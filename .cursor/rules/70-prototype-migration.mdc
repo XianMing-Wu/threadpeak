@@ -21,6 +21,7 @@ alwaysApply: false
 | `src/session/author-network.ts` sessionStorage；产品 `#authors` 网络已 fail-closed | committed relationship event → owner-scoped network projector |
 | `src/history.ts` / workspace localStorage；侧栏重开已 fail-closed | ConversationUseCases + owner-scoped GET/exact reopen |
 | `src/pages/Authors.tsx` | 搜索与网络均已 fail-closed；保持两个 feature |
+| `src/pages/Settings.tsx` 写死用户/已上传 PDF；产品设置身份与资料范围已 fail-closed | 服务端 identity + committed source scope；本地偏好不改变领域合同，也不得锁死整站登录 |
 | `src/path-3d/` + `src/components/Path3D.tsx` hash/session handoff | validated document + UUID mapping + server handoff |
 | `src/visuals/specs.ts` 固定图 | validated VisualizationArtifact + Surface Catalog |
 

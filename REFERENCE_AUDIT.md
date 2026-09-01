@@ -19,6 +19,7 @@
 | 当前源码落点 | 当前事实 | 重构目标 |
 | --- | --- | --- |
 | `src/components/Shell.tsx`、`src/styles.css` | 知乎浅色桌面壳、持久主侧栏和 Hash 页面 | Web shell 只组合 route、projection 和 feature UI |
+| `src/pages/Settings.tsx`、`src/resolve-settings-identity.ts` | 设置页不再把写死用户或已上传 PDF 资料范围当成已提交 identity/sources；缺 provider 显式失败。密度/动效仍是本地偏好 | 服务端 OAuth/session 身份与 committed source/attachment scope |
 | `src/components/Composer.tsx` | 路线、图文、问博主的输入外观与本地 UI state | 正向模式白名单；command 发往同源 API，未知持久化值归一为空 |
 | `src/pages/Chat.tsx`、`src/chat/`、`src/workspace/catalog.ts` | 普通/图文无真实 provider 时显式失败，不再渲染预写 Mock 或 fixture 图；路线 generate 连接失败或超时显式失败，不再停在 pending | 真实 Answer/Path provider、typed stream、持久 request/session |
 | `src/workspace/store.ts`、`src/history.ts`、`src/resolve-history-reopen.ts` | 侧栏重开不再把 localStorage 正文当成已提交 history；缺 provider 显式失败。workspace 存储仍是原型草稿 | owner-scoped 服务端事实、outbox/projector 和精确 history reopen |

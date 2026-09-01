@@ -1,6 +1,6 @@
 ---
 description: "约束 React 前端 runtime、状态、交互、无障碍和模块依赖风格。"
-globs: "src/**/*.ts,src/**/*.tsx,src/**/*.css,src/chat/**,apps/web/**,packages/runtime-store/**,packages/api-client/**,packages/design-system/**"
+globs: "src/**/*.ts,src/**/*.tsx,src/**/*.css,src/chat/**,src/pages/Settings.tsx,src/resolve-settings-identity.ts,apps/web/**,packages/runtime-store/**,packages/api-client/**,packages/design-system/**"
 alwaysApply: false
 ---
 
@@ -44,6 +44,7 @@ UI action → typed command method → api-client
 - 每个服务端能力使用 discriminated union 表达实际可达的 `idle/loading/streaming/ready/empty/recoverable-error/terminal-error/cancelled/reconnecting` 子集；禁止多个 boolean 组合不可能状态。
 - 首次概念页按真实顺序显示 initial answer generation → initial ready → graph bootstrapping → ready。再次进入/新对话不得重播首答生成；graph 失败不能遮蔽首答。
 - History reopen 恢复精确 committed snapshot，不触发模型、作者筛选或 graph rebuild。
+- `#settings` 身份与资料范围缺 provider 时显式失败；不得写死登录用户或已上传 PDF。密度、动效、思考深度是本地偏好，不改变领域合同，也不得把 `threadpeak-authenticated` fail-close 成整站锁死。
 - 旧 document/revision 在新请求失败时继续显示；禁止先清 UI 再发请求。
 
 ## React 约束
