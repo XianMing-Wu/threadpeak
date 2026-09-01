@@ -1,7 +1,5 @@
-import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react'
+import { useCallback, useRef, useSyncExternalStore } from 'react'
 import type { RuntimeStore } from '@threadpeak/runtime-store'
-import { ensurePrototypeRuntimeListeners, getPrototypeRuntimeStore } from './prototype-runtime'
-import { projectLibraryReadModel, type LibraryReadModel } from './library-read-model'
 
 export function useRuntimeSelector<TView, TSelected>(
   store: RuntimeStore<TView>,
@@ -20,13 +18,4 @@ export function useRuntimeSelector<TView, TSelected>(
   }
 
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
-}
-
-export function useLibrarySelector<TSelected>(selector: (view: LibraryReadModel) => TSelected): TSelected {
-  const store = getPrototypeRuntimeStore()
-  useEffect(() => {
-    ensurePrototypeRuntimeListeners()
-    store.hydrateFromGet(projectLibraryReadModel())
-  }, [store])
-  return useRuntimeSelector(store, selector)
 }

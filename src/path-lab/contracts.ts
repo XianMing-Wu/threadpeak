@@ -380,8 +380,21 @@ export function parseGenerationResponse(value: unknown): ParsedGenerationRespons
   }
 }
 
-export async function readSafeServiceError(response: Response): Promise<string> {
-  return (await readSafeServiceFailure(response)).message
+export function projectSafeServiceFailure(status: number, payload: unknown): SafeServiceFailure {
+  if (!isRecord(payload) || typeof payload.code !== 'string' || !owns(SERVICE_ERROR_MESSAGES, payload.code)) {
+    return { message: `生成服务返回错误（HTTP ${status}）` }
+  }
+  let diagnostics: PathDiagnosticsView | undefined
+  try {
+    diagnostics = projectDiagnostics(payload)
+  } catch {
+    // Error envelopes may omit diagnostics. Never fall back to arbitrary server text.
+  }
+  return {
+    message: SERVICE_ERROR_MESSAGES[payload.code as ServiceErrorCode],
+    diagnostics,
+    clarification: parseClarification(payload),
+  }
 }
 
 export async function readSafeServiceFailure(response: Response): Promise<SafeServiceFailure> {
@@ -391,19 +404,5 @@ export async function readSafeServiceFailure(response: Response): Promise<SafeSe
   } catch {
     return { message: `生成服务返回错误（HTTP ${response.status}）` }
   }
-  if (!isRecord(payload) || typeof payload.code !== 'string' || !owns(SERVICE_ERROR_MESSAGES, payload.code)) {
-    return { message: `生成服务返回错误（HTTP ${response.status}）` }
-  }
-  let diagnostics: PathDiagnosticsView | undefined
-  try {
-    diagnostics = projectDiagnostics(payload)
-  } catch {
-    // Error envelopes may omit diagnostics. Never fall back to arbitrary server text.
-  }
-  const clarification = parseClarification(payload)
-  return {
-    message: SERVICE_ERROR_MESSAGES[payload.code as ServiceErrorCode],
-    diagnostics,
-    clarification,
-  }
+  return projectSafeServiceFailure(response.status, payload)
 }

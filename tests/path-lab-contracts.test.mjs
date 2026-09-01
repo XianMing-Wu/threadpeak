@@ -5,6 +5,8 @@ import assert from 'node:assert/strict'
 const read = (path) => readFile(new URL(path, import.meta.url), 'utf8')
 const html = await read('../path-lab.html')
 const app = await read('../src/path-lab/App.tsx')
+const session = await read('../src/path-lab/path-lab-session.ts')
+const labMain = await read('../src/path-lab/main.tsx')
 const input = await read('../src/path-lab/GoalInput.tsx')
 const inputPolicy = await read('../src/path-lab/inputPolicy.ts')
 const contracts = await read('../src/path-lab/contracts.ts')
@@ -39,11 +41,14 @@ test('受控目标输入覆盖 Enter、Shift+Enter、IME、pending、abort 与�
 })
 
 test('生成请求只发送 canonical raw_goal 与服务端标识的澄清答案，且密钥不进入 Vite', () => {
-  assert.match(app, /fetch\('\/api\/paths\/generate'/)
-  assert.match(app, /JSON\.stringify\(\{ raw_goal: rawGoal, clarification_answers: answers \}\)/)
-  assert.doesNotMatch(app, /JSON\.stringify\(\{ goal:/)
+  assert.match(session, /PATH_LAB_GENERATE_URL = '\/api\/paths\/generate'/)
+  assert.match(session, /requestJson\(/)
+  assert.match(session, /JSON\.stringify\(\{ raw_goal: rawGoal, clarification_answers: answers \}\)/)
+  assert.doesNotMatch(session, /JSON\.stringify\(\{ goal:/)
+  assert.doesNotMatch(app, /fetch\(/)
+  assert.match(labMain, /createPathLabSession/)
   assert.match(vite, /target: 'http:\/\/127\.0\.0\.1:4312'/)
-  for (const source of [app, input, contracts, vite]) {
+  for (const source of [app, session, labMain, input, contracts, vite]) {
     assert.doesNotMatch(source, /import\.meta\.env|OPEN(?:CODE)?_?GO|ZHIHU_?API|API_?KEY/i)
   }
 })
@@ -60,17 +65,17 @@ test('客户端只发布 renderer_document，diagnostics 是严格本地枚举 s
   assert.match(contracts, /isSafeInteger\(trace\.provider_call_count\)/)
   assert.match(contracts, /QUALITY_ISSUE_LABELS/)
   assert.match(contracts, /DEGRADATION_LABELS/)
-  assert.doesNotMatch(app + contracts, /JSON\.stringify\([^)]*diagnostic/i)
-  assert.doesNotMatch(app + contracts, /payload\.(?:prompt|traceback|stack|quoted_text|content_text)/i)
+  assert.doesNotMatch(app + session + contracts, /JSON\.stringify\([^)]*diagnostic/i)
+  assert.doesNotMatch(app + session + contracts, /payload\.(?:prompt|traceback|stack|quoted_text|content_text)/i)
 })
 
 test('未通过质量门禁的文档不会替换当前 3D 路径', () => {
-  const gate = app.indexOf('result.diagnostics.passed !== true')
-  const publish = app.indexOf('setDocument(result.rendererDocument)')
+  const gate = session.indexOf('result.diagnostics.passed !== true')
+  const publish = session.indexOf('document: result.rendererDocument')
   assert.ok(gate >= 0 && publish > gate)
-  assert.match(app, /质量门禁未通过/)
-  assert.match(app, /上一版路径已保留/)
-  assert.match(app.slice(gate, publish), /throw new PublicPathLabError/)
+  assert.match(session, /质量门禁未通过/)
+  assert.match(session, /上一版路径已保留/)
+  assert.match(session.slice(gate, publish), /throw new PublicPathLabError/)
 })
 
 test('服务端错误只按本地枚举映射，不读取任意 detail/message', () => {

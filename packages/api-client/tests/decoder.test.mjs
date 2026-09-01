@@ -72,4 +72,38 @@ test('public errors reject unknown keys and injected fetch never invents success
   assert.equal(failed.ok, false)
   if (failed.ok) throw new Error('expected failure')
   assert.equal(failed.error.code, 'TRANSPORT_FAILED')
+
+  const posted = client.createApiClient({
+    fetch: async (url, init) => {
+      assert.equal(url, '/api/paths/generate')
+      assert.equal(init?.method, 'POST')
+      return { ok: true, status: 200, text: async () => '{"keep":true}' }
+    },
+  })
+  const json = await posted.requestJson({
+    url: '/api/paths/generate',
+    method: 'POST',
+    body: '{"raw_goal":"x"}',
+    traceId: 'trace-2',
+  })
+  assert.deepEqual(json, { ok: true, status: 200, value: { keep: true } })
+
+  const aborted = client.createApiClient({
+    fetch: async (_url, init) => {
+      assert.equal(init?.signal?.aborted, true)
+      const error = new Error('Aborted')
+      error.name = 'AbortError'
+      throw error
+    },
+  })
+  const signal = AbortSignal.abort()
+  const cancelled = await aborted.requestJson({
+    url: '/api/paths/generate',
+    method: 'POST',
+    signal,
+    traceId: 'trace-3',
+  })
+  assert.equal(cancelled.ok, false)
+  if (cancelled.ok) throw new Error('expected abort')
+  assert.equal(cancelled.aborted, true)
 })

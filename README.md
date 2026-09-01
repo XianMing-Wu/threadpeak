@@ -94,7 +94,7 @@ npm run dev
 http://127.0.0.1:4301/path-lab.html
 ```
 
-它调用 `POST /api/paths/generate` 并只把通过校验的 `renderer_document` 交给 3D renderer。前端与图表/3D 资产已在本仓库内构建；实验 API 仍可能指向本机 `127.0.0.1:4312`，不能证明主产品的回答、知识、作者或历史链路已经接通。目标生产 workspace 必须使用本项目服务端 adapter、真实 provider、持久化合同和可复现构建。
+它经 `@threadpeak/api-client` 调用 `POST /api/paths/generate`，由 RuntimeStore 保存已发布 document；只把通过校验的 `renderer_document` 交给 3D renderer。前端与图表/3D 资产已在本仓库内构建；实验 API 仍可能指向本机 `127.0.0.1:4312`，不能证明主产品的回答、知识、作者或历史链路已经接通。目标生产 workspace 必须使用本项目服务端 adapter、真实 provider、持久化合同和可复现构建。
 
 ## 当前验证
 

@@ -1,9 +1,7 @@
 import type { ClarificationOption, ClarificationPrompt } from './contracts'
+import type { ClarificationHistoryItem } from './clarification'
 
-export type ClarificationHistoryItem = Readonly<{
-  prompt: ClarificationPrompt
-  option: ClarificationOption
-}>
+export type { ClarificationHistoryItem }
 
 export type ClarificationCardProps = Readonly<{
   prompt: ClarificationPrompt

@@ -1,19 +1,10 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import type { LearningPathDocument } from 'liu-kanshan-learning-path-3d'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { useRuntimeSelector } from '../runtime/use-runtime-selector'
 import { GoalInput } from './GoalInput'
-import {
-  parseGenerationResponse,
-  PublicPathLabError,
-  readSafeServiceFailure,
-  type ClarificationAnswer,
-  type ClarificationOption,
-  type ClarificationPrompt,
-  type PathDiagnosticsView,
-} from './contracts'
-import { ClarificationCard, type ClarificationHistoryItem } from './ClarificationCard'
+import { ClarificationCard } from './ClarificationCard'
 import { Path3DErrorBoundary } from './Path3DErrorBoundary'
-
-type RunState = 'idle' | 'clarifying' | 'pending' | 'ready' | 'aborted' | 'error'
+import type { PathLabSession } from './path-lab-session'
+import type { LearningPathDocument } from 'liu-kanshan-learning-path-3d'
 
 const LearningPath3DView = lazy(async () => {
   const module = await import('../components/Path3D')
@@ -66,192 +57,28 @@ function elapsedLabel(milliseconds: number): string {
   return `${(milliseconds / 1000).toFixed(1)} 秒`
 }
 
-export function PathLabApp() {
+export function PathLabApp(props: { session: PathLabSession }) {
+  const session = props.session
+  const view = useRuntimeSelector(session.store, (snapshot) => snapshot)
   const [goal, setGoal] = useState('')
-  const [runState, setRunState] = useState<RunState>('idle')
-  const [status, setStatus] = useState('等待输入一个可观察、可验证的学习目标')
-  const [error, setError] = useState('')
-  const [document, setDocument] = useState<LearningPathDocument>()
-  const [publishedDiagnostics, setPublishedDiagnostics] = useState<PathDiagnosticsView>()
-  const [attemptDiagnostics, setAttemptDiagnostics] = useState<PathDiagnosticsView>()
-  const [clarification, setClarification] = useState<ClarificationPrompt>()
-  const [clarificationGoal, setClarificationGoal] = useState('')
-  const [clarificationAnswers, setClarificationAnswers] = useState<ClarificationAnswer[]>([])
-  const [clarificationHistory, setClarificationHistory] = useState<ClarificationHistoryItem[]>([])
-  const [selectedOptionId, setSelectedOptionId] = useState<string>()
-  const [elapsedMs, setElapsedMs] = useState(0)
-  const requestRef = useRef<{ id: number; controller: AbortController; startedAt: number } | undefined>(undefined)
-  const requestIdRef = useRef(0)
-  const items = useMemo(() => document ? evidenceItems(document) : [], [document])
-  const pending = runState === 'pending'
-  const diagnostics = attemptDiagnostics ?? publishedDiagnostics
+  const items = useMemo(() => view.document ? evidenceItems(view.document) : [], [view.document])
+  const pending = view.runState === 'pending'
+  const diagnostics = view.attemptDiagnostics ?? view.publishedDiagnostics
 
   useEffect(() => {
     if (!pending) return
-    const timer = window.setInterval(() => {
-      const request = requestRef.current
-      if (request) setElapsedMs(performance.now() - request.startedAt)
-    }, 1000)
+    const timer = window.setInterval(() => session.tickElapsed(), 1000)
     return () => window.clearInterval(timer)
-  }, [pending])
+  }, [pending, session])
 
-  useEffect(() => () => requestRef.current?.controller.abort(), [])
-
-  const abort = () => {
-    const request = requestRef.current
-    if (!request) return
-    request.controller.abort()
-    requestRef.current = undefined
-    setRunState('aborted')
-    setStatus('已停止本次生成；目标草稿仍保留，可修改后重试')
-  }
-
-  const resetClarification = () => {
-    setClarification(undefined)
-    setClarificationGoal('')
-    setClarificationAnswers([])
-    setClarificationHistory([])
-    setSelectedOptionId(undefined)
-  }
+  useEffect(() => () => session.abort(), [session])
 
   const changeGoal = (value: string) => {
     setGoal(value)
-    if (clarification && value.trim() !== clarificationGoal) {
-      resetClarification()
-      setRunState(document ? 'ready' : 'idle')
-      setStatus(document ? '当前路径仍可浏览；修改目标后可生成新版本' : '等待生成新的学习目标')
-      setError('')
-    }
+    session.changeGoal(value)
   }
 
-  const generate = async (
-    rawGoal: string,
-    answers: readonly ClarificationAnswer[] = [],
-    transition?: Readonly<{ prompt: ClarificationPrompt; option: ClarificationOption }>,
-  ) => {
-    requestRef.current?.controller.abort()
-    requestIdRef.current += 1
-    const id = requestIdRef.current
-    const controller = new AbortController()
-    const startedAt = performance.now()
-    requestRef.current = { id, controller, startedAt }
-    setRunState('pending')
-    setStatus(answers.length > 0 ? '选择已确认，正在生成完整路径…' : '正在判断目标是否需要校准…')
-    setError('')
-    setAttemptDiagnostics(undefined)
-    setElapsedMs(0)
-
-    try {
-      const response = await fetch('/api/paths/generate', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', accept: 'application/json' },
-        body: JSON.stringify({ raw_goal: rawGoal, clarification_answers: answers }),
-        signal: controller.signal,
-      })
-      if (!response.ok) {
-        const failure = await readSafeServiceFailure(response)
-        if (requestRef.current?.id !== id) return
-        if (failure.diagnostics) setAttemptDiagnostics(failure.diagnostics)
-        if (failure.clarification) {
-          if (transition && failure.clarification.questionId !== transition.prompt.questionId) {
-            setClarificationHistory((current) => [
-              ...current.filter((item) => item.prompt.questionId !== transition.prompt.questionId),
-              transition,
-            ])
-          }
-          setClarification(failure.clarification)
-          setClarificationGoal(rawGoal)
-          setSelectedOptionId(
-            answers.find((answer) => answer.question_id === failure.clarification?.questionId)?.option_id,
-          )
-          setElapsedMs(performance.now() - startedAt)
-          setRunState('clarifying')
-          setStatus(`请完成第 ${failure.clarification.step} 题；答完最多 ${failure.clarification.total} 题后立即生成`)
-          setError('')
-          return
-        }
-        throw new PublicPathLabError(failure.message)
-      }
-
-      let payload: unknown
-      try {
-        payload = await response.json()
-      } catch {
-        throw new PublicPathLabError('生成服务没有返回有效 JSON')
-      }
-      const result = parseGenerationResponse(payload)
-      if (requestRef.current?.id !== id) return
-      setAttemptDiagnostics(result.diagnostics)
-      if (result.diagnostics.passed !== true) {
-        const issueSummary = result.diagnostics.qualityIssueCodes.length
-          ? `：${result.diagnostics.qualityIssueLabels.slice(0, 3).join('、')}`
-          : result.diagnostics.qualityIssueCount
-            ? `（${result.diagnostics.qualityIssueCount} 项问题）`
-            : ''
-        throw new PublicPathLabError(`质量门禁未通过${issueSummary}；未发布新路径，上一版路径已保留`)
-      }
-
-      setDocument(result.rendererDocument)
-      setPublishedDiagnostics(result.diagnostics)
-      setAttemptDiagnostics(undefined)
-      setElapsedMs(performance.now() - startedAt)
-      setRunState('ready')
-      setStatus(`路径已生成：${result.rendererDocument.structure.subjects.length} 个载体，${result.rendererDocument.structure.concepts.length} 个最终概念`)
-      resetClarification()
-    } catch (cause: unknown) {
-      if (controller.signal.aborted || (cause instanceof DOMException && cause.name === 'AbortError')) return
-      if (requestRef.current?.id !== id) return
-      setRunState('error')
-      setStatus('本次生成未完成')
-      setError(cause instanceof PublicPathLabError ? cause.message : '无法连接本地路径生成服务，请确认服务已启动后重试')
-    } finally {
-      if (requestRef.current?.id === id) requestRef.current = undefined
-    }
-  }
-
-  const submitNewGoal = (rawGoal: string) => {
-    resetClarification()
-    void generate(rawGoal)
-  }
-
-  const continueClarification = () => {
-    if (!clarification || !selectedOptionId || pending) return
-    const option = clarification.options.find((item) => item.id === selectedOptionId)
-    if (!option) return
-    const nextAnswers = [
-      ...clarificationAnswers.filter((answer) => answer.question_id !== clarification.questionId),
-      { question_id: clarification.questionId, option_id: option.id },
-    ]
-    setClarificationAnswers(nextAnswers)
-    void generate(clarificationGoal || goal.trim(), nextAnswers, { prompt: clarification, option })
-  }
-
-  const backClarification = () => {
-    const prior = clarificationHistory.at(-1)
-    if (!prior || pending) return
-    const remaining = clarificationHistory.slice(0, -1)
-    setClarificationHistory(remaining)
-    setClarificationAnswers(
-      remaining.map((item) => ({
-        question_id: item.prompt.questionId,
-        option_id: item.option.id,
-      })),
-    )
-    setClarification(prior.prompt)
-    setSelectedOptionId(prior.option.id)
-    setRunState('clarifying')
-    setStatus(`返回第 ${prior.prompt.step} 题，可重新选择后继续`)
-    setError('')
-  }
-
-  const restartClarification = () => {
-    resetClarification()
-    setRunState(document ? 'ready' : 'idle')
-    setStatus('请修改目标；原草稿已保留')
-    setError('')
-  }
-
-  return <div className="path-lab" data-run-state={runState}>
+  return <div className="path-lab" data-run-state={view.runState}>
     <header className="path-lab-input-panel">
       <div className="path-lab-heading">
         <span>ThreadPeak · 路径算法实验台</span>
@@ -261,41 +88,41 @@ export function PathLabApp() {
       <GoalInput
         value={goal}
         onChange={changeGoal}
-        onSubmit={submitNewGoal}
+        onSubmit={(rawGoal) => session.submitNewGoal(rawGoal)}
         pending={pending}
-        onAbort={abort}
-        error={error}
+        onAbort={() => session.abort()}
+        error={view.error}
       />
       <div className="path-lab-status">
         <i aria-hidden="true" />
-        <span role="status" aria-live="polite" aria-atomic="true">{status}</span>
-        {(pending || runState === 'ready') && <time aria-hidden="true">{elapsedLabel(elapsedMs)}</time>}
+        <span role="status" aria-live="polite" aria-atomic="true">{view.status}</span>
+        {(pending || view.runState === 'ready') && <time aria-hidden="true">{elapsedLabel(view.elapsedMs)}</time>}
       </div>
     </header>
 
     <main className="path-lab-workspace">
       <section className="path-lab-canvas" aria-label="生成的 3D 知识脉络">
-        {clarification && <ClarificationCard
-          prompt={clarification}
-          history={clarificationHistory}
-          selectedOptionId={selectedOptionId}
+        {view.clarification && <ClarificationCard
+          prompt={view.clarification}
+          history={view.clarificationHistory}
+          selectedOptionId={view.selectedOptionId}
           pending={pending}
-          onSelect={setSelectedOptionId}
-          onContinue={continueClarification}
-          onBack={backClarification}
-          onRestart={restartClarification}
+          onSelect={(optionId) => session.selectOption(optionId)}
+          onContinue={() => session.continueClarification(goal.trim())}
+          onBack={() => session.backClarification()}
+          onRestart={() => session.restartClarification()}
         />}
-        {document ? <>
+        {view.document ? <>
           <div className="path-lab-document-title">
             <small>RENDERER V1</small>
-            <strong>{document.metadata.title}</strong>
-            {document.metadata.description && <span>{document.metadata.description}</span>}
+            <strong>{view.document.metadata.title}</strong>
+            {view.document.metadata.description && <span>{view.document.metadata.description}</span>}
           </div>
-          <Path3DErrorBoundary resetKey={document.id}>
+          <Path3DErrorBoundary resetKey={view.document.id}>
             <Suspense fallback={<div className="path-lab-loading-3d" role="status"><i aria-hidden="true" />正在加载 3D 运行时…</div>}>
               <LearningPath3DView
-                document={document}
-                ariaLabel={`${document.metadata.title}的 3D 知识脉络`}
+                document={view.document}
+                ariaLabel={`${view.document.metadata.title}的 3D 知识脉络`}
                 instanceIdPrefix="threadpeak-path-lab"
               />
             </Suspense>
@@ -308,19 +135,19 @@ export function PathLabApp() {
         </div>}
       </section>
 
-      {(document || diagnostics) && <aside className="path-lab-inspector" aria-label="路径证据与质量摘要">
+      {(view.document || diagnostics) && <aside className="path-lab-inspector" aria-label="路径证据与质量摘要">
         <section className="path-lab-quality">
-          <header><span>{attemptDiagnostics ? '本次尝试质量' : '质量摘要'}</span><b data-passed={diagnostics?.passed === true}>{diagnostics?.passed === true ? '已通过' : '未通过 · 未发布'}</b></header>
-          {document && <dl aria-label="当前已发布路径结构">
-            <div><dt>载体</dt><dd>{document.structure.subjects.length}</dd></div>
-            <div><dt>最终概念</dt><dd>{document.structure.concepts.length}</dd></div>
-            <div><dt>证据入口</dt><dd>{document.data.resources.length}</dd></div>
-            <div><dt>分支 / 合流</dt><dd>{document.structure.flowGroups.length}</dd></div>
+          <header><span>{view.attemptDiagnostics ? '本次尝试质量' : '质量摘要'}</span><b data-passed={diagnostics?.passed === true}>{diagnostics?.passed === true ? '已通过' : '未通过 · 未发布'}</b></header>
+          {view.document && <dl aria-label="当前已发布路径结构">
+            <div><dt>载体</dt><dd>{view.document.structure.subjects.length}</dd></div>
+            <div><dt>最终概念</dt><dd>{view.document.structure.concepts.length}</dd></div>
+            <div><dt>证据入口</dt><dd>{view.document.data.resources.length}</dd></div>
+            <div><dt>分支 / 合流</dt><dd>{view.document.structure.flowGroups.length}</dd></div>
           </dl>}
           <ul>
             <li><span>质量门禁</span><strong>{diagnostics ? qualityScoreLabel(diagnostics.qualityScore) : '未通过'}</strong></li>
             <li><span>确定性不变量</span><strong>{diagnostics ? diagnostics.invariantCount : 0}</strong></li>
-            <li><span>服务耗时</span><strong>{diagnostics ? elapsedLabel(diagnostics.totalMs) : elapsedLabel(elapsedMs)}</strong></li>
+            <li><span>服务耗时</span><strong>{diagnostics ? elapsedLabel(diagnostics.totalMs) : elapsedLabel(view.elapsedMs)}</strong></li>
             <li><span>生成模式</span><strong>{diagnostics?.degraded ? '降级输出' : '完整输出'}</strong></li>
           </ul>
           {diagnostics?.sourceCounts.length ? <div className="path-lab-source-counts">
@@ -339,7 +166,7 @@ export function PathLabApp() {
           </div> : null}
         </section>
 
-        {document && <section className="path-lab-evidence">
+        {view.document && <section className="path-lab-evidence">
           <header><span>概念与证据</span><b>{items.length}</b></header>
           <div>
             {items.map((item, index) => <article key={item.id}>

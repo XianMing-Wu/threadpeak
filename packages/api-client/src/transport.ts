@@ -6,17 +6,77 @@ import {
   type DecodedStreamEvent,
 } from './decoder.ts'
 
+export type FetchInit = {
+  method?: string
+  headers?: Record<string, string>
+  body?: string
+  signal?: AbortSignal
+}
+
 export type FetchPort = (
   input: string,
-  init?: { method?: string; headers?: Record<string, string>; body?: string },
+  init?: FetchInit,
 ) => Promise<{ ok: boolean; status: number; text: () => Promise<string> }>
+
+export type JsonRequestResult =
+  | { ok: true; status: number; value: unknown }
+  | { ok: false; status?: number; value?: unknown; aborted?: boolean; error: PublicError }
 
 function transportError(message: string, traceId: string, retryable = true): PublicError {
   return { code: 'TRANSPORT_FAILED', message, traceId, retryable }
 }
 
+function isAbort(cause: unknown, signal?: AbortSignal): boolean {
+  if (signal?.aborted) return true
+  return cause instanceof Error && cause.name === 'AbortError'
+}
+
 export function createApiClient(ports: { fetch: FetchPort }) {
   return {
+    async requestJson(spec: {
+      url: string
+      method: 'GET' | 'POST'
+      headers?: Record<string, string>
+      body?: string
+      signal?: AbortSignal
+      traceId: string
+    }): Promise<JsonRequestResult> {
+      try {
+        const response = await ports.fetch(spec.url, {
+          method: spec.method,
+          headers: spec.headers,
+          body: spec.body,
+          signal: spec.signal,
+        })
+        const text = await response.text()
+        const value = safeJson(text)
+        if (!response.ok) {
+          const decoded = decodePublicError(value, spec.traceId)
+          return {
+            ok: false,
+            status: response.status,
+            value,
+            error: decoded.ok
+              ? decoded.value
+              : transportError('Request failed with a non-success status.', spec.traceId),
+          }
+        }
+        return { ok: true, status: response.status, value }
+      } catch (cause) {
+        if (isAbort(cause, spec.signal)) {
+          return {
+            ok: false,
+            aborted: true,
+            error: transportError('Request was aborted.', spec.traceId, false),
+          }
+        }
+        return {
+          ok: false,
+          error: transportError('Request failed before a response body was available.', spec.traceId),
+        }
+      }
+    },
+
     async readUnknown(url: string, traceId: string): Promise<DecodeResult<unknown>> {
       try {
         const response = await ports.fetch(url, { method: 'GET' })

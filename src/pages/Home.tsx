@@ -4,7 +4,7 @@ import { Composer, QuickModes } from '../components/Composer'
 import { Icon } from '../icons'
 import { launchChat } from './Chat'
 import { openKnowledge, openRoute } from '../workspace/nav'
-import { useLibrarySelector } from '../runtime/use-runtime-selector'
+import { useLibrarySelector } from '../runtime/use-library-selector'
 import { selectRecommendedKnowledge, selectRecommendedRoutes } from '../runtime/library-read-model'
 
 const suggestions = ['给我制定一条机器学习数学路线','用图解释矩阵乘法','哪些知乎作者擅长讲线性代数？']

@@ -11,4 +11,9 @@ export {
   type DecodedStreamEvent,
 } from './decoder.ts'
 
-export { createApiClient, type FetchPort } from './transport.ts'
+export {
+  createApiClient,
+  type FetchInit,
+  type FetchPort,
+  type JsonRequestResult,
+} from './transport.ts'

@@ -4,7 +4,7 @@ import { Icon } from '../icons'
 import { RealPath3D } from '../components/Path3D'
 import { KnowledgeCanvasPage } from './KnowledgeCanvas'
 import { NAV_EVENT, openConceptKnowledge, openKnowledge, openRoute, readActiveKnowledgeId, readKnowledgeConceptId, readKnowledgeListReturn } from '../workspace/nav'
-import { useLibrarySelector } from '../runtime/use-runtime-selector'
+import { useLibrarySelector } from '../runtime/use-library-selector'
 import { selectKnowledgeCards, selectRouteCards } from '../runtime/library-read-model'
 import { getKnowledge, listConceptCards, useWorkspaceTick } from '../workspace/store'
 
