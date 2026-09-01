@@ -1,7 +1,7 @@
 # Architecture status — path-lab transport
 
 - Time: 2026-09-01
-- Commit: pending (this slice)
+- Commit: `475496b`
 - Environment: darwin, Node v25.5.0 (engines `>=24`), npm 11.8.0, Vite 8.2.2, TypeScript 6.0.3
 - Maturity proposal: path-lab session adapter = `implemented` against the existing JSON lab API; product PathStreamEvent / CAS session = still `prototype` / `uncontracted` in this Web repo
 
