@@ -82,7 +82,7 @@ npm run dev
 | `#path-3d` | WebGL renderer；用户路线缺校验文档则显式失败，不再回退演示路径 | 只消费已校验 document 与 server handoff，不保存学习进度 |
 | `#knowledge` | 我的/示例知识脉络列表 | 读取 owner-scoped committed projection |
 | `#knowledge-detail` | 只读知识画布 | 只渲染 revision，不从消息或布局发明节点和边 |
-| `#session-learning` | 未选择 route/concept 时显式失败；`openLearning` 不再发明概念；已选中仍是原型 lesson | 严格执行 canonical 首答在前、知识图在后 |
+| `#session-learning` | 未选择 route/concept 时显式失败；我的路线无 canonical 首答时不发明 lesson/图；示例仍用标记 catalog lesson | 严格执行 canonical 首答在前、知识图在后 |
 | `#authors` | 博主搜索与博主网络视觉原型 | 搜索与网络为两个 feature，执行不同检索顺序和写入规则 |
 | `#settings` | 前端偏好与确认界面 | 偏好不能改变领域合同 |
 

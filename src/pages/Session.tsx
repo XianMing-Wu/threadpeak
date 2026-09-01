@@ -16,7 +16,7 @@ import { useAnnotations } from '../session/useAnnotations'
 import { parseGrowCommand } from '../knowledge-canvas/generate'
 import { MarkdownMath } from '../lib/MarkdownMath'
 import { VisualAnswer } from './Chat'
-import { coachReply, conceptTitle } from '../workspace/catalog'
+import { catalogLesson, coachReply, conceptTitle } from '../workspace/catalog'
 import {
   readActiveConceptId,
   readActiveConversationId,
@@ -39,7 +39,7 @@ import {
   syncKnowledgeWithFirstLesson,
 } from '../workspace/store'
 import type { LearningTurn } from '../workspace/types'
-import { resolveLearningEntry } from '../session/resolve-learning-entry'
+import { resolveFirstLesson, resolveLearningEntry } from '../session/resolve-learning-entry'
 
 let sessionStatusTitle = ''
 
@@ -88,6 +88,15 @@ export function SessionPage() {
     ...(route ? { route } : {}),
   })
   if (entry.kind === 'unavailable') return <SessionUnavailable title={entry.title} message={entry.message}/>
+  if (!route) return <SessionUnavailable title="未选择学习概念" message="没有可进入的学习概念。"/>
+  const cataloged = catalogLesson(entry.routeId, entry.conceptId)
+  const firstLesson = resolveFirstLesson({
+    routeId: entry.routeId,
+    conceptId: entry.conceptId,
+    route: { id: route.id, owner: route.owner },
+    ...(cataloged ? { catalogLesson: cataloged } : {}),
+  })
+  if (firstLesson.kind === 'unavailable') return <SessionUnavailable title={firstLesson.title} message={firstLesson.message}/>
   return <SessionLearning key={`${entry.routeId}::${entry.conceptId}`} routeId={entry.routeId} conceptId={entry.conceptId}/>
 }
 
@@ -124,7 +133,8 @@ function SessionLearning({ routeId, conceptId }: { routeId: string; conceptId: s
     }
     setEntryPhase('preparing')
     const generate=window.setTimeout(()=>{
-      setLesson(syncKnowledgeWithFirstLesson(routeId, conceptId).lesson)
+      const generated = syncKnowledgeWithFirstLesson(routeId, conceptId)
+      if (generated.lesson) setLesson(generated.lesson)
     },1800)
     const timer=window.setTimeout(()=>setEntryPhase('ready'),1800)
     return()=>{window.clearTimeout(generate);window.clearTimeout(timer)}

@@ -266,9 +266,8 @@ export function getLesson(routeId: string, conceptId: string): FirstLesson | und
 
 export function hasGeneratedLesson(routeId: string, conceptId: string) {
   const route = getRoute(routeId)
-  if (!route) return false
-  if (route.owner === 'example') return true
-  return Boolean(readWorkspace().lessons[lessonKey(routeId, conceptId)])
+  if (route?.owner !== 'example') return false
+  return Boolean(catalogLesson(routeId, conceptId))
 }
 
 function newId(prefix: string) {
@@ -453,60 +452,12 @@ export function blueprintOf(routeId: string) {
   return draftFromRoute(getRoute(routeId))
 }
 
-export function syncKnowledgeWithFirstLesson(routeId: string, conceptId: string): { lesson: FirstLesson; knowledge?: KnowledgeRecord; createdKnowledge: boolean } {
+export function syncKnowledgeWithFirstLesson(routeId: string, conceptId: string): { lesson?: FirstLesson; knowledge?: KnowledgeRecord; createdKnowledge: false } {
   const route = getRoute(routeId)
-  if (!route) {
-    const fallback = catalogLesson(routeId, conceptId) ?? draftFirstLesson(blueprintOf(routeId), conceptId)
-    return { lesson: fallback, createdKnowledge: false }
-  }
-  const existingLesson = readWorkspace().lessons[lessonKey(routeId, conceptId)]
-  if (existingLesson) {
-    return { lesson: existingLesson, knowledge: route.knowledgeId ? getKnowledge(route.knowledgeId) : undefined, createdKnowledge: false }
-  }
-  if (route.owner === 'example') {
-    const lesson = catalogLesson(routeId, conceptId) ?? draftFirstLesson(blueprintOf(routeId), conceptId)
-    return { lesson, knowledge: getKnowledgeByRoute(routeId), createdKnowledge: false }
-  }
-
-  const lesson = draftFirstLesson(blueprintOf(routeId), conceptId)
-  const graph = graphFromLesson(conceptTitle(blueprintOf(routeId), conceptId), lesson, conceptAccent(blueprintOf(routeId), conceptId))
-  let createdKnowledge = false
-  mutate((snapshot) => {
-    snapshot.lessons[lessonKey(routeId, conceptId)] = lesson
-    if (!route.knowledgeId) {
-      const knowledge = {
-        id: `knowledge-${route.id}`,
-        routeId: route.id,
-        owner: 'mine' as const,
-        title: route.title,
-        description: route.summary,
-        icon: route.icon,
-        sources: 2,
-        type: '知乎回答',
-        seedConceptId: conceptId,
-        graph,
-        graphs: { [conceptId]: graph },
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      }
-      snapshot.knowledge = [knowledge, ...snapshot.knowledge]
-      snapshot.routes = snapshot.routes.map((item) => item.id === route.id ? { ...item, knowledgeId: knowledge.id } : item)
-      createdKnowledge = true
-    } else {
-      snapshot.knowledge = snapshot.knowledge.map((item) => {
-        if (item.id !== route.knowledgeId) return item
-        const graphs = conceptGraphsOf(item)
-        if (graphs[conceptId]) return { ...item, graphs, updatedAt: Date.now() }
-        return {
-          ...item,
-          graphs: { ...graphs, [conceptId]: graph },
-          updatedAt: Date.now(),
-        }
-      })
-    }
-    snapshot.conversations = snapshot.conversations.map((item) => item.routeId === routeId ? { ...item, knowledgeId: snapshot.routes.find((entry) => entry.id === routeId)?.knowledgeId ?? item.knowledgeId } : item)
-  })
-  return { lesson, knowledge: getKnowledgeByRoute(routeId), createdKnowledge }
+  if (route?.owner !== 'example') return { createdKnowledge: false }
+  const lesson = catalogLesson(routeId, conceptId)
+  if (!lesson) return { createdKnowledge: false }
+  return { lesson, knowledge: getKnowledgeByRoute(routeId), createdKnowledge: false }
 }
 
 export function saveConversationDraft(id: string, draft: { turns?: LearningTurn[]; value?: string; quote?: string; mode?: AssistantMode }) {

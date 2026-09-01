@@ -45,3 +45,60 @@ export function resolveOpenLearningTarget(routeId: string, conceptId?: string) {
     conceptId: conceptId?.trim() ?? '',
   }
 }
+
+export type FirstLessonInput = {
+  routeId: string
+  conceptId: string
+  route?: { id: string; owner: 'mine' | 'example' }
+  catalogLesson?: {
+    heading: string
+    paragraphs: string[]
+    placeholder: string
+    quote?: string
+    figureCaption?: string
+  }
+}
+
+export type FirstLessonResolution =
+  | {
+      kind: 'ready'
+      source: 'example-catalog'
+      routeId: string
+      conceptId: string
+    }
+  | {
+      kind: 'unavailable'
+      reason: 'missing-route' | 'missing-canonical-answer' | 'missing-example-lesson'
+      title: string
+      message: string
+    }
+
+export function resolveFirstLesson(input: FirstLessonInput): FirstLessonResolution {
+  const routeId = input.routeId.trim()
+  const conceptId = input.conceptId.trim()
+  if (!routeId || !input.route) {
+    return {
+      kind: 'unavailable',
+      reason: 'missing-route',
+      title: '无法准备这次学习',
+      message: '没有可进入的学习概念。不能发明首段讲解，也不能因此创建知识脉络。',
+    }
+  }
+  if (input.route.owner === 'mine') {
+    return {
+      kind: 'unavailable',
+      reason: 'missing-canonical-answer',
+      title: '还没有这次概念的首次回复',
+      message: '这条用户路线还没有已 settle 的首次回复。不能用草稿发明一课，也不能在首次回复之前创建知识脉络。',
+    }
+  }
+  if (!input.catalogLesson) {
+    return {
+      kind: 'unavailable',
+      reason: 'missing-example-lesson',
+      title: '无法准备这次学习',
+      message: '这条示例路线没有已标记的概念讲解，不能用草稿发明一课。',
+    }
+  }
+  return { kind: 'ready', source: 'example-catalog', routeId, conceptId }
+}

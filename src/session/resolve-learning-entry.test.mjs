@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { resolveLearningEntry, resolveOpenLearningTarget } from './resolve-learning-entry.ts'
+import { resolveFirstLesson, resolveLearningEntry, resolveOpenLearningTarget } from './resolve-learning-entry.ts'
 
 test('missing route or concept does not fall back to linear-algebra', () => {
   const missingRoute = resolveLearningEntry({ routeId: '', conceptId: 'linear-map' })
@@ -28,6 +28,47 @@ test('openLearning does not invent the first blueprint concept', () => {
   assert.deepEqual(resolveOpenLearningTarget('generated-path', 'kernel-image'), {
     routeId: 'generated-path',
     conceptId: 'kernel-image',
+  })
+})
+
+test('a selected mine route does not invent a first lesson or knowledge graph', () => {
+  const mine = resolveFirstLesson({
+    routeId: 'generated-path',
+    conceptId: 'kernel-image',
+    route: { id: 'generated-path', owner: 'mine' },
+  })
+  assert.equal(mine.kind, 'unavailable')
+  assert.equal(mine.reason, 'missing-canonical-answer')
+  assert.match(mine.message, /不能用草稿发明一课/)
+  assert.match(mine.message, /不能在首次回复之前创建知识脉络/)
+})
+
+test('an example concept without a marked catalog lesson does not draft one', () => {
+  const missing = resolveFirstLesson({
+    routeId: 'linear-algebra',
+    conceptId: 'unknown-concept',
+    route: { id: 'linear-algebra', owner: 'example' },
+  })
+  assert.equal(missing.kind, 'unavailable')
+  assert.equal(missing.reason, 'missing-example-lesson')
+})
+
+test('an example concept with a marked catalog lesson can still prepare', () => {
+  const example = resolveFirstLesson({
+    routeId: 'linear-algebra',
+    conceptId: 'linear-map',
+    route: { id: 'linear-algebra', owner: 'example' },
+    catalogLesson: {
+      heading: '线性变换',
+      paragraphs: ['示例讲解'],
+      placeholder: '围绕“线性变换”继续提问',
+    },
+  })
+  assert.deepEqual(example, {
+    kind: 'ready',
+    source: 'example-catalog',
+    routeId: 'linear-algebra',
+    conceptId: 'linear-map',
   })
 })
 
