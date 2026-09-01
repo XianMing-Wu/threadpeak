@@ -7,7 +7,8 @@ import { MarkdownMath } from '../lib/MarkdownMath'
 import { VisualChart } from '../visuals/VisualChart'
 import { buildVisualFrames } from '../visuals/specs'
 import type { VisualSpec } from '../visuals/types'
-import { defaultAnswerMock, linkedRouteIntro } from '../workspace/catalog'
+import { resolveOrdinaryAnswer } from '../chat/resolve-ordinary-answer'
+import { linkedRouteIntro } from '../workspace/catalog'
 import { setActiveConversation } from '../workspace/nav'
 import { ChatRoutePanel } from '../path-planning/chat-route-panel'
 import {
@@ -39,15 +40,11 @@ function Thinking({label='生成最终回答'}:{label?:string}) {
   return <div className="chat-thinking" role="status"><strong>{label}</strong><span className="dots"><i/><i/><i/></span></div>
 }
 
-function DefaultAnswer({query}:{query:string}) {
-  const mock=defaultAnswerMock(query)
-  return <article className="chat-answer">
-    <h2>{mock.heading}</h2>
-    <MarkdownMath source={mock.lead}/>
-    <div className="answer-sections">
-      {mock.sections.map(([title,text])=><section key={title}><h3>{title}</h3><MarkdownMath source={text}/></section>)}
-    </div>
-    <p className="chat-answer-note">这是前端 Mock 回答；接入后端后，正文会由实时检索与模型结果替换。</p>
+function OrdinaryAnswerUnavailable() {
+  const resolution=resolveOrdinaryAnswer()
+  return <article className="chat-answer" role="alert">
+    <h2>{resolution.title}</h2>
+    <p>{resolution.message}</p>
   </article>
 }
 
@@ -134,11 +131,11 @@ export function ChatPage() {
   const [experience,setExperience]=useState<ChatExperience>(stored?.experience??launch.mode)
   const [conversationId,setConversationId]=useState(stored?.id??launch.conversationId)
   const [routeId,setRouteId]=useState(stored?.routeId??launch.routeId??'')
-  const [status,setStatus]=useState<'thinking'|'complete'>(stored?.routeReady||launch.mode==='route'?'complete':'thinking')
+  const [status,setStatus]=useState<'thinking'|'complete'>(stored?.routeReady||launch.mode!=='visual'?'complete':'thinking')
   const [value,setValue]=useState('')
   useEffect(()=>{if(conversationId)setActiveConversation(conversationId)},[conversationId])
   useEffect(()=>{
-    if(experience==='route'){setStatus('complete');return}
+    if(experience==='route'||experience==='answer'){setStatus('complete');return}
     if(stored?.turns.length){setStatus('complete');return}
     setStatus('thinking')
     const timer=window.setTimeout(()=>setStatus('complete'),720)
@@ -183,7 +180,7 @@ export function ChatPage() {
         {status==='thinking'?<Thinking/>:experience==='visual'?<VisualAnswer query={query}/>:experience==='route'?<>
           {conversation?.kind==='route-followup'&&<article className="chat-answer"><h2>继续同一条路线</h2><p>{linkedRouteIntro(getRoute(routeId)?.title??query,followupOrdinal)}</p></article>}
           {conversation?.kind!=='route-followup'&&<ChatRoutePanel conversationId={conversationId} query={query} existingRouteId={routeId||undefined} onRouteReady={setRouteId}/>}
-        </>:<DefaultAnswer query={query}/>}
+        </>:<OrdinaryAnswerUnavailable/>}
       </div></section>
       {experience!=='route'&&<div className="query-chat-composer"><Composer compact value={value} onChange={setValue} mode="" onMode={()=>undefined} onSend={followUp} showScope={false} showReference={false}/></div>}
     </main>

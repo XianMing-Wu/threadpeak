@@ -1,6 +1,6 @@
 ---
 description: "约束 React 前端 runtime、状态、交互、无障碍和模块依赖风格。"
-globs: "src/**/*.ts,src/**/*.tsx,src/**/*.css,apps/web/**,packages/runtime-store/**,packages/api-client/**,packages/design-system/**"
+globs: "src/**/*.ts,src/**/*.tsx,src/**/*.css,src/chat/**,apps/web/**,packages/runtime-store/**,packages/api-client/**,packages/design-system/**"
 alwaysApply: false
 ---
 
