@@ -16,6 +16,7 @@ import { useAnnotations } from '../session/useAnnotations'
 import { parseGrowCommand } from '../knowledge-canvas/generate'
 import { MarkdownMath } from '../lib/MarkdownMath'
 import { resolveVisualAnswer } from '../chat/resolve-visual-answer'
+import { resolveAskAuthor } from '../session/resolve-ask-author'
 import { catalogLesson, coachReply, conceptTitle } from '../workspace/catalog'
 import {
   readActiveConceptId,
@@ -261,7 +262,10 @@ function SessionEntryStatus() {
 }
 
 function AssistantAnswer({kind,host}:{kind:string;host:string;topic:string}) {
-  if(kind==='authors') return <section className="assistant-turn" data-canvas-host={host}><span className="kanshan-avatar">山</span><div><p>我从博主网络里挑出了与你当前问题最相关的两位作者：</p><div className="author-answer"><b>马同学</b><p>我会先让你盯住基向量：矩阵的列不是随意排出来的数，它们就是基向量变换后的坐标。把这个动作画出来，矩阵乘法就不再抽象。</p><small>《为什么矩阵可以被理解为线性变换？》</small></div><div className="author-answer"><b>李永乐老师</b><p>我更建议从坐标系理解“基”。换一组基只是换一种描述，同一个线性变换会有不同矩阵，但空间里的动作没有变。</p><small>《如何直观理解向量空间和基？》</small></div></div></section>
+  if(kind==='authors') {
+    const authors=resolveAskAuthor()
+    return <section className="assistant-turn" data-canvas-host={host} role="alert"><span className="kanshan-avatar">山</span><div><h2>{authors.title}</h2><p>{authors.message}</p></div></section>
+  }
   if(kind==='visual') {
     const visual=resolveVisualAnswer()
     return <section className="assistant-turn" data-canvas-host={host} role="alert"><span className="kanshan-avatar">山</span><div><h2>{visual.title}</h2><p>{visual.message}</p></div></section>

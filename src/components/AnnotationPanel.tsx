@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import { Icon } from '../icons'
 import { isZhihuUrl, type AskAuthorsAnnotation } from '../session/ask-authors'
+import { resolveAskAuthor } from '../session/resolve-ask-author'
 
 export function AnnotationPanel({
   annotation,
@@ -39,7 +40,12 @@ export function AnnotationPanel({
           {annotation.quote}
         </blockquote>
         <p className="annotation-panel__question">{annotation.question}</p>
-        {annotation.status === 'answering' || !reply ? (
+        {annotation.status === 'unavailable' ? (
+          <div className="annotation-panel__pending" role="alert">
+            <strong>无法完成本次问博主</strong>
+            <span>{annotation.error || resolveAskAuthor().message}</span>
+          </div>
+        ) : annotation.status === 'answering' || !reply ? (
           <div className="annotation-panel__pending" aria-live="polite">
             <strong>正在解答</strong>
             <span className="annotation-waiting" aria-label="正在生成批注">

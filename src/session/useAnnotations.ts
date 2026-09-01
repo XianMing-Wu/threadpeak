@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react'
-import { recordAskAuthorsOnNetwork } from './author-network'
 import {
   annotationEventName,
   annotationsInScope,
   createAskAuthorsAnnotation,
   nextOrdinal,
   readAnnotationStore,
-  resolveBloggerReply,
   writeAnnotationStore,
   type AnnotationStore,
   type AskAuthorsAnnotation,
 } from './ask-authors'
+import { resolveAskAuthor } from './resolve-ask-author'
 
 function persist(store: AnnotationStore) {
   writeAnnotationStore(store)
@@ -26,31 +25,19 @@ export function useAnnotations(scopeId: string) {
     return () => window.removeEventListener(annotationEventName(), sync)
   }, [])
 
-  useEffect(() => {
-    const pending = store.items.filter((item) => item.status === 'answering')
-    if (pending.length === 0) return
-    const timers = pending.map((item) => window.setTimeout(() => {
-      setStore((current) => persist({
-        ...current,
-        items: current.items.map((entry) => {
-          if (entry.id !== item.id || entry.status !== 'answering') return entry
-          const ready = { ...entry, status: 'ready' as const, reply: resolveBloggerReply(entry.quote, entry.question) }
-          recordAskAuthorsOnNetwork(ready)
-          return ready
-        }),
-      }))
-    }, 720))
-    return () => timers.forEach((timer) => window.clearTimeout(timer))
-  }, [store.items])
-
   const commit = (next: AnnotationStore) => setStore(persist(next))
   const annotations = annotationsInScope(store.items, scopeId)
   const active = annotations.find((item) => item.id === store.activeId) ?? null
 
   const create = (quote: string, question: string, nodeId: string) => {
     const ordinal = nextOrdinal(store.items, scopeId)
-    const created = createAskAuthorsAnnotation(quote, question, nodeId, ordinal, scopeId)
-    recordAskAuthorsOnNetwork(created)
+    const resolution = resolveAskAuthor()
+    const created = {
+      ...createAskAuthorsAnnotation(quote, question, nodeId, ordinal, scopeId),
+      status: 'unavailable' as const,
+      reply: null,
+      error: resolution.message,
+    }
     commit({
       items: [...store.items, created],
       activeId: created.id,

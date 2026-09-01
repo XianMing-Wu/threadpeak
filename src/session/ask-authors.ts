@@ -23,8 +23,9 @@ export interface AskAuthorsAnnotation {
   nodeId: string
   quote: string
   question: string
-  status: 'answering' | 'ready'
+  status: 'answering' | 'ready' | 'unavailable'
   reply: BloggerReply | null
+  error?: string
 }
 
 export type AnnotationStore = {
@@ -97,23 +98,6 @@ export function isZhihuUrl(value: string) {
     return url.protocol === 'https:' && (url.hostname === 'zhihu.com' || url.hostname.endsWith('.zhihu.com'))
   } catch {
     return false
-  }
-}
-
-function compact(value: string, max = 54) {
-  const next = value.replace(/\s+/g, ' ').trim()
-  return next.length <= max ? next : `${next.slice(0, max - 1)}…`
-}
-
-export function resolveBloggerReply(quote: string, question: string): BloggerReply {
-  const quoted = compact(quote)
-  const asked = compact(question, 72)
-  return {
-    name: '马同学',
-    bio: '数学可视化与线性代数答主',
-    title: '为什么矩阵可以被理解为线性变换？',
-    url: 'https://www.zhihu.com/question/266765008/answer/331234567',
-    text: `针对你的问题「${asked}」，我会先盯住原文里的「${quoted}」。矩阵的列不是随意排出来的数，它们就是基向量变换后的坐标。把这个动作画出来，矩阵乘法就不再抽象。`,
   }
 }
 
