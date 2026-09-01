@@ -21,7 +21,7 @@
 | `src/components/Shell.tsx`、`src/styles.css` | 知乎浅色桌面壳、持久主侧栏和 Hash 页面 | Web shell 只组合 route、projection 和 feature UI |
 | `src/components/Composer.tsx` | 路线、图文、问博主的输入外观与本地 UI state | 正向模式白名单；command 发往同源 API，未知持久化值归一为空 |
 | `src/pages/Chat.tsx`、`src/chat/`、`src/workspace/catalog.ts` | 普通/图文无真实 provider 时显式失败，不再渲染预写 Mock 或 fixture 图；路线已改走 generate session | 真实 Answer/Path provider、typed stream、持久 request/session |
-| `src/workspace/store.ts`、`src/history.ts` | localStorage/sessionStorage 承担 conversation、route、knowledge 真相 | owner-scoped 服务端事实、outbox/projector 和精确 history reopen |
+| `src/workspace/store.ts`、`src/history.ts`、`src/resolve-history-reopen.ts` | 侧栏重开不再把 localStorage 正文当成已提交 history；缺 provider 显式失败。workspace 存储仍是原型草稿 | owner-scoped 服务端事实、outbox/projector 和精确 history reopen |
 | `src/pages/Session.tsx`、`src/session/`、`src/knowledge-canvas/`、`src/workspace/nav.ts` | 未选择时不再默认线性代数；我的路线不再 `draftFirstLesson`/`growGraph` 建图或画布 persist；问博主无真实 resolution 时显式失败；示例仍读标记 catalog lesson | canonical 初始回复 settle 后由 GraphSurgeon 创建并增量更新 |
 | `src/session/ask-authors.ts`、`resolve-ask-author.ts` | 用户问博主不再渲染固定作者或预写回复；缺 provider 显式失败 | 真实知乎搜索、稳定身份、逐作者 evidence、LLM 候选内筛选 |
 | `src/session/author-graph-rag.ts`、`resolve-author-search.ts`、`resolve-author-network.ts`、`author-network.ts` | 用户博主搜索与博主网络不再用本地 GraphRAG、sessionStorage 或示例星图冒充成功；缺 provider 显式失败。引擎仍隔离 | network-first AuthorSearch 与 committed relationship projector |
@@ -68,7 +68,7 @@
 | --- | --- | --- |
 | 路线→概念 | 路线只生成 path；已校验 handoff 后才进入概念 | 尚未形成生产 handoff |
 | 概念首次进入 | 先生成并 settle 唯一 canonical 初始回复，再创建 graph/root | 当前仍由本地 lesson/catalog 与页面写图模拟 |
-| 再次进入/新对话/history | 永久复用 canonical；精确恢复，不重跑模型/projector | 当前浏览器存储只能证明交互草稿 |
+| 再次进入/新对话/history | 永久复用 canonical；精确恢复，不重跑模型/projector | 侧栏重开已 fail-closed；浏览器存储只能证明交互草稿 |
 | 后续回答→知识图 | 只有 settled answer 进入 GraphProjectionPipeline；GraphSurgeon 唯一写图 | 当前页面函数仍直接修改本地图 |
 | 问博主 | 知乎站内搜索多个真实用户与内容→逐作者 evidence→LLM 选 1–2→0 才直达 | 当前固定数据必须删除出用户请求链 |
 | 博主搜索 | 当前用户网络优先；有 1–3 位即停止；0 位才查知乎并由 LLM 选最多 3 位 | 用户搜索已 fail-closed；本地 GraphRAG 不得冒充成功 |

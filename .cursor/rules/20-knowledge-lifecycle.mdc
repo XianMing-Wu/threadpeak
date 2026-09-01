@@ -1,6 +1,6 @@
 ---
 description: "约束概念首次回复、会话历史、知识脉络 bootstrap/incremental 与永久复用语义。"
-globs: "src/pages/Session.tsx,src/pages/KnowledgeCanvas.tsx,src/pages/Collections.tsx,src/learningSession.ts,src/history.ts,src/workspace/nav.ts,src/workspace/store.ts,src/knowledge-canvas/**,src/session/**,src/components/AnnotatedText.tsx,src/components/SelectionToolbar.tsx,src/components/Composer.tsx,src/components/AskAuthorsPrompt.tsx,apps/web/**/concept-learning/**,apps/web/**/knowledge-map/**,apps/web/**/history/**,packages/contracts/knowledge/**,server/knowledge/**"
+globs: "src/pages/Session.tsx,src/pages/KnowledgeCanvas.tsx,src/pages/Collections.tsx,src/learningSession.ts,src/history.ts,src/resolve-history-reopen.ts,src/workspace/nav.ts,src/workspace/store.ts,src/knowledge-canvas/**,src/session/**,src/components/Shell.tsx,src/components/AnnotatedText.tsx,src/components/SelectionToolbar.tsx,src/components/Composer.tsx,src/components/AskAuthorsPrompt.tsx,apps/web/**/concept-learning/**,apps/web/**/knowledge-map/**,apps/web/**/history/**,packages/contracts/knowledge/**,server/knowledge/**"
 alwaysApply: false
 ---
 
@@ -116,6 +116,6 @@ load_settled_answer → verify_job_kind → a1_extract → evaluate_draft
 
 - `src/pages/Session.tsx + growGraph` 改为 concept entry / `POST /turns` / graph SSE；删除页面写图。无 route/concept 时 fail-closed，不得回退线性代数 fixture，也不得用 `defaultConceptId`、`draftFirstLesson` 或 `growGraph` 为用户路线发明首答/节点。KnowledgeCanvas 不得对 mine 做内存 grow 或 persist。`migrateKnowledge` 不得改写 mine 的 lesson/图。
 - `src/session/useAnnotations.ts` 只产生 Selector；贡献由 GraphSurgeon 落库。
-- `src/history.ts` / workspace localStorage 改为 owner-scoped ConversationUseCases + GET。
+- `src/history.ts` 侧栏重开已 fail-closed，本地列表只是草稿缓存；改为 owner-scoped ConversationUseCases + GET。
 - 浏览器必须证明阶段顺序“生成首答 → 首答可读 → graph bootstrapping → ready”，以及并发首次进入、刷新、新对话、历史恢复和 graph 失败都复用同一首答。
 - 数据库/集成测试覆盖 unique/CAS、lease/fencing、bootstrap/incremental idempotency、revision、RLS、SSE cursor replay/gap 和 GraphSurgeon 不变量。

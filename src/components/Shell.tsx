@@ -1,8 +1,8 @@
 import { useLayoutEffect, useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon, MountainMark } from '../icons'
-import { ACTIVE_HISTORY_KEY, HISTORY_CHANGE_EVENT, HISTORY_OPEN_EVENT, openChatHistory, readChatHistory } from '../history'
-import { hydrateLearningHistory } from '../workspace/store'
+import { ACTIVE_HISTORY_KEY, HISTORY_CHANGE_EVENT, readChatHistory } from '../history'
+import { resolveHistoryReopen, type HistoryReopenResolution } from '../resolve-history-reopen'
 
 function profileMenuBox(button: HTMLElement, collapsed: boolean) {
   const rect = button.getBoundingClientRect()
@@ -22,6 +22,7 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
   const [historyOpen,setHistoryOpen]=useState(true)
   const [history,setHistory]=useState(readChatHistory)
   const [activeHistoryId,setActiveHistoryId]=useState(()=>sessionStorage.getItem(ACTIVE_HISTORY_KEY)??'')
+  const [reopen,setReopen]=useState<HistoryReopenResolution|null>(null)
   const [profileOpen,setProfileOpen]=useState(false)
   const [menuBox,setMenuBox]=useState<{left:number;bottom:number}|null>(null)
   const previousRoute=useRef(route)
@@ -54,8 +55,8 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
     addEventListener('keydown',escape)
     return()=>{removeEventListener('pointerdown',close);removeEventListener('keydown',escape)}
   },[])
-  useEffect(()=>{hydrateLearningHistory();setHistory(readChatHistory());setActiveHistoryId(sessionStorage.getItem(ACTIVE_HISTORY_KEY)??'')},[])
-  useEffect(()=>{const refresh=()=>{setHistory(readChatHistory());setActiveHistoryId(sessionStorage.getItem(ACTIVE_HISTORY_KEY)??'')};addEventListener(HISTORY_CHANGE_EVENT,refresh);addEventListener(HISTORY_OPEN_EVENT,refresh);addEventListener('storage',refresh);return()=>{removeEventListener(HISTORY_CHANGE_EVENT,refresh);removeEventListener(HISTORY_OPEN_EVENT,refresh);removeEventListener('storage',refresh)}},[])
+  useEffect(()=>{setHistory(readChatHistory());setActiveHistoryId(sessionStorage.getItem(ACTIVE_HISTORY_KEY)??'')},[])
+  useEffect(()=>{const refresh=()=>{setHistory(readChatHistory());setActiveHistoryId(sessionStorage.getItem(ACTIVE_HISTORY_KEY)??'')};addEventListener(HISTORY_CHANGE_EVENT,refresh);addEventListener('storage',refresh);return()=>{removeEventListener(HISTORY_CHANGE_EVENT,refresh);removeEventListener('storage',refresh)}},[])
   const navigate=(target:RouteName)=>{if(compactRoutes.has(target))setCollapsed(true);go(target)}
   const active = route === 'chat' ? 'home' : route === 'path-3d' || route === 'session-learning' ? 'paths' : route === 'knowledge-detail' ? 'knowledge' : route
   const nav = [
@@ -65,7 +66,7 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
   const recent=history.filter((entry)=>{const age=Date.now()-entry.updatedAt;return age>=24*60*60*1000&&age<7*24*60*60*1000})
   const earlier=history.filter((entry)=>Date.now()-entry.updatedAt>=7*24*60*60*1000)
   const historyCurrent=route==='chat'||route==='session-learning'
-  const historyButton=(entry:(typeof history)[number])=><button key={entry.id} className={historyCurrent&&activeHistoryId===entry.id?'is-current':''} aria-current={historyCurrent&&activeHistoryId===entry.id?'page':undefined} title={entry.title} onClick={()=>openChatHistory(entry)}>{entry.title}</button>
+  const historyButton=(entry:(typeof history)[number])=><button key={entry.id} className={historyCurrent&&activeHistoryId===entry.id?'is-current':''} aria-current={historyCurrent&&activeHistoryId===entry.id?'page':undefined} title={entry.title} onClick={()=>setReopen(resolveHistoryReopen())}>{entry.title}</button>
   return <div className={`tp-shell ${collapsed?'is-collapsed':''}`} data-page={route}>
     <aside className="tp-sidebar" aria-label="问山主导航">
       <button type="button" className="tp-collapse" aria-label={collapsed?'展开侧栏':'收起侧栏'} onClick={()=>setCollapsed((value)=>!value)}><Icon name="collapse" size={18}/></button>
@@ -77,7 +78,7 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
       </nav>
       <section className={`tp-history ${historyOpen?'is-open':''}`} aria-label="历史记录">
         <button type="button" className="tp-history-toggle" aria-label={historyOpen?'收起聊天历史':'展开聊天历史'} aria-expanded={historyOpen} onClick={()=>setHistoryOpen((value)=>!value)}><Icon name="history" size={20}/><span>历史</span><Icon name="chevron" size={15}/></button>
-        {historyOpen&&<div>{history.length===0?<p className="tp-history-empty">暂无聊天历史</p>:<>{today.length>0&&<><small>今天</small>{today.map(historyButton)}</>}{recent.length>0&&<><small>近 7 天</small>{recent.map(historyButton)}</>}{earlier.length>0&&<><small>更早</small>{earlier.map(historyButton)}</>}</>}</div>}
+        {historyOpen&&<div><small>本地草稿</small>{reopen&&<p className="tp-history-empty" role="alert">{reopen.title}。{reopen.message}</p>}{history.length===0?<p className="tp-history-empty">暂无聊天历史</p>:<>{today.length>0&&<><small>今天</small>{today.map(historyButton)}</>}{recent.length>0&&<><small>近 7 天</small>{recent.map(historyButton)}</>}{earlier.length>0&&<><small>更早</small>{earlier.map(historyButton)}</>}</>}</div>}
       </section>
       <div className="tp-profile-wrap" ref={profileRef}>
         {profileOpen&&menuBox&&createPortal(<div ref={menuRef} className="tp-profile-menu" role="menu" aria-label="账号菜单" style={menuBox}>

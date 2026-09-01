@@ -1,3 +1,7 @@
+import { resolveHistoryReopen, type HistoryReopenResolution } from './resolve-history-reopen'
+
+/** Isolated draft cache. Product sidebar reopen must not compose this into committed history success. */
+
 export type HistoryExperience = 'answer' | 'route' | 'visual' | 'learning'
 
 export type ChatHistoryEntry = {
@@ -60,22 +64,8 @@ export function addChatHistory(query:string,experience:HistoryExperience,extra?:
   return entry
 }
 
-export function openChatHistory(entry:ChatHistoryEntry) {
-  const refreshed={...entry,updatedAt:Date.now()}
-  writeChatHistory([refreshed,...readChatHistory().filter((item)=>item.id!==entry.id)])
-  sessionStorage.setItem(ACTIVE_HISTORY_KEY,entry.id)
-  if(entry.experience==='learning'&&entry.routeId&&entry.conceptId){
-    sessionStorage.setItem('threadpeak-active-route',entry.routeId)
-    sessionStorage.setItem('threadpeak-active-concept',entry.conceptId)
-    sessionStorage.setItem('threadpeak-active-conversation',entry.id)
-    if(!sessionStorage.getItem('threadpeak-session-return')) sessionStorage.setItem('threadpeak-session-return','path-3d')
-    window.dispatchEvent(new Event(HISTORY_OPEN_EVENT))
-    location.hash='session-learning'
-    return
-  }
-  sessionStorage.setItem(CHAT_LAUNCH_KEY,JSON.stringify({query:entry.query,mode:entry.experience==='learning'?'answer':entry.experience,conversationId:entry.id,routeId:entry.routeId}))
-  window.dispatchEvent(new Event(HISTORY_OPEN_EVENT))
-  location.hash='chat'
+export function openChatHistory(_entry:ChatHistoryEntry):HistoryReopenResolution {
+  return resolveHistoryReopen()
 }
 
 export function clearActiveHistory() {

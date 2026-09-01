@@ -39,10 +39,10 @@ Cursor 会自动读取根 `AGENTS.md`，并按 `.mdc` frontmatter 的 `globs` �
 | --- | --- |
 | `.cursor/rules/00-architecture-core.mdc` | 任意 `src/apps/packages/server` 代码与工程配置：协议、投影、模块所有权、依赖方向 |
 | `.cursor/rules/10-path-generation.mdc` | 路径规划、path-lab、路线列表、3D handoff、path contracts/server |
-| `.cursor/rules/20-knowledge-lifecycle.mdc` | 概念进入、openLearning 导航、canonical 首答、conversation/history、selection、知识图与 GraphSurgeon |
+| `.cursor/rules/20-knowledge-lifecycle.mdc` | 概念进入、openLearning 导航、canonical 首答、conversation/history 重开门、selection、知识图与 GraphSurgeon |
 | `.cursor/rules/30-authors.mdc` | 问博主、Chat/Session 问博主门、Authors 搜索/网络门、作者身份/evidence/network |
 | `.cursor/rules/40-visualization-3d.mdc` | 图文 artifact、Chat/Session 图文门、Surface Catalog、知识画布、3D renderer/vendor |
-| `.cursor/rules/50-frontend-runtime-ui.mdc` | React/TSX/CSS、RuntimeStore、页面、Chat 普通回答门、可访问性和浏览器状态 |
+| `.cursor/rules/50-frontend-runtime-ui.mdc` | React/TSX/CSS、RuntimeStore、页面、Chat 普通回答门、侧栏历史重开门、可访问性和浏览器状态 |
 | `.cursor/rules/60-backend-platform.mdc` | API/worker/server/contracts、provider、事务、事件、幂等、安全和可观测性 |
 | `.cursor/rules/70-prototype-migration.mdc` | 当前 `src/` 原型、localStorage/fixture 清理和纵向迁移 |
 | `.cursor/rules/80-testing-quality.mdc` | 源码、测试、配置和 catalog：TypeScript 风格、门禁、验证矩阵与 DoD |
@@ -66,6 +66,7 @@ Cursor 会自动读取根 `AGENTS.md`，并按 `.mdc` frontmatter 的 `globs` �
 - 产品 Session / 划选问博主不再用固定作者或 720ms 预写回复冒充成功；没有真实 AskAuthorResolution 时显式失败，也不再因此写入博主网络。仍不是 Zhihu-first 检索或刘看山直达。
 - 产品 `#authors` 博主搜索不再用本地 GraphRAG、雷达扫描或示例作者冒充成功；没有真实 AuthorSearch provider 时显式失败。仍不是 network-first 检索或 committed `AuthorSearchResult`。
 - 产品 `#authors` 博主网络不再用 sessionStorage 或示例星图冒充已提交网络；没有真实 relationship projector 时显式失败，页面也不再 hydrate 入网。仍不是 owner-scoped network projection。
+- 产品侧栏历史重开不再把 localStorage 会话正文当成已提交 history；没有真实 conversation GET 时显式失败，列表只标为本地草稿。仍不是 owner-scoped exact reopen。
 - 路径/知识算法实现与领域文档仍位于 `../算法/`，是实现/合同证据，不代表本 Web 已纵向接通。
 - `prototype`、`contracted`、`implemented`、`integrated`、`production-ready` 必须按当前证据逐级判断；目录存在、类型检查、fixture 或历史测试数不能越级证明完成。
 

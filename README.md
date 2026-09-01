@@ -76,7 +76,7 @@ npm run dev
 | 入口 | 当前原型职责 | 目标重构边界 |
 | --- | --- | --- |
 | 初始授权态 | 知乎授权视觉入口 | 服务端 OAuth/session，密钥与 token 不进浏览器 |
-| `#home` | 路线/图文入口、Composer、示例推荐 | command/query 进入同源 API，不在页面生成领域事实 |
+| `#home` | 路线/图文入口、Composer、示例推荐；侧栏历史重开无真实 conversation GET 时显式失败，列表只标本地草稿 | command/query 进入同源 API，不在页面生成领域事实 |
 | `#chat` | 普通/图文无真实 provider 时显式失败，不再渲染预写 Mock 或 fixture 图；路线模式走 generate session，失败显式报错 | 普通回答接 AnswerPipeline；路线接 PathStreamEvent/CAS，图文接真实 visual artifact |
 | `#paths` | 我的路线/示例路线列表 | 读取 committed path projection |
 | `#path-3d` | WebGL renderer；用户路线缺校验文档则显式失败，不再回退演示路径 | 只消费已校验 document 与 server handoff，不保存学习进度 |
