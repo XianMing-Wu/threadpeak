@@ -1,9 +1,9 @@
-# Architecture status — Path3D validated document
+# Architecture status — Session fail-closed entry
 
 - Time: 2026-09-01
-- Commit: `71f087c`
+- Commit: `47a3ad0`
 - Environment: darwin, Node v25.5.0 (engines `>=24`), npm 11.8.0, Vite 8.2.2, TypeScript 6.0.3
-- Maturity proposal: Path3D mine-route document host = `implemented` against locally persisted validated documents; PathStreamEvent / CAS snapshot / wire-id handoff = still `prototype` / `uncontracted`; example 3D routes remain marked example assets
+- Maturity proposal: Session missing-entry gate = `implemented`; selected-concept first lesson / growGraph / canonical answer = still `prototype`; no knowledge production write chain
 
 ## Commands
 
@@ -13,24 +13,24 @@
 | `npm run check:architecture` | 0 |
 | `npm run check:contracts` | 0 (15 tests) |
 | `npm run check:product-invariants` | 0 |
-| `npm test` | 0 (97 tests) |
+| `npm test` | 0 (99 tests) |
 | `npm run build` | 0 |
 
 ## Browser / HTTP
 
 - `GET /` returned 200
-- Cursor browser MCP was unavailable this wake. Document resolution was verified by `resolvePath3DView` unit tests instead of a live WebGL pass.
+- `#session-learning` with no active route/concept showed “无法进入这次学习” and did not invent a linear-algebra lesson
+- Explicit `linear-algebra` + `linear-map` selection still opened the marked example lesson
 
 ## What this slice proves
 
-- `#path-3d` no longer defaults to `linear-algebra` or `threadPeakPathDocument` when a user route is missing
-- Mine routes with an invalid document or an example fixture id fail closed
-- Marked example routes can still render their example documents
-- Opening 3D does not add a knowledge write chain
+- Session no longer defaults to `linear-algebra` / `linear-map`
+- Missing route or concept does not create a conversation or invent a first lesson
+- An explicitly selected example concept can still enter the current prototype lesson
 
 ## What this slice does not prove
 
-- No PathStreamEvent NDJSON, CAS session, or server handoff
-- No wire-id → domain UUID mapping
-- Session still defaults to `linear-algebra` when no active route is selected
-- No Web → real provider live gate for user-triggered product routes
+- No canonical initial answer, handoff validation, or GraphSurgeon
+- Selected mine routes still use `syncKnowledgeWithFirstLesson` / `draftFirstLesson`
+- `openLearning` can still invent a concept via `defaultConceptId`
+- No authors write-chain change
