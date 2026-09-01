@@ -114,7 +114,7 @@ load_settled_answer → verify_job_kind → a1_extract → evaluate_draft
 
 ## 当前原型迁移与验收
 
-- `src/pages/Session.tsx + growGraph` 改为 concept entry / `POST /turns` / graph SSE；删除页面写图。无 route/concept 时 fail-closed，不得回退线性代数 fixture，也不得用 `defaultConceptId`、`draftFirstLesson` 或 `growGraph` 为用户路线发明首答/节点。`migrateKnowledge` 不得改写 mine 的 lesson/图。
+- `src/pages/Session.tsx + growGraph` 改为 concept entry / `POST /turns` / graph SSE；删除页面写图。无 route/concept 时 fail-closed，不得回退线性代数 fixture，也不得用 `defaultConceptId`、`draftFirstLesson` 或 `growGraph` 为用户路线发明首答/节点。KnowledgeCanvas 不得对 mine 做内存 grow 或 persist。`migrateKnowledge` 不得改写 mine 的 lesson/图。
 - `src/session/useAnnotations.ts` 只产生 Selector；贡献由 GraphSurgeon 落库。
 - `src/history.ts` / workspace localStorage 改为 owner-scoped ConversationUseCases + GET。
 - 浏览器必须证明阶段顺序“生成首答 → 首答可读 → graph bootstrapping → ready”，以及并发首次进入、刷新、新对话、历史恢复和 graph 失败都复用同一首答。

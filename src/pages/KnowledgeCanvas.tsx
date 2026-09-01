@@ -16,7 +16,8 @@ import {
 } from '../knowledge-canvas/content'
 import { conceptTitle } from '../workspace/catalog'
 import { closeConceptKnowledge, readActiveConversationId, readActiveKnowledgeId, readCanvasReturn, readKnowledgeConceptId } from '../workspace/nav'
-import { blueprintOf, getConceptGraph, getKnowledge, saveKnowledgeGraph } from '../workspace/store'
+import { blueprintOf, getConceptGraph, getKnowledge } from '../workspace/store'
+import { resolveGraphMutation } from '../session/resolve-learning-entry'
 import { conversationGraphView, growGraph, growKindLabel, parseGrowCommand, resolveGrowHost } from '../knowledge-canvas/generate'
 import {
   CARD_W,
@@ -120,11 +121,6 @@ export function KnowledgeCanvasPage() {
   useEffect(() => {
     writeLearningSession({ turns, value, quote, mode })
   }, [mode, quote, turns, value])
-
-  useEffect(() => {
-    if (!knowledge || knowledge.owner === 'example' || !conceptId) return
-    saveKnowledgeGraph(knowledge.id, { nodes, edges }, conceptId)
-  }, [conceptId, edges, knowledge?.id, knowledge?.owner, nodes])
 
   const sessionConversationId = returnTo === 'session-learning' ? readActiveConversationId() : ''
   const view = useMemo(
@@ -399,6 +395,7 @@ export function KnowledgeCanvasPage() {
   const send = () => {
     const command = parseGrowCommand(value)
     if (command) {
+      if (resolveGraphMutation({ routeId: knowledge?.routeId ?? '', owner: knowledge?.owner ?? 'mine' }).kind !== 'allow-example') return
       const hostId = resolveGrowHost(nodes, selected, quote, quoteFromId)
       const grown = growGraph(nodes, edges, hostId, command.kind, command.question, quote, undefined, sessionConversationId || undefined)
       if (grown) {
