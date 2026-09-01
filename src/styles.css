@@ -319,7 +319,7 @@
 .thread-node .node-handle.is-parallel-out{top:auto;bottom:0;left:50%;transform:translate(-50%,50%)}
 .thread-node .node-heading i{display:none}
 
-.composer-chips{display:flex;flex-direction:column;gap:6px;margin:0 0 8px;overflow:visible;position:relative;z-index:3}
+.composer-chips{display:flex;flex-direction:column;gap:6px;margin:0 0 8px;overflow:visible;position:relative;z-index:3}.composer-unavailable{margin:0;padding:7px 8px;border-radius:8px;background:#f6f7f9;color:#646a73;font-size:12px;line-height:1.5}.composer-unavailable b{display:block;margin-bottom:2px;color:#313640;font-size:13px}
 .composer-chips>span.file-chip,
 .composer-chips .quote-chip{display:flex;align-items:flex-start;gap:8px;width:100%;min-width:0;height:auto;max-width:none;padding:7px 8px;border:0;border-radius:8px;background:#f6f7f9;color:#646a73;box-shadow:none;overflow:visible;white-space:normal}
 .composer-chips .quote-chip{border-left:2px solid rgba(55,58,64,.28)}
