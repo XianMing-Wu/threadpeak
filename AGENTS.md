@@ -41,7 +41,7 @@ Cursor 会自动读取根 `AGENTS.md`，并按 `.mdc` frontmatter 的 `globs` �
 | `.cursor/rules/10-path-generation.mdc` | 路径规划、path-lab、路线列表、3D handoff、path contracts/server |
 | `.cursor/rules/20-knowledge-lifecycle.mdc` | 概念进入、openLearning 导航、canonical 首答、conversation/history、selection、知识图与 GraphSurgeon |
 | `.cursor/rules/30-authors.mdc` | 问博主、博主搜索、作者身份/evidence/network |
-| `.cursor/rules/40-visualization-3d.mdc` | 图文 artifact、Surface Catalog、知识画布、3D renderer/vendor |
+| `.cursor/rules/40-visualization-3d.mdc` | 图文 artifact、Chat/Session 图文门、Surface Catalog、知识画布、3D renderer/vendor |
 | `.cursor/rules/50-frontend-runtime-ui.mdc` | React/TSX/CSS、RuntimeStore、页面、Chat 普通回答门、可访问性和浏览器状态 |
 | `.cursor/rules/60-backend-platform.mdc` | API/worker/server/contracts、provider、事务、事件、幂等、安全和可观测性 |
 | `.cursor/rules/70-prototype-migration.mdc` | 当前 `src/` 原型、localStorage/fixture 清理和纵向迁移 |
@@ -59,7 +59,8 @@ Cursor 会自动读取根 `AGENTS.md`，并按 `.mdc` frontmatter 的 `globs` �
 - `@threadpeak/api-client` 与 `@threadpeak/runtime-store` 已提供 decoder / headless store。Home 与路线/知识列表开始走 selector；投影仍来自原型 `workspace/store`，不是服务端 committed GET。
 - path-lab 的 JSON 实验请求已改走 api-client + RuntimeStore；它仍代理到本机 `4312`，不能证明主产品 PathStreamEvent/CAS session 已接通。
 - 产品 Chat 路线模式已去掉页面 timer 和 `draftMineBlueprint` 成功路径；用户请求必须拿到已校验 document，否则显式失败。仍不是 PathStreamEvent/CAS。
-- 产品 Chat 普通回答不再渲染 `defaultAnswerMock` 预写正文；没有真实 Answer provider 时显式失败。仍不是 AnswerPipeline / committed artifact。图文模式仍是页面 timer prototype。
+- 产品 Chat 普通回答不再渲染 `defaultAnswerMock` 预写正文；没有真实 Answer provider 时显式失败。仍不是 AnswerPipeline / committed artifact。
+- 产品 Chat / Session 图文模式不再用页面 timer 和 fixture frames 冒充成功；没有真实 VisualizationArtifact 时显式失败。仍不是 Surface Catalog / committed visual attachment。
 - 产品 `#path-3d` 对用户路线只渲染已校验 document；缺文档或示例 fixture 冒充用户路线时显式失败，不再回退 `threadPeakPathDocument`。示例路线仍用明确标记的示例文档。仍不是 CAS snapshot / wire-id handoff。
 - 产品 `#session-learning` 在未选择 route/concept 时 fail-closed，不再默认 `linear-algebra` / `linear-map` 或发明首段讲解。`openLearning` 不再用 `defaultConceptId` 补第一个概念。已选中的**我的路线**在没有 canonical 首答时显式失败，不再 `draftFirstLesson` 建图，也不再用 `growGraph`/`syncConversationGraph` 发明节点。`#knowledge-detail` 也不对 mine 做内存 `growGraph` 或 persist。workspace 读取也不会用 `draftFirstLesson` 改写 mine 的 lesson/图。已选中的示例路线仍可读标记 catalog lesson，不是 canonical 首答。
 - 路径/知识算法实现与领域文档仍位于 `../算法/`，是实现/合同证据，不代表本 Web 已纵向接通。

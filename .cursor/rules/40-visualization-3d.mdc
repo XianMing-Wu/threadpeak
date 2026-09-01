@@ -1,6 +1,6 @@
 ---
 description: "约束图文内容、知识画布、3D renderer 及可视化合同边界。"
-globs: "src/visuals/**,src/knowledge-canvas/**,src/pages/KnowledgeCanvas.tsx,src/pages/Session.tsx,src/components/BasisVisual.tsx,src/components/Path3D.tsx,src/path-3d/**,src/vendor/learning-path-3d/**,src/pathDocument.ts,apps/web/**/path-3d/**,apps/web/**/knowledge-map/**,packages/surface-catalog/**,packages/path-3d-host/**,packages/contracts/visualization/**,server/visualization/**"
+globs: "src/visuals/**,src/chat/**,src/pages/Chat.tsx,src/knowledge-canvas/**,src/pages/KnowledgeCanvas.tsx,src/pages/Session.tsx,src/components/BasisVisual.tsx,src/components/Path3D.tsx,src/path-3d/**,src/vendor/learning-path-3d/**,src/pathDocument.ts,apps/web/**/path-3d/**,apps/web/**/knowledge-map/**,packages/surface-catalog/**,packages/path-3d-host/**,packages/contracts/visualization/**,server/visualization/**"
 alwaysApply: false
 ---
 

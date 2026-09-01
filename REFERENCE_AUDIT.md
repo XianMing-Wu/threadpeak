@@ -20,7 +20,7 @@
 | --- | --- | --- |
 | `src/components/Shell.tsx`、`src/styles.css` | 知乎浅色桌面壳、持久主侧栏和 Hash 页面 | Web shell 只组合 route、projection 和 feature UI |
 | `src/components/Composer.tsx` | 路线、图文、问博主的输入外观与本地 UI state | 正向模式白名单；command 发往同源 API，未知持久化值归一为空 |
-| `src/pages/Chat.tsx`、`src/chat/`、`src/workspace/catalog.ts` | 普通回答无真实 provider 时显式失败，不再渲染预写 Mock；路线已改走 generate session | 真实 Answer/Path provider、typed stream、持久 request/session |
+| `src/pages/Chat.tsx`、`src/chat/`、`src/workspace/catalog.ts` | 普通/图文无真实 provider 时显式失败，不再渲染预写 Mock 或 fixture 图；路线已改走 generate session | 真实 Answer/Path provider、typed stream、持久 request/session |
 | `src/workspace/store.ts`、`src/history.ts` | localStorage/sessionStorage 承担 conversation、route、knowledge 真相 | owner-scoped 服务端事实、outbox/projector 和精确 history reopen |
 | `src/pages/Session.tsx`、`src/session/`、`src/knowledge-canvas/`、`src/workspace/nav.ts` | 未选择时不再默认线性代数；我的路线不再 `draftFirstLesson`/`growGraph` 建图或画布 persist；示例仍读标记 catalog lesson | canonical 初始回复 settle 后由 GraphSurgeon 创建并增量更新 |
 | `src/session/ask-authors.ts` | 固定作者与本地回答证据原型 | 真实知乎搜索、稳定身份、逐作者 evidence、LLM 候选内筛选 |
@@ -97,7 +97,7 @@ DEEPSEEK_MODEL_NAME
 | 示例资产 | 明确标记、只读、与用户数据分区 | 进入证据、作者筛选、知识写入或用户请求结果 |
 | 日志/错误 | 只记录安全 metadata、hash、长度、attempt | secret、token、原始 provider payload、用户正文 |
 
-当前源码中的 catalog lesson/route、固定作者、本地 GraphRAG、图文页面 timer 和浏览器事实源都是阻断 `integrated` 的迁移债务。它们可以暂时支撑视觉验收，但必须从用户请求的生产 composition 中删除。普通回答已从该 composition 去掉预写 Mock，改为显式失败，仍未接通 AnswerPipeline。
+当前源码中的 catalog lesson/route、固定作者、本地 GraphRAG 和浏览器事实源都是阻断 `integrated` 的迁移债务。它们可以暂时支撑视觉验收，但必须从用户请求的生产 composition 中删除。普通/图文回答已从该 composition 去掉预写 Mock，改为显式失败，仍未接通 AnswerPipeline 或 VisualizationArtifact。
 
 ## 博主搜索与网络视觉锚点
 

@@ -77,12 +77,12 @@ npm run dev
 | --- | --- | --- |
 | 初始授权态 | 知乎授权视觉入口 | 服务端 OAuth/session，密钥与 token 不进浏览器 |
 | `#home` | 路线/图文入口、Composer、示例推荐 | command/query 进入同源 API，不在页面生成领域事实 |
-| `#chat` | 普通回答无真实 provider 时显式失败，不再渲染预写 Mock；路线模式走 generate session，失败显式报错 | 普通回答接 AnswerPipeline；路线接 PathStreamEvent/CAS，图文接真实 visual artifact |
+| `#chat` | 普通/图文无真实 provider 时显式失败，不再渲染预写 Mock 或 fixture 图；路线模式走 generate session，失败显式报错 | 普通回答接 AnswerPipeline；路线接 PathStreamEvent/CAS，图文接真实 visual artifact |
 | `#paths` | 我的路线/示例路线列表 | 读取 committed path projection |
 | `#path-3d` | WebGL renderer；用户路线缺校验文档则显式失败，不再回退演示路径 | 只消费已校验 document 与 server handoff，不保存学习进度 |
 | `#knowledge` | 我的/示例知识脉络列表 | 读取 owner-scoped committed projection |
 | `#knowledge-detail` | 只读知识画布；我的路线不得内存 `growGraph` 或 persist | 只渲染 revision，不从消息或布局发明节点和边 |
-| `#session-learning` | 未选择 route/concept 时显式失败；我的路线不发明 lesson/图/conversation 节点；示例仍用标记 catalog lesson | 严格执行 canonical 首答在前、知识图在后 |
+| `#session-learning` | 未选择 route/concept 时显式失败；我的路线不发明 lesson/图/conversation 节点；图文模式无真实 artifact 时显式失败；示例仍用标记 catalog lesson | 严格执行 canonical 首答在前、知识图在后 |
 | `#authors` | 博主搜索与博主网络视觉原型 | 搜索与网络为两个 feature，执行不同检索顺序和写入规则 |
 | `#settings` | 前端偏好与确认界面 | 偏好不能改变领域合同 |
 
