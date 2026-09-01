@@ -8,7 +8,6 @@ import {
   conceptTitle,
   documentFromBlueprint,
   draftFirstLesson,
-  draftMineBlueprint,
   exampleBlueprints,
   exampleKnowledgeRecord,
   findExampleBlueprint,
@@ -17,6 +16,7 @@ import {
   routeRecordFromBlueprint,
 } from './catalog'
 import { conversationHostAfterGrow, growGraph, mergeConversationBranch, parseGrowCommand, parseQuotedUserTurn, parseTurnHost, plainQuoteText, readGrowCommand, replyCardTitle, resolveQuotedHost } from '../knowledge-canvas/generate'
+import { mineRouteFromValidatedDocument } from './published-route'
 import type {
   ConceptCard,
   ConversationKind,
@@ -334,18 +334,13 @@ export function attachConversationToRoute(routeId: string, conversationId: strin
   })
 }
 
-export function createMineRouteFromChat(query: string, choices: string[], conversationId: string): RouteRecord {
+export function createMineRouteFromChat(query: string, choices: string[], conversationId: string, document: RouteRecord['document']): RouteRecord {
   const existing = getConversation(conversationId)
   if (existing?.routeId) {
     const route = getRoute(existing.routeId)
     if (route) return route
   }
-  const blueprint = draftMineBlueprint(query, choices)
-  const route = routeRecordFromBlueprint(blueprint, {
-    knowledgeId: null,
-    conversationIds: [conversationId],
-    createdAt: Date.now(),
-  })
+  const route = mineRouteFromValidatedDocument(query, conversationId, document, Date.now())
   mutate((snapshot) => {
     snapshot.routes = [route, ...snapshot.routes.filter((item) => item.id !== route.id)]
     snapshot.conversations = snapshot.conversations.map((item) => item.id === conversationId ? {

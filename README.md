@@ -77,7 +77,7 @@ npm run dev
 | --- | --- | --- |
 | 初始授权态 | 知乎授权视觉入口 | 服务端 OAuth/session，密钥与 token 不进浏览器 |
 | `#home` | 路线/图文入口、Composer、示例推荐 | command/query 进入同源 API，不在页面生成领域事实 |
-| `#chat` | 普通回答、路线澄清、图文流式外观 | 删除前端预写回答和 timer 状态机，接真实 Answer/Path pipeline |
+| `#chat` | 普通回答仍是 Mock；路线模式走 generate session，失败显式报错 | 删除前端预写回答；路线接 PathStreamEvent/CAS，图文接真实 visual artifact |
 | `#paths` | 我的路线/示例路线列表 | 读取 committed path projection |
 | `#path-3d` | WebGL 路线 document renderer | 只消费已校验 document 与 handoff，不保存学习进度 |
 | `#knowledge` | 我的/示例知识脉络列表 | 读取 owner-scoped committed projection |

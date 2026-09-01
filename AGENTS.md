@@ -58,6 +58,7 @@ Cursor 会自动读取根 `AGENTS.md`，并按 `.mdc` frontmatter 的 `globs` �
 - 共享 runtime Zod 的唯一物理定义已在 `packages/contracts`。`../算法/shared/runtime-contracts.ts` 只保留兼容 re-export，删除条件见该文件与 `packages/contracts/COMPATIBILITY.md`。
 - `@threadpeak/api-client` 与 `@threadpeak/runtime-store` 已提供 decoder / headless store。Home 与路线/知识列表开始走 selector；投影仍来自原型 `workspace/store`，不是服务端 committed GET。
 - path-lab 的 JSON 实验请求已改走 api-client + RuntimeStore；它仍代理到本机 `4312`，不能证明主产品 PathStreamEvent/CAS session 已接通。
+- 产品 Chat 路线模式已去掉页面 timer 和 `draftMineBlueprint` 成功路径；用户请求必须拿到已校验 document，否则显式失败。仍不是 PathStreamEvent/CAS。
 - 路径/知识算法实现与领域文档仍位于 `../算法/`，是实现/合同证据，不代表本 Web 已纵向接通。
 - `prototype`、`contracted`、`implemented`、`integrated`、`production-ready` 必须按当前证据逐级判断；目录存在、类型检查、fixture 或历史测试数不能越级证明完成。
 
