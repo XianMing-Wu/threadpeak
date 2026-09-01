@@ -11,7 +11,6 @@ import {
   exampleBlueprints,
   exampleKnowledgeRecord,
   findExampleBlueprint,
-  firstConceptId,
   graphFromLesson,
   routeRecordFromBlueprint,
 } from './catalog'
@@ -666,10 +665,6 @@ export function recommendedExampleKnowledge() {
 
 export function recommendedExampleRoutes() {
   return listRoutes('example').slice(0, 2)
-}
-
-export function defaultConceptId(routeId: string) {
-  return firstConceptId(blueprintOf(routeId))
 }
 
 export function routeDocument(routeId: string) {

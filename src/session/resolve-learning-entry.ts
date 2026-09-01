@@ -38,3 +38,10 @@ export function resolveLearningEntry(input: LearningEntryInput): LearningEntry {
   }
   return { kind: 'ready', routeId, conceptId }
 }
+
+export function resolveOpenLearningTarget(routeId: string, conceptId?: string) {
+  return {
+    routeId: routeId.trim(),
+    conceptId: conceptId?.trim() ?? '',
+  }
+}

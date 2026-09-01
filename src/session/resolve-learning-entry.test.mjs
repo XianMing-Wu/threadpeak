@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { resolveLearningEntry } from './resolve-learning-entry.ts'
+import { resolveLearningEntry, resolveOpenLearningTarget } from './resolve-learning-entry.ts'
 
 test('missing route or concept does not fall back to linear-algebra', () => {
   const missingRoute = resolveLearningEntry({ routeId: '', conceptId: 'linear-map' })
@@ -20,6 +20,15 @@ test('missing route or concept does not fall back to linear-algebra', () => {
   assert.equal(missingConcept.kind, 'unavailable')
   assert.equal(missingConcept.reason, 'missing-concept')
   assert.match(missingConcept.message, /不能默认打开“线性变换”/)
+})
+
+test('openLearning does not invent the first blueprint concept', () => {
+  assert.deepEqual(resolveOpenLearningTarget('linear-algebra'), { routeId: 'linear-algebra', conceptId: '' })
+  assert.deepEqual(resolveOpenLearningTarget('linear-algebra', '  '), { routeId: 'linear-algebra', conceptId: '' })
+  assert.deepEqual(resolveOpenLearningTarget('generated-path', 'kernel-image'), {
+    routeId: 'generated-path',
+    conceptId: 'kernel-image',
+  })
 })
 
 test('an explicitly selected route and concept can enter', () => {
