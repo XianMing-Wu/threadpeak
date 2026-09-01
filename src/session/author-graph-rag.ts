@@ -5,9 +5,10 @@ import {
   parentsOf,
   type AuthorNetworkEdge,
   type AuthorNetworkKind,
-  type AuthorNetworkNode,
   type AuthorNetworkStore,
 } from './author-network'
+
+/** Isolated prototype retriever. Product `#authors` search must not compose this into user-request success. */
 
 export type GraphRagMode = 'local' | 'global' | 'hybrid'
 

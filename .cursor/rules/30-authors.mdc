@@ -1,6 +1,6 @@
 ---
 description: "约束问博主、博主搜索、作者身份、关系事件和博主网络的固定流程。"
-globs: "src/pages/Authors.tsx,src/pages/Session.tsx,src/session/ask-authors.ts,src/session/resolve-ask-author.ts,src/session/useAnnotations.ts,src/session/author-graph-rag.ts,src/session/author-network.ts,src/components/AskAuthorsPrompt.tsx,src/components/AuthorNetworkGraph.tsx,src/components/AnnotationPanel.tsx,apps/web/**/concept-learning/**,apps/web/**/author-search/**,apps/web/**/author-network/**,packages/contracts/authors/**,server/authors/**"
+globs: "src/pages/Authors.tsx,src/pages/Session.tsx,src/session/ask-authors.ts,src/session/resolve-ask-author.ts,src/session/resolve-author-search.ts,src/session/useAnnotations.ts,src/session/author-graph-rag.ts,src/session/author-network.ts,src/components/AskAuthorsPrompt.tsx,src/components/AuthorNetworkGraph.tsx,src/components/AnnotationPanel.tsx,apps/web/**/concept-learning/**,apps/web/**/author-search/**,apps/web/**/author-network/**,packages/contracts/authors/**,server/authors/**"
 alwaysApply: false
 ---
 
