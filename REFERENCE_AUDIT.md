@@ -24,7 +24,7 @@
 | `src/workspace/store.ts`、`src/history.ts` | localStorage/sessionStorage 承担 conversation、route、knowledge 真相 | owner-scoped 服务端事实、outbox/projector 和精确 history reopen |
 | `src/pages/Session.tsx`、`src/session/`、`src/knowledge-canvas/`、`src/workspace/nav.ts` | 未选择时不再默认线性代数；我的路线不再 `draftFirstLesson`/`growGraph` 建图或画布 persist；问博主无真实 resolution 时显式失败；示例仍读标记 catalog lesson | canonical 初始回复 settle 后由 GraphSurgeon 创建并增量更新 |
 | `src/session/ask-authors.ts`、`resolve-ask-author.ts` | 用户问博主不再渲染固定作者或预写回复；缺 provider 显式失败 | 真实知乎搜索、稳定身份、逐作者 evidence、LLM 候选内筛选 |
-| `src/session/author-graph-rag.ts`、`resolve-author-search.ts`、`author-network.ts` | 用户博主搜索不再用本地 GraphRAG 或固定作者冒充成功；缺 provider 显式失败。引擎与 session 网络仍隔离 | network-first AuthorSearch 与 committed relationship projector |
+| `src/session/author-graph-rag.ts`、`resolve-author-search.ts`、`resolve-author-network.ts`、`author-network.ts` | 用户博主搜索与博主网络不再用本地 GraphRAG、sessionStorage 或示例星图冒充成功；缺 provider 显式失败。引擎仍隔离 | network-first AuthorSearch 与 committed relationship projector |
 | `src/path-3d/`、`src/components/Path3D.tsx`、`src/vendor/learning-path-3d/` | 可运行 WebGL renderer；用户路线不再回退演示 fixture | 只消费已校验 path document 和服务端 handoff，不拥有学习事实 |
 | `src/vendor/icons-v15.svg`、`vendor/charts/` | 图标与三类交互图已落入本仓库，不再读兄弟目录 | 仍是示例图文资产，不能冒充用户请求结果 |
 | `packages/contracts` | 共享 Uuid/Evidence/Envelope/PublicError/StreamCursor 的唯一 Zod 定义；旧算法路径只 re-export | 路径/知识领域 schema 仍在算法包，本切片未接通 Web 写链 |
@@ -72,7 +72,7 @@
 | 后续回答→知识图 | 只有 settled answer 进入 GraphProjectionPipeline；GraphSurgeon 唯一写图 | 当前页面函数仍直接修改本地图 |
 | 问博主 | 知乎站内搜索多个真实用户与内容→逐作者 evidence→LLM 选 1–2→0 才直达 | 当前固定数据必须删除出用户请求链 |
 | 博主搜索 | 当前用户网络优先；有 1–3 位即停止；0 位才查知乎并由 LLM 选最多 3 位 | 用户搜索已 fail-closed；本地 GraphRAG 不得冒充成功 |
-| 博主网络 | 只有最终回答采用真实作者后产生 committed relationship event | 当前 sessionStorage/示例网络不是生产事实 |
+| 博主网络 | 只有最终回答采用真实作者后产生 committed relationship event | 用户网络页已 fail-closed；sessionStorage/示例星图不得冒充成功 |
 | 刘看山 | 直达回答可以 settle，但不创建 AuthorIdentity 或网络节点 | 重构合同必须显式测试 |
 
 ## 真实 provider 与数据边界
@@ -97,7 +97,7 @@ DEEPSEEK_MODEL_NAME
 | 示例资产 | 明确标记、只读、与用户数据分区 | 进入证据、作者筛选、知识写入或用户请求结果 |
 | 日志/错误 | 只记录安全 metadata、hash、长度、attempt | secret、token、原始 provider payload、用户正文 |
 
-当前源码中的 catalog lesson/route、本地 GraphRAG 和浏览器事实源都是阻断 `integrated` 的迁移债务。它们可以暂时支撑视觉验收，但必须从用户请求的生产 composition 中删除。普通/图文/问博主/博主搜索已从该 composition 去掉预写 Mock、固定作者与本地 GraphRAG 成功，改为显式失败，仍未接通 AnswerPipeline、VisualizationArtifact、AskAuthorResolution 或 AuthorSearchPipeline。
+当前源码中的 catalog lesson/route、本地 GraphRAG 和浏览器事实源都是阻断 `integrated` 的迁移债务。它们可以暂时支撑视觉验收，但必须从用户请求的生产 composition 中删除。普通/图文/问博主/博主搜索/博主网络已从该 composition 去掉预写 Mock、固定作者、本地 GraphRAG 与 session 网络成功，改为显式失败，仍未接通 AnswerPipeline、VisualizationArtifact、AskAuthorResolution、AuthorSearchPipeline 或 author-network projector。
 
 ## 博主搜索与网络视觉锚点
 
@@ -106,7 +106,7 @@ DEEPSEEK_MODEL_NAME
 | 搜索过程分阶段可见 | `#authors` 搜索表单与 fail-closed 提示；不再雷达扫出示例作者 | 先 network stage，零命中后才 Zhihu stage |
 | 一位作者只出现一次 | 人物卡不得由本地 GraphRAG 或固定作者凑出 | 以稳定知乎外部用户 ID 去重，不按显示名合并 |
 | 结果可解释 | 缺 provider 时 `role="alert"` | 显示来源、相关性、freshness 与真实内容链接 |
-| 搜索与网络并列 | `Authors.tsx` 的两个板块 | 搜索只读；候选、排名和点击不自动入网 |
+| 搜索与网络并列 | `Authors.tsx` 的两个板块，网络缺 projector 时 `role="alert"` | 搜索只读；候选、排名和点击不自动入网 |
 
 当前白底、`#1772f6` 主蓝、`#edf4ff` 浅蓝状态面、`#e8eaed` 边界和 `#8590a6` 次级字继续作为视觉基线。其他参考只能提供“人是主体、关系可视”等设计启发，不能定义实体、边、权重或检索顺序。
 

@@ -1,9 +1,7 @@
-import { useEffect, useState } from 'react'
-import { AuthorNetworkGraph } from '../components/AuthorNetworkGraph'
+import { useState } from 'react'
 import { ProductWorkspace } from '../components/Shell'
 import { Icon } from '../icons'
-import { readAnnotationStore } from '../session/ask-authors'
-import { hydrateNetworkFromAnnotations, useAuthorNetwork, type AuthorNetworkStore } from '../session/author-network'
+import { resolveAuthorNetwork } from '../session/resolve-author-network'
 import { resolveAuthorSearch, type AuthorSearchResolution } from '../session/resolve-author-search'
 
 type AuthorSection = 'search' | 'network'
@@ -19,10 +17,17 @@ function AuthorSearchUnavailable() {
   </section>
 }
 
+function AuthorNetworkUnavailable() {
+  const resolution = resolveAuthorNetwork()
+  return <section className="radar-search-status" role="alert">
+    <small>博主网络</small>
+    <h2>{resolution.title}</h2>
+    <p>{resolution.message}</p>
+  </section>
+}
+
 export function AuthorsPage() {
   const [section, setSection] = useState<AuthorSection>('search')
-  const network = useAuthorNetwork()
-  useEffect(() => { hydrateNetworkFromAnnotations(readAnnotationStore().items) }, [])
 
   return <ProductWorkspace active="authors" page="authors">
     <main className="consultation-page">
@@ -34,7 +39,7 @@ export function AuthorsPage() {
         <button type="button" className={section === 'search' ? 'is-active' : ''} onClick={() => setSection('search')}>搜索博主</button>
         <button type="button" className={section === 'network' ? 'is-active' : ''} onClick={() => setSection('network')}>博主网络</button>
       </div>
-      {section === 'search' ? <AuthorSearchPane /> : <AuthorNetworkPane store={network} />}
+      {section === 'search' ? <AuthorSearchPane /> : <AuthorNetworkPane />}
     </main>
   </ProductWorkspace>
 }
@@ -91,10 +96,10 @@ function AuthorSearchPane() {
   </section>
 }
 
-function AuthorNetworkPane({ store }: { store: AuthorNetworkStore }) {
+function AuthorNetworkPane() {
   return <section className="consultation-body is-network">
     <div className="author-network-pane">
-      <AuthorNetworkGraph nodes={store.nodes} edges={store.edges}/>
+      <AuthorNetworkUnavailable/>
     </div>
   </section>
 }

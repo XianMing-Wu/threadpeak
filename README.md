@@ -83,7 +83,7 @@ npm run dev
 | `#knowledge` | 我的/示例知识脉络列表 | 读取 owner-scoped committed projection |
 | `#knowledge-detail` | 只读知识画布；我的路线不得内存 `growGraph` 或 persist | 只渲染 revision，不从消息或布局发明节点和边 |
 | `#session-learning` | 未选择 route/concept 时显式失败；我的路线不发明 lesson/图/conversation 节点；图文/问博主无真实 provider 时显式失败；示例仍用标记 catalog lesson | 严格执行 canonical 首答在前、知识图在后 |
-| `#authors` | 博主搜索无真实 provider 时显式失败，不再用本地 GraphRAG 或示例作者雷达冒充成功；博主网络仍是视觉原型 | 搜索与网络为两个 feature，执行不同检索顺序和写入规则 |
+| `#authors` | 博主搜索与博主网络无真实 provider 时显式失败，不再用本地 GraphRAG、sessionStorage 或示例星图冒充成功 | 搜索与网络为两个 feature，执行不同检索顺序和写入规则 |
 | `#settings` | 前端偏好与确认界面 | 偏好不能改变领域合同 |
 
 ## 独立路径算法实验台

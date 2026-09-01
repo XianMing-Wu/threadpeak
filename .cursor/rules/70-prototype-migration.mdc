@@ -18,9 +18,9 @@ alwaysApply: false
 | `src/session/useAnnotations.ts` | 只产生 Selector；GraphSurgeon 落贡献 |
 | `src/session/ask-authors.ts` 固定作者；用户问博主已 fail-closed | Zhihu-first AskAuthorResolution，1–2 位或刘看山直达 |
 | `src/session/author-graph-rag.ts`；产品 `#authors` 搜索已 fail-closed | network-first AuthorSearch，零命中才 Zhihu |
-| `src/session/author-network.ts` sessionStorage | committed relationship event → owner-scoped network projector |
+| `src/session/author-network.ts` sessionStorage；产品 `#authors` 网络已 fail-closed | committed relationship event → owner-scoped network projector |
 | `src/history.ts` / workspace localStorage | ConversationUseCases + owner-scoped GET/exact reopen |
-| `src/pages/Authors.tsx` | 搜索已 fail-closed；保持 author-search 与 author-network 两个 feature |
+| `src/pages/Authors.tsx` | 搜索与网络均已 fail-closed；保持两个 feature |
 | `src/path-3d/` + `src/components/Path3D.tsx` hash/session handoff | validated document + UUID mapping + server handoff |
 | `src/visuals/specs.ts` 固定图 | validated VisualizationArtifact + Surface Catalog |
 

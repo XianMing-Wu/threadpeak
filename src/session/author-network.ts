@@ -4,6 +4,8 @@ import { blueprintConcepts, exampleBlueprints } from '../workspace/catalog'
 import { blueprintOf } from '../workspace/store'
 import type { AskAuthorsAnnotation } from './ask-authors'
 
+/** Isolated prototype store. Product `#authors` network must not compose this into user-request success. */
+
 export type AuthorNetworkKind = 'carrier' | 'concept' | 'question' | 'author'
 export type AuthorNetworkEdgeKind = 'has-concept' | 'has-question' | 'authored-at'
 
