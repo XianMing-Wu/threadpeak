@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { resolveFirstLesson, resolveLearningEntry, resolveOpenLearningTarget } from './resolve-learning-entry.ts'
+import { resolveFirstLesson, resolveKnowledgeMigration, resolveLearningEntry, resolveOpenLearningTarget } from './resolve-learning-entry.ts'
 
 test('missing route or concept does not fall back to linear-algebra', () => {
   const missingRoute = resolveLearningEntry({ routeId: '', conceptId: 'linear-map' })
@@ -70,6 +70,23 @@ test('an example concept with a marked catalog lesson can still prepare', () => 
     routeId: 'linear-algebra',
     conceptId: 'linear-map',
   })
+})
+
+test('workspace read does not rewrite mine-route lessons or graphs', () => {
+  assert.deepEqual(resolveKnowledgeMigration({ owner: 'mine', routeId: 'generated-path' }), {
+    kind: 'keep',
+    reason: 'mine-route',
+  })
+  assert.deepEqual(resolveKnowledgeMigration({
+    owner: 'mine',
+    routeId: 'generated-path',
+    hasExampleBlueprint: true,
+  }), { kind: 'keep', reason: 'mine-route' })
+  assert.deepEqual(resolveKnowledgeMigration({
+    owner: 'example',
+    routeId: 'linear-algebra',
+    hasExampleBlueprint: true,
+  }), { kind: 'rewrite-example' })
 })
 
 test('an explicitly selected route and concept can enter', () => {

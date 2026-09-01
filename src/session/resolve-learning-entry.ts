@@ -102,3 +102,21 @@ export function resolveFirstLesson(input: FirstLessonInput): FirstLessonResoluti
   }
   return { kind: 'ready', source: 'example-catalog', routeId, conceptId }
 }
+
+export type KnowledgeMigrationInput = {
+  owner?: 'mine' | 'example'
+  routeId: string
+  hasExampleBlueprint?: boolean
+}
+
+export type KnowledgeMigration =
+  | { kind: 'rewrite-example' }
+  | { kind: 'keep'; reason: 'mine-route' | 'unknown-route' }
+
+export function resolveKnowledgeMigration(input: KnowledgeMigrationInput): KnowledgeMigration {
+  const routeId = input.routeId.trim()
+  if (!routeId) return { kind: 'keep', reason: 'unknown-route' }
+  if (input.owner === 'mine') return { kind: 'keep', reason: 'mine-route' }
+  if (input.owner === 'example' && input.hasExampleBlueprint) return { kind: 'rewrite-example' }
+  return { kind: 'keep', reason: 'unknown-route' }
+}

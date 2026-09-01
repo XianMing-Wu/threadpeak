@@ -15,6 +15,7 @@ import {
   routeRecordFromBlueprint,
 } from './catalog'
 import { conversationHostAfterGrow, growGraph, mergeConversationBranch, parseGrowCommand, parseQuotedUserTurn, parseTurnHost, plainQuoteText, readGrowCommand, replyCardTitle, resolveQuotedHost } from '../knowledge-canvas/generate'
+import { resolveKnowledgeMigration } from '../session/resolve-learning-entry'
 import { mineRouteFromValidatedDocument } from './published-route'
 import type {
   ConceptCard,
@@ -97,21 +98,20 @@ function migrateKnowledge(snapshot: WorkspaceSnapshot): WorkspaceSnapshot {
   let dirty = false
   const lessons = { ...snapshot.lessons }
   const knowledge = snapshot.knowledge.map((item) => {
+    const example = findExampleBlueprint(item.routeId)
+    if (resolveKnowledgeMigration({ owner: item.owner, routeId: item.routeId, ...(example ? { hasExampleBlueprint: true } : {}) }).kind !== 'rewrite-example' || !example) return item
     const mixed = item.graph.nodes.some((node) => node.id.startsWith('c-'))
     const graphs = conceptGraphsOf(item)
     const route = snapshot.routes.find((entry) => entry.id === item.routeId)
-    const blueprint = findExampleBlueprint(item.routeId) ?? (route ? draftFromRoute(route) : undefined)
     const nextGraphs: Record<string, KnowledgeGraph> = { ...graphs }
     let itemDirty = !item.graphs || mixed
-    if (blueprint) {
-      for (const conceptId of Object.keys(graphs)) {
-        const current = lessons[lessonKey(item.routeId, conceptId)]
-        if (item.graphs?.[conceptId] && !isLegacyLesson(current) && !mixed) continue
-        const fresh = draftFirstLesson(blueprint, conceptId)
-        lessons[lessonKey(item.routeId, conceptId)] = fresh
-        nextGraphs[conceptId] = graphFromLesson(conceptTitle(blueprint, conceptId), fresh, conceptAccent(blueprint, conceptId))
-        itemDirty = true
-      }
+    for (const conceptId of Object.keys(graphs)) {
+      const current = lessons[lessonKey(item.routeId, conceptId)]
+      if (item.graphs?.[conceptId] && !isLegacyLesson(current) && !mixed) continue
+      const fresh = draftFirstLesson(example, conceptId)
+      lessons[lessonKey(item.routeId, conceptId)] = fresh
+      nextGraphs[conceptId] = graphFromLesson(conceptTitle(example, conceptId), fresh, conceptAccent(example, conceptId))
+      itemDirty = true
     }
     if (!itemDirty) return item
     dirty = true
