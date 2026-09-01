@@ -44,6 +44,10 @@ test('受控目标输入覆盖 Enter、Shift+Enter、IME、pending、abort 与�
 
 test('生成请求只发送 canonical raw_goal 与服务端标识的澄清答案，且密钥不进入 Vite', () => {
   assert.match(session, /PATH_LAB_GENERATE_URL = '\/api\/paths\/generate'/)
+  assert.match(session, /PATH_GENERATE_TIMEOUT_MS/)
+  assert.match(session, /AbortSignal\.timeout/)
+  assert.match(session, /AbortSignal\.any/)
+  assert.match(session, /Promise\.race/)
   assert.match(session, /requestJson\(/)
   assert.match(session, /JSON\.stringify\(\{ raw_goal: rawGoal, clarification_answers: answers \}\)/)
   assert.doesNotMatch(session, /JSON\.stringify\(\{ goal:/)

@@ -71,6 +71,40 @@ test('Chat generate session transport failure does not invent a path document', 
   session.submitNewGoal('给我制定一条机器学习数学路线')
   const view = await waitFor(session, (next) => next.runState === 'error')
   assert.equal(view.document, undefined)
-  assert.match(view.error, /无法连接本地路径生成服务/)
+  assert.match(view.error, /无法连接本地路径生成服务或等待超时/)
+  session.teardown()
+})
+
+test('Chat generate session timeout does not invent a path document', async () => {
+  const session = createPathGenerateSession({
+    fetch: (_url, init) => new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => {
+        const error = new Error('Aborted')
+        error.name = 'AbortError'
+        reject(error)
+      })
+    }),
+    now: () => 1,
+    generateTimeoutMs: 30,
+  })
+  session.submitNewGoal('给我制定一条机器学习数学路线')
+  const view = await waitFor(session, (next) => next.runState === 'error')
+  assert.equal(view.document, undefined)
+  assert.notEqual(view.runState, 'pending')
+  assert.match(view.error, /无法连接本地路径生成服务或等待超时/)
+  session.teardown()
+})
+
+test('Chat generate session timeout fail-closes when fetch ignores abort', async () => {
+  const session = createPathGenerateSession({
+    fetch: () => new Promise(() => {}),
+    now: () => 1,
+    generateTimeoutMs: 30,
+  })
+  session.submitNewGoal('给我制定一条机器学习数学路线')
+  const view = await waitFor(session, (next) => next.runState === 'error')
+  assert.equal(view.document, undefined)
+  assert.notEqual(view.runState, 'pending')
+  assert.match(view.error, /无法连接本地路径生成服务或等待超时/)
   session.teardown()
 })

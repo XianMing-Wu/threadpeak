@@ -20,7 +20,7 @@
 | --- | --- | --- |
 | `src/components/Shell.tsx`、`src/styles.css` | 知乎浅色桌面壳、持久主侧栏和 Hash 页面 | Web shell 只组合 route、projection 和 feature UI |
 | `src/components/Composer.tsx` | 路线、图文、问博主的输入外观与本地 UI state | 正向模式白名单；command 发往同源 API，未知持久化值归一为空 |
-| `src/pages/Chat.tsx`、`src/chat/`、`src/workspace/catalog.ts` | 普通/图文无真实 provider 时显式失败，不再渲染预写 Mock 或 fixture 图；路线已改走 generate session | 真实 Answer/Path provider、typed stream、持久 request/session |
+| `src/pages/Chat.tsx`、`src/chat/`、`src/workspace/catalog.ts` | 普通/图文无真实 provider 时显式失败，不再渲染预写 Mock 或 fixture 图；路线 generate 连接失败或超时显式失败，不再停在 pending | 真实 Answer/Path provider、typed stream、持久 request/session |
 | `src/workspace/store.ts`、`src/history.ts`、`src/resolve-history-reopen.ts` | 侧栏重开不再把 localStorage 正文当成已提交 history；缺 provider 显式失败。workspace 存储仍是原型草稿 | owner-scoped 服务端事实、outbox/projector 和精确 history reopen |
 | `src/pages/Session.tsx`、`src/session/`、`src/knowledge-canvas/`、`src/workspace/nav.ts` | 未选择时不再默认线性代数；我的路线不再 `draftFirstLesson`/`growGraph` 建图或画布 persist；问博主无真实 resolution 时显式失败；示例仍读标记 catalog lesson | canonical 初始回复 settle 后由 GraphSurgeon 创建并增量更新 |
 | `src/session/ask-authors.ts`、`resolve-ask-author.ts` | 用户问博主不再渲染固定作者或预写回复；缺 provider 显式失败 | 真实知乎搜索、稳定身份、逐作者 evidence、LLM 候选内筛选 |

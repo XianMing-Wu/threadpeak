@@ -3,7 +3,7 @@
 | 项 | 值 |
 | --- | --- |
 | Owner | `src/path-lab/path-lab-session.ts` |
-| 新路径 | `createApiClient.requestJson` → `parseGenerationResponse` / `projectSafeServiceFailure` → RuntimeStore selector |
+| 新路径 | `createApiClient.requestJson` + generate timeout → `parseGenerationResponse` / `projectSafeServiceFailure` → RuntimeStore selector；连接失败或超时显式失败，fetch 忽略 abort 时也不得停在 pending。Chat 卸载只 `abort()`，不得 `teardown()` 以免 StrictMode 把 store 冻死后一直停在 pending |
 | 旧路径 | `App.tsx` 直接 `fetch('/api/paths/generate')` + `useState` |
 | 删除条件 | 产品 path feature 使用 `PathStreamEvent` NDJSON 与 CAS session GET 恢复，且 path-lab 不再是页面内 JSON command |
 

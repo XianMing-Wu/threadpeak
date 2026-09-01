@@ -1,4 +1,4 @@
-import { createApiClient, type FetchPort } from '@threadpeak/api-client'
+import { createApiClient, type FetchPort, type JsonRequestResult } from '@threadpeak/api-client'
 import { createRuntimeStore, type RuntimeStore } from '@threadpeak/runtime-store'
 import type { LearningPathDocument } from 'liu-kanshan-learning-path-3d'
 import type { ClarificationHistoryItem } from './clarification.ts'
@@ -13,6 +13,8 @@ import {
 } from './contracts.ts'
 
 export const PATH_LAB_GENERATE_URL = '/api/paths/generate'
+export const PATH_GENERATE_TIMEOUT_MS = 10_000
+export const PATH_GENERATE_UNAVAILABLE_MESSAGE = '无法连接本地路径生成服务或等待超时，请确认服务已启动后重试'
 
 export type PathLabRunState = 'idle' | 'clarifying' | 'pending' | 'ready' | 'aborted' | 'error'
 
@@ -35,9 +37,30 @@ export type PathLabView = {
 export type PathLabSessionPorts = {
   fetch: FetchPort
   now: () => number
+  generateTimeoutMs?: number
 }
 
 const idleStatus = '等待输入一个可观察、可验证的学习目标'
+
+function waitForAbort(signal: AbortSignal): Promise<void> {
+  if (signal.aborted) return Promise.resolve()
+  return new Promise((resolve) => {
+    signal.addEventListener('abort', () => resolve(), { once: true })
+  })
+}
+
+function unavailableTransportResult(traceId: string): JsonRequestResult {
+  return {
+    ok: false,
+    aborted: true,
+    error: {
+      code: 'TRANSPORT_FAILED',
+      message: PATH_GENERATE_UNAVAILABLE_MESSAGE,
+      traceId,
+      retryable: true,
+    },
+  }
+}
 
 export function createInitialPathLabView(): PathLabView {
   return {
@@ -101,17 +124,34 @@ export function createPathLabSession(ports: PathLabSessionPorts) {
       elapsedMs: 0,
     })
 
-    const request = await client.requestJson({
-      url: PATH_LAB_GENERATE_URL,
-      method: 'POST',
-      headers: { 'content-type': 'application/json', accept: 'application/json' },
-      body: JSON.stringify({ raw_goal: rawGoal, clarification_answers: answers }),
-      signal: nextController.signal,
-      traceId: `path-lab-${generation}`,
-    })
+    const timeoutMs = ports.generateTimeoutMs ?? PATH_GENERATE_TIMEOUT_MS
+    const timeoutSignal = AbortSignal.timeout(timeoutMs)
+    const requestSignal = AbortSignal.any([nextController.signal, timeoutSignal])
+    const traceId = `path-lab-${generation}`
+    const request = await Promise.race([
+      client.requestJson({
+        url: PATH_LAB_GENERATE_URL,
+        method: 'POST',
+        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        body: JSON.stringify({ raw_goal: rawGoal, clarification_answers: answers }),
+        signal: requestSignal,
+        traceId,
+      }),
+      waitForAbort(timeoutSignal).then(() => unavailableTransportResult(traceId)),
+    ])
 
     if (generation !== requestGeneration) return
-    if (!request.ok && request.aborted) return
+    if (!request.ok && request.aborted) {
+      if (nextController.signal.aborted) return
+      store.setInflight('path-lab', 'terminal-error')
+      patch({
+        runState: 'error',
+        status: '本次生成未完成',
+        error: PATH_GENERATE_UNAVAILABLE_MESSAGE,
+        requestStartedAt: undefined,
+      })
+      return
+    }
 
     try {
       if (!request.ok) {
@@ -140,7 +180,7 @@ export function createPathLabSession(ports: PathLabSessionPorts) {
           return
         }
         if (!request.status) {
-          throw new PublicPathLabError('无法连接本地路径生成服务，请确认服务已启动后重试')
+          throw new PublicPathLabError(PATH_GENERATE_UNAVAILABLE_MESSAGE)
         }
         throw new PublicPathLabError(failure.message)
       }
@@ -176,7 +216,7 @@ export function createPathLabSession(ports: PathLabSessionPorts) {
       patch({
         runState: 'error',
         status: '本次生成未完成',
-        error: cause instanceof PublicPathLabError ? cause.message : '无法连接本地路径生成服务，请确认服务已启动后重试',
+        error: cause instanceof PublicPathLabError ? cause.message : PATH_GENERATE_UNAVAILABLE_MESSAGE,
         requestStartedAt: undefined,
       })
     } finally {

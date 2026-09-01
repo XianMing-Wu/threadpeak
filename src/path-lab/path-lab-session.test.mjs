@@ -127,7 +127,41 @@ test('transport failure does not invent a path document', async () => {
   session.submitNewGoal('学会线性代数')
   const view = await waitFor(session, (next) => next.runState === 'error')
   assert.equal(view.document, undefined)
-  assert.match(view.error, /无法连接本地路径生成服务/)
+  assert.match(view.error, /无法连接本地路径生成服务或等待超时/)
+  session.teardown()
+})
+
+test('unreachable generate does not stay pending after timeout', async () => {
+  const session = createPathLabSession({
+    fetch: (_url, init) => new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => {
+        const error = new Error('Aborted')
+        error.name = 'AbortError'
+        reject(error)
+      })
+    }),
+    now: () => 1,
+    generateTimeoutMs: 30,
+  })
+  session.submitNewGoal('学会线性代数')
+  const view = await waitFor(session, (next) => next.runState === 'error')
+  assert.equal(view.document, undefined)
+  assert.notEqual(view.runState, 'pending')
+  assert.match(view.error, /无法连接本地路径生成服务或等待超时/)
+  session.teardown()
+})
+
+test('generate timeout fail-closes even when fetch ignores abort', async () => {
+  const session = createPathLabSession({
+    fetch: () => new Promise(() => {}),
+    now: () => 1,
+    generateTimeoutMs: 30,
+  })
+  session.submitNewGoal('学会线性代数')
+  const view = await waitFor(session, (next) => next.runState === 'error')
+  assert.equal(view.document, undefined)
+  assert.notEqual(view.runState, 'pending')
+  assert.match(view.error, /无法连接本地路径生成服务或等待超时/)
   session.teardown()
 })
 
