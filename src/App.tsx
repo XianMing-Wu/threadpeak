@@ -8,6 +8,7 @@ import { SettingsPage } from './pages/Settings'
 import { ChatPage } from './pages/Chat'
 import { AuthLanding } from './pages/AuthLanding'
 import { IconSprite } from './icons'
+import { ensurePrototypeRuntimeListeners } from './runtime/prototype-runtime'
 
 const routes = new Set<RouteName>(['home','chat','paths','path-3d','knowledge','knowledge-detail','session-learning','authors','settings'])
 function readRoute():RouteName { const key=location.hash.slice(1).split('?')[0] as RouteName; return routes.has(key)?key:'home' }
@@ -17,7 +18,7 @@ export function App(){
   const[route,setRoute]=useState<RouteName>(readRoute)
   const[authenticated,setAuthenticated]=useState(()=>localStorage.getItem(AUTH_KEY)!=='false')
   const[theme,setTheme]=useState<'light'|'dark'>(()=>localStorage.getItem(THEME_KEY)==='dark'?'dark':'light')
-  useEffect(()=>{const onHash=()=>setRoute(readRoute());addEventListener('hashchange',onHash);return()=>removeEventListener('hashchange',onHash)},[])
+  useEffect(()=>{const onHash=()=>setRoute(readRoute());addEventListener('hashchange',onHash);ensurePrototypeRuntimeListeners();return()=>removeEventListener('hashchange',onHash)},[])
   useEffect(()=>{document.documentElement.dataset.theme=theme;localStorage.setItem(THEME_KEY,theme)},[theme])
   const toggleTheme=()=>setTheme((value)=>value==='dark'?'light':'dark')
   const logout=()=>{localStorage.setItem(AUTH_KEY,'false');setAuthenticated(false)}

@@ -4,12 +4,13 @@ import { Icon } from '../icons'
 import { RealPath3D } from '../components/Path3D'
 import { KnowledgeCanvasPage } from './KnowledgeCanvas'
 import { NAV_EVENT, openConceptKnowledge, openKnowledge, openRoute, readActiveKnowledgeId, readKnowledgeConceptId, readKnowledgeListReturn } from '../workspace/nav'
-import { getKnowledge, listConceptCards, listKnowledge, listRoutes, useWorkspaceTick } from '../workspace/store'
+import { useLibrarySelector } from '../runtime/use-runtime-selector'
+import { selectKnowledgeCards, selectRouteCards } from '../runtime/library-read-model'
+import { getKnowledge, listConceptCards, useWorkspaceTick } from '../workspace/store'
 
 export function KnowledgePage() {
-  useWorkspaceTick()
   const [section, setSection] = useState<'mine' | 'example'>('mine')
-  const items = listKnowledge(section)
+  const items = useLibrarySelector(selectKnowledgeCards(section))
   return <ProductWorkspace active="knowledge" page="knowledge">
     <main className="knowledge-square">
       <header className="square-hero"><h1>知识脉络</h1><p>先按与路线一致的名称收纳，再进入每个最终概念自己的知识脉络</p></header>
@@ -30,9 +31,8 @@ export function KnowledgePage() {
 }
 
 export function PathsPage() {
-  useWorkspaceTick()
   const [tab, setTab] = useState<'mine' | 'example'>('mine')
-  const shown = listRoutes(tab)
+  const shown = useLibrarySelector(selectRouteCards(tab))
   return <ProductWorkspace active="paths" page="paths">
     <main className="route-list">
       <header className="square-hero"><h1>路线规划</h1><p>从目标出发，把必要载体和最终概念组织成可以进入的学习路线</p></header>

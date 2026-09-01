@@ -73,6 +73,12 @@ function resolveSpecifier(fromFile, specifier) {
   if (bare === '@threadpeak/contracts' || bare.startsWith('@threadpeak/contracts/')) {
     return path.join(repoRoot, 'packages/contracts/src/index.ts')
   }
+  if (bare === '@threadpeak/api-client' || bare.startsWith('@threadpeak/api-client/')) {
+    return path.join(repoRoot, 'packages/api-client/src/index.ts')
+  }
+  if (bare === '@threadpeak/runtime-store' || bare.startsWith('@threadpeak/runtime-store/')) {
+    return path.join(repoRoot, 'packages/runtime-store/src/index.ts')
+  }
   if (bare === 'liu-kanshan-learning-path-3d') {
     return path.join(repoRoot, 'src/vendor/learning-path-3d/index.js')
   }

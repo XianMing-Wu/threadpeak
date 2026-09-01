@@ -27,7 +27,8 @@
 | `src/session/author-graph-rag.ts`、`author-network.ts` | 本地检索、示例作者和 session 网络 | network-first AuthorSearch 与 committed relationship projector |
 | `src/components/Path3D.tsx`、`src/vendor/learning-path-3d/` | 可运行 WebGL renderer 与本地 handoff；角色 GLB 已在 `public/assets/` | 只消费已校验 path document 和服务端 handoff，不拥有学习事实 |
 | `src/vendor/icons-v15.svg`、`vendor/charts/` | 图标与三类交互图已落入本仓库，不再读兄弟目录 | 仍是示例图文资产，不能冒充用户请求结果 |
-| `packages/contracts` | 共享 Uuid/Evidence/Envelope 的唯一 Zod 定义；旧算法路径只 re-export | 路径/知识领域 schema 仍在算法包，本切片未接通 Web 写链 |
+| `packages/contracts` | 共享 Uuid/Evidence/Envelope/PublicError/StreamCursor 的唯一 Zod 定义；旧算法路径只 re-export | 路径/知识领域 schema 仍在算法包，本切片未接通 Web 写链 |
+| `packages/api-client`、`packages/runtime-store`、`src/runtime/` | decoder 与 headless store 已落地；Home/列表页走 selector | 投影仍读原型 `workspace/store`；无产品 command 与真实 stream |
 
 ## 视觉参考映射
 

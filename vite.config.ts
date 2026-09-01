@@ -12,6 +12,9 @@ export default defineConfig({
   publicDir: 'public',
   resolve: {
     alias: {
+      '@threadpeak/contracts': fileURLToPath(new URL('./packages/contracts/src/index.ts', import.meta.url)),
+      '@threadpeak/api-client': fileURLToPath(new URL('./packages/api-client/src/index.ts', import.meta.url)),
+      '@threadpeak/runtime-store': fileURLToPath(new URL('./packages/runtime-store/src/index.ts', import.meta.url)),
       'liu-kanshan-learning-path-3d': localRuntime,
       'organic-mindmap': `${chartsRoot}organic-mindmap`,
       'sunburst-chart': `${chartsRoot}sunburst-chart`,

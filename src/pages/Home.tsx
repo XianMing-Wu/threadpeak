@@ -4,7 +4,8 @@ import { Composer, QuickModes } from '../components/Composer'
 import { Icon } from '../icons'
 import { launchChat } from './Chat'
 import { openKnowledge, openRoute } from '../workspace/nav'
-import { recommendedExampleKnowledge, recommendedExampleRoutes } from '../workspace/store'
+import { useLibrarySelector } from '../runtime/use-runtime-selector'
+import { selectRecommendedKnowledge, selectRecommendedRoutes } from '../runtime/library-read-model'
 
 const suggestions = ['给我制定一条机器学习数学路线','用图解释矩阵乘法','哪些知乎作者擅长讲线性代数？']
 
@@ -18,8 +19,8 @@ export function HomePage() {
     if(!query)return
     launchChat(query,mode==='route'?'route':mode==='visual'?'visual':'answer')
   }
-  const exampleKnowledge = recommendedExampleKnowledge()
-  const exampleRoutes = recommendedExampleRoutes()
+  const exampleKnowledge = useLibrarySelector(selectRecommendedKnowledge)
+  const exampleRoutes = useLibrarySelector(selectRecommendedRoutes)
   return <main className="home" data-page="home">
     <div className="home-heading">循着问题与答案的脉络，登上理解的高峰。</div>
     <div className="home-center">

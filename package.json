@@ -14,11 +14,14 @@
     "build": "tsc -b && vite build",
     "check": "tsc -b --pretty false",
     "check:architecture": "node --test tests/architecture-baseline.test.mjs",
-    "check:contracts": "node --test packages/contracts/tests/*.test.mjs tests/runtime-contracts-compat.test.mjs",
+    "check:contracts": "node --test packages/contracts/tests/*.test.mjs packages/api-client/tests/*.test.mjs tests/runtime-contracts-compat.test.mjs",
     "check:product-invariants": "node --test tests/architecture-governance.test.mjs",
-    "test": "node --test tests/*.test.mjs packages/contracts/tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs packages/contracts/tests/*.test.mjs packages/api-client/tests/*.test.mjs packages/runtime-store/tests/*.test.mjs"
   },
   "dependencies": {
+    "@threadpeak/api-client": "0.1.0",
+    "@threadpeak/contracts": "0.1.0",
+    "@threadpeak/runtime-store": "0.1.0",
     "katex": "0.16.47",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

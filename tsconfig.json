@@ -12,13 +12,17 @@
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
+      "@threadpeak/contracts": ["packages/contracts/src/index.ts"],
+      "@threadpeak/api-client": ["packages/api-client/src/index.ts"],
+      "@threadpeak/runtime-store": ["packages/runtime-store/src/index.ts"],
       "liu-kanshan-learning-path-3d": ["src/vendor/learning-path-3d/index.d.ts"]
     },
     "resolveJsonModule": true,
     "ignoreDeprecations": "6.0",
     "isolatedModules": true,
+    "allowImportingTsExtensions": true,
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "vite.config.ts", "packages/*/src"]
 }

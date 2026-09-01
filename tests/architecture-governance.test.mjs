@@ -111,7 +111,7 @@ test('governance command and evidence boundary stay explicit', async () => {
   assert.equal(pkg.scripts['check:architecture'], 'node --test tests/architecture-baseline.test.mjs')
   assert.equal(
     pkg.scripts['check:contracts'],
-    'node --test packages/contracts/tests/*.test.mjs tests/runtime-contracts-compat.test.mjs',
+    'node --test packages/contracts/tests/*.test.mjs packages/api-client/tests/*.test.mjs tests/runtime-contracts-compat.test.mjs',
   )
   assert.ok(Array.isArray(pkg.workspaces) && pkg.workspaces.includes('packages/*'))
   assert.match(pkg.engines?.node ?? '', /24/)

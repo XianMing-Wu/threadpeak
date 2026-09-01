@@ -2,7 +2,7 @@
 
 `threadpeak-ux-ui` 当前是 React + Vite UX 原型，用于核对页面、交互、3D 宿主和迁移切片；它不是生产架构，也没有因为页面可运行或源码测试通过而自动接通后端。
 
-产品与工程约束以 [`AGENTS.md`](AGENTS.md) 和匹配的 [`.cursor/rules/`](.cursor/rules/) 为准。跨进程 runtime Zod 的唯一物理定义是 [`packages/contracts`](packages/contracts/src/runtime-contracts.ts)；路径/知识领域文档仍位于 `../算法/知识脉络/` 与 `../算法/路径生成/`。参考项目、截图、旧 Demo 与本文件只能提供证据，不能覆盖当前用户裁决或领域合同。
+产品与工程约束以 [`AGENTS.md`](AGENTS.md) 和匹配的 [`.cursor/rules/`](.cursor/rules/) 为准。跨进程 runtime Zod 的唯一物理定义是 [`packages/contracts`](packages/contracts/src/runtime-contracts.ts)。浏览器 transport 与 headless store 分别是 [`packages/api-client`](packages/api-client/src/index.ts) 与 [`packages/runtime-store`](packages/runtime-store/src/index.ts)；路径/知识领域文档仍位于 `../算法/知识脉络/` 与 `../算法/路径生成/`。参考项目、截图、旧 Demo 与本文件只能提供证据，不能覆盖当前用户裁决或领域合同。
 
 ## 已冻结的产品链路
 
@@ -109,7 +109,7 @@ npm run build
 
 - `check`：当前 TypeScript 工程检查。
 - `check:architecture`：解析本仓库 import graph，阻断兄弟目录与出仓路径。
-- `check:contracts`：共享 runtime schema 的 golden fixture，以及旧算法路径 re-export 双边一致。
+- `check:contracts`：共享 runtime/transport schema 的 golden fixture、api-client decoder，以及旧算法路径 re-export 双边一致。
 - `check:product-invariants`：验证渐进式规则元数据、规则路由、六条冻结语义、三份文档一致性和服务端环境合同。
 - `test`：当前页面与源码合同；其中大量 regex/fixture 只能证明原型结构，不能证明真实网络、事务、权限或恢复。
 - `build`：使用本仓库 lockfile 与本地 vendor 资产构建；不再读取兄弟项目 `node_modules`。
@@ -119,7 +119,7 @@ npm run build
 
 ## 当前明确未完成
 
-- 主产品仍包含本地 catalog、预写回答、固定作者数据、页面 timer 和浏览器存储，尚不满足真实数据门禁。
+- 主产品仍包含本地 catalog、预写回答、固定作者数据、页面 timer 和浏览器存储，尚不满足真实数据门禁。RuntimeStore 目前只投影原型列表，不是服务端 read model。
 - 知乎授权、真实回答/作者检索、LLM 生成、PostgreSQL、worker、outbox、SSE/projector 和 owner 隔离尚未纵向接通。
 - 首答永久性、并发 singleflight、graph bootstrap/incremental、作者网络事件和精确历史恢复尚无生产数据库证据。
 - 3D 当前只证明 renderer 交互；不能据此声称路线生成、概念进入或知识生命周期已完成。
