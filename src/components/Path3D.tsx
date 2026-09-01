@@ -8,10 +8,6 @@ import {
   type LearningResourceNavigatorPort,
   type NodeSemanticBadgeIcon,
 } from 'liu-kanshan-learning-path-3d'
-import { Icon } from '../icons'
-import { threadPeakPathDocument } from '../pathDocument'
-import { openLearning, readActiveRouteId, readPathReturn } from '../workspace/nav'
-import { getRoute, routeDocument } from '../workspace/store'
 
 let serial = 0
 
@@ -21,23 +17,6 @@ const characterAssets = {
   runStop: new URL('../vendor/learning-path-3d/assets/liu-kanshan-run-stop.glb', import.meta.url).href,
   turn: new URL('../vendor/learning-path-3d/assets/liu-kanshan-turn.glb', import.meta.url).href,
 } as const
-
-const threadPeakNodeBadgeIconById: Readonly<Record<string, NodeSemanticBadgeIcon>> = {
-  'route-start':'start',
-  'carrier-foundation':'foundation',
-  'vector-space':'vector',
-  'linear-map':'transform',
-  'carrier-structure':'structure',
-  'kernel-image':'kernel',
-  eigen:'eigen',
-  'carrier-probability':'data',
-  variance:'variance',
-  'covariance-matrix':'matrix',
-  'carrier-application':'application',
-  pca:'pca',
-  projection:'projection',
-  'goal-understanding':'goal',
-}
 
 const memoryStorage = (): LearningProgressStoragePort & { values: Map<string, string> } => {
   const values = new Map<string, string>()
@@ -69,7 +48,7 @@ export type LearningPath3DViewProps = Readonly<{
   onResourceNavigate?: (href: string, target: 'self' | 'blank') => LearningResourceNavigationResult
 }>
 
-function defaultResourceNavigation(href: string, target: 'self' | 'blank'): LearningResourceNavigationResult {
+export function defaultResourceNavigation(href: string, target: 'self' | 'blank'): LearningResourceNavigationResult {
   if (href.startsWith('#')) {
     location.hash = href.slice(1)
     return { status: 'accepted', resolvedHref: href }
@@ -189,52 +168,4 @@ export function LearningPath3DView({
       <span>{error}</span>
     </div>}
   </div>
-}
-
-function conceptIdFromAction(detail: ContextualCardAction) {
-  if (detail.nodeId && !detail.nodeId.startsWith('carrier-') && detail.nodeId !== 'route-start' && detail.nodeId !== 'goal-understanding') return detail.nodeId
-  const action = detail.actionId ?? ''
-  if (action.startsWith('action-')) return action.slice('action-'.length)
-  if (action.startsWith('learn:')) return action.slice('learn:'.length)
-  return ''
-}
-
-export function RealPath3D() {
-  const routeId = readActiveRouteId() || 'linear-algebra'
-  const route = getRoute(routeId)
-  const document = routeDocument(routeId) ?? threadPeakPathDocument
-  const goBack = () => { location.hash = readPathReturn() }
-  const enterLearning = (detail: ContextualCardAction, event: Event) => {
-    const conceptId = conceptIdFromAction(detail)
-    if (conceptId) sessionStorage.setItem('threadpeak-active-concept', conceptId)
-    const shouldLearn = detail.actionId?.startsWith('learn:') || detail.actionId?.startsWith('action-')
-    if (!shouldLearn) return
-    event.preventDefault()
-    openLearning(routeId, conceptId || undefined, 'path-3d')
-  }
-  const onResourceNavigate = (href: string, target: 'self' | 'blank') => {
-    if (href === '#session-learning' || href.startsWith('#session-learning')) {
-      openLearning(routeId, sessionStorage.getItem('threadpeak-active-concept') || undefined, 'path-3d')
-      return { status: 'accepted' as const, resolvedHref: href }
-    }
-    return defaultResourceNavigation(href, target)
-  }
-  return <section className="path3d-stage" aria-label="双层圆台 3D 学习路线">
-    <header>
-      <div className="path3d-heading">
-        <button type="button" className="path3d-back" aria-label="返回上一级" onClick={goBack}><Icon name="back" size={18}/></button>
-        <div><small>路线规划</small><strong>{route?.title ?? document.metadata.title}</strong></div>
-      </div>
-      <span>点击绿色载体查看内容，卡片内“走到这”后移动，点击其他位置关闭 · 知乎蓝概念交互不变</span>
-    </header>
-    {/* document={threadPeakPathDocument} */}
-    <LearningPath3DView
-      document={document.id === threadPeakPathDocument.id ? threadPeakPathDocument : document}
-      ariaLabel={`${route?.title ?? document.metadata.title}的 3D 路线`}
-      instanceIdPrefix="threadpeak-legacy"
-      nodeBadgeIconById={threadPeakNodeBadgeIconById}
-      onContextualCardAction={enterLearning}
-      onResourceNavigate={onResourceNavigate}
-    />
-  </section>
 }

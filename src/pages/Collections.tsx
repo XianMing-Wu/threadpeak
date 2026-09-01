@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ProductWorkspace } from '../components/Shell'
 import { Icon } from '../icons'
-import { RealPath3D } from '../components/Path3D'
+import { Path3DStage } from '../path-3d/path-3d-stage'
 import { KnowledgeCanvasPage } from './KnowledgeCanvas'
 import { NAV_EVENT, openConceptKnowledge, openKnowledge, openRoute, readActiveKnowledgeId, readKnowledgeConceptId, readKnowledgeListReturn } from '../workspace/nav'
 import { useLibrarySelector } from '../runtime/use-library-selector'
@@ -53,7 +53,7 @@ export function PathsPage() {
 }
 
 export function Path3DPage() {
-  return <ProductWorkspace active="paths" page="path-3d"><RealPath3D/></ProductWorkspace>
+  return <ProductWorkspace active="paths" page="path-3d"><Path3DStage/></ProductWorkspace>
 }
 
 export function KnowledgeConceptsPage() {

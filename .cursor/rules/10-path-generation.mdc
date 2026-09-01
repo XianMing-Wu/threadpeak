@@ -1,6 +1,6 @@
 ---
 description: "约束学习路线生成、澄清、canonical path contract、3D handoff 与重构边界。"
-globs: "src/path-lab/**,src/path-planning/**,src/pathDocument.ts,src/pages/Chat.tsx,src/pages/Home.tsx,src/pages/Collections.tsx,src/workspace/**,src/components/Path3D.tsx,apps/web/**/path-planning/**,apps/web/**/path-3d/**,packages/contracts/path/**,packages/path-3d-host/**,server/path/**"
+globs: "src/path-lab/**,src/path-planning/**,src/path-3d/**,src/pathDocument.ts,src/pages/Chat.tsx,src/pages/Home.tsx,src/pages/Collections.tsx,src/workspace/**,src/components/Path3D.tsx,apps/web/**/path-planning/**,apps/web/**/path-3d/**,packages/contracts/path/**,packages/path-3d-host/**,server/path/**"
 alwaysApply: false
 ---
 
@@ -53,7 +53,7 @@ validate → planSearch → searchRecentYear → [searchExpandedWindow]
 | `src/workspace/store.ts` / `catalog.ts` 关键词拼路线 | 删除用户请求生产路径；只读示例与隔离测试 fixture 必须分离且明确标记 |
 | `src/pages/Chat.tsx` / `src/path-planning/` JSON generate adapter | PathStreamEvent decoder → path projector → RuntimeStore selector；删除 path-lab re-export |
 | `src/path-lab/contracts.ts` | 迁移到唯一 `packages/contracts/path` 后删除兼容层 |
-| `src/components/Path3D.tsx` session/hash handoff | validated document + wire UUID mapping + server handoff |
+| `src/path-3d/` / `src/components/Path3D.tsx` 本地 document 宿主 | validated document + wire UUID mapping + server handoff；删除 hash/session 导航事实 |
 
 ## 未裁决边界
 

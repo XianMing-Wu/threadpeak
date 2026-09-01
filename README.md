@@ -79,7 +79,7 @@ npm run dev
 | `#home` | 路线/图文入口、Composer、示例推荐 | command/query 进入同源 API，不在页面生成领域事实 |
 | `#chat` | 普通回答仍是 Mock；路线模式走 generate session，失败显式报错 | 删除前端预写回答；路线接 PathStreamEvent/CAS，图文接真实 visual artifact |
 | `#paths` | 我的路线/示例路线列表 | 读取 committed path projection |
-| `#path-3d` | WebGL 路线 document renderer | 只消费已校验 document 与 handoff，不保存学习进度 |
+| `#path-3d` | WebGL renderer；用户路线缺校验文档则显式失败，不再回退演示路径 | 只消费已校验 document 与 server handoff，不保存学习进度 |
 | `#knowledge` | 我的/示例知识脉络列表 | 读取 owner-scoped committed projection |
 | `#knowledge-detail` | 只读知识画布 | 只渲染 revision，不从消息或布局发明节点和边 |
 | `#session-learning` | 概念会话、划选引用、图文、问博主、新分支 | 严格执行 canonical 首答在前、知识图在后 |

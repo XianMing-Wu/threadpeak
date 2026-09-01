@@ -21,7 +21,7 @@ alwaysApply: false
 | `src/session/author-network.ts` sessionStorage | committed relationship event → owner-scoped network projector |
 | `src/history.ts` / workspace localStorage | ConversationUseCases + owner-scoped GET/exact reopen |
 | `src/pages/Authors.tsx` | 保持 author-search 与 author-network 两个 feature |
-| `src/components/Path3D.tsx` hash/session handoff | validated document + UUID mapping + server handoff |
+| `src/path-3d/` + `src/components/Path3D.tsx` hash/session handoff | validated document + UUID mapping + server handoff |
 | `src/visuals/specs.ts` 固定图 | validated VisualizationArtifact + Surface Catalog |
 
 旧 `carrier → concept → question` author graph 是 prototype；旧“用户 → 类别 → 作者”也未冻结可视 topology。它们都不能直接成为 production schema。已冻结的只有 AskAuthor Zhihu-first、AuthorSearch network-first、committed relationship trigger、候选不自动入网和刘看山不入网。

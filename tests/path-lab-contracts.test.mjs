@@ -12,6 +12,8 @@ const inputPolicy = await read('../src/path-lab/inputPolicy.ts')
 const contracts = await read('../src/path-lab/contracts.ts')
 const styles = await read('../src/path-lab/styles.css')
 const path3d = await read('../src/components/Path3D.tsx')
+const path3dStage = await read('../src/path-3d/path-3d-stage.tsx')
+const path3dResolve = await read('../src/path-3d/resolved-path-document.ts')
 const vite = await read('../vite.config.ts')
 
 test('path-lab 是独立多入口且不装载产品侧栏或其他页面', () => {
@@ -93,8 +95,12 @@ test('泛化 3D adapter 对新文档执行 dispose 后 remount，旧入口仍兼
   assert.match(path3d, /\[document, instanceIdPrefix, nodeBadgeIconById, onContextualCardAction, onResourceNavigate\]/)
   assert.match(path3d, /if \(disposed\) \{\s*instance\.dispose\(\)/)
   assert.match(path3d, /new URL\('\.\.\/vendor\/learning-path-3d\/assets\/liu-kanshan-idle\.glb', import\.meta\.url\)\.href/)
-  assert.match(path3d, /export function RealPath3D/)
-  assert.match(path3d, /document=\{threadPeakPathDocument\}/)
+  assert.doesNotMatch(path3d, /export function RealPath3D/)
+  assert.doesNotMatch(path3d, /threadPeakPathDocument/)
+  assert.match(path3dStage, /resolvePath3DView/)
+  assert.match(path3dResolve, /invalid-mine-document/)
+  assert.doesNotMatch(path3d + path3dStage, /readActiveRouteId\(\) \|\| 'linear-algebra'/)
+  assert.doesNotMatch(path3d + path3dStage, /\?\? threadPeakPathDocument/)
 })
 
 test('实验台可见内容严格限于输入、状态、3D、证据与质量摘要', () => {

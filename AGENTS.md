@@ -59,6 +59,7 @@ Cursor 会自动读取根 `AGENTS.md`，并按 `.mdc` frontmatter 的 `globs` �
 - `@threadpeak/api-client` 与 `@threadpeak/runtime-store` 已提供 decoder / headless store。Home 与路线/知识列表开始走 selector；投影仍来自原型 `workspace/store`，不是服务端 committed GET。
 - path-lab 的 JSON 实验请求已改走 api-client + RuntimeStore；它仍代理到本机 `4312`，不能证明主产品 PathStreamEvent/CAS session 已接通。
 - 产品 Chat 路线模式已去掉页面 timer 和 `draftMineBlueprint` 成功路径；用户请求必须拿到已校验 document，否则显式失败。仍不是 PathStreamEvent/CAS。
+- 产品 `#path-3d` 对用户路线只渲染已校验 document；缺文档或示例 fixture 冒充用户路线时显式失败，不再回退 `threadPeakPathDocument`。示例路线仍用明确标记的示例文档。仍不是 CAS snapshot / wire-id handoff。
 - 路径/知识算法实现与领域文档仍位于 `../算法/`，是实现/合同证据，不代表本 Web 已纵向接通。
 - `prototype`、`contracted`、`implemented`、`integrated`、`production-ready` 必须按当前证据逐级判断；目录存在、类型检查、fixture 或历史测试数不能越级证明完成。
 
