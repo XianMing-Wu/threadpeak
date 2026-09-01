@@ -1,7 +1,7 @@
 # Architecture status — engineering baseline
 
 - Time: 2026-09-01
-- Commit: pending (this slice)
+- Commit: `f0d674b`
 - Environment: darwin, Node v25.5.0 (engines `>=24`), npm 11.8.0, Vite 8.2.2, TypeScript 6.0.3
 - Maturity proposal: workspace/runtime-assets = `implemented`; product pages remain `prototype`
 
