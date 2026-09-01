@@ -1,7 +1,15 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useLayoutEffect, useEffect, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { Icon, MountainMark } from '../icons'
 import { ACTIVE_HISTORY_KEY, HISTORY_CHANGE_EVENT, HISTORY_OPEN_EVENT, openChatHistory, readChatHistory } from '../history'
 import { hydrateLearningHistory } from '../workspace/store'
+
+function profileMenuBox(button: HTMLElement, collapsed: boolean) {
+  const rect = button.getBoundingClientRect()
+  return collapsed
+    ? { left: Math.round(rect.right + 8), bottom: Math.round(window.innerHeight - rect.bottom) }
+    : { left: Math.round(rect.left), bottom: Math.round(window.innerHeight - rect.top + 8) }
+}
 
 export type RouteName = 'home' | 'chat' | 'paths' | 'path-3d' | 'knowledge' | 'knowledge-detail' | 'session-learning' | 'authors' | 'settings'
 
@@ -15,11 +23,37 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
   const [history,setHistory]=useState(readChatHistory)
   const [activeHistoryId,setActiveHistoryId]=useState(()=>sessionStorage.getItem(ACTIVE_HISTORY_KEY)??'')
   const [profileOpen,setProfileOpen]=useState(false)
+  const [menuBox,setMenuBox]=useState<{left:number;bottom:number}|null>(null)
   const previousRoute=useRef(route)
   const profileRef=useRef<HTMLDivElement>(null)
+  const menuRef=useRef<HTMLDivElement>(null)
   useEffect(()=>{if(previousRoute.current!==route){if(compactRoutes.has(route))setCollapsed(true);previousRoute.current=route}},[route])
   useEffect(()=>{const shortcut=(event:KeyboardEvent)=>{if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==='k'){event.preventDefault();location.hash='home';window.setTimeout(()=>document.querySelector<HTMLTextAreaElement>('.home .composer textarea')?.focus(),60)}};addEventListener('keydown',shortcut);return()=>removeEventListener('keydown',shortcut)},[])
-  useEffect(()=>{const close=(event:PointerEvent)=>{if(!profileRef.current?.contains(event.target as Node))setProfileOpen(false)};const escape=(event:KeyboardEvent)=>{if(event.key==='Escape')setProfileOpen(false)};addEventListener('pointerdown',close);addEventListener('keydown',escape);return()=>{removeEventListener('pointerdown',close);removeEventListener('keydown',escape)}},[])
+  useLayoutEffect(()=>{
+    if(!profileOpen){setMenuBox(null);return}
+    const place=()=>{
+      const button=profileRef.current?.querySelector<HTMLElement>('.tp-profile')
+      if(button)setMenuBox(profileMenuBox(button,collapsed))
+    }
+    place()
+    addEventListener('resize',place)
+    return()=>removeEventListener('resize',place)
+  },[profileOpen,collapsed])
+  useEffect(()=>{
+    const close=(event:PointerEvent)=>{
+      const target=event.target as Node
+      if(profileRef.current?.contains(target)||menuRef.current?.contains(target))return
+      setProfileOpen(false)
+    }
+    const escape=(event:KeyboardEvent)=>{
+      if(event.key!=='Escape')return
+      setProfileOpen(false)
+      profileRef.current?.querySelector<HTMLButtonElement>('.tp-profile')?.focus()
+    }
+    addEventListener('pointerdown',close)
+    addEventListener('keydown',escape)
+    return()=>{removeEventListener('pointerdown',close);removeEventListener('keydown',escape)}
+  },[])
   useEffect(()=>{hydrateLearningHistory();setHistory(readChatHistory());setActiveHistoryId(sessionStorage.getItem(ACTIVE_HISTORY_KEY)??'')},[])
   useEffect(()=>{const refresh=()=>{setHistory(readChatHistory());setActiveHistoryId(sessionStorage.getItem(ACTIVE_HISTORY_KEY)??'')};addEventListener(HISTORY_CHANGE_EVENT,refresh);addEventListener(HISTORY_OPEN_EVENT,refresh);addEventListener('storage',refresh);return()=>{removeEventListener(HISTORY_CHANGE_EVENT,refresh);removeEventListener(HISTORY_OPEN_EVENT,refresh);removeEventListener('storage',refresh)}},[])
   const navigate=(target:RouteName)=>{if(compactRoutes.has(target))setCollapsed(true);go(target)}
@@ -46,10 +80,10 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
         {historyOpen&&<div>{history.length===0?<p className="tp-history-empty">暂无聊天历史</p>:<>{today.length>0&&<><small>今天</small>{today.map(historyButton)}</>}{recent.length>0&&<><small>近 7 天</small>{recent.map(historyButton)}</>}{earlier.length>0&&<><small>更早</small>{earlier.map(historyButton)}</>}</>}</div>}
       </section>
       <div className="tp-profile-wrap" ref={profileRef}>
-        {profileOpen&&<div className="tp-profile-menu" role="menu" aria-label="账号菜单">
+        {profileOpen&&menuBox&&createPortal(<div ref={menuRef} className="tp-profile-menu" role="menu" aria-label="账号菜单" style={menuBox}>
           <button type="button" role="menuitem" onClick={onThemeChange}><Icon name="moon" size={20}/><span>夜间模式</span><i className={`theme-switch ${theme==='dark'?'is-on':''}`} aria-hidden="true"><b/></i></button>
           <button type="button" role="menuitem" className="is-danger" onClick={onLogout}><Icon name="logout" size={20}/><span>退出登录</span></button>
-        </div>}
+        </div>,document.body)}
         <button type="button" className="tp-profile" aria-label="打开账号菜单" aria-expanded={profileOpen} onClick={()=>setProfileOpen((value)=>!value)}><span><Icon name="user" size={21}/></span><b>吴贤明</b></button>
       </div>
     </aside>
