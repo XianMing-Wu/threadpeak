@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Composer } from '../components/Composer'
 import { ProductWorkspace } from '../components/Shell'
 import { Icon } from '../icons'
 import { clearActiveHistory, CHAT_LAUNCH_KEY, HISTORY_OPEN_EVENT } from '../history'
+import { resolveChatLaunch, type ChatLaunchReady } from '../chat/resolve-chat-launch'
 import { resolveOrdinaryAnswer } from '../chat/resolve-ordinary-answer'
 import { resolveVisualAnswer } from '../chat/resolve-visual-answer'
 import { linkedRouteIntro } from '../workspace/catalog'
@@ -24,13 +25,16 @@ export function launchChat(query:string,mode:ChatExperience) {
   location.hash='chat'
 }
 
-function readLaunch():{query:string;mode:ChatExperience;conversationId:string;routeId?:string} {
+function readChatLaunchPayload(): unknown {
   try {
-    const parsed=JSON.parse(sessionStorage.getItem(CHAT_LAUNCH_KEY)??'{}') as {query?:string;mode?:ChatExperience;conversationId?:string;routeId?:string}
-    return {query:parsed.query?.trim()||'性价比高的显卡有哪些？',mode:parsed.mode??'answer',conversationId:parsed.conversationId??'',routeId:parsed.routeId}
+    return JSON.parse(sessionStorage.getItem(CHAT_LAUNCH_KEY) ?? 'null')
   } catch {
-    return {query:'性价比高的显卡有哪些？',mode:'answer',conversationId:''}
+    return null
   }
+}
+
+function experienceOf(value: unknown, fallback: ChatExperience): ChatExperience {
+  return value === 'route' || value === 'visual' || value === 'answer' ? value : fallback
 }
 
 function OrdinaryAnswerUnavailable() {
@@ -49,28 +53,66 @@ function VisualAnswerUnavailable() {
   </article>
 }
 
+function ChatLaunchUnavailable({ title, message }: { title: string; message: string }) {
+  return <ProductWorkspace active="paths" page="chat">
+    <main className="query-chat">
+      <header className="query-chat-header">
+        <div>
+          <button aria-label="返回首页" onClick={()=>location.hash='home'}><Icon name="back" size={18}/></button>
+          <h1>{title}</h1>
+        </div>
+      </header>
+      <section className="query-chat-body">
+        <article className="chat-answer" role="alert">
+          <h2>{title}</h2>
+          <p>{message}</p>
+        </article>
+      </section>
+    </main>
+  </ProductWorkspace>
+}
+
+function fieldsFromLaunch(next: ChatLaunchReady) {
+  const conversation=next.conversationId?getConversation(next.conversationId):undefined
+  return {
+    query: conversation?.query ?? next.query,
+    experience: experienceOf(conversation?.experience, next.mode),
+    conversationId: conversation?.id ?? next.conversationId,
+    routeId: conversation?.routeId ?? next.routeId ?? '',
+  }
+}
+
 export function ChatPage() {
-  const launch=useMemo(readLaunch,[])
-  const stored=launch.conversationId?getConversation(launch.conversationId):undefined
-  const [query,setQuery]=useState(stored?.query??launch.query)
-  const [experience,setExperience]=useState<ChatExperience>(stored?.experience??launch.mode)
-  const [conversationId,setConversationId]=useState(stored?.id??launch.conversationId)
-  const [routeId,setRouteId]=useState(stored?.routeId??launch.routeId??'')
+  const [launch,setLaunch]=useState(()=>resolveChatLaunch(readChatLaunchPayload()))
+  const initial=launch.kind==='ready'?fieldsFromLaunch(launch):null
+  const [query,setQuery]=useState(initial?.query??'')
+  const [experience,setExperience]=useState<ChatExperience>(initial?.experience??'answer')
+  const [conversationId,setConversationId]=useState(initial?.conversationId??'')
+  const [routeId,setRouteId]=useState(initial?.routeId??'')
   const [value,setValue]=useState('')
   useEffect(()=>{if(conversationId)setActiveConversation(conversationId)},[conversationId])
   useEffect(()=>{
     const restore=()=>{
-      const next=readLaunch()
-      const conversation=next.conversationId?getConversation(next.conversationId):undefined
-      setQuery(conversation?.query??next.query)
-      setExperience(conversation?.experience??next.mode)
-      setConversationId(conversation?.id??next.conversationId)
-      setRouteId(conversation?.routeId??next.routeId??'')
+      const next=resolveChatLaunch(readChatLaunchPayload())
+      setLaunch(next)
+      if(next.kind!=='ready'){
+        setQuery('')
+        setConversationId('')
+        setRouteId('')
+        setValue('')
+        return
+      }
+      const fields=fieldsFromLaunch(next)
+      setQuery(fields.query)
+      setExperience(fields.experience)
+      setConversationId(fields.conversationId)
+      setRouteId(fields.routeId)
       setValue('')
     }
     addEventListener(HISTORY_OPEN_EVENT,restore)
     return()=>removeEventListener(HISTORY_OPEN_EVENT,restore)
   },[])
+  if(launch.kind==='unavailable')return <ChatLaunchUnavailable title={launch.title} message={launch.message}/>
   const followUp=()=>{const next=value.trim();if(!next)return;setQuery(next);setExperience(experience==='visual'?'visual':'answer');setValue('')}
   const newChat=()=>{
     if(routeId){

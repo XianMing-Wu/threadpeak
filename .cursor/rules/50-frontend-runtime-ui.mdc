@@ -1,6 +1,6 @@
 ---
 description: "约束 React 前端 runtime、状态、交互、无障碍和模块依赖风格。"
-globs: "src/**/*.ts,src/**/*.tsx,src/**/*.css,src/chat/**,src/pages/Settings.tsx,src/resolve-settings-identity.ts,src/components/Shell.tsx,src/resolve-account-identity.ts,src/components/Composer.tsx,src/resolve-composer-attachment.ts,src/pages/AuthLanding.tsx,src/resolve-auth-session.ts,apps/web/**,packages/runtime-store/**,packages/api-client/**,packages/design-system/**"
+globs: "src/**/*.ts,src/**/*.tsx,src/**/*.css,src/chat/**,src/pages/Chat.tsx,src/chat/resolve-chat-launch.ts,src/pages/Settings.tsx,src/resolve-settings-identity.ts,src/components/Shell.tsx,src/resolve-account-identity.ts,src/components/Composer.tsx,src/resolve-composer-attachment.ts,src/pages/AuthLanding.tsx,src/resolve-auth-session.ts,apps/web/**,packages/runtime-store/**,packages/api-client/**,packages/design-system/**"
 alwaysApply: false
 ---
 
@@ -48,6 +48,7 @@ UI action → typed command method → api-client
 - 侧栏账号缺 provider 时只标本地原型账号，不得写死姓名；主题和退出仍可用，不得锁死整站登录。
 - Composer 附件和资料范围缺 provider 时显式失败；不得用本地文件名或「已上传 PDF」冒充 committed source / evidence pack。思考深度仍是本地偏好。
 - 授权页知乎 OAuth 缺 provider 时显式失败；不得用延时动画冒充授权成功。进入本地原型仍可用，不得锁死整站登录。
+- `#chat` 没有本次发送上下文时显式失败；不得预写问题或用 localStorage 会话正文冒充已打开的会话。Home 发送仍可写入本地草稿 handoff。
 - 旧 document/revision 在新请求失败时继续显示；禁止先清 UI 再发请求。
 
 ## React 约束

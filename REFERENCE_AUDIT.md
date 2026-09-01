@@ -22,7 +22,7 @@
 | `src/pages/AuthLanding.tsx`、`src/resolve-auth-session.ts` | 知乎授权视觉入口；无真实 OAuth 时显式失败，不再用 900ms「正在连接知乎」冒充成功。进入本地原型仍可用 | 服务端 OAuth/session，密钥与 token 不进浏览器 |
 | `src/pages/Settings.tsx`、`src/resolve-settings-identity.ts` | 设置页不再把写死用户或已上传 PDF 资料范围当成已提交 identity/sources；缺 provider 显式失败。密度/动效仍是本地偏好 | 服务端 OAuth/session 身份与 committed source/attachment scope |
 | `src/components/Composer.tsx`、`src/resolve-composer-attachment.ts` | 路线、图文、问博主的输入外观与本地 UI state；附件和资料范围无真实 provider 时显式失败，不再用本地 file chip 或已上传 PDF 冒充来源 | 正向模式白名单；command 发往同源 API；来源/附件走 committed scope |
-| `src/pages/Chat.tsx`、`src/chat/`、`src/workspace/catalog.ts` | 普通/图文无真实 provider 时显式失败，不再渲染预写 Mock 或 fixture 图；路线 generate 连接失败或超时显式失败，不再停在 pending | 真实 Answer/Path provider、typed stream、持久 request/session |
+| `src/pages/Chat.tsx`、`src/chat/`、`src/workspace/catalog.ts` | 普通/图文无真实 provider 时显式失败，不再渲染预写 Mock 或 fixture 图；缺发送上下文不再预写「性价比高的显卡」或用 localStorage 正文冒充已打开会话；路线 generate 连接失败或超时显式失败，不再停在 pending | 真实 Answer/Path provider、typed stream、持久 request/session、committed conversation GET |
 | `src/workspace/store.ts`、`src/history.ts`、`src/resolve-history-reopen.ts` | 侧栏重开不再把 localStorage 正文当成已提交 history；缺 provider 显式失败。workspace 存储仍是原型草稿 | owner-scoped 服务端事实、outbox/projector 和精确 history reopen |
 | `src/pages/Session.tsx`、`src/session/`、`src/knowledge-canvas/`、`src/workspace/nav.ts` | 未选择时不再默认线性代数；我的路线不再 `draftFirstLesson`/`growGraph` 建图或画布 persist；问博主无真实 resolution 时显式失败；示例仍读标记 catalog lesson | canonical 初始回复 settle 后由 GraphSurgeon 创建并增量更新 |
 | `src/session/ask-authors.ts`、`resolve-ask-author.ts` | 用户问博主不再渲染固定作者或预写回复；缺 provider 显式失败 | 真实知乎搜索、稳定身份、逐作者 evidence、LLM 候选内筛选 |

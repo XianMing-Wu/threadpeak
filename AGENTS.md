@@ -42,7 +42,7 @@ Cursor 会自动读取根 `AGENTS.md`，并按 `.mdc` frontmatter 的 `globs` �
 | `.cursor/rules/20-knowledge-lifecycle.mdc` | 概念进入、openLearning 导航、canonical 首答、conversation/history 重开门、selection、知识图与 GraphSurgeon |
 | `.cursor/rules/30-authors.mdc` | 问博主、Chat/Session 问博主门、Authors 搜索/网络门、作者身份/evidence/network |
 | `.cursor/rules/40-visualization-3d.mdc` | 图文 artifact、Chat/Session 图文门、Surface Catalog、知识画布、3D renderer/vendor |
-| `.cursor/rules/50-frontend-runtime-ui.mdc` | React/TSX/CSS、RuntimeStore、页面、Chat 普通回答门、侧栏历史重开门、Settings identity/sources 门、Shell 账号身份门、Composer 附件/资料范围门、授权页 OAuth 门、可访问性和浏览器状态 |
+| `.cursor/rules/50-frontend-runtime-ui.mdc` | React/TSX/CSS、RuntimeStore、页面、Chat 普通回答门、Chat 打开会话门、侧栏历史重开门、Settings identity/sources 门、Shell 账号身份门、Composer 附件/资料范围门、授权页 OAuth 门、可访问性和浏览器状态 |
 | `.cursor/rules/60-backend-platform.mdc` | API/worker/server/contracts、provider、事务、事件、幂等、安全和可观测性 |
 | `.cursor/rules/70-prototype-migration.mdc` | 当前 `src/` 原型、localStorage/fixture 清理和纵向迁移 |
 | `.cursor/rules/80-testing-quality.mdc` | 源码、测试、配置和 catalog：TypeScript 风格、门禁、验证矩阵与 DoD |
@@ -60,6 +60,7 @@ Cursor 会自动读取根 `AGENTS.md`，并按 `.mdc` frontmatter 的 `globs` �
 - path-lab 的 JSON 实验请求已改走 api-client + RuntimeStore；它仍代理到本机 `4312`，不能证明主产品 PathStreamEvent/CAS session 已接通。
 - 产品 Chat 路线模式已去掉页面 timer 和 `draftMineBlueprint` 成功路径；用户请求必须拿到已校验 document，否则显式失败。实验室 API 不可达或等待超时时不再停在 pending。仍不是 PathStreamEvent/CAS。
 - 产品 Chat 普通回答不再渲染 `defaultAnswerMock` 预写正文；没有真实 Answer provider 时显式失败。仍不是 AnswerPipeline / committed artifact。
+- 产品 `#chat` 不再在缺少发送上下文时预写「性价比高的显卡」或用 localStorage 正文冒充已打开会话；缺 launch 显式失败。Home 发送仍可写本地草稿 handoff。仍不是 owner-scoped conversation GET。
 - 产品 Chat / Session 图文模式不再用页面 timer 和 fixture frames 冒充成功；没有真实 VisualizationArtifact 时显式失败。仍不是 Surface Catalog / committed visual attachment。
 - 产品 `#path-3d` 对用户路线只渲染已校验 document；缺文档或示例 fixture 冒充用户路线时显式失败，不再回退 `threadPeakPathDocument`。示例路线仍用明确标记的示例文档。仍不是 CAS snapshot / wire-id handoff。
 - 产品 `#session-learning` 在未选择 route/concept 时 fail-closed，不再默认 `linear-algebra` / `linear-map` 或发明首段讲解。`openLearning` 不再用 `defaultConceptId` 补第一个概念。已选中的**我的路线**在没有 canonical 首答时显式失败，不再 `draftFirstLesson` 建图，也不再用 `growGraph`/`syncConversationGraph` 发明节点。`#knowledge-detail` 也不对 mine 做内存 `growGraph` 或 persist。workspace 读取也不会用 `draftFirstLesson` 改写 mine 的 lesson/图。已选中的示例路线仍可读标记 catalog lesson，不是 canonical 首答。
