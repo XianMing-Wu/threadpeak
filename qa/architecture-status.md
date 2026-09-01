@@ -1,7 +1,7 @@
 # Architecture status — contract convergence
 
 - Time: 2026-09-01
-- Commit: pending (this slice)
+- Commit: `d04c669`
 - Environment: darwin, Node v25.5.0 (engines `>=24`), npm 11.8.0, Vite 8.2.2, TypeScript 6.0.3
 - Maturity proposal: `@threadpeak/contracts` shared runtime schema = `contracted`; product pages remain `prototype`
 
