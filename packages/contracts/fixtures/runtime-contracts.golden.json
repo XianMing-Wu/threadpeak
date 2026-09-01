@@ -1,0 +1,23 @@
+{
+  "uuidUpper": "A0B1C2D3-E4F5-4ABC-8DEF-001122334455",
+  "uuidLower": "a0b1c2d3-e4f5-4abc-8def-001122334455",
+  "traceId": "fixture-trace",
+  "envelope": {
+    "eventId": "11111111-1111-4111-8111-111111111111",
+    "occurredAt": "2030-01-02T03:04:05.000Z",
+    "traceId": "fixture-trace",
+    "schemaVersion": 1
+  },
+  "evidence": {
+    "id": "33333333-3333-4333-8333-333333333333",
+    "provider": "zhihu",
+    "sourceUrl": "https://www.zhihu.com/question/100001",
+    "title": "route 路线材料 1",
+    "excerpt": "golden evidence：说明学习顺序、实践产出、常见卡点、必要前置与验证方式。",
+    "authorName": "fixture-author-1",
+    "publishedAt": "2029-12-01T00:00:00.000Z",
+    "retrievedAt": "2030-01-02T03:04:05.000Z",
+    "sourceContentSha256": "08803725ad00456c4acc6b4262caaa3070ffee8f6924ec28af1448f4d39272e3",
+    "visibility": "public"
+  }
+}

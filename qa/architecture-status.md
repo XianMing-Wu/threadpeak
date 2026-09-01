@@ -1,38 +1,30 @@
-# Architecture status — engineering baseline
+# Architecture status — contract convergence
 
 - Time: 2026-09-01
-- Commit: `f0d674b`
+- Commit: pending (this slice)
 - Environment: darwin, Node v25.5.0 (engines `>=24`), npm 11.8.0, Vite 8.2.2, TypeScript 6.0.3
-- Maturity proposal: workspace/runtime-assets = `implemented`; product pages remain `prototype`
+- Maturity proposal: `@threadpeak/contracts` shared runtime schema = `contracted`; product pages remain `prototype`
 
 ## Commands
 
 | Command | Exit |
 | --- | --- |
-| `npm install` | 0 (132 packages, 0 vulnerabilities) |
+| `npm install` | 0 (workspace + zod) |
 | `npm run check` | 0 |
-| `npm run check:architecture` | 0 (2 tests) |
-| `npm run check:product-invariants` | 0 (5 tests) |
-| `npm test` | 0 (70 tests) |
+| `npm run check:architecture` | 0 |
+| `npm run check:contracts` | 0 (7 tests, both sides) |
+| `npm run check:product-invariants` | 0 |
+| `npm test` | 0 (77 tests) |
 | `npm run build` | 0 |
 
 ## What this slice proves
 
-- The app builds from this repository's lockfile. Scripts no longer invoke `../../zhihu_thread_chatbot/node_modules`.
-- Icons, chart engines, 3D character GLBs, and the 3D host contract excerpt live under `src/vendor/`, `vendor/`, and `public/assets/`.
-- `check:architecture` parses import specifiers and resolves local edges; sibling directory paths fail the gate.
-
-## Browser / live evidence
-
-- Vite `http://127.0.0.1:4301/` rendered the authenticated home shell with local icon sprite (MCP browser snapshot).
-- Dev server served local assets with HTTP 200: `src/vendor/icons-v15.svg`, `vendor/charts/*`, `public/assets/liu-kanshan-idle.glb`.
-- `.env` contains all five required keys. A one-off composition-root-style probe (not a product request) received DeepSeek `/v1/models` 200 and Zhihu origin 200. Secrets were not logged.
-- Interactive hash-page walk was interrupted when the browser MCP session dropped after the home snapshot.
+- Unique physical definition of shared Uuid / Evidence / Envelope / OpenCode protocol lives in `packages/contracts`.
+- `../算法/shared/runtime-contracts.ts` is a re-export only; golden fixtures parse identically and unknown keys fail on both sides.
+- Compatibility deletion condition is written in the old file and `packages/contracts/COMPATIBILITY.md`.
 
 ## What this slice does not prove
 
-- No Web → API → real Zhihu/DeepSeek live gate for user-triggered path/answer/author commands.
-- Path-lab still proxies `/api` to `127.0.0.1:4312`; that is a later path slice.
-- Algorithm contracts remain at `../算法/` until the next slice.
-- Fixture pages, localStorage truth, and fixed authors are unchanged.
-- `format:check` / `lint` scripts are not in this slice.
+- Path/knowledge domain schemas are still in `../算法/`; they were not silently copied or rewritten.
+- No Web → API → real provider live gate for user-triggered commands.
+- Knowledge still has a local `EvidenceRecordSchema` duplicate; it is not the unique owner and must not be treated as a second runtime definition.

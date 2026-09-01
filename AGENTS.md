@@ -11,7 +11,7 @@
 | 维度 | 权威来源 |
 | --- | --- |
 | 当前用户已裁决产品语义 | 本文件第 2 节；旧文档、fixture、截图和源码不得反向覆盖 |
-| 领域字段、状态机、不变量、HTTP、持久化语义 | [`../算法/知识脉络/知识脉络图设计算法.md`](../算法/知识脉络/知识脉络图设计算法.md)、[`../算法/路径生成/最小学习路径算法部分.md`](../算法/路径生成/最小学习路径算法部分.md) 与 `../算法/shared/runtime-contracts.ts` |
+| 领域字段、状态机、不变量、HTTP、持久化语义 | [`../算法/知识脉络/知识脉络图设计算法.md`](../算法/知识脉络/知识脉络图设计算法.md)、[`../算法/路径生成/最小学习路径算法部分.md`](../算法/路径生成/最小学习路径算法部分.md) 与唯一 runtime Zod [`packages/contracts`](packages/contracts/src/runtime-contracts.ts)；旧 `../算法/shared/runtime-contracts.ts` 只允许 re-export |
 | 模块所有权、依赖方向、代码风格、迁移和发布门禁 | 本文件 + 匹配的 `.cursor/rules/*.mdc` |
 | 可见功能、术语、页面和交互事实 | `../PRODUCT_SPEC.md`、`../threadpeak-state-machines/` 与参考图 |
 | 当前实现/测试状态 | 现场源码和当次命令输出；历史数字不能证明现在完成 |
@@ -55,7 +55,8 @@ Cursor 会自动读取根 `AGENTS.md`，并按 `.mdc` frontmatter 的 `globs` �
 - 当前目录仍是 React/Vite UX 原型，主页面存在 fixture、页面内状态和浏览器存储；它不是生产架构。
 - 运行时已不再借用兄弟项目 `node_modules` / `public` / `src`。图标、交互图引擎、3D 角色 GLB 与 3D 宿主合同摘录已落入本仓库 `vendor/`、`src/vendor/` 与 `public/assets/`。
 - 当前主产品尚未接通真实知乎/LLM provider；重构切片只有在真实服务端纵向链和 live gate 通过后才能标记 `integrated`。
-- 相邻路径和知识算法包仍位于 `../算法/`，是实现/合同证据，不代表本 Web 已纵向接通；下一切片再迁入 `packages/contracts`。
+- 共享 runtime Zod 的唯一物理定义已在 `packages/contracts`。`../算法/shared/runtime-contracts.ts` 只保留兼容 re-export，删除条件见该文件与 `packages/contracts/COMPATIBILITY.md`。
+- 路径/知识算法实现与领域文档仍位于 `../算法/`，是实现/合同证据，不代表本 Web 已纵向接通。
 - `prototype`、`contracted`、`implemented`、`integrated`、`production-ready` 必须按当前证据逐级判断；目录存在、类型检查、fixture 或历史测试数不能越级证明完成。
 
 ## 5. 每次任务的最小流程

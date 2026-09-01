@@ -70,6 +70,9 @@ function resolveSpecifier(fromFile, specifier) {
   if (bare.startsWith('.') || bare.startsWith('/')) {
     return path.resolve(path.dirname(fromFile), bare)
   }
+  if (bare === '@threadpeak/contracts' || bare.startsWith('@threadpeak/contracts/')) {
+    return path.join(repoRoot, 'packages/contracts/src/index.ts')
+  }
   if (bare === 'liu-kanshan-learning-path-3d') {
     return path.join(repoRoot, 'src/vendor/learning-path-3d/index.js')
   }
@@ -86,8 +89,11 @@ function resolveSpecifier(fromFile, specifier) {
 }
 
 async function assertFileExists(resolved, specifier, fromFile) {
+  const withoutJs = resolved.endsWith('.js') ? resolved.slice(0, -3) : resolved
   const candidates = [
     resolved,
+    `${withoutJs}.ts`,
+    `${withoutJs}.tsx`,
     `${resolved}.ts`,
     `${resolved}.tsx`,
     `${resolved}.js`,
@@ -116,7 +122,7 @@ export async function checkArchitecture() {
     'path-lab.html',
   ].map((relative) => path.join(repoRoot, relative))
 
-  const sourceRoots = ['src', 'tests', 'scripts'].map((relative) => path.join(repoRoot, relative))
+  const sourceRoots = ['src', 'tests', 'scripts', 'packages'].map((relative) => path.join(repoRoot, relative))
   const sourceFiles = (await Promise.all(sourceRoots.map(walkFiles))).flat()
     .filter((filePath) => !isSkippedFile(filePath))
 

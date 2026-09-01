@@ -3,6 +3,9 @@
   "version": "2.0.0",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "engines": {
     "node": ">=24"
   },
@@ -11,8 +14,9 @@
     "build": "tsc -b && vite build",
     "check": "tsc -b --pretty false",
     "check:architecture": "node --test tests/architecture-baseline.test.mjs",
+    "check:contracts": "node --test packages/contracts/tests/*.test.mjs tests/runtime-contracts-compat.test.mjs",
     "check:product-invariants": "node --test tests/architecture-governance.test.mjs",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs packages/contracts/tests/*.test.mjs"
   },
   "dependencies": {
     "katex": "0.16.47",
