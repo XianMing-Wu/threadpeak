@@ -1,0 +1,9 @@
+.env
+.env.*
+!.env.example
+.DS_Store
+*.tsbuildinfo
+
+node_modules/
+dist/
+.tmp-chrome/

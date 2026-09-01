@@ -1,0 +1,68 @@
+---
+description: "约束学习路线生成、澄清、canonical path contract、3D handoff 与重构边界。"
+globs: "src/path-lab/**,src/pathDocument.ts,src/pages/Chat.tsx,src/pages/Home.tsx,src/pages/Collections.tsx,src/workspace/**,src/components/Path3D.tsx,apps/web/**/path-planning/**,apps/web/**/path-3d/**,packages/contracts/path/**,packages/path-3d-host/**,server/path/**"
+alwaysApply: false
+---
+
+# 路径生成与知识 handoff
+
+路径合同细节以项目根相对路径 `../算法/路径生成/最小学习路径算法部分.md` 为准。本规则冻结它在 ThreadPeak 中的所有权、调用预算和与知识主链的边界。
+
+## 唯一流程
+
+```text
+validate → planSearch → searchRecentYear → [searchExpandedWindow]
+  → generateCandidates → [fallbackGeneration]
+  → prune → projectRenderer
+```
+
+1. 正常最多 1 次 LLM 主调用；结构/质量门禁失败最多 1 次完整 fallback。禁止第三次修复、独立 judge 或循环到通过。
+2. `answer`、`reviseAnswer`、`choice.reminder` 的 provider 调用数必须为 0。
+3. 选择题数量按当前路径合同只能是 0 或 2–3；一次展示一题，最多三题必须产出路径。
+4. 剪枝、下一题和回改前题都是纯 TypeScript。
+5. `server/path` 公开文件固定为 `contracts.ts`、`config.ts`、`providers.ts`、`service.ts`、`renderer.ts`、`http.ts`；不得新增 Agent/solver/reviewer 目录。
+6. 路径管线绝不写 `graph_nodes`、`GraphContribution`、conversation 或 author network。
+
+## 路径事实与传输
+
+- 事实源是 CAS 提交的 `PathGenerationSession` 与同事务 `PublishedPathSnapshot`。
+- `PathStreamEvent` NDJSON 只传输已定义 stage/result；页面不得自造“分析中/第几题”状态。
+- store `create/compareAndSwap` 成功即提交；提交后断连不回滚，客户端用已知 `sessionId` GET 恢复。
+- 候选集及 0 题时 final/document 整体通过前，不持久化半成品 session。
+- 每条流的 `seq` 从 1 连续并绑定一个 `requestId`；`requestId` 不是跨请求幂等 key。
+- `FinalLearningPath → LearningPathDocument 1.0` 必须通过 renderer validator 后才发 `path.ready`。
+
+## 与知识主链的唯一交点
+
+```text
+服务端 ActorContext：tenantId + principalId
+点击概念：planInstanceId + conceptId + 可选 pathRevision
+知识作用域：(tenantId, principalId, planInstanceId, conceptId)
+```
+
+- `pathRevision` 只用于读取路径 snapshot，不进入知识图身份。
+- 3D wire id（例如 `c-<uuid>`）必须先映射成 domain UUID，再由 `resolvePathKnowledgeHandoff` 验证 owner、plan、concept 和 revision。
+- 未知/跨 owner/revision 不匹配统一表现为不可访问，不泄露具体原因。
+- `path.ready` 只同步路线结果卡、路线列表和 3D document。路线生成、打开路线列表、进入 3D 或预加载都不能创建首答、knowledge graph 或 root。
+- 只有用户通过有效 handoff 进入概念，才触发 `ConceptLearningEntryPipeline`；知识规则随后接管。
+
+## 当前原型迁移
+
+| 当前文件 | 目标 |
+| --- | --- |
+| `src/workspace/store.ts` / `catalog.ts` 关键词拼路线 | 删除用户请求生产路径；只读示例与隔离测试 fixture 必须分离且明确标记 |
+| `src/pages/Chat.tsx` 页面阶段/timer | api-client decoder → path projector → RuntimeStore selector |
+| `src/path-lab/contracts.ts` | 迁移到唯一 `packages/contracts/path` 后删除兼容层 |
+| `src/components/Path3D.tsx` session/hash handoff | validated document + wire UUID mapping + server handoff |
+
+## 未裁决边界
+
+- 可见产品材料写澄清题 1–2，而路径 vNext 写 0 或 2–3：实现只按 vNext；产品规格/状态机同步前不能声称集成完成。
+- 产品希望冷域离页继续，而路径合同是 request-stream + CAS session、无 durable job：不得暗改成 job。若要后台继续，先修改路径算法、预算、取消与恢复合同。
+
+## 最低验证
+
+- 运行路径算法包的 `check:server` 与 tests，以及当前 UI 的 typecheck/contract tests。
+- 使用真实 in-process NDJSON 覆盖 start/choice/revise/cancel/failure/sequence/terminal/GET restore。
+- 验证 renderer digest、wire-id handoff、未知 concept/revision/owner 拒绝。
+- 浏览器覆盖输入 → 澄清 → `path.ready` → 3D → 点击概念，并证明整个路径阶段没有 knowledge 写入。

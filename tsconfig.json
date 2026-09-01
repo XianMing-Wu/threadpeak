@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "typeRoots": ["../../zhihu_thread_chatbot/node_modules/@types"],
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+    "paths": {
+      "react": ["../../zhihu_thread_chatbot/node_modules/@types/react/index.d.ts"],
+      "react/jsx-runtime": ["../../zhihu_thread_chatbot/node_modules/@types/react/jsx-runtime.d.ts"],
+      "react-dom/client": ["../../zhihu_thread_chatbot/node_modules/@types/react-dom/client.d.ts"],
+      "liu-kanshan-learning-path-3d": ["src/vendor/learning-path-3d/index.d.ts"],
+      "remark-gfm": ["../../zhihu_thread_chatbot/node_modules/remark-gfm"],
+      "remark-math": ["../../zhihu_thread_chatbot/node_modules/remark-math"],
+      "katex": ["../../zhihu_thread_chatbot/node_modules/@types/katex/index.d.ts"]
+    },
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx"
+  },
+  "include": ["src", "vite.config.ts"]
+}

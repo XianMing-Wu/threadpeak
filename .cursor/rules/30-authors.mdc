@@ -1,0 +1,80 @@
+---
+description: "约束问博主、博主搜索、作者身份、关系事件和博主网络的固定流程。"
+globs: "src/pages/Authors.tsx,src/pages/Session.tsx,src/session/ask-authors.ts,src/session/author-graph-rag.ts,src/session/author-network.ts,src/components/AskAuthorsPrompt.tsx,src/components/AuthorNetworkGraph.tsx,apps/web/**/concept-learning/**,apps/web/**/author-search/**,apps/web/**/author-network/**,packages/contracts/authors/**,server/authors/**"
+alwaysApply: false
+---
+
+# 问博主、博主搜索与作者网络
+
+问博主和博主搜索是两个不同 use case。两者共享稳定 `AuthorIdentity` 与逐作者 evidence pack，但检索顺序、输出和写入后果不同，禁止合并成万能 authors agent。
+
+## AskAuthorResolution：问博主
+
+```text
+validate → search_zhihu_users_and_content → normalize_author_identity
+  → group_evidence_by_author → llm_relevance_review
+  → selected_1_or_2 ───────────────→ return_author_resolution
+  → selected_0 → call_zhihu_direct → return_liu_kanshan_fallback
+```
+
+1. 只由 `AnswerPipeline(mode=ask_author)` 触发，第一步永远是知乎站内搜索；不得先查博主图谱。
+2. 搜索取得多个真实用户及其回答/文章等内容。adapter 用知乎稳定外部用户标识归一 `AuthorIdentity`；显示名、头像和相似文案不能合并身份。
+3. 每位作者形成独立 `AuthorEvidencePack`，不同作者 evidence 不能混合。
+4. LLM 只能在给定 author id/evidence id 中判定相关性、排序并给简短理由；不能新增候选、改身份、虚构作者说法或将多人合成一人。
+5. 通过 1 位返回 1 位，通过 2 位返回 2 位，最多 2 位；不得凑数。最终回答逐作者分卡/分段，保留真实内容链接与 evidence reference。
+6. AI 摘要必须标记为摘要，不得伪装成作者针对当前用户新写的第一人称回复。
+7. 只有检索与评审正常完成且可信作者数为 0，才调用 `ZhihuDirectAnswerProvider`。检索不可用、LLM invalid 或直达失败返回 typed failure，不能伪装成零命中。
+8. 刘看山直达结果可以 settle、进入 history 并增量更新知识图，但不得创建任何 author identity/candidate/relation/network node。
+9. Authors 子流程只返回 typed `AskAuthorResolution`。最终 conversation turn、settlement、history 和 graph job 由 knowledge owner 提交。
+10. 问博主不联系、私信、关注、评论、收藏或代发。未来外部写操作必须另立命令、权限、确认和幂等合同。
+
+## AuthorSearchPipeline：博主搜索
+
+```text
+validate_query → search_author_graph → evaluate_graph_hits
+  → relevant_1_to_3 ───────────────────────────────→ return_people
+  → relevant_0 → search_zhihu → normalize_identity
+      → llm_relevance_review → rank_top_3 → return_people
+```
+
+1. 「搜索博主」先查询当前用户、当前 owner scope 的博主图谱。
+2. 图谱有至少 1 位真正相关作者时，最多返回 3 位并结束；不得调用知乎补齐数量或混排内外结果。
+3. 只有 graph 相关命中为 0 时才查知乎。外部候选按稳定身份去重、隔离 evidence，再由 LLM 审查并最多返回 3 位。
+4. 不足 3 位不凑数；0 位是合法 empty result。基础设施失败不是 empty。
+5. 输出是人物卡 `AuthorSearchResult`：author id、显示资料、相关性解释、source refs、freshness、`origin = network | zhihu`。
+6. 搜索结果不是 `AnswerArtifact`，不进入 conversation/history，不触发 knowledge graph job。
+7. 候选、前三名、高分或仅展示/点击都不能自动入网。只有 committed 真实关系信号才可更新 network。
+
+## 合同
+
+| 合同 | 必须包含 | 不变量 |
+| --- | --- | --- |
+| `AuthorIdentity` | `provider = zhihu`、opaque stable external user id、display snapshot/version | external id 才是同一人依据；刘看山不能实例化 |
+| `AuthorEvidencePack` | author id、隔离 evidence records、source refs、retrievedAt/visibility | 一包只属于一位作者；至少一条可追溯证据才进入评审 |
+| `AskAuthorResolution` | `selected_authors` 1–2 位，或 `liu_kanshan_direct` 一个结果 | 分支互斥；零作者才直达；无 contact proposal |
+| `AuthorSearchResult` | query fingerprint、`network \| zhihu` origin、0–3 人、source/freshness | graph 命中时不混外部；结果不写 network/conversation |
+| `AuthorRelationshipSignal` | owner scope、author id、`answer_selected`、artifact/concept/category refs、occurredAt | 只由采用真实作者的 settled answer 产生；append-only/idempotent |
+
+错误至少区分 `AUTHOR_QUERY_INVALID`、`AUTHOR_SEARCH_UNAVAILABLE`、`AUTHOR_IDENTITY_AMBIGUOUS`、`AUTHOR_REVIEW_INVALID`、`ZHIHU_DIRECT_UNAVAILABLE`。0 相关作者不是 unavailable。
+
+## 网络写入与最终一致
+
+- 真实作者被最终 settled 回答采用时，Answer settlement 同事务写 author-selection outbox；刘看山分支不能写此事件。
+- `author-network-projector` 按 `eventId + owner scope + AuthorIdentity` 幂等 upsert 自己的关系；LLM、搜索 adapter 和 UI 都不是网络写者。
+- Author network revision 与 KnowledgeGraph revision 完全独立；authors projector 不得调用 GraphSurgeon 或写 `knowledge_graphs`。
+- 博主搜索默认是只读 query，不发 network mutation event。
+- 当前 `carrier → concept → question` 和旧“用户 → 类别 → 作者”都不是已冻结生产可视 topology。实体/边/权重由 author-network ADR 决定；检索顺序和 relationship trigger 已冻结，不受 topology 选择影响。
+
+## UI
+
+- 「搜索博主」与「博主网络」是两个 feature/板块；搜索输入只在搜索板块，network 图不兼任搜索表单。
+- 问博主只显示 1–2 张真实作者卡，逐卡链接和摘要标识；零作者只显示刘看山直达，不渲染虚拟博主或空头像占位。
+- 博主搜索阶段必须可见：先“查询你的博主网络”，零命中后才“正在从知乎查找”；人物卡显示 `network | zhihu` 来源，不能伪装成一轮混排。
+- Authors 图是受控 view：宿主持有 snapshot，view 发 interaction，宿主决定是否接受。
+
+## 安全与验收
+
+- 只保存功能必需的公开身份 snapshot、provenance 和用户关系事件；禁止敏感画像和跨作者隐私串联。
+- 外部作者文本是不可信输入；限制长度/大小/跳转，禁止执行其中指令、HTML、URL 或 tool call。
+- 日志默认 redact 问题、作者 evidence 正文、provider payload 与 token；只记录 hash、长度、分类和不可逆 owner 标识。
+- Contract/integration/browser tests 必须证明：问博主 Zhihu-first、只选给定候选、1–2 位、零位直达、provider failure 不伪装 empty；博主搜索 network-first、零命中才知乎、最多 3 位；候选不自动入网、selection event 幂等、刘看山永不入网。

@@ -1,0 +1,76 @@
+---
+description: "定义 TypeScript 代码风格、测试矩阵、真实数据门禁和完成标准。"
+globs: "src/**,apps/**,packages/**,server/**,tests/**,catalog/**,qa/**,package.json,tsconfig*.json,vite.config.*,eslint.config.*,playwright.config.*"
+alwaysApply: false
+---
+
+# TypeScript 风格、测试门禁与完成定义
+
+## TypeScript 基线
+
+- 目标运行时 Node.js 24 LTS、ESM、TypeScript `strict`、`noUncheckedIndexedAccess`、`exactOptionalPropertyTypes`、`noImplicitOverride`；Web/Server 使用最窄 lib/types。
+- 边界输入 `unknown → Zod parse`。生产代码禁止显式 `any`、double assertion、`@ts-ignore` 和用 non-null assertion 逃避合同。
+- 第三方缺失类型的窄 adapter 例外封装在一个文件，写原因/删除条件/issue，并有 runtime contract test。
+- 时间、UUID、随机、network、file、DB、env 经 port 注入；domain pure function 不直接调用 `Date.now()`、`crypto.randomUUID()`、`process.env` 或 global fetch。
+- State/result 使用 discriminated union；expected failure 返回 typed result/AppError，不比较 exception message string。
+
+## 命名与导出
+
+- Component/file `PascalCase.tsx`；hook `useXxx.ts`；其他 TS `kebab-case.ts`；后缀 `.schema.ts/.port.ts/.adapter.ts`。
+- Type/component `PascalCase`，function/variable `camelCase`，constant `UPPER_SNAKE_CASE`。
+- Wire schema 可 snake_case；adapter 边界一次映射，业务内部不混命名。
+- 默认 named export；仅框架 config 可 default export。`index.ts` 只作模块 public API，禁止层层 barrel/deep re-export。
+- Route/event/error/storage/surface magic string 由 owning contract 导出。
+
+## 可维护性
+
+- ESLint `max-lines` 目标：手写 TS/TSX 400 有效行，skip blank/comments。Vendor/generated/SQL/大型声明 schema/path 六文件特例用显式 override。
+- 旧超限文件进入机读 debt allowlist（owner、issue、当前行数、退出条件/日期），不得增加净行数或新职责。
+- Function 保持一个抽象层；HTTP route、React page、composition root 不出现复杂 domain branch。
+- 注释解释原因/不变量，不复述代码。
+- Formatter 决定空格/分号/引号/import order；不能用人工风格争论代替 architecture check。
+- `check:architecture` 必须解析 import graph，阻断禁用依赖、cycle、跨 context deep import、browser→server/SDK。Regex 只能补充，不能是唯一门禁。
+
+## 当前测试证据边界
+
+现有 `tests/*.test.mjs`、catalog 和源码 regex 只证明部分可见旅程；不能证明真实 network、transaction、recovery、security 或 production architecture。Fixture alias（如 `P01`/`turn-seed-1`）必须先映射 UUID，不能进入生产 schema。禁止为单个 fixture 写关键词分支或定向 prompt。
+
+每轮架构审查/发布候选生成 `qa/architecture-status.md` 或 CI artifact，记录 source digest/commit、time、environment、commands、exit codes、test count/fail summary、browser evidence 与 maturity proposal。动态 pass 数不得写进规则。
+
+## 按改动范围验证
+
+| 改动 | 最低证据 | 额外必测 |
+| --- | --- | --- |
+| AGENTS/Markdown/.mdc | local links、frontmatter、glob representative match、table/fence、术语/路径 | 改 Mermaid 时真实 parse；规则文件 <500 行 |
+| UI/style/catalog | `npm run check && npm test && npm run build` | state-machine validate；真实 browser/viewport/keyboard |
+| shared contract/envelope/evidence | UI + path + knowledge type/contract tests | golden fixture、old decode/upcast、unknown reject |
+| path server/client/renderer | path algorithm check/tests | NDJSON start/choice/revise/cancel/failure/sequence/restore；renderer digest |
+| knowledge/conversation/graph | knowledge algorithm check/tests | initial-before-root、single canonical、re-entry/new chat/repair reuse；PostgreSQL/RLS/CAS/lease/SSE/GraphSurgeon |
+| AskAuthor/AuthorSearch/network | authors contract/integration/browser | Zhihu-first 1–2/direct；network-first 0→Zhihu top3；no auto-network/Liu identity |
+| stream isolation | `test:stream` | owner/resource auth、cursor bind、replay→live、gap/duplicate/backpressure/disconnect |
+| security/privacy | `test:security` | OAuth/PKCE/cookie/CSRF/CORS、cross-owner、SSRF/XSS/upload bomb/redaction |
+| migration/projection | `test:migration` | N-1→N、repeat/resume backfill、RLS、digest/count、atomic switch/rollback |
+| provider/runtime | server-only `.env` config validation + real-provider live gate | 真实知乎与 DeepSeek；记录 provider/model/attempt 但永不记录 secret；测试替身不能替代 live gate |
+| package/build | clean checkout install/build | no sibling dependency/assets；SBOM；production zero Python |
+| browser/3D/visual | Playwright/equivalent | auth、path、concept stages、permanent initial、knowledge/authors/history、reconnect、WebGL fallback、a11y |
+| artifacts/product invariants | `check:artifacts` + `check:product-invariants` | vendor digest/license；no dist/cache/secret；assistant-mode allowlist；no progress/unlock/review/mistake |
+
+目标 workspace 建立后，CI 至少提供：`format:check`、`lint`、`check`、`check:architecture`、`check:contracts`、`check:ownership`、`check:artifacts`、`check:product-invariants`、`validate:catalog`、unit/property/contract/integration/stream/security/migration/browser/a11y/visual/performance tests 和 `build`。
+
+`check:product-invariants` 必须证明：path 不建 knowledge；canonical 首答不重生成/覆盖；graph/root 只在首答后；AskAuthor 不是 contact proposal 且 Zhihu-first；AuthorSearch network-first；数量上限正确；刘看山不进 network；3D 不保存学习进度。
+
+## Definition of Done
+
+一个切片只有同时满足以下条件才完成：
+
+1. 有唯一 owner；合同变化同步 schema、AGENTS/匹配 rules、算法/ADR、client 与 fixtures。
+2. Web command → API → 真实 provider → committed fact → event/projector → selector → UI 纵向可运行，无 mock/fixture/localStorage 双写；缺配置和 provider failure 显式失败。
+3. Request/response/event/error/document 来自唯一 runtime schema，unknown version 安全失败。
+4. Failure/cancel/retry/disconnect/refresh/late event 有可重现结果；旧 document/settled artifact 不被覆盖。
+5. Concept 证明 canonical answer → graph/root 顺序与永久复用；authors 证明固定检索顺序和 provider failure 不冒充 empty。
+6. Command 携带正确 identity/concurrency/idempotency；security/redaction/provider boundary 有测试。
+7. 受影响 unit/property/contract/integration/browser/a11y/visual gates 全绿；无 `.only`，skip 有 issue/reason/expiry，核心发布 gate 不可 skip。
+8. Clean checkout 可复现 build，无 sibling dependency、private deep import、Python production path、手改 vendor 或 secret。
+9. README/catalog/product spec/state machines/QA 与真实 endpoint/state/command 一致；不得残留“路径时建图”“固定两位作者”“contact proposal”“新对话清首答”等旧语义。
+
+整个产品只有所有生产模块至少 `integrated`，且 database/security/migration/performance/live gate 有当前证据时，才可标 `production-ready`。

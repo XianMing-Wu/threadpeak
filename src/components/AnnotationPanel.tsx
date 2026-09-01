@@ -1,0 +1,72 @@
+import type { CSSProperties } from 'react'
+import { Icon } from '../icons'
+import { isZhihuUrl, type AskAuthorsAnnotation } from '../session/ask-authors'
+
+export function AnnotationPanel({
+  annotation,
+  onClose,
+  placement = 'page',
+  style,
+}: {
+  annotation: AskAuthorsAnnotation
+  onClose: () => void
+  placement?: 'page' | 'node'
+  style?: CSSProperties
+}) {
+  const reply = annotation.reply
+  const href = reply && isZhihuUrl(reply.url) ? reply.url : null
+
+  return (
+    <aside
+      className={placement === 'node' ? 'annotation-panel annotation-panel--node' : 'annotation-panel'}
+      aria-label="侧边批注"
+      style={style}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <header className="annotation-panel__header">
+        <div>
+          <h2>博主批注</h2>
+          <span>围绕所选原文的解答</span>
+        </div>
+        <button type="button" className="annotation-panel__icon-button" aria-label="隐藏侧边面板" onClick={onClose}>
+          <Icon name="close" size={16}/>
+        </button>
+      </header>
+      <div className="annotation-panel__body">
+        <blockquote className="annotation-panel__quote">
+          <span>所选原文</span>
+          {annotation.quote}
+        </blockquote>
+        <p className="annotation-panel__question">{annotation.question}</p>
+        {annotation.status === 'answering' || !reply ? (
+          <div className="annotation-panel__pending" aria-live="polite">
+            <strong>正在解答</strong>
+            <span className="annotation-waiting" aria-label="正在生成批注">
+              <i className="annotation-waiting__dot"/><i className="annotation-waiting__dot"/><i className="annotation-waiting__dot"/>
+            </span>
+          </div>
+        ) : (
+          <article className="annotation-card">
+            <div className="annotation-card__author">
+              <span className="annotation-card__avatar" aria-hidden="true">{reply.name.slice(0, 1)}</span>
+              <div>
+                <b>{reply.name}</b>
+                <small>{reply.bio}</small>
+              </div>
+            </div>
+            <p className="annotation-card__reply">{reply.text}</p>
+            <div className="annotation-card__source">
+              <strong>{reply.title}</strong>
+              {href ? (
+                <a href={href} target="_blank" rel="noopener noreferrer">{href}</a>
+              ) : (
+                <span>链接不可用</span>
+              )}
+            </div>
+          </article>
+        )}
+      </div>
+    </aside>
+  )
+}

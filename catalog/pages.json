@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "2.0.0",
+  "source": "src/App.tsx + src/pages/*.tsx",
+  "items": [
+    { "id": "auth", "name": "知乎授权入口", "hash": "signed-out", "states": ["default", "dark", "authorizing", "authorized"] },
+    { "id": "home", "name": "问山主页面", "hash": "#home", "states": ["idle", "focused", "mode-selected", "pdf-ready", "sent"] },
+    { "id": "chat", "name": "问题会话", "hash": "#chat", "states": ["answer-thinking", "answer-complete", "route-analyzing", "route-question-one", "route-question-one-answered", "route-question-two-appended", "route-ready", "visual-text-streaming", "visual-frame-one-generating", "visual-frame-one-ready", "visual-frame-two-generating", "visual-interactive-ready", "follow-up"] },
+    { "id": "paths", "name": "路线列表", "hash": "#paths", "states": ["mine", "example", "route-open"] },
+    { "id": "path-3d", "name": "双层圆台路线", "hash": "#path-3d", "states": ["scene", "panned", "carrier-selected", "concept-bridge-visible", "concept-selected", "card-safe-area", "error"] },
+    { "id": "knowledge", "name": "知识脉络", "hash": "#knowledge", "states": ["mine", "example", "concept-open"] },
+    { "id": "knowledge-detail", "name": "只读知识画布", "hash": "#knowledge-detail", "states": ["concepts", "canvas", "panned", "node-selected", "edge-reason-open", "zoomed"] },
+    { "id": "session-learning", "name": "统一概念学习", "hash": "#session-learning", "states": ["answer", "quote-ready", "visual", "coach", "authors", "new-branch"] },
+    { "id": "authors", "name": "博主网络", "hash": "#authors", "states": ["search-tab", "network-tab", "radar-idle", "query-open", "radar-scanning", "advisor-revealing", "dynamic-concepts", "top-three", "advisor-hover", "advisor-detail", "related-article", "graph-rag-idle", "graph-rag-extracting", "graph-rag-ready"] },
+    { "id": "settings", "name": "设置", "hash": "#settings", "states": ["default", "preference-changed", "density-on", "reduced-motion-on", "confirm-open", "history-cleared"] }
+  ]
+}

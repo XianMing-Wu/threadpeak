@@ -1,0 +1,68 @@
+---
+description: "约束 AGENTS、README、审计文档与 Cursor Rules 的同步和渐进式披露。"
+globs: "AGENTS.md,.cursor/rules/**,README.md,qa/**,catalog/**,**/*.md,**/*.mdx"
+alwaysApply: false
+---
+
+# 文档与 Cursor Rules
+
+## Cursor Project Rules 格式
+
+遵循 Cursor 官方 [Rules 文档](https://cursor.com/docs/rules)：
+
+- 根 `AGENTS.md` 是无 frontmatter 的始终加载入口；它应保持短小，保存权威、不可变产品语义和规则路由。
+- Project Rules 存放在 `.cursor/rules/`，扩展名必须是 `.mdc`；普通 `.md` 会被 Project Rules 系统忽略。
+- 文件自动附加规则使用：
+
+```yaml
+---
+globs: "comma-separated/project-relative/patterns/**"
+alwaysApply: false
+---
+```
+
+- `alwaysApply: true` 会无条件加载并忽略 globs/description；除非确实每次都需要，否则不要使用。
+- `alwaysApply: false` + `globs` 在匹配文件进入上下文时自动附加。
+- `alwaysApply: false` + `description`、无 globs 由 Agent 按相关性调入；无 description/globs 只能手动 @mention。
+- 每条规则单一关注点、少于 500 行；flat `.cursor/rules/` 目录优先，文件名用数字前缀保持可读顺序。
+- Globs 以项目根为基准，多个 pattern 用逗号分隔。新增/移动关键文件时必须更新 glob 和 AGENTS 路由表。
+- 一个文件可匹配多条规则；规则是合并约束，不是互斥选择。
+
+## 修改规则的同步要求
+
+1. 先说明改的是 product invariant、protocol、projection、document、module ownership、migration、style 还是 gate。
+2. Product invariant 变化先更新根 AGENTS；领域细节更新 owning `.mdc` 与算法/ADR；跨域交接同时更新两边。
+3. 新模块必须有唯一 owner、目标目录、匹配 glob、合同与最低验证；不能只创建目录。
+4. 删除规则前检查是否仍有文件仅由该规则覆盖，避免静默失去约束。
+5. 不在多条规则中复制大段可漂移细节。跨规则只重复少量安全不变量，并明确 canonical owner。
+6. 规则中引用“当前已实现/测试通过”必须有现场证据；否则写目标或 prototype，不写完成态。
+
+## 文档权威与冲突
+
+- 当前用户裁决最高。
+- 根 AGENTS 保存已裁决产品语义；算法文档保存领域 schema/state/HTTP；`.mdc` 保存 scoped architecture/engineering rules；产品规格/状态机保存可见交互；现场源码/命令证明当前状态。
+- 迁移材料中的 Python、旧 AgentEvent/LearningPath/Projection、CarrierPart、RequirementUniverse、KnowledgeThread、SummaryNode 等方案不能静默进入生产合同。
+- 改领域含义、跨包 API、owner、状态机或 transaction boundary 必须同一变更记录 ADR；等价 rename/move 可不写 ADR，但仍过 gates。
+
+## 参考项目证据边界
+
+| 参考实现 | 只借 | 不借 |
+| --- | --- | --- |
+| `opencode` EventV2Bridge/FileMutation/session handlers | HTTP command/event bridge 分离、canonical compare-and-write | process mutex/fork 当 durable correctness |
+| `OpenHands` adapter/`handleEventForUI` | SDK→app model adapter、deterministic projector | ACP/tool host/agent settings |
+| `a2ui` MessageProcessor/SurfaceViewModel | Surface + Catalog + DataModel | model 任意组件/logic/subagent orchestration |
+| `assistant-ui` ExternalStoreAdapter/RuntimeCore | Runtime/Adapter/UI 分离 | unstable runtime、SDK type 侵入 domain |
+| `thread-chatbot` ThreadTreeState/selectors/ui-stream | lineage tree、artifact registry、stream once | browser queue/AbortController 当 server correctness |
+| `hypothesis-client` Selector/PortProvider | quote/position/range re-anchoring | 整套 guest/sidebar/API 或宽松 origin |
+| `vercel-ai` transport/idempotency | provider adapter、key 与 payload fingerprint 分离 | AI SDK/tool loop 当领域模型 |
+
+采用其他参考项目前，直接检查其实际源码并记录可定位 evidence；相似实现只能形成综合建议，不能证明当前项目已经具备对应关系。禁止为了“先跑”把 ThreadPeak 接到参考 Agent host；AG-UI 最多是 transport。
+
+## 文档/规则最低验证
+
+- 所有 `.mdc`：扩展名正确、frontmatter 起止正确、`alwaysApply` boolean、非空 glob、少于 500 行。
+- 用代表文件验证自动匹配：Path3D、Session、Authors、visuals、server、tests、AGENTS 至少命中预期组合。
+- 检查根 AGENTS 路由表与实际 `.mdc` 一一对应，无孤儿/遗漏规则。
+- 检查本地 Markdown links、表格列数、代码围栏、标题、trailing whitespace、merge markers。
+- 关键不变量在根 AGENTS 和 owning rule 中可检索：initial-before-root、canonical permanent、AskAuthor Zhihu-first、AuthorSearch network-first、Liu not author。
+- 文档-only 检查不能被报告成 runtime、browser、transaction 或 production gate 通过。

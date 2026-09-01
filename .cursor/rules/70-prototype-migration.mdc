@@ -1,0 +1,73 @@
+---
+description: "指导当前 UX 原型按纵向切片迁移到目标生产架构并删除旧数据链。"
+globs: "src/**,package.json,tsconfig*.json,vite.config.*,README.md,catalog/**"
+alwaysApply: false
+---
+
+# 当前 UX 原型的迁移规则
+
+当前 `src/` 是可见旅程草稿，不是生产架构。修改现有文件时，不能把局部 mock 修补成第二套长期系统；每个切片应把一条纵向链迁向目标 owner，或明确保持 prototype。
+
+## 当前实现到目标
+
+| 当前实现 | 迁移目标 |
+| --- | --- |
+| `src/workspace/store.ts` + `catalog.ts` 关键词拼路线 | 删除用户请求生产路径；只读示例与隔离测试 fixture 分开存放并明确标记 |
+| `src/pages/Chat.tsx` 页面内路线阶段/timer | `PathStreamEvent` decoder → projector → RuntimeStore |
+| `src/pages/Session.tsx` + `growGraph` | concept entry / `POST /turns` → AnswerPipeline；canvas 只听 committed `graph.*` |
+| `src/session/useAnnotations.ts` | 只产生 Selector；GraphSurgeon 落贡献 |
+| `src/session/ask-authors.ts` 固定作者 | Zhihu-first AskAuthorResolution，1–2 位或刘看山直达 |
+| `src/session/author-graph-rag.ts` | network-first AuthorSearch，零命中才 Zhihu |
+| `src/session/author-network.ts` sessionStorage | committed relationship event → owner-scoped network projector |
+| `src/history.ts` / workspace localStorage | ConversationUseCases + owner-scoped GET/exact reopen |
+| `src/pages/Authors.tsx` | 保持 author-search 与 author-network 两个 feature |
+| `src/components/Path3D.tsx` hash/session handoff | validated document + UUID mapping + server handoff |
+| `src/visuals/specs.ts` 固定图 | validated VisualizationArtifact + Surface Catalog |
+
+旧 `carrier → concept → question` author graph 是 prototype；旧“用户 → 类别 → 作者”也未冻结可视 topology。它们都不能直接成为 production schema。已冻结的只有 AskAuthor Zhihu-first、AuthorSearch network-first、committed relationship trigger、候选不自动入网和刘看山不入网。
+
+## 纵向 Strangler 顺序
+
+1. **工程基线**：自有 workspace/lockfile/Node 24/lint/format/architecture scripts；移除 sibling dependencies/assets。
+2. **合同收敛**：把 `../算法/shared/runtime-contracts.ts` 移到唯一 `packages/contracts`；旧包只 re-export，golden fixtures 双边通过。
+3. **Transport/store**：api-client decoder/projector + RuntimeStore；页面先改 selector 消费。
+4. **Path 纵切**：真实 start/choice/revise/restore → document → 3D；删除页面假 stage 和关键词路线。
+5. **Concept 首答纵切**：handoff → singleflight canonical answer → graph/root bootstrap → restore/repair。
+6. **Knowledge 纵切**：conversation tree/selection/subsequent answer/incremental graph SSE → read-only canvas；删除 `growGraph`/annotation write/local truth。
+7. **Authors 纵切**：真实 Zhihu AskAuthor/direct fallback → network-first search → relationship projector；删除固定作者/local GraphRAG/session network。
+8. **其他 context**：identity/sources/attachments/visualization 各自 contracted 后再接，不得借 path/knowledge/authors 偷渡。
+9. **清理**：consumer 归零后删除 compatibility adapter、运行时 mock/fixture、旧 storage key 和第二写链；只读示例资产与测试夹具不得进入生产请求 composition。
+
+每个 compatibility 层写明 owner、旧/新 schema、删除条件和 test。旧 browser auth/ID/selection/graph revision 不能“顺便迁移”：必须经 ADR 选择丢弃、只读或服务端重新校验；旧 ID 经 handoff/alias 映射 UUID，DOM selection 重新解析 code-point span/hash。
+
+## 看到即阻断
+
+| 违规 | 必须改成 |
+| --- | --- |
+| 页面直接 fetch/EventSource + setState 拼领域消息 | api-client decoder → projector → RuntimeStore selector |
+| 浏览器 storage 作为 path/conversation/graph/network truth | 服务端 committed fact/read model |
+| 图组件 invent 节点/边 | validated schema + view-only renderer |
+| DOM Range/数组下标作持久 selection/id | quote + code-point offsets + hashes/stable UUID |
+| 路线答题后再调模型 | pure TypeScript prune |
+| 路线 ready/3D preload 建 knowledge | valid concept entry 后先 settle canonical，再 bootstrap graph/root |
+| re-enter/new conversation/graph repair 重生成首答 | 读取 `CanonicalInitialAnswerRef` |
+| 服务端猜 parent/active conversation | request 带明确 id，缺失 4xx |
+| evidence/知乎摘要直接冒充回答 | AnswerComposer/typed resolution 或明确失败 |
+| ask_author contact proposal/固定作者/graph-first | Zhihu users+content → identity → LLM 选 1–2 → 0 才直达 |
+| AuthorSearch 直接知乎/内外混排补三人 | owner network first；0 才知乎；最多 3，不凑数 |
+| candidates/top3/Liu 自动写 network | committed real relationship only；刘看山永不实例化 AuthorIdentity |
+| Agent/UI/path/authors 写 knowledge nodes | GraphSurgeon + MutationPlan only |
+| layout 合并 semantic satellites | 语义不同保持独立 |
+| Composer 或持久化草稿出现模式白名单之外的值 | 读取边界归一为空模式；UI 只消费正向白名单 |
+| 新建重复 Evidence/UUID/Event schema | 唯一 packages/contracts runtime schema |
+| 生产依赖 Python 或 sibling node_modules/public/src | Node.js workspace dependency/synced vendor |
+| domain/use case import framework/DB/AI SDK/env | injected port + adapter |
+| memory mutex/AbortController 当 durable correctness | DB unique/CAS/lease/fencing |
+| provider idempotency header 当本地幂等 | local atomic placeholder + fingerprint + terminal state |
+| HTTP 200 包装失败 | typed status/error/resource terminal event |
+| 任意 model HTML/JS/component | Surface Catalog + strict props/command allowlist |
+| `any`/double assertion/ts-ignore 穿边界 | schema parse；窄 adapter 例外 + issue/test |
+
+## 本地浏览器存储白名单
+
+只允许 theme、density、reduced-motion、未提交 composer draft 和无敏感性能 cache。新增任何其他 key 必须视为架构变更并证明它不是事实源。

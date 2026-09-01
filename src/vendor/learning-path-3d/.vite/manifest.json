@@ -1,0 +1,54 @@
+{
+  "_CharacterRig-BpJUYaY6.js": {
+    "file": "CharacterRig-BpJUYaY6.js",
+    "name": "CharacterRig",
+    "imports": [
+      "_three-runtime-CHDI8JSc.js"
+    ]
+  },
+  "_overpassSpec-CjJGXqVE.js": {
+    "file": "overpassSpec-CjJGXqVE.js",
+    "name": "overpassSpec"
+  },
+  "_three-runtime-CHDI8JSc.js": {
+    "file": "three-runtime-CHDI8JSc.js",
+    "name": "three-runtime"
+  },
+  "src/app/LearningPathSession.ts": {
+    "file": "LearningPathSession-BhENLC7P.js",
+    "name": "LearningPathSession",
+    "src": "src/app/LearningPathSession.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_overpassSpec-CjJGXqVE.js",
+      "_three-runtime-CHDI8JSc.js",
+      "_CharacterRig-BpJUYaY6.js"
+    ]
+  },
+  "src/infrastructure/three/character/prepareLearningPathCharacter.ts": {
+    "file": "prepareLearningPathCharacter-Bvm1PXv0.js",
+    "name": "prepareLearningPathCharacter",
+    "src": "src/infrastructure/three/character/prepareLearningPathCharacter.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_CharacterRig-BpJUYaY6.js"
+    ]
+  },
+  "src/module/index.ts": {
+    "file": "index.js",
+    "name": "index",
+    "src": "src/module/index.ts",
+    "isEntry": true,
+    "imports": [
+      "_overpassSpec-CjJGXqVE.js"
+    ],
+    "dynamicImports": [
+      "src/app/LearningPathSession.ts",
+      "src/infrastructure/three/character/prepareLearningPathCharacter.ts"
+    ]
+  },
+  "style.css": {
+    "file": "styles.css",
+    "src": "style.css"
+  }
+}

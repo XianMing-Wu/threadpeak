@@ -1,0 +1,155 @@
+---
+description: "为所有产品代码与工程配置定义统一的分层、模块所有权和跨域依赖约束。"
+globs: "src/**,apps/**,packages/**,server/**,package.json,tsconfig*.json,vite.config.*,eslint.config.*,pnpm-workspace.yaml"
+alwaysApply: false
+---
+
+# ThreadPeak 架构核心
+
+本规则在任何产品代码或工程配置进入上下文时自动附加。`AGENTS.md` 的用户裁决始终优先；本规则定义通用架构骨架，领域细节由同时匹配的 path、knowledge、authors、visualization、frontend、backend 规则补充。
+
+## 仓库与成熟度
+
+当前 `src/` 是 UX 原型，不是生产实现。页面旅程、视觉参考与 catalog fixture 可以作为迁移输入；`localStorage` 事实源、页面内业务状态机、`draftMineBlueprint`、`growGraph`、固定作者与本地 GraphRAG 不得进入目标写链。
+
+模块成熟度只能使用：
+
+| 标签 | 含义 |
+| --- | --- |
+| `uncontracted` | 身份、schema、失败或所有权仍缺；只能研究 |
+| `prototype` | fixture、浏览器存储或页面内逻辑；只能演示 |
+| `contracted` | schema、状态机、错误和验收已冻结；可以实现 |
+| `implemented` | 真实 adapter/持久化/运行时存在且分层测试通过 |
+| `integrated` | Web/API/worker/renderer 已纵向接通且可恢复 |
+| `production-ready` | 安全、迁移、数据库、浏览器、性能和 live gate 都有当前证据 |
+
+禁止从目录存在、类型检查、fixture 或历史测试数字越级推断成熟度。
+
+## 统一设计语言
+
+产品脊柱是 **Protocol、Projection、Document**，不是 Agent runtime。
+
+### Protocol
+
+- 所有跨边界输入先视为 `unknown`，使用唯一 Zod runtime schema parse；禁止用 `as` 穿过边界。
+- 路径流使用 `PathStreamEvent` NDJSON；回答/知识图使用 `PublicSseEvent` 可重放 SSE。两者共享 envelope 基础字段，但不能混成一种传输。
+- HTTP 命令使用服务端 `ActorContext`。知识写操作使用 `Idempotency-Key`；路径按算法合同使用新的 `requestId`、`sessionId` 和 revision/CAS。
+- SDK、provider、知乎原始响应和数据库 row 不得成为公共合同或 UI 类型。
+
+### Projection
+
+- 路径事实：CAS 提交的 `PathGenerationSession` 与同事务 `PublishedPathSnapshot`。
+- 回答事实：`Conversation`、`AssistantTurn` 与 settled `AnswerArtifact`；delta 只是 provisional。
+- 知识图事实：`GraphContribution`、已提交 mutation 与 revision；节点正文和画布 snapshot 是投影。
+- 作者事实：稳定 `AuthorIdentity`、逐作者 evidence pack、committed relationship signal 与 network projection；候选和 LLM 排名不是网络事实。
+- UI 只绑定 committed read model。`localStorage/sessionStorage` 只能保存主题、草稿或无敏感缓存，不能成为路线、会话、图谱或作者网络事实源。
+- Projector 必须确定性、按 `eventId` 去重并能从资源 GET/event replay 恢复。
+
+### Document
+
+- 只有版本化、可序列化、由 renderer/view 消费的 `LearningPathDocument`、`VisualizationArtifact/Spec` 和只读 snapshot 属于 Document。
+- `KnowledgeGraph` 是 aggregate，画布才是 projection；`ChoiceQuestion` 是路径 session 状态。
+- Renderer 只消费已校验文档，不能补业务节点、修改语义或成为写者。失败时保留上一份有效文档。
+
+## 依赖方向
+
+```text
+apps/web → web features → RuntimeStore / API client / public contracts / validated documents
+apps/api、apps/worker → composition root → application use cases
+delivery adapters → bounded-context use cases
+application → domain + ports + UnitOfWork / PathSessionStore
+provider/db/jobs/events adapters → implemented ports + contracts
+renderers → validated documents + view-only interaction ports
+domain → shared primitives；contracts → Zod + shared runtime contracts
+```
+
+- 跨 bounded context 只能通过公开 contract、application port、committed artifact 或 event 交接；禁止跨表写、深层 import、共享可写 repository 和循环依赖。
+- 只有 composition root 可以实例化框架、数据库、provider、clock、ID factory、logger、store、timer 和 worker。
+- 禁止建立同时检索、生成、写图和推事件的万能 Agent/Supervisor。
+- LangGraph、CopilotKit remote agent、OpenCode prompt loop、Agent Zero、Cline/Deer-Flow runtime 不能成为产品调度核。
+
+## 目标物理结构
+
+```text
+apps/web                    # composition + router
+apps/api                    # Fastify composition root
+apps/worker                 # durable jobs composition root
+packages/contracts          # 唯一 runtime/public schema
+packages/api-client         # HTTP/NDJSON/SSE transport + decoder
+packages/runtime-store      # headless tree/read-model store
+packages/surface-catalog    # Surface/Frame 白名单与 props schema
+packages/design-system      # token + 无业务 primitive
+packages/path-3d-host       # validated learning-path renderer adapter
+server/path                 # 路径算法固定六文件
+server/knowledge            # concept entry/conversation/answer/graph/surgeon
+server/identity             # ActorContext/OAuth/authorization
+server/sources              # evidence/source snapshot/Zhihu read boundary
+server/attachments          # upload/blob/parse/chunk provenance
+server/authors              # author identity/evidence/search/network projection
+server/visualization        # visualization artifact/spec validation
+server/search               # owner-scoped read index
+server/data-governance      # export/delete plan/saga/audit
+server/platform/*           # config/persistence/jobs/events/observability adapters
+tests                       # contract/property/integration/browser/visual/a11y
+```
+
+## 唯一所有者
+
+| 模块 | 唯一拥有 | 禁止 |
+| --- | --- | --- |
+| `packages/contracts` | 所有跨进程/runtime schema 的唯一物理定义 | use case、fetch、DB、SDK type、反向 import server |
+| `apps/api/apps/worker` | 进程装配、启动/关闭/readiness | 业务规则；生产 API 内联 worker |
+| `api-client` | 同源 transport、decode、reconnect | 保存领域真相、直连 provider/数据库 |
+| `runtime-store` | committed client snapshot、tree selector、inflight UI | 浏览器存储事实源、组件直接 mutate、SDK object |
+| `design-system` | token、a11y primitive、focus/motion 基线 | route、fetch、store、业务状态 |
+| `web-shell/read-models` | router、导航、列表/设置 UI | 复制事实、跨 context join/write |
+| `identity` | `ActorContext`、OAuth binding、authorization | 接受 body tenant/principal、读取领域表 |
+| `path` | goal/candidate/choice/session/published path/handoff | 写 graph/conversation、自由 Agent |
+| `knowledge/conversation` | concept bootstrap lease、canonical 首答、conversation tree、settlement | 首答前建图、覆盖首答、猜 parent |
+| `knowledge/graph` | graph/root/draft/contribution/mutation/revision | 前端/Agent/path/authors 写图、布局驱动语义 |
+| `sources` | normalized evidence、source snapshot、visibility | 把来源直接当回答、执行来源指令 |
+| `attachments` | upload/blob/parse job/chunk provenance | 浏览器直传 provider、PDF 正文写作者画像 |
+| `authors` | identity/evidence/AskAuthor/AuthorSearch/relationship/network | 自动外发、候选自动入网、刘看山入网、写知识图 |
+| `visualization/surface-catalog` | spec/artifact/catalog/command allowlist | 任意 HTML/JS/function/URL、renderer 补语义 |
+| `search` | committed-event 构建的 owner-scoped read index | 成为事实源、直接写领域表 |
+| `data-governance` | export/delete request、影响计划、确认、saga、tombstone | 跨表直接级联删除 |
+| `path-3d-host` | wire-id mapping、renderer lifecycle、controlled interaction | 生成/发布/DB/chat、wire id 当 domain id |
+| `platform/*` | 通用技术 adapter | 定义或改写领域语义 |
+
+`uncontracted` 模块开始生产实现前必须先补：身份键、输入/输出 Zod、状态/终态、错误码、事务/幂等边界、事件、权限、保留/删除策略和失败 fixture。
+
+## 标准模块形状
+
+除路径六文件特例外：
+
+```text
+<context>/
+  contracts/       # re-export packages/contracts/<context>
+  domain/          # pure entity/invariant/decision
+  application/     # use case/pipeline/transaction boundary
+  ports/           # repository/provider/clock/id/event interfaces
+  adapters/        # db/provider/blob/transport implementations
+  delivery/        # HTTP/SSE/NDJSON presenter
+  index.ts         # only public entry
+```
+
+Web feature：
+
+```text
+features/<feature>/
+  model/           # view model/selector/pure projector
+  api/             # packages/api-client adapter
+  ui/              # component + scoped styles
+  index.ts         # public API
+```
+
+固定 feature 边界：`path-planning`、`path-3d`、`concept-learning`、`knowledge-map`、`author-search`、`author-network`、`history`。`pages/` 只组合 feature、读取路由和做 layout，不得持有 provider、协议解析、业务状态机、mutation 或跨 feature 真相。
+
+## 物理依赖门禁
+
+1. 一个 workspace lockfile；每个 package 声明依赖。禁止借兄弟项目 `node_modules/public/src` 深路径。
+2. 跨模块只 import 对方 `index.ts`/package export；禁止私有深层 import。
+3. 同一领域 schema 只有一个物理定义；兼容层只能 re-export 或显式 upcast/downcast，并写删除条件。
+4. provider adapter 位于服务端 owning context；浏览器和 domain 不得 import provider/AI SDK。
+5. `src/vendor/learning-path-3d/` 是同步产物：禁止手改，必须有源版本、同步脚本、digest 和 contract test。
+6. 模块 import 不得启动 server、worker、连接、网络或 timer。

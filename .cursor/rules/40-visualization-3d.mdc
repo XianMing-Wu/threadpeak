@@ -1,0 +1,57 @@
+---
+description: "约束图文内容、知识画布、3D renderer 及可视化合同边界。"
+globs: "src/visuals/**,src/knowledge-canvas/**,src/pages/KnowledgeCanvas.tsx,src/pages/Session.tsx,src/components/BasisVisual.tsx,src/components/Path3D.tsx,src/vendor/learning-path-3d/**,src/pathDocument.ts,apps/web/**/path-3d/**,apps/web/**/knowledge-map/**,packages/surface-catalog/**,packages/path-3d-host/**,packages/contracts/visualization/**,server/visualization/**"
+alwaysApply: false
+---
+
+# 图文、知识画布与 3D Renderer
+
+Visualization、KnowledgeGraph 和 LearningPath 是三种不同对象：visual 是回答 attachment/document，knowledge 是 aggregate 的 read projection，3D 是路径 document renderer。禁止因都“画图”而混用 schema 或所有权。
+
+## VisualizationArtifact / Surface Catalog
+
+- Visual mode 仍走同一 `AnswerPipeline(visual)`；settled answer 可附一个已校验 `VisualizationArtifact/Spec`，不是第二条聊天链。
+- Surface/Frame 只能从固定 Catalog 选择；props 运行时 parse，command 必须在 allowlist。
+- 模型不得返回或执行任意 HTML、JavaScript、function、inline handler、动态组件名、import URL 或 iframe origin。
+- Renderer 只消费已校验 declarative document，不能新增业务节点、改 answer/graph 语义或直接写 store。
+- UIMessage/AI SDK/tool-loop 类型不得成为 visualization contract。
+- 渲染失败保留回答和上一份有效 document，并提供 loading/error/fallback；不能清空内容后只报错。
+
+## 图文交互
+
+- 可视化回答在图内交互，不为每个图再添加无合同的滑杆、输入框、播放/重置工具条；renderer 自带的必要 reset 例外。
+- 交互 state 是 view state，不自动变成 KnowledgeDraft/graph edge。只有 settled answer 语义进入 GraphProjectionPipeline。
+- 可视化必须支持 keyboard、visible focus、ARIA label、reduced motion 和静态 fallback；颜色不是唯一编码。
+- Markdown、公式和可视化内容使用 allowlist sanitizer，并限制 link/image/iframe 协议与 origin。
+
+## 3D 路径宿主
+
+- `packages/path-3d-host`/当前 `Path3D.tsx` 只接收 `validateLearningPathDocument` 通过的 LearningPath 1.0 document。
+- 3D XState/scene 只管理 renderer 生命周期、镜头、角色与受控交互；不得管理生成、选择题、发布、conversation、knowledge mutation 或学习进度。
+- Wire id 必须映射回 domain UUID。宿主收到点击后先验证 mapping，再通过服务端 path→knowledge handoff；renderer 不能直接拼 hash/sessionStorage 充当生产导航事实。
+- 所有节点从首次加载可交互；禁止恢复 unlock/completed/review/mistake/progress 领域状态。
+- WebGL 失败必须提供可访问的非 3D fallback，不能阻断已发布路径和概念入口。
+
+## 知识画布
+
+- Knowledge canvas 只消费 owner-scoped committed graph snapshot/revision；不能从 conversation message、布局或 DOM 重新推导节点/边。
+- 画布是受控 view：宿主持有 snapshot，view 只发 selection/pan/zoom/expand 等 interaction。
+- Semantic edge 与 layout edge 分离；布局算法不能合并不同 satellite、改 parent 或创建 topology。
+- Graph 失败/重连保留上一 revision；gap 触发 replay/资源重取，不能跳过事件继续画。
+
+## Vendor 约束
+
+`src/vendor/learning-path-3d/` 是生成/同步 artifact：
+
+1. 禁止直接修改 bundle、source map、GLB 或 vendor CSS。
+2. 修改上游 3D runtime 后通过同步脚本重建，并记录源 commit/version、digest 和许可证。
+3. Contract test 验证 public mount API、document version、wire-id event 和 asset digest。
+4. 构建产物/source map 不得包含 secret、内部 provider URL 或用户数据。
+
+## 最低验证
+
+- Catalog schema、唯一 ID、引用闭合和实际 renderer evidence。
+- Visual artifact invalid/unknown version、sanitization、fallback、keyboard/a11y 和 reduced-motion。
+- 3D validated document、wire mapping、点击/关闭/拖动、WebGL fallback、1280×720 与受影响低视口。
+- Knowledge canvas revision/replay/gap、只读语义、layout 不改 topology。
+- 如修改 vendor 来源，只通过受控同步脚本更新构建产物，并重新验证来源版本、digest、许可证和 public API。

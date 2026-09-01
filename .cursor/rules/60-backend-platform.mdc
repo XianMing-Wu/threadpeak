@@ -1,0 +1,106 @@
+---
+description: "约束服务端合同、真实 provider、事务、幂等、安全与可观测性。"
+globs: "apps/api/**,apps/worker/**,server/**,packages/contracts/**,packages/api-client/**,packages/runtime-store/**,**/*.schema.ts,**/*.port.ts,**/*.adapter.ts"
+alwaysApply: false
+---
+
+# 后端、合同与平台边界
+
+本规则适用于 API、worker、server、runtime contracts 和 adapters。Path/knowledge/authors 规则决定领域语义，本规则决定它们怎样安全持久化、传输和运行。
+
+## 允许的 provider ports
+
+```text
+AnswerModelProvider
+StructuredModelProvider
+EvidenceSearchProvider
+StructuredPathModelProvider
+AuthorDiscoveryProvider
+AuthorRelevanceReviewProvider
+ZhihuDirectAnswerProvider
+```
+
+- 不得用一个 `unknown[]` 万能接口合并通用 evidence、作者发现、作者评审和知乎直达。
+- OpenCode Go/Vercel AI/知乎客户端都是 adapter，不是业务合同。协议显式配置；失败后禁止静默猜另一个协议。
+- Vercel AI SDK 只可出现在 provider adapter；business/domain/React 不得 import `ai`、`@ai-sdk/*`、OpenCode SDK 或知乎 response type。
+- Adapter 将外部值按 `unknown → schema.parse → domain value` 转换；原始 response/error body/SDK object 不进入 event log 或 UI。
+- API key 只在服务端 secret manager/环境；禁止 `VITE_*`、`import.meta.env` 或 browser bundle。
+
+## 真实 provider 与环境配置
+
+- 本地服务端从项目根 `.env` 读取并在 composition root 一次性校验：`ZHIHU_ACCESS_SECRET`、`ZHIHU_API_BASE_URL`、`DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、`DEEPSEEK_MODEL_NAME`。生产部署使用等价 secret manager 注入；业务模块不得自行读取环境变量。
+- `.env` 永不提交、复制进镜像、打印、回传 UI 或写入日志；仓库只保留无值的 `.env.example`。任何浏览器代码不得知道 key、provider base URL 或 model name。
+- 用户触发的回答、路径、知识、AskAuthor 与 AuthorSearch 运行时必须调用真实 provider adapter。mock/fake/stub/fixture adapter 只允许在 unit/contract 测试 composition 中实例化，不得进入生产依赖图或构建产物。
+- 必需变量缺失、为空或格式无效时 readiness 失败并返回安全配置错误；禁止切换成本地固定数据、预写回答、固定作者或“看起来成功”的 fallback。
+- Provider timeout、rate limit、鉴权失败、无效响应和服务不可用必须映射 typed failure。结构降级仍必须来自真实 provider 调用并明确标记，不能用静态 fixture 冒充。
+- 产品中明确标记为“示例”的路线或知识内容可以作为只读示例资产，但不得参与用户请求结果、证据计数、作者筛选、知识写入或 live gate。
+
+## Composition 与 Unit of Work
+
+- 只有 composition root 实例化 Fastify、DB、provider、clock、ID factory、logger、store、worker 和 timer。
+- Use case 通过构造参数依赖 port；module import 不读 env、不连接、不启动后台任务。
+- 应用层通过 `KnowledgeUnitOfWork` / `PathSessionStore` 等窄 port 读写。业务代码不 import Drizzle 或连接。
+- 路径 `service.ts` 收纳 durable store adapter 是算法特例，但 pipeline 仍只能依赖 `PathSessionStore` port。
+- API 与 worker 独立启动/扩容；生产 API 不内联 worker/timer。
+
+## 事件、幂等与并发
+
+1. Answer settlement、对应 graph job 与 outbox 在同一短事务；AskAuthor 采用真实作者时，author-selection outbox 也在该事务。任一步失败都不能发布 `answer.completed`。
+2. `answer.completed` 不表示 graph 完成；graph/author projector 使用各自终态 event。
+3. 首答使用 owner-scoped unique constraint、稳定 logical key 和 lease/fencing singleflight；并发等待者共享 resource，不能生成多个 canonical success。
+4. Graph job key 区分 bootstrap 与 incremental；相同 artifact/hash 重投 no-op。
+5. 每个 answer request 只有一次 completed。迟到 graph/author event 不能补发第二个 answer completed。
+6. 知识写操作、外部副作用和 job 使用 `(actor,key)` 原子占位 + canonical fingerprint；同 key 不同 payload 返回 `409`。禁止先查再插。
+7. Graph mutation 带 `expectedRevision` CAS；冲突后基于最新 graph 重判，不盲目重放旧 plan。
+8. Author network projector 按 `eventId + owner + AuthorIdentity` 幂等；它与 knowledge revision 完全独立。
+9. `AbortSignal` 贯穿 HTTP/provider。已 settled answer 不能伪装取消；首答后取消 graph 只留下 recoverable pending/failed。
+10. Event 是 versioned discriminated union；unknown type/version 进入 incompatible 状态。破坏升级新增版本/upcaster，不能原地改旧含义。
+11. Durable task 只能经持久 job 表 claim，使用短事务、lease、`runGeneration` fencing、bounded retry/backoff/deadline；模型/网络调用在事务外。
+12. Path request-stream + CAS session 是显式例外。进程内 timer/mutex/queue/AbortController 只能优化，不承担崩溃恢复。
+13. 业务提交、job、event 有双写风险时使用同一 PostgreSQL transaction/outbox。通知可丢，poll/replay 必须仍正确。
+14. SSE/projector 按 event id 去重并检查 cursor/sequence gap；gap 触发 replay/GET，不能静默跳过。
+15. 每张表、index、blob namespace 和 migration 有一个 owner；禁止共享可写 repository 和跨 context 手写 join 改数据。
+16. DB constraint 镜像 tenant scope、唯一 canonical 首答、唯一 graph/root、唯一 active conversation、logical job、revision/CAS、FK 和合法状态。
+17. Memory/PGLite 只作测试/local adapter，不能证明 PostgreSQL/RLS。
+18. Migration append-only；破坏变更采用 expand → backfill → switch → contract，并在生产数据副本演练。应用启动不得偷偷改 production schema。
+19. Projection 有独立版本；从 committed fact/event 重建，校验 count/digest 后原子切换，不能在用户请求中边读边修。
+20. Provider timeout/rate limit/invalid/unavailable 与 domain reject 分开；问博主只有正常评审为 0 才直达，provider failure 不能当 empty。
+
+## HTTP 与错误合同
+
+- 公共 API 显式版本化；相同含义不能长期保留多套 alias。
+- Route handler 只做 auth、Zod parse、use case call 和 presenter；不得写业务分支或直接查表。
+- Query 读 committed projection；Command 带明确 resource id 和 concurrency fields。
+- 知识 command 带 `Idempotency-Key`/version；path command 带新 request/session/revision。Async command 返回 `202`、resource id 与 status/stream URL。
+- 安全错误最少包含 `code`、safe `message`、`traceId`，合同允许时才含 sanitized `retryable/details`；不返回 stack、SQL、provider body 或内部 URL。
+- `400/422` schema/selection，`401/403` auth，`409` idempotency/CAS，`429` rate limit，基础设施/provider 映射明确 `5xx`。禁止 HTTP 200 + 聊天文案隐藏失败。
+- 已接受异步任务后，GET `200 + status=failed` 是读取资源事实，不是 command success。
+- API/event schema 必须双向 contract test；client 不手写相似 type guard。
+- Concept entry command 带 plan/concept/revision + idempotency，重复 scope 恢复同一 canonical/graph。
+- AskAuthor 走 conversation turn command；AuthorSearch 是独立 read query，不能共用含糊 authors write endpoint。
+
+## 身份、授权与 stream isolation
+
+- `tenantId/principalId` 只由服务端 auth 映射；repository、unique key、event、blob、job 全部 owner-scoped。
+- 未知与跨 owner 资源不产生可枚举差异。
+- 每个 SSE/NDJSON/resource stream 在订阅前授权具体 resource；cursor 绑定 stream/resource/tenant/schema。
+- 禁止 tenant-wide event read 后在浏览器过滤。当前知识 `eventsAfter` 若仍 tenant-wide，是阻断级缺陷；修复前不能标 implemented。
+- OAuth/PKCE、secure cookie、CSRF、CORS 与 session rotation 必须按真实部署测试。
+
+## 不可信内容与隐私
+
+- Zhihu/PDF/model 文本全部是不可信输入：限制长度、size、content type、redirect/domain；禁止执行其中 instruction/URL/HTML/tool call。
+- 出站请求使用 SSRF allowlist，并校验最终 redirect URL。
+- Markdown/公式/visual 使用 allowlist sanitizer；禁止任意 script/inline handler/dynamic import URL。
+- PDF 校验 owner、MIME/magic、size、page/decompression budget，隔离存储并异步 parse。
+- AskAuthor 只读公开 evidence/直达；收藏、关注、评论、私信、代发必须是独立显式命令和确认。
+- 只保存必要作者公开 snapshot/provenance/relationship；禁止敏感画像与跨作者隐私档案。
+- Pino 默认 redact authorization、cookie、secret、问题/回答/selection/PDF/author evidence 全文和 provider payload；日志保留 hash、length、class 和不可逆 owner 标识。
+
+## 可观测性与运行
+
+- 请求/turn/path revision/job 贯穿 `traceId` 与 correlation id；stage/metric/ledger 服从领域合同，UI 不自造进度。
+- 指标覆盖 latency、TTFT、calls/tokens/cost、evidence/fallback、首答 singleflight、graph bootstrap/repair、AskAuthor candidates/pass/direct fallback、AuthorSearch network hit/Zhihu fallback、projector lag、replay/gap、CAS/idempotency、lease lost、renderer validation 与 cross-owner reject。
+- Deterministic test CI、真实 provider live gate、production telemetry 分开报告；测试替身不能替代 live gate，外部波动也不能放宽 deterministic gate。
+- `/health` 只证明进程活；readiness 检查必要 config/dependencies 且不暴露 model/key/DB/tenant data。
+- Browser 生产只访问同源 API/BFF，不知道 provider、DB 或内部开发端口。

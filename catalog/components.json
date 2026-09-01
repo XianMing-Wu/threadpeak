@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "2.0.0",
+  "items": [
+    { "id": "auth-entry", "owner": "auth", "states": ["default", "dark", "authorizing", "authorized"] },
+    { "id": "wide-shell", "owner": "global", "states": ["expanded", "collapsed"] },
+    { "id": "sidebar-history", "owner": "global", "states": ["expanded", "collapsed", "current", "restored", "empty"] },
+    { "id": "account-menu", "owner": "global", "states": ["closed", "open", "dark", "signed-out"] },
+    { "id": "product-workspace", "owner": "knowledge/paths/session", "states": ["without-library"] },
+    { "id": "prompt-composer", "owner": "home/session-learning", "states": ["idle", "focused", "typing", "disabled", "enabled", "mode", "quote", "pdf", "thinking-menu"] },
+    { "id": "route-job-card", "owner": "chat", "states": ["working", "ready"] },
+    { "id": "route-card", "owner": "paths", "states": ["idle", "hover"] },
+    { "id": "carrier-platform", "owner": "path-3d", "states": ["idle", "hover", "selected"] },
+    { "id": "concept-platform", "owner": "path-3d", "states": ["idle", "hover", "selected", "enter-learning"] },
+    { "id": "knowledge-card", "owner": "knowledge", "states": ["idle", "hover"] },
+    { "id": "summary-node", "owner": "knowledge-detail", "states": ["idle", "selected", "read-only"] },
+    { "id": "edge-reason", "owner": "knowledge-detail", "states": ["closed", "open"] },
+    { "id": "selection-toolbar", "owner": "session-learning", "states": ["hidden", "quote-only"] },
+    { "id": "visual-frame", "owner": "session-learning", "states": ["ready", "node-selected"] },
+    { "id": "author-answer", "owner": "session-learning", "states": ["two-author-fixture"] },
+    { "id": "advisor-radar", "owner": "authors", "states": ["query-open", "scanning", "complete", "hover", "selected"] },
+    { "id": "advisor-detail", "owner": "authors", "states": ["closed", "open", "related-link"] },
+    { "id": "author-network-graph", "owner": "authors", "states": ["idle", "hover", "drag", "highlight"] },
+    { "id": "graph-rag-search", "owner": "authors", "states": ["idle", "extracting", "retrieving", "expanding", "ranking", "ready", "empty"] },
+    { "id": "settings-switch", "owner": "settings", "states": ["off", "on"] },
+    { "id": "clear-history-dialog", "owner": "settings", "states": ["closed", "open", "cancel", "confirm"] }
+  ]
+}

@@ -1,0 +1,43 @@
+import { useState } from 'react'
+import { Icon, MountainMark } from '../icons'
+
+export function AuthLanding({ theme, onThemeChange, onAuthorize }: {
+  theme: 'light' | 'dark'
+  onThemeChange: () => void
+  onAuthorize: () => void
+}) {
+  const [authorizing,setAuthorizing]=useState(false)
+  const authorize=()=>{
+    if(authorizing)return
+    setAuthorizing(true)
+    window.setTimeout(onAuthorize,900)
+  }
+
+  return <main className="auth-landing">
+    <button type="button" className="auth-theme" aria-label="切换夜间模式" aria-pressed={theme==='dark'} onClick={onThemeChange}>
+      <Icon name="moon" size={19}/><span>夜间模式</span>
+    </button>
+    <section className="auth-intro" aria-labelledby="auth-title">
+      <div className="auth-brand"><MountainMark size={42}/><strong>问山</strong></div>
+      <p className="auth-kicker">THREADPEAK · 知识探索伙伴</p>
+      <h1 id="auth-title">循着问题与答案的脉络，<br/>登上理解的高峰。</h1>
+      <p className="auth-description">连接知乎的优质内容与创作者，让每一次提问都能沉淀为清晰的知识脉络和学习路线。</p>
+      <div className="auth-features" aria-label="产品能力">
+        <span><Icon name="book" size={18}/>梳理知识脉络</span>
+        <span><Icon name="route" size={18}/>制定学习路线</span>
+        <span><Icon name="network" size={18}/>发现相关博主</span>
+      </div>
+    </section>
+    <section className="auth-card" aria-label="登录问山">
+      <span className="auth-card-mark">知</span>
+      <h2>使用知乎账号登录</h2>
+      <p>授权后即可同步你的公开账号信息，并开始保存学习脉络与路线进度。</p>
+      <button type="button" className={`zhihu-authorize ${authorizing?'is-loading':''}`} disabled={authorizing} onClick={authorize}>
+        {authorizing?<><i className="auth-spinner"/>正在连接知乎...</>:<>知乎授权登录<Icon name="arrow-right" size={18}/></>}
+      </button>
+      <small>当前为认证交互原型。正式接入后，授权凭证将由服务端安全交换，不会保存在浏览器中。</small>
+      <p className="auth-agreement">继续即表示你同意 <span>用户协议</span> 和 <span>隐私政策</span></p>
+    </section>
+    <footer>问山 · 让知识成为可以行走的路径</footer>
+  </main>
+}
