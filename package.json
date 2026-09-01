@@ -16,7 +16,7 @@
     "check:architecture": "node --test tests/architecture-baseline.test.mjs",
     "check:contracts": "node --test packages/contracts/tests/*.test.mjs packages/api-client/tests/*.test.mjs tests/runtime-contracts-compat.test.mjs",
     "check:product-invariants": "node --test tests/architecture-governance.test.mjs",
-    "test": "node --test tests/*.test.mjs packages/contracts/tests/*.test.mjs packages/api-client/tests/*.test.mjs packages/runtime-store/tests/*.test.mjs src/path-lab/*.test.mjs src/path-planning/*.test.mjs src/path-3d/*.test.mjs"
+    "test": "node --test tests/*.test.mjs packages/contracts/tests/*.test.mjs packages/api-client/tests/*.test.mjs packages/runtime-store/tests/*.test.mjs src/path-lab/*.test.mjs src/path-planning/*.test.mjs src/path-3d/*.test.mjs src/session/*.test.mjs"
   },
   "dependencies": {
     "@threadpeak/api-client": "0.1.0",

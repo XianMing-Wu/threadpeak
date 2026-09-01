@@ -31,6 +31,7 @@ import {
   getConversation,
   getKnowledgeByRoute,
   getLesson,
+  getRoute,
   hasGeneratedLesson,
   saveConversationDraft,
   startLearningConversation,
@@ -38,8 +39,13 @@ import {
   syncKnowledgeWithFirstLesson,
 } from '../workspace/store'
 import type { LearningTurn } from '../workspace/types'
+import { resolveLearningEntry } from '../session/resolve-learning-entry'
 
-let sessionStatusTitle = '线性变换'
+let sessionStatusTitle = ''
+
+function readLearningNav() {
+  return { routeId: readActiveRouteId(), conceptId: readActiveConceptId() }
+}
 
 function resolveLearningConversation(routeId: string, conceptId: string) {
   const active = getConversation(readActiveConversationId())
@@ -47,12 +53,48 @@ function resolveLearningConversation(routeId: string, conceptId: string) {
   return ensureLearningConversation(routeId, conceptId)
 }
 
+function SessionUnavailable(props: { title: string; message: string }) {
+  return <ProductWorkspace active="paths" page="session-learning">
+    <main className="learning-session">
+      <section className="lesson-chat">
+        <header>
+          <div className="lesson-heading">
+            <button type="button" className="lesson-back" aria-label="返回上一级" onClick={()=>{location.hash=readSessionReturn()}}><Icon name="back" size={18}/></button>
+            <div><small>刘看山陪你学</small><h1>{props.title}</h1></div>
+          </div>
+        </header>
+        <div className="conversation" role="alert">
+          <article>
+            <h2>无法进入这次学习</h2>
+            <p>{props.message}</p>
+          </article>
+        </div>
+      </section>
+    </main>
+  </ProductWorkspace>
+}
+
 export function SessionPage() {
+  const [nav, setNav] = useState(readLearningNav)
+  useEffect(() => {
+    const restore = () => setNav(readLearningNav())
+    addEventListener(HISTORY_OPEN_EVENT, restore)
+    return () => removeEventListener(HISTORY_OPEN_EVENT, restore)
+  }, [])
+  const route = nav.routeId ? getRoute(nav.routeId) : undefined
+  const entry = resolveLearningEntry({
+    routeId: nav.routeId,
+    conceptId: nav.conceptId,
+    ...(route ? { route } : {}),
+  })
+  if (entry.kind === 'unavailable') return <SessionUnavailable title={entry.title} message={entry.message}/>
+  return <SessionLearning key={`${entry.routeId}::${entry.conceptId}`} routeId={entry.routeId} conceptId={entry.conceptId}/>
+}
+
+function SessionLearning({ routeId, conceptId }: { routeId: string; conceptId: string }) {
   const selectRootRef = useRef<HTMLDivElement>(null)
-  const routeId = readActiveRouteId() || 'linear-algebra'
-  const conceptId = readActiveConceptId() || 'linear-map'
   const blueprint = blueprintOf(routeId)
-  const title = conceptTitle(blueprint, conceptId) || '线性变换'
+  const title = conceptTitle(blueprint, conceptId) || conceptId
   const alreadyReady = hasGeneratedLesson(routeId, conceptId)
   const [entryPhase,setEntryPhase] = useState<'preparing'|'ready'>('preparing')
   const conversationRef = useRef(resolveLearningConversation(routeId, conceptId))
@@ -73,29 +115,6 @@ export function SessionPage() {
 
   useEffect(() => {
     setActiveConversation(conversationRef.current.id)
-  }, [])
-
-  useEffect(() => {
-    const restore = () => {
-      const nextRoute = readActiveRouteId() || 'linear-algebra'
-      const nextConcept = readActiveConceptId() || 'linear-map'
-      const next = resolveLearningConversation(nextRoute, nextConcept)
-      conversationRef.current = next
-      setActiveConversation(next.id)
-      setTurns(next.turns ?? [])
-      setValue(next.value ?? '')
-      setQuote(next.quote ?? '')
-      setMode(next.mode ?? '')
-      setSelection(null)
-      setAuthorQuestion(null)
-      setLesson(getLesson(nextRoute, nextConcept) ?? {
-        heading: conceptTitle(blueprintOf(nextRoute), nextConcept) || nextConcept,
-        paragraphs: [],
-        placeholder: `围绕“${conceptTitle(blueprintOf(nextRoute), nextConcept) || nextConcept}”继续提问，或选择上方模式深入理解…`,
-      })
-    }
-    addEventListener(HISTORY_OPEN_EVENT, restore)
-    return () => removeEventListener(HISTORY_OPEN_EVENT, restore)
   }, [])
 
   useEffect(() => {
