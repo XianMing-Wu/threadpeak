@@ -19,6 +19,7 @@
 | 当前源码落点 | 当前事实 | 重构目标 |
 | --- | --- | --- |
 | `src/components/Shell.tsx`、`src/styles.css`、`src/resolve-account-identity.ts` | 知乎浅色桌面壳、持久主侧栏和 Hash 页面；侧栏账号无真实身份时只标本地原型，不再写死姓名 | Web shell 只组合 route、projection 和 feature UI；账号读取服务端 session |
+| `src/pages/AuthLanding.tsx`、`src/resolve-auth-session.ts` | 知乎授权视觉入口；无真实 OAuth 时显式失败，不再用 900ms「正在连接知乎」冒充成功。进入本地原型仍可用 | 服务端 OAuth/session，密钥与 token 不进浏览器 |
 | `src/pages/Settings.tsx`、`src/resolve-settings-identity.ts` | 设置页不再把写死用户或已上传 PDF 资料范围当成已提交 identity/sources；缺 provider 显式失败。密度/动效仍是本地偏好 | 服务端 OAuth/session 身份与 committed source/attachment scope |
 | `src/components/Composer.tsx`、`src/resolve-composer-attachment.ts` | 路线、图文、问博主的输入外观与本地 UI state；附件和资料范围无真实 provider 时显式失败，不再用本地 file chip 或已上传 PDF 冒充来源 | 正向模式白名单；command 发往同源 API；来源/附件走 committed scope |
 | `src/pages/Chat.tsx`、`src/chat/`、`src/workspace/catalog.ts` | 普通/图文无真实 provider 时显式失败，不再渲染预写 Mock 或 fixture 图；路线 generate 连接失败或超时显式失败，不再停在 pending | 真实 Answer/Path provider、typed stream、持久 request/session |

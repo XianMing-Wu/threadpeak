@@ -24,6 +24,7 @@ alwaysApply: false
 | `src/pages/Settings.tsx` 写死用户/已上传 PDF；产品设置身份与资料范围已 fail-closed | 服务端 identity + committed source scope；本地偏好不改变领域合同，也不得锁死整站登录 |
 | `src/components/Shell.tsx` 写死侧栏姓名；产品账号控件已标本地原型 | 服务端 session 身份；主题/退出仍是本地壳控件，不得锁死整站登录 |
 | `src/components/Composer.tsx` 本地 file chip /「你上传的文档」；产品附件与资料范围已 fail-closed | committed source/attachment scope；思考深度仍是本地偏好 |
+| `src/pages/AuthLanding.tsx` 900ms「正在连接知乎」；产品知乎授权已 fail-closed | 服务端 OAuth/session；进入本地原型仍可用，不得锁死整站登录 |
 | `src/path-3d/` + `src/components/Path3D.tsx` hash/session handoff | validated document + UUID mapping + server handoff |
 | `src/visuals/specs.ts` 固定图 | validated VisualizationArtifact + Surface Catalog |
 

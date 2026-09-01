@@ -1,17 +1,13 @@
 import { useState } from 'react'
 import { Icon, MountainMark } from '../icons'
+import { resolveAuthSession, type AuthSessionResolution } from '../resolve-auth-session'
 
 export function AuthLanding({ theme, onThemeChange, onAuthorize }: {
   theme: 'light' | 'dark'
   onThemeChange: () => void
   onAuthorize: () => void
 }) {
-  const [authorizing,setAuthorizing]=useState(false)
-  const authorize=()=>{
-    if(authorizing)return
-    setAuthorizing(true)
-    window.setTimeout(onAuthorize,900)
-  }
+  const [oauthNotice,setOauthNotice]=useState<AuthSessionResolution|null>(null)
 
   return <main className="auth-landing">
     <button type="button" className="auth-theme" aria-label="切换夜间模式" aria-pressed={theme==='dark'} onClick={onThemeChange}>
@@ -32,9 +28,11 @@ export function AuthLanding({ theme, onThemeChange, onAuthorize }: {
       <span className="auth-card-mark">知</span>
       <h2>使用知乎账号登录</h2>
       <p>授权后即可同步你的公开账号信息，并开始保存学习脉络与路线进度。</p>
-      <button type="button" className={`zhihu-authorize ${authorizing?'is-loading':''}`} disabled={authorizing} onClick={authorize}>
-        {authorizing?<><i className="auth-spinner"/>正在连接知乎...</>:<>知乎授权登录<Icon name="arrow-right" size={18}/></>}
+      <button type="button" className="zhihu-authorize" onClick={() => setOauthNotice(resolveAuthSession())}>
+        知乎授权登录<Icon name="arrow-right" size={18}/>
       </button>
+      {oauthNotice && <p className="auth-unavailable" role="alert"><b>{oauthNotice.title}</b> {oauthNotice.message}</p>}
+      <button type="button" className="auth-prototype-enter" onClick={onAuthorize}>进入本地原型</button>
       <small>当前为认证交互原型。正式接入后，授权凭证将由服务端安全交换，不会保存在浏览器中。</small>
       <p className="auth-agreement">继续即表示你同意 <span>用户协议</span> 和 <span>隐私政策</span></p>
     </section>

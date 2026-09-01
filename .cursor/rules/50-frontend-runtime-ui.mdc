@@ -1,6 +1,6 @@
 ---
 description: "约束 React 前端 runtime、状态、交互、无障碍和模块依赖风格。"
-globs: "src/**/*.ts,src/**/*.tsx,src/**/*.css,src/chat/**,src/pages/Settings.tsx,src/resolve-settings-identity.ts,src/components/Shell.tsx,src/resolve-account-identity.ts,src/components/Composer.tsx,src/resolve-composer-attachment.ts,apps/web/**,packages/runtime-store/**,packages/api-client/**,packages/design-system/**"
+globs: "src/**/*.ts,src/**/*.tsx,src/**/*.css,src/chat/**,src/pages/Settings.tsx,src/resolve-settings-identity.ts,src/components/Shell.tsx,src/resolve-account-identity.ts,src/components/Composer.tsx,src/resolve-composer-attachment.ts,src/pages/AuthLanding.tsx,src/resolve-auth-session.ts,apps/web/**,packages/runtime-store/**,packages/api-client/**,packages/design-system/**"
 alwaysApply: false
 ---
 
@@ -47,6 +47,7 @@ UI action → typed command method → api-client
 - `#settings` 身份与资料范围缺 provider 时显式失败；不得写死登录用户或已上传 PDF。密度、动效、思考深度是本地偏好，不改变领域合同，也不得把 `threadpeak-authenticated` fail-close 成整站锁死。
 - 侧栏账号缺 provider 时只标本地原型账号，不得写死姓名；主题和退出仍可用，不得锁死整站登录。
 - Composer 附件和资料范围缺 provider 时显式失败；不得用本地文件名或「已上传 PDF」冒充 committed source / evidence pack。思考深度仍是本地偏好。
+- 授权页知乎 OAuth 缺 provider 时显式失败；不得用延时动画冒充授权成功。进入本地原型仍可用，不得锁死整站登录。
 - 旧 document/revision 在新请求失败时继续显示；禁止先清 UI 再发请求。
 
 ## React 约束
