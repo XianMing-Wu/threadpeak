@@ -1,9 +1,9 @@
-# Architecture status — sidebar history reopen fail-closed
+# Architecture status — Chat route generate timeout fail-closed
 
 - Time: 2026-09-01
-- Commit: `1cc9e0f`
+- Commit: `8d2a06b`
 - Environment: darwin, Node v25.5.0 (engines `>=24`), npm 11.8.0, Vite 8.2.2, TypeScript 6.0.3
-- Maturity proposal: sidebar history reopen gate = `implemented`; ConversationUseCases / committed GET exact reopen = still `prototype`
+- Maturity proposal: Chat / path-lab generate timeout gate = `implemented`; PathStreamEvent / CAS session = still `prototype`
 
 ## Commands
 
@@ -13,24 +13,25 @@
 | `npm run check:architecture` | 0 |
 | `npm run check:contracts` | 0 (15 tests) |
 | `npm run check:product-invariants` | 0 |
-| `npm test` | 0 (113 tests) |
+| `npm test` | 0 (119 tests) |
 | `npm run build` | 0 |
 
 ## Browser / HTTP
 
-- Production preview `http://127.0.0.1:4302/#home` at 1280×720
-- Clicking a seeded localStorage history title stays on `#home` and shows `role="alert"`「无法重开这次历史」
-- Sidebar list is labeled 本地草稿; Shell no longer calls `hydrateLearningHistory` or navigates via `openChatHistory`
-- Dev Vite on `4301` may still serve a stale module until that process is restarted
+- Dev Vite `http://127.0.0.1:4301/#home` at 1280×720 with lab API `4312` down
+- Home → 路线制定 → `给我制定一条机器学习数学路线` → `#chat`
+- `#chat` shows `role="alert"`「无法发布这条路线」and does not stay on「正在判断目标是否需要校准」
+- Proxy unavailability surfaced as HTTP 502; hanging fetch is covered by the 10s generate timeout even when `fetch` ignores abort
+- Chat unmount uses `abort()` rather than `teardown()`, so StrictMode cleanup cannot freeze the store on pending
 
 ## What this slice proves
 
-- Sidebar reopen no longer writes session route/concept keys or jumps to `#chat` / `#session-learning` as a committed restore
-- `openChatHistory` only returns the unavailable resolution
+- Unreachable or hung `/api/paths/generate` no longer looks like a succeeding path
+- User abort still leaves the cancelled state; timeout abort is an explicit error
 - `store.ts` stayed at 626 lines; no authors write-chain or path/knowledge schema copy
 
 ## What this slice does not prove
 
-- No owner-scoped conversation GET, exact reopen, or committed history projection
+- No PathStreamEvent NDJSON, CAS session, or live generate against a running `4312` lab
+- The 10s budget is the lab JSON adapter wait, not a production generate SLA
 - Workspace localStorage still holds prototype conversation/route/knowledge drafts
-- Route generate still depends on the lab API at `127.0.0.1:4312`
