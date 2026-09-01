@@ -1,9 +1,9 @@
-# Architecture status — migrateKnowledge mine-route keep
+# Architecture status — mine-route graph mutation fail-closed
 
 - Time: 2026-09-01
-- Commit: `2a589f3`
+- Commit: `5ef6eb8`
 - Environment: darwin, Node v25.5.0 (engines `>=24`), npm 11.8.0, Vite 8.2.2, TypeScript 6.0.3
-- Maturity proposal: workspace-read mine keep-gate = `implemented`; example migrate rewrite / growGraph / canonical AnswerPipeline = still `prototype`; no knowledge production write chain
+- Maturity proposal: mine conversation-graph write gate = `implemented`; example growGraph / canvas in-memory grow / canonical AnswerPipeline = still `prototype`
 
 ## Commands
 
@@ -13,22 +13,23 @@
 | `npm run check:architecture` | 0 |
 | `npm run check:contracts` | 0 (15 tests) |
 | `npm run check:product-invariants` | 0 |
-| `npm test` | 0 (104 tests) |
+| `npm test` | 0 (105 tests) |
 | `npm run build` | 0 |
 
 ## Browser / HTTP
 
-- Vite was running; this slice is a localStorage read-path gate, verified by `resolveKnowledgeMigration` tests
-- No new user-visible Session path beyond the previous mine-route fail-closed screen
+- This slice is a store write-path gate; example Session still uses prototype growGraph
+- KnowledgeCanvas can still invent nodes in memory for leftover mine knowledge until persist is skipped by `saveKnowledgeGraph`
 
 ## What this slice proves
 
-- `migrateKnowledge` no longer uses `draftFromRoute` + `draftFirstLesson` to rewrite mine knowledge
-- Mine items are kept as stored; only marked example blueprints may still be rewritten
+- `syncConversationGraph` / `appendLearningTurnToGraph` do not grow mine graphs
+- `saveKnowledgeGraph` does not persist mine graphs
 - `store.ts` stayed at 626 lines
 
 ## What this slice does not prove
 
-- No canonical initial answer, handoff validation, or GraphSurgeon
-- Example migrate rewrite and `growGraph` remain prototype
+- No canonical initial answer or GraphSurgeon
+- KnowledgeCanvas `growGraph` can still change in-memory nodes before persist
+- Example Session still writes local graphs
 - No authors write-chain change
