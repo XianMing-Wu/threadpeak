@@ -1,0 +1,97 @@
+{
+  "$schema": "./mindmap.schema.json",
+  "root": {
+    "title": "踩坑全景",
+    "subtitle": "PROJECT RISKS",
+    "description": "六类项目风险从中心生长，末梢节点是可以逐项检查的具体症状。"
+  },
+  "theme": {
+    "background": "#fbfaf7",
+    "centerFill": "#d8d5ce",
+    "centerStroke": "#bdb8ae",
+    "text": "#3e3932",
+    "centerText": "#2f2b24"
+  },
+  "layout": {
+    "minHeight": 760,
+    "leafGap": 66,
+    "branchGap": 30,
+    "rootBranchWidth": 12,
+    "twigWidth": 3.6,
+    "maxLabelChars": 10
+  },
+  "branches": [
+    {
+      "id": "goal-drift",
+      "title": "目标偏移",
+      "color": "#df5145",
+      "side": "left",
+      "detail": "目标、终点和验收标准没有同时锁定时，项目会在执行中悄悄偏航。",
+      "children": [
+        { "title": "范围模糊" },
+        { "title": "终点变动" },
+        { "title": "验收缺席" }
+      ]
+    },
+    {
+      "id": "information-gap",
+      "title": "信息缺口",
+      "color": "#e89a2d",
+      "side": "left",
+      "detail": "来源、样本和反例共同决定信息是否足以支撑结论。",
+      "children": [
+        { "title": "来源不明" },
+        { "title": "样本偏小" },
+        { "title": "只看正例" }
+      ]
+    },
+    {
+      "id": "long-term-loss",
+      "title": "长期失控",
+      "color": "#bf6a36",
+      "side": "left",
+      "detail": "维护责任、依赖更新与退出路线缺一不可。",
+      "children": [
+        { "title": "维护无主" },
+        { "title": "依赖过期" },
+        { "title": "退出无路" }
+      ]
+    },
+    {
+      "id": "overbuilding",
+      "title": "实现过度",
+      "color": "#36a578",
+      "side": "right",
+      "detail": "抽象和功能若早于真实证据，复杂度会先于价值增长。",
+      "children": [
+        { "title": "过早抽象" },
+        { "title": "功能堆叠" },
+        { "title": "忽略删减" }
+      ]
+    },
+    {
+      "id": "false-validation",
+      "title": "验证假象",
+      "color": "#347fc2",
+      "side": "right",
+      "detail": "静态截图和狭窄测试不能替代真实交互验证。",
+      "children": [
+        { "title": "只看截图" },
+        { "title": "测试过窄" },
+        { "title": "静态代替交互" }
+      ]
+    },
+    {
+      "id": "collaboration-gap",
+      "title": "协作断层",
+      "color": "#7657c5",
+      "side": "right",
+      "detail": "责任、决策记录与改动边界不清会让多人工作互相抵消。",
+      "children": [
+        { "title": "责任不明" },
+        { "title": "决策丢失" },
+        { "title": "相互覆盖" }
+      ]
+    }
+  ]
+}

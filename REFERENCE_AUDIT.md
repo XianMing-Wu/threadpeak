@@ -25,7 +25,8 @@
 | `src/pages/Session.tsx`、`src/knowledge-canvas/` | 页面直接生成/追加知识图 | canonical 初始回复 settle 后由 GraphSurgeon 创建并增量更新 |
 | `src/session/ask-authors.ts` | 固定作者与本地回答证据原型 | 真实知乎搜索、稳定身份、逐作者 evidence、LLM 候选内筛选 |
 | `src/session/author-graph-rag.ts`、`author-network.ts` | 本地检索、示例作者和 session 网络 | network-first AuthorSearch 与 committed relationship projector |
-| `src/components/Path3D.tsx`、`src/vendor/learning-path-3d/` | 可运行 WebGL renderer 与本地 handoff | 只消费已校验 path document 和服务端 handoff，不拥有学习事实 |
+| `src/components/Path3D.tsx`、`src/vendor/learning-path-3d/` | 可运行 WebGL renderer 与本地 handoff；角色 GLB 已在 `public/assets/` | 只消费已校验 path document 和服务端 handoff，不拥有学习事实 |
+| `src/vendor/icons-v15.svg`、`vendor/charts/` | 图标与三类交互图已落入本仓库，不再读兄弟目录 | 仍是示例图文资产，不能冒充用户请求结果 |
 
 ## 视觉参考映射
 

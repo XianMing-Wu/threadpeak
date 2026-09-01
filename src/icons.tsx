@@ -1,5 +1,5 @@
 import type { ReactNode, SVGProps } from 'react'
-import spriteMarkup from '../../../zhihu_ux_ui/design-system/zhida/icons-v15.svg?raw'
+import spriteMarkup from './vendor/icons-v15.svg?raw'
 
 const spritePrefix = 'threadpeak-icon-'
 const inlineSpriteMarkup = spriteMarkup

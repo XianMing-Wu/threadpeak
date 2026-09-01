@@ -53,9 +53,9 @@ Cursor 会自动读取根 `AGENTS.md`，并按 `.mdc` frontmatter 的 `globs` �
 ## 4. 当前仓库事实
 
 - 当前目录仍是 React/Vite UX 原型，主页面存在 fixture、页面内状态和浏览器存储；它不是生产架构。
+- 运行时已不再借用兄弟项目 `node_modules` / `public` / `src`。图标、交互图引擎、3D 角色 GLB 与 3D 宿主合同摘录已落入本仓库 `vendor/`、`src/vendor/` 与 `public/assets/`。
 - 当前主产品尚未接通真实知乎/LLM provider；重构切片只有在真实服务端纵向链和 live gate 通过后才能标记 `integrated`。
-- 相邻路径和知识算法包是实现/合同证据，不代表本 Web 已纵向接通。
-- 当前项目借用兄弟项目的依赖与资产，是待清理原型债务，不是目标 workspace 结构。
+- 相邻路径和知识算法包仍位于 `../算法/`，是实现/合同证据，不代表本 Web 已纵向接通；下一切片再迁入 `packages/contracts`。
 - `prototype`、`contracted`、`implemented`、`integrated`、`production-ready` 必须按当前证据逐级判断；目录存在、类型检查、fixture 或历史测试数不能越级证明完成。
 
 ## 5. 每次任务的最小流程

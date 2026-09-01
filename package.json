@@ -3,11 +3,32 @@
   "version": "2.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
-    "dev": "node ../../zhihu_thread_chatbot/node_modules/vite/bin/vite.js --host 127.0.0.1 --port 4301",
-    "build": "node ../../zhihu_thread_chatbot/node_modules/typescript/bin/tsc -b && node ../../zhihu_thread_chatbot/node_modules/vite/bin/vite.js build",
-    "check": "node ../../zhihu_thread_chatbot/node_modules/typescript/bin/tsc -b --pretty false",
+    "dev": "vite --host 127.0.0.1 --port 4301",
+    "build": "tsc -b && vite build",
+    "check": "tsc -b --pretty false",
+    "check:architecture": "node --test tests/architecture-baseline.test.mjs",
     "check:product-invariants": "node --test tests/architecture-governance.test.mjs",
     "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "katex": "0.16.47",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/katex": "^0.16.8",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.4",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.0"
   }
 }

@@ -108,6 +108,14 @@ test('governance command and evidence boundary stay explicit', async () => {
   const pkg = JSON.parse(packageSource)
 
   assert.equal(pkg.scripts['check:product-invariants'], 'node --test tests/architecture-governance.test.mjs')
+  assert.equal(pkg.scripts['check:architecture'], 'node --test tests/architecture-baseline.test.mjs')
+  assert.match(pkg.engines?.node ?? '', /24/)
+  assert.equal(typeof pkg.dependencies?.react, 'string')
+  assert.equal(typeof pkg.devDependencies?.vite, 'string')
+  for (const command of Object.values(pkg.scripts)) {
+    assert.doesNotMatch(command, /zhihu_thread_chatbot|zhihu_ux_ui|zhihu_3D_path|交互图/)
+    assert.doesNotMatch(command, /\.\.\/\.\.\/.*node_modules/)
+  }
   assert.match(readme, /当前明确未完成/)
   assert.match(audit, /当前未达到的完成条件/)
   assert.match(readme, /不能.*证明|不能证明/)

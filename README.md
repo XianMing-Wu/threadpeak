@@ -94,21 +94,23 @@ npm run dev
 http://127.0.0.1:4301/path-lab.html
 ```
 
-它调用 `POST /api/paths/generate` 并只把通过校验的 `renderer_document` 交给 3D renderer。当前实验服务与兄弟项目依赖只能作为迁移证据；目标生产 workspace 必须使用本项目服务端 adapter、真实 provider、持久化合同和可复现构建。实验台接通不能证明主产品的回答、知识、作者或历史链路已经接通。
+它调用 `POST /api/paths/generate` 并只把通过校验的 `renderer_document` 交给 3D renderer。前端与图表/3D 资产已在本仓库内构建；实验 API 仍可能指向本机 `127.0.0.1:4312`，不能证明主产品的回答、知识、作者或历史链路已经接通。目标生产 workspace 必须使用本项目服务端 adapter、真实 provider、持久化合同和可复现构建。
 
 ## 当前验证
 
 ```bash
 npm run check
+npm run check:architecture
 npm run check:product-invariants
 npm test
 npm run build
 ```
 
 - `check`：当前 TypeScript 工程检查。
+- `check:architecture`：解析本仓库 import graph，阻断兄弟目录与出仓路径。
 - `check:product-invariants`：验证渐进式规则元数据、规则路由、六条冻结语义、三份文档一致性和服务端环境合同。
 - `test`：当前页面与源码合同；其中大量 regex/fixture 只能证明原型结构，不能证明真实网络、事务、权限或恢复。
-- `build`：当前 Vite 构建；借用兄弟项目依赖仍是待清理原型债务。
+- `build`：使用本仓库 lockfile 与本地 vendor 资产构建；不再读取兄弟项目 `node_modules`。
 - `../threadpeak-state-machines/npm run validate`：状态机文档验证，不能替代运行时集成测试。
 
 重构切片只有同时通过同源 Web→API→真实 provider→持久化/event→UI 的纵向验证，以及真实知乎/DeepSeek live gate，才能标记为 `integrated`。规则文件或 README 写明目标不等于实现完成。
