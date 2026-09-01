@@ -84,7 +84,9 @@ function safeRuntimeMessage(_value: unknown, fallback: string): string {
 
 /**
  * Generic adapter for renderer-v1 learning-path documents.
- * A document change intentionally disposes and remounts the imperative runtime.
+ * Remount only when the document id, instance prefix, or badge map changes.
+ * Parent re-renders (sidebar collapse, new callback identities, rebuilt catalog
+ * objects with the same id) must not dispose an in-flight WebGL runtime.
  */
 export function LearningPath3DView({
   document,
@@ -97,7 +99,12 @@ export function LearningPath3DView({
 }: LearningPath3DViewProps) {
   const mountRef = useRef<HTMLDivElement>(null)
   const moduleRef = useRef<LearningPathModule | null>(null)
+  const onContextualCardActionRef = useRef(onContextualCardAction)
+  const onResourceNavigateRef = useRef(onResourceNavigate)
+  onContextualCardActionRef.current = onContextualCardAction
+  onResourceNavigateRef.current = onResourceNavigate
   const [error, setError] = useState('')
+  const documentId = document.id
 
   useEffect(() => {
     const mount = mountRef.current
@@ -110,11 +117,11 @@ export function LearningPath3DView({
     const navigator: LearningResourceNavigatorPort = {
       navigate(request, { signal }) {
         if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
-        return onResourceNavigate(request.binding.href, request.binding.target)
+        return onResourceNavigateRef.current(request.binding.href, request.binding.target)
       },
     }
     const handleContextualAction = (event: Event) => {
-      onContextualCardAction?.((event as CustomEvent<ContextualCardAction>).detail ?? {}, event)
+      onContextualCardActionRef.current?.((event as CustomEvent<ContextualCardAction>).detail ?? {}, event)
     }
 
     setError('')
@@ -127,7 +134,7 @@ export function LearningPath3DView({
         instanceId: `${instanceIdPrefix}-${instanceSerial}`,
         navigator,
         storage,
-        progressKey: `threadpeak:path-progress:document:${document.id}:instance:${instanceSerial}`,
+        progressKey: `threadpeak:path-progress:document:${documentId}:instance:${instanceSerial}`,
         document,
         characterAssets,
         launchMode: 'reset',
@@ -158,7 +165,7 @@ export function LearningPath3DView({
       moduleRef.current = null
       delete mount.dataset.snapshot
     }
-  }, [document, instanceIdPrefix, nodeBadgeIconById, onContextualCardAction, onResourceNavigate])
+  }, [documentId, instanceIdPrefix, nodeBadgeIconById])
 
   return <div className={`learning-path-3d-view ${className}`.trim()} aria-label={ariaLabel}>
     <div ref={mountRef} className="path3d-mount learning-path-3d-mount" />

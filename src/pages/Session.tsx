@@ -7,7 +7,6 @@ import type { AssistantMode } from '../assistant-mode'
 import { Composer } from '../components/Composer'
 import { SelectionToolbar } from '../components/SelectionToolbar'
 import { ProductWorkspace } from '../components/Shell'
-import { AgentStatus } from '../components/AgentStatus'
 import { Icon } from '../icons'
 import { HISTORY_OPEN_EVENT } from '../history'
 import { openKnowledgeCanvas } from '../learningSession'
@@ -33,16 +32,12 @@ import {
   getKnowledgeByRoute,
   getLesson,
   getRoute,
-  hasGeneratedLesson,
   saveConversationDraft,
   startLearningConversation,
   syncConversationGraph,
-  syncKnowledgeWithFirstLesson,
 } from '../workspace/store'
 import type { LearningTurn } from '../workspace/types'
 import { resolveFirstLesson, resolveLearningEntry } from '../session/resolve-learning-entry'
-
-let sessionStatusTitle = ''
 
 function readLearningNav() {
   return { routeId: readActiveRouteId(), conceptId: readActiveConceptId() }
@@ -105,8 +100,6 @@ function SessionLearning({ routeId, conceptId }: { routeId: string; conceptId: s
   const selectRootRef = useRef<HTMLDivElement>(null)
   const blueprint = blueprintOf(routeId)
   const title = conceptTitle(blueprint, conceptId) || conceptId
-  const alreadyReady = hasGeneratedLesson(routeId, conceptId)
-  const [entryPhase,setEntryPhase] = useState<'preparing'|'ready'>('preparing')
   const conversationRef = useRef(resolveLearningConversation(routeId, conceptId))
   const seed = getConversation(conversationRef.current.id)
   const [quote,setQuote] = useState(seed?.quote ?? '')
@@ -117,29 +110,15 @@ function SessionLearning({ routeId, conceptId }: { routeId: string; conceptId: s
   const [mode,setMode] = useState<AssistantMode>(seed?.mode ?? '')
   const [value,setValue] = useState(seed?.value ?? '')
   const [turns,setTurns] = useState<LearningTurn[]>(seed?.turns ?? [])
-  const [lesson,setLesson] = useState(() => getLesson(routeId, conceptId) ?? {
+  const lesson = getLesson(routeId, conceptId) ?? {
     heading: title,
     paragraphs: [],
     placeholder: `围绕“${title}”继续提问，或选择上方模式深入理解…`,
-  })
+  }
 
   useEffect(() => {
     setActiveConversation(conversationRef.current.id)
   }, [])
-
-  useEffect(() => {
-    if (alreadyReady) {
-      setEntryPhase('ready')
-      return
-    }
-    setEntryPhase('preparing')
-    const generate=window.setTimeout(()=>{
-      const generated = syncKnowledgeWithFirstLesson(routeId, conceptId)
-      if (generated.lesson) setLesson(generated.lesson)
-    },1800)
-    const timer=window.setTimeout(()=>setEntryPhase('ready'),1800)
-    return()=>{window.clearTimeout(generate);window.clearTimeout(timer)}
-  },[alreadyReady,conceptId,routeId])
 
   useEffect(() => {
     const clear=(event:MouseEvent)=>{
@@ -220,7 +199,6 @@ function SessionLearning({ routeId, conceptId }: { routeId: string; conceptId: s
   }
   const knowledgeReady = Boolean(getKnowledgeByRoute(routeId))
   const placeholder = lesson.placeholder || `围绕“${title}”继续提问，或选择上方模式深入理解…`
-  sessionStatusTitle = title
 
   return <ProductWorkspace active="paths" page="session-learning">
     <main className="learning-session">
@@ -236,18 +214,16 @@ function SessionLearning({ routeId, conceptId }: { routeId: string; conceptId: s
           </div>
         </header>
         <div className="conversation" ref={selectRootRef} onMouseUp={onSelect}>
-          {entryPhase==='preparing'?<SessionEntryStatus/>:<>
-            <article data-canvas-host="root"><span className="kanshan-avatar">山</span><div>
-              <h2>{lesson.heading}</h2>
-              {lesson.paragraphs.map((paragraph) => <p key={paragraph}><AnnotatedText text={paragraph} annotations={annotations.annotations} activeId={annotations.active?.id} onOpen={annotations.open}/></p>)}
-              {lesson.quote && <blockquote><AnnotatedText text={lesson.quote} annotations={annotations.annotations} activeId={annotations.active?.id} onOpen={annotations.open}/></blockquote>}
-              {lesson.figureCaption && <BasisVisual caption={lesson.figureCaption}/>}
-            </div></article>
-            {turns.map((turn,i)=>turn.role==='user'?<div className="user-turn" key={i}>{turn.text}</div>:<AssistantAnswer key={i} kind={turn.text} host={turn.nodeId || `turn:${i}`} topic={title}/>) }
-          </>}
+          <article data-canvas-host="root"><span className="kanshan-avatar">山</span><div>
+            <h2>{lesson.heading}</h2>
+            {lesson.paragraphs.map((paragraph) => <p key={paragraph}><AnnotatedText text={paragraph} annotations={annotations.annotations} activeId={annotations.active?.id} onOpen={annotations.open}/></p>)}
+            {lesson.quote && <blockquote><AnnotatedText text={lesson.quote} annotations={annotations.annotations} activeId={annotations.active?.id} onOpen={annotations.open}/></blockquote>}
+            {lesson.figureCaption && <BasisVisual caption={lesson.figureCaption}/>}
+          </div></article>
+          {turns.map((turn,i)=>turn.role==='user'?<div className="user-turn" key={i}>{turn.text}</div>:<AssistantAnswer key={i} kind={turn.text} host={turn.nodeId || `turn:${i}`} topic={title}/>) }
         </div>
-        {entryPhase==='ready'&&<><div className="mode-prompts"><button className={mode==='visual'?'is-active':''} onClick={()=>setMode(mode==='visual'?'':'visual')}><Icon name="image" size={17}/>图文模式</button></div>
-        <Composer compact value={value} onChange={setValue} mode={mode} onMode={setMode} onSend={send} quote={quote} onClearQuote={()=>{setQuote('');setQuoteFromId('')}} showScope={false} showReference={false} showAttachment={false} placeholder={placeholder}/></>}
+        <div className="mode-prompts"><button className={mode==='visual'?'is-active':''} onClick={()=>setMode(mode==='visual'?'':'visual')}><Icon name="image" size={17}/>图文模式</button></div>
+        <Composer compact value={value} onChange={setValue} mode={mode} onMode={setMode} onSend={send} quote={quote} onClearQuote={()=>{setQuote('');setQuoteFromId('')}} showScope={false} showReference={false} showAttachment={false} placeholder={placeholder}/>
       </section>
       {annotations.panelOpen && annotations.active && <AnnotationPanel annotation={annotations.active} onClose={annotations.close}/>}
       {!annotations.panelOpen && annotations.annotations.length > 0 && <button type="button" className="annotation-panel-reopen" aria-label="显示侧边面板" onClick={annotations.reopen}>批注</button>}
@@ -255,10 +231,6 @@ function SessionLearning({ routeId, conceptId }: { routeId: string; conceptId: s
       {authorQuestion && <AskAuthorsPrompt selection={authorQuestion} onCancel={()=>setAuthorQuestion(null)} onSubmit={submitAskAuthors}/>}
     </main>
   </ProductWorkspace>
-}
-
-function SessionEntryStatus() {
-  return <AgentStatus items={[{label:'正在准备当前学习内容...',detail:`正在组织“${sessionStatusTitle}”的讲解与可视化内容`}]}/>
 }
 
 function AssistantAnswer({kind,host}:{kind:string;host:string;topic:string}) {

@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import type { NodeSemanticBadgeIcon } from 'liu-kanshan-learning-path-3d'
 import { defaultResourceNavigation, LearningPath3DView } from '../components/Path3D'
 import { Icon } from '../icons'
@@ -37,8 +38,10 @@ function conceptIdFromAction(detail: ContextualCardAction) {
 
 export function Path3DStage() {
   const routeId = readActiveRouteId()
-  const route = routeId ? getRoute(routeId) : undefined
-  const view = resolvePath3DView({ routeId, route })
+  const view = useMemo(() => {
+    const route = routeId ? getRoute(routeId) : undefined
+    return resolvePath3DView({ routeId, route })
+  }, [routeId])
   const goBack = () => { location.hash = readPathReturn() }
 
   if (view.kind === 'unavailable') {

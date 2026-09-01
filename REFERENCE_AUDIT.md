@@ -24,7 +24,7 @@
 | `src/components/Composer.tsx`、`src/resolve-composer-attachment.ts` | 路线、图文、问博主的输入外观与本地 UI state；附件和资料范围无真实 provider 时显式失败，不再用本地 file chip 或已上传 PDF 冒充来源 | 正向模式白名单；command 发往同源 API；来源/附件走 committed scope |
 | `src/pages/Chat.tsx`、`src/chat/`、`src/workspace/catalog.ts` | 普通/图文无真实 provider 时显式失败，不再渲染预写 Mock 或 fixture 图；缺发送上下文不再预写「性价比高的显卡」或用 localStorage 正文冒充已打开会话；路线 generate 连接失败或超时显式失败，不再停在 pending | 真实 Answer/Path provider、typed stream、持久 request/session、committed conversation GET |
 | `src/workspace/store.ts`、`src/history.ts`、`src/resolve-history-reopen.ts` | 侧栏重开不再把 localStorage 正文当成已提交 history；缺 provider 显式失败。workspace 存储仍是原型草稿 | owner-scoped 服务端事实、outbox/projector 和精确 history reopen |
-| `src/pages/Session.tsx`、`src/session/`、`src/knowledge-canvas/`、`src/workspace/nav.ts` | 未选择时不再默认线性代数；我的路线不再 `draftFirstLesson`/`growGraph` 建图或画布 persist；问博主无真实 resolution 时显式失败；示例仍读标记 catalog lesson | canonical 初始回复 settle 后由 GraphSurgeon 创建并增量更新 |
+| `src/pages/Session.tsx`、`src/session/`、`src/knowledge-canvas/`、`src/workspace/nav.ts` | 未选择时不再默认线性代数；进入时不再用 1800ms「正在准备」冒充生成；我的路线不再 `draftFirstLesson`/`growGraph` 建图或画布 persist；问博主无真实 resolution 时显式失败；示例仍读标记 catalog lesson | canonical 初始回复 settle 后由 GraphSurgeon 创建并增量更新 |
 | `src/session/ask-authors.ts`、`resolve-ask-author.ts` | 用户问博主不再渲染固定作者或预写回复；缺 provider 显式失败 | 真实知乎搜索、稳定身份、逐作者 evidence、LLM 候选内筛选 |
 | `src/session/author-graph-rag.ts`、`resolve-author-search.ts`、`resolve-author-network.ts`、`author-network.ts` | 用户博主搜索与博主网络不再用本地 GraphRAG、sessionStorage 或示例星图冒充成功；缺 provider 显式失败。引擎仍隔离 | network-first AuthorSearch 与 committed relationship projector |
 | `src/path-3d/`、`src/components/Path3D.tsx`、`src/vendor/learning-path-3d/` | 可运行 WebGL renderer；用户路线不再回退演示 fixture | 只消费已校验 path document 和服务端 handoff，不拥有学习事实 |
