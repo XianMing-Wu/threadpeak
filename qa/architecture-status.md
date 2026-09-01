@@ -1,9 +1,9 @@
-# Architecture status — Chat route generate timeout fail-closed
+# Architecture status — Settings identity and sources fail-closed
 
 - Time: 2026-09-01
-- Commit: `8d2a06b`
+- Commit: `600d163`
 - Environment: darwin, Node v25.5.0 (engines `>=24`), npm 11.8.0, Vite 8.2.2, TypeScript 6.0.3
-- Maturity proposal: Chat / path-lab generate timeout gate = `implemented`; PathStreamEvent / CAS session = still `prototype`
+- Maturity proposal: Settings identity/sources gate = `implemented`; OAuth/session identity and committed source scope = still `prototype`
 
 ## Commands
 
@@ -13,25 +13,25 @@
 | `npm run check:architecture` | 0 |
 | `npm run check:contracts` | 0 (15 tests) |
 | `npm run check:product-invariants` | 0 |
-| `npm test` | 0 (119 tests) |
+| `npm test` | 0 (122 tests) |
 | `npm run build` | 0 |
 
 ## Browser / HTTP
 
-- Dev Vite `http://127.0.0.1:4301/#home` at 1280×720 with lab API `4312` down
-- Home → 路线制定 → `给我制定一条机器学习数学路线` → `#chat`
-- `#chat` shows `role="alert"`「无法发布这条路线」and does not stay on「正在判断目标是否需要校准」
-- Proxy unavailability surfaced as HTTP 502; hanging fetch is covered by the 10s generate timeout even when `fetch` ignores abort
-- Chat unmount uses `abort()` rather than `teardown()`, so StrictMode cleanup cannot freeze the store on pending
+- Dev Vite `http://127.0.0.1:4301/#settings` at 1280×720
+- Two `role="alert"` blocks: 「无法显示登录身份」and 「无法设置资料范围」
+- Settings page no longer shows 吴贤明 or a 知乎 · PDF / 已上传 PDF cycle
+- Density and thinking-depth controls remain as local preferences
+- `#home` still opens; `threadpeak-authenticated` was not fail-closed into a locked auth landing
 
 ## What this slice proves
 
-- Unreachable or hung `/api/paths/generate` no longer looks like a succeeding path
-- User abort still leaves the cancelled state; timeout abort is an explicit error
+- Settings no longer presents a hardcoded person or uploaded-PDF scope as committed identity/sources
+- Prototype login unlock stays available so the rest of the app can be used
 - `store.ts` stayed at 626 lines; no authors write-chain or path/knowledge schema copy
 
 ## What this slice does not prove
 
-- No PathStreamEvent NDJSON, CAS session, or live generate against a running `4312` lab
-- The 10s budget is the lab JSON adapter wait, not a production generate SLA
-- Workspace localStorage still holds prototype conversation/route/knowledge drafts
+- No server OAuth/session, ActorContext, or committed source/attachment scope
+- Shell sidebar still shows a prototype account label outside Settings
+- Composer file chips and Home PDF scope remain local UI, not uploaded sources
