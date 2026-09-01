@@ -1,9 +1,9 @@
-# Architecture status — mine-route graph mutation fail-closed
+# Architecture status — KnowledgeCanvas mine grow fail-closed
 
 - Time: 2026-09-01
-- Commit: `5ef6eb8`
+- Commit: `7e7e750`
 - Environment: darwin, Node v25.5.0 (engines `>=24`), npm 11.8.0, Vite 8.2.2, TypeScript 6.0.3
-- Maturity proposal: mine conversation-graph write gate = `implemented`; example growGraph / canvas in-memory grow / canonical AnswerPipeline = still `prototype`
+- Maturity proposal: KnowledgeCanvas mine grow/persist gate = `implemented`; example in-memory grow / canonical AnswerPipeline / GraphSurgeon = still `prototype`
 
 ## Commands
 
@@ -18,18 +18,17 @@
 
 ## Browser / HTTP
 
-- This slice is a store write-path gate; example Session still uses prototype growGraph
-- KnowledgeCanvas can still invent nodes in memory for leftover mine knowledge until persist is skipped by `saveKnowledgeGraph`
+- This slice is a canvas write-path gate; example canvas may still grow nodes in memory
+- Persist effect that wrote mine graphs into localStorage was removed
 
 ## What this slice proves
 
-- `syncConversationGraph` / `appendLearningTurnToGraph` do not grow mine graphs
-- `saveKnowledgeGraph` does not persist mine graphs
-- `store.ts` stayed at 626 lines
+- Mine-route KnowledgeCanvas no longer calls `growGraph` or `saveKnowledgeGraph`
+- `KnowledgeCanvas.tsx` shrank (620 → 617 lines)
 
 ## What this slice does not prove
 
 - No canonical initial answer or GraphSurgeon
-- KnowledgeCanvas `growGraph` can still change in-memory nodes before persist
-- Example Session still writes local graphs
+- Example canvas still uses prototype in-memory grow
+- Chat ordinary answers remain mock
 - No authors write-chain change
