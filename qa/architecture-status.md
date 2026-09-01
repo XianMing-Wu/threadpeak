@@ -1,9 +1,9 @@
-# Architecture status — KnowledgeCanvas mine grow fail-closed
+# Architecture status — Chat ordinary-answer fail-closed
 
 - Time: 2026-09-01
-- Commit: `7e7e750`
+- Commit: `3e8a531`
 - Environment: darwin, Node v25.5.0 (engines `>=24`), npm 11.8.0, Vite 8.2.2, TypeScript 6.0.3
-- Maturity proposal: KnowledgeCanvas mine grow/persist gate = `implemented`; example in-memory grow / canonical AnswerPipeline / GraphSurgeon = still `prototype`
+- Maturity proposal: Chat ordinary-answer gate = `implemented`; AnswerPipeline / committed artifact / visual Chat = still `prototype`
 
 ## Commands
 
@@ -13,22 +13,22 @@
 | `npm run check:architecture` | 0 |
 | `npm run check:contracts` | 0 (15 tests) |
 | `npm run check:product-invariants` | 0 |
-| `npm test` | 0 (105 tests) |
+| `npm test` | 0 (107 tests) |
 | `npm run build` | 0 |
 
 ## Browser / HTTP
 
-- This slice is a canvas write-path gate; example canvas may still grow nodes in memory
-- Persist effect that wrote mine graphs into localStorage was removed
+- Vite `http://127.0.0.1:4301/` served `OrdinaryAnswerUnavailable` and `resolveOrdinaryAnswer`; `defaultAnswerMock` is gone from Chat and catalog
+- Browser MCP was unavailable after the previous tab hit `chrome-error://`; no end-to-end click-through on Home → Chat
 
 ## What this slice proves
 
-- Mine-route KnowledgeCanvas no longer calls `growGraph` or `saveKnowledgeGraph`
-- `KnowledgeCanvas.tsx` shrank (620 → 617 lines)
+- User-triggered ordinary Chat answers no longer render prewritten mock success
+- `Chat.tsx` shrank (191 → 188 lines); `catalog.ts` dropped `defaultAnswerMock` (680 → 635)
 
 ## What this slice does not prove
 
-- No canonical initial answer or GraphSurgeon
-- Example canvas still uses prototype in-memory grow
-- Chat ordinary answers remain mock
+- No AnswerPipeline, real Zhihu/LLM adapter, or committed answer artifact
+- Chat visual mode still uses page timers and fixture frames
+- Route generate is still lab JSON, not PathStreamEvent/CAS
 - No authors write-chain change
