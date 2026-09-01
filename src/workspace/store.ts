@@ -15,7 +15,7 @@ import {
   routeRecordFromBlueprint,
 } from './catalog'
 import { conversationHostAfterGrow, growGraph, mergeConversationBranch, parseGrowCommand, parseQuotedUserTurn, parseTurnHost, plainQuoteText, readGrowCommand, replyCardTitle, resolveQuotedHost } from '../knowledge-canvas/generate'
-import { resolveKnowledgeMigration } from '../session/resolve-learning-entry'
+import { resolveGraphMutation, resolveKnowledgeMigration } from '../session/resolve-learning-entry'
 import { mineRouteFromValidatedDocument } from './published-route'
 import type {
   ConceptCard,
@@ -477,7 +477,7 @@ export function saveKnowledgeGraph(knowledgeId: string, graph: KnowledgeRecord['
       }
     }
     if (snapshot.knowledge.some((item) => item.id === knowledgeId)) {
-      snapshot.knowledge = snapshot.knowledge.map((item) => item.id === knowledgeId ? write(item) : item)
+      snapshot.knowledge = snapshot.knowledge.map((item) => item.id === knowledgeId && item.owner !== 'mine' ? write(item) : item)
       return
     }
     const cataloged = exampleKnowledge().find((item) => item.id === knowledgeId)
@@ -498,7 +498,7 @@ export function syncConversationGraph(
   turns?: LearningTurn[],
 ) {
   const knowledge = getKnowledgeByRoute(routeId)
-  if (!knowledge) return
+  if (!knowledge || resolveGraphMutation({ routeId, owner: knowledge.owner }).kind !== 'allow-example') return
   const conversation = getConversation(conversationId)
   const lesson = getLesson(routeId, conceptId)
   if (!lesson) return

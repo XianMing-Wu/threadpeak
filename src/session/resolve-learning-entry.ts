@@ -120,3 +120,19 @@ export function resolveKnowledgeMigration(input: KnowledgeMigrationInput): Knowl
   if (input.owner === 'example' && input.hasExampleBlueprint) return { kind: 'rewrite-example' }
   return { kind: 'keep', reason: 'unknown-route' }
 }
+
+export type GraphMutationInput = {
+  routeId: string
+  owner?: 'mine' | 'example'
+}
+
+export type GraphMutation =
+  | { kind: 'allow-example' }
+  | { kind: 'reject'; reason: 'missing-route' | 'missing-canonical-answer' }
+
+export function resolveGraphMutation(input: GraphMutationInput): GraphMutation {
+  const routeId = input.routeId.trim()
+  if (!routeId) return { kind: 'reject', reason: 'missing-route' }
+  if (input.owner === 'example') return { kind: 'allow-example' }
+  return { kind: 'reject', reason: 'missing-canonical-answer' }
+}

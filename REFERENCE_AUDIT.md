@@ -22,7 +22,7 @@
 | `src/components/Composer.tsx` | 路线、图文、问博主的输入外观与本地 UI state | 正向模式白名单；command 发往同源 API，未知持久化值归一为空 |
 | `src/pages/Chat.tsx`、`src/workspace/catalog.ts` | 普通回答仍预写；路线已改走 generate session，不再关键词拼成功 | 真实 Answer/Path provider、typed stream、持久 request/session |
 | `src/workspace/store.ts`、`src/history.ts` | localStorage/sessionStorage 承担 conversation、route、knowledge 真相 | owner-scoped 服务端事实、outbox/projector 和精确 history reopen |
-| `src/pages/Session.tsx`、`src/session/`、`src/knowledge-canvas/`、`src/workspace/nav.ts` | 未选择时不再默认线性代数；我的路线与 workspace 读取都不再 `draftFirstLesson` 建图；示例仍读标记 catalog lesson | canonical 初始回复 settle 后由 GraphSurgeon 创建并增量更新 |
+| `src/pages/Session.tsx`、`src/session/`、`src/knowledge-canvas/`、`src/workspace/nav.ts` | 未选择时不再默认线性代数；我的路线不再 `draftFirstLesson`/`growGraph` 建图；示例仍读标记 catalog lesson | canonical 初始回复 settle 后由 GraphSurgeon 创建并增量更新 |
 | `src/session/ask-authors.ts` | 固定作者与本地回答证据原型 | 真实知乎搜索、稳定身份、逐作者 evidence、LLM 候选内筛选 |
 | `src/session/author-graph-rag.ts`、`author-network.ts` | 本地检索、示例作者和 session 网络 | network-first AuthorSearch 与 committed relationship projector |
 | `src/path-3d/`、`src/components/Path3D.tsx`、`src/vendor/learning-path-3d/` | 可运行 WebGL renderer；用户路线不再回退演示 fixture | 只消费已校验 path document 和服务端 handoff，不拥有学习事实 |

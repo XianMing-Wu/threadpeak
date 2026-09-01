@@ -14,7 +14,7 @@ alwaysApply: false
 | --- | --- |
 | `src/workspace/store.ts` + `catalog.ts` 关键词拼路线 | 删除用户请求生产路径；只读示例与隔离测试 fixture 分开存放并明确标记 |
 | `src/pages/Chat.tsx` 页面内路线阶段/timer | `PathStreamEvent` decoder → projector → RuntimeStore |
-| `src/pages/Session.tsx` + `growGraph` | concept entry / `POST /turns` → AnswerPipeline；无 route/concept 不得回退线性代数 fixture；我的路线无 canonical 首答不得 `draftFirstLesson` 建图；canvas 只听 committed `graph.*` |
+| `src/pages/Session.tsx` + `growGraph` | concept entry / `POST /turns` → AnswerPipeline；无 route/concept 不得回退线性代数 fixture；我的路线无 canonical 首答不得 `draftFirstLesson`/`growGraph` 建图；canvas 只听 committed `graph.*` |
 | `src/session/useAnnotations.ts` | 只产生 Selector；GraphSurgeon 落贡献 |
 | `src/session/ask-authors.ts` 固定作者 | Zhihu-first AskAuthorResolution，1–2 位或刘看山直达 |
 | `src/session/author-graph-rag.ts` | network-first AuthorSearch，零命中才 Zhihu |

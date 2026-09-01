@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { resolveFirstLesson, resolveKnowledgeMigration, resolveLearningEntry, resolveOpenLearningTarget } from './resolve-learning-entry.ts'
+import { resolveFirstLesson, resolveGraphMutation, resolveKnowledgeMigration, resolveLearningEntry, resolveOpenLearningTarget } from './resolve-learning-entry.ts'
 
 test('missing route or concept does not fall back to linear-algebra', () => {
   const missingRoute = resolveLearningEntry({ routeId: '', conceptId: 'linear-map' })
@@ -87,6 +87,16 @@ test('workspace read does not rewrite mine-route lessons or graphs', () => {
     routeId: 'linear-algebra',
     hasExampleBlueprint: true,
   }), { kind: 'rewrite-example' })
+})
+
+test('mine routes cannot invent conversation graph nodes', () => {
+  assert.deepEqual(resolveGraphMutation({ routeId: 'generated-path', owner: 'mine' }), {
+    kind: 'reject',
+    reason: 'missing-canonical-answer',
+  })
+  assert.deepEqual(resolveGraphMutation({ routeId: 'linear-algebra', owner: 'example' }), {
+    kind: 'allow-example',
+  })
 })
 
 test('an explicitly selected route and concept can enter', () => {
