@@ -1,9 +1,9 @@
-# Architecture status — mine-route first-lesson fail-closed
+# Architecture status — migrateKnowledge mine-route keep
 
 - Time: 2026-09-01
-- Commit: `dad6e28`
+- Commit: `2a589f3`
 - Environment: darwin, Node v25.5.0 (engines `>=24`), npm 11.8.0, Vite 8.2.2, TypeScript 6.0.3
-- Maturity proposal: mine-route missing-canonical-answer gate = `implemented`; example catalog lesson / growGraph / canonical AnswerPipeline = still `prototype`; no knowledge production write chain
+- Maturity proposal: workspace-read mine keep-gate = `implemented`; example migrate rewrite / growGraph / canonical AnswerPipeline = still `prototype`; no knowledge production write chain
 
 ## Commands
 
@@ -13,24 +13,22 @@
 | `npm run check:architecture` | 0 |
 | `npm run check:contracts` | 0 (15 tests) |
 | `npm run check:product-invariants` | 0 |
-| `npm test` | 0 (103 tests) |
+| `npm test` | 0 (104 tests) |
 | `npm run build` | 0 |
 
 ## Browser / HTTP
 
-- `GET /` returned 200
-- Home hash `#home` rendered the signed-in shell
-- Browser CDP was unavailable for injecting a mine route; empty-canonical fail-closed is covered by `resolveFirstLesson` tests
+- Vite was running; this slice is a localStorage read-path gate, verified by `resolveKnowledgeMigration` tests
+- No new user-visible Session path beyond the previous mine-route fail-closed screen
 
 ## What this slice proves
 
-- Selected mine routes do not call `draftFirstLesson` or create a knowledge graph
-- `syncKnowledgeWithFirstLesson` is read-only and only returns marked example catalog lessons
-- `store.ts` shrank (675 → 626 lines) by deleting the mine write path
+- `migrateKnowledge` no longer uses `draftFromRoute` + `draftFirstLesson` to rewrite mine knowledge
+- Mine items are kept as stored; only marked example blueprints may still be rewritten
+- `store.ts` stayed at 626 lines
 
 ## What this slice does not prove
 
 - No canonical initial answer, handoff validation, or GraphSurgeon
-- `migrateKnowledge` can still rewrite dirty local graphs with `draftFirstLesson`
-- Example Session still uses prototype catalog lesson + growGraph
+- Example migrate rewrite and `growGraph` remain prototype
 - No authors write-chain change
