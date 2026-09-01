@@ -1,9 +1,9 @@
-# Architecture status — Chat visual-answer fail-closed
+# Architecture status — Session ask-author fail-closed
 
 - Time: 2026-09-01
-- Commit: `b53208b`
+- Commit: `04bb9f5`
 - Environment: darwin, Node v25.5.0 (engines `>=24`), npm 11.8.0, Vite 8.2.2, TypeScript 6.0.3
-- Maturity proposal: Chat/Session visual-answer gate = `implemented`; VisualizationArtifact / Surface Catalog / AnswerPipeline = still `prototype`
+- Maturity proposal: Session/划选问博主 gate = `implemented`; AskAuthorResolution / Zhihu-first live chain = still `prototype`
 
 ## Commands
 
@@ -13,23 +13,22 @@
 | `npm run check:architecture` | 0 |
 | `npm run check:contracts` | 0 (15 tests) |
 | `npm run check:product-invariants` | 0 |
-| `npm test` | 0 (109 tests) |
+| `npm test` | 0 (110 tests) |
 | `npm run build` | 0 |
 
 ## Browser / HTTP
 
-- Vite `http://127.0.0.1:4301/` served `VisualAnswerUnavailable` and `resolveVisualAnswer`; Chat no longer contains `selectVisualFrames` or the 2600ms visual timer
-- Session visual kind now calls `resolveVisualAnswer` instead of composing `VisualAnswer`
-- Browser MCP was unavailable; Home `#home` dump-dom confirmed the SPA boots. Chat visual click-through was not exercised in a live tab
+- Vite `http://127.0.0.1:4301/` served `resolveAskAuthor` from Session and `useAnnotations`; `resolveBloggerReply` and the 720ms ready timer are gone
+- Browser MCP was unreliable this slice; Session visual/ask-author click-through was not exercised in the user's live tab after the restart
 
 ## What this slice proves
 
-- User-triggered Chat/Session visual answers no longer render fixture mindmap/sunburst/timeline or page timers as success
-- `Chat.tsx` shrank (188 → 105 lines); isolated visual engines remain in `src/visuals/` and must not be composed into user-request success
+- User-triggered Session composer 问博主 and selection annotations no longer render 马同学 / 李永乐老师 or write those names into the blogger network
+- `useAnnotations.ts` shrank (timer removed); `store.ts` stayed at 626 lines
 
 ## What this slice does not prove
 
-- No VisualizationArtifact, Surface Catalog, or committed visual attachment
-- Route generate is still lab JSON, not PathStreamEvent/CAS
-- Session ask-authors still presents fixed authors 马同学 / 李永乐老师
-- No authors write-chain change
+- No Zhihu-first search, AuthorEvidencePack, LLM review, or 刘看山 direct fallback
+- Authors page search still uses local GraphRAG / example authors
+- Route generate still depends on the lab API at `127.0.0.1:4312`
+- No authors write-chain / schema copy
