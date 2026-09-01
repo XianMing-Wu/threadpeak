@@ -42,7 +42,7 @@ Cursor 会自动读取根 `AGENTS.md`，并按 `.mdc` frontmatter 的 `globs` �
 | `.cursor/rules/20-knowledge-lifecycle.mdc` | 概念进入、openLearning 导航、canonical 首答、conversation/history 重开门、selection、知识图与 GraphSurgeon |
 | `.cursor/rules/30-authors.mdc` | 问博主、Chat/Session 问博主门、Authors 搜索/网络门、作者身份/evidence/network |
 | `.cursor/rules/40-visualization-3d.mdc` | 图文 artifact、Chat/Session 图文门、Surface Catalog、知识画布、3D renderer/vendor |
-| `.cursor/rules/50-frontend-runtime-ui.mdc` | React/TSX/CSS、RuntimeStore、页面、Chat 普通回答门、侧栏历史重开门、Settings identity/sources 门、可访问性和浏览器状态 |
+| `.cursor/rules/50-frontend-runtime-ui.mdc` | React/TSX/CSS、RuntimeStore、页面、Chat 普通回答门、侧栏历史重开门、Settings identity/sources 门、Shell 账号身份门、可访问性和浏览器状态 |
 | `.cursor/rules/60-backend-platform.mdc` | API/worker/server/contracts、provider、事务、事件、幂等、安全和可观测性 |
 | `.cursor/rules/70-prototype-migration.mdc` | 当前 `src/` 原型、localStorage/fixture 清理和纵向迁移 |
 | `.cursor/rules/80-testing-quality.mdc` | 源码、测试、配置和 catalog：TypeScript 风格、门禁、验证矩阵与 DoD |
@@ -68,6 +68,7 @@ Cursor 会自动读取根 `AGENTS.md`，并按 `.mdc` frontmatter 的 `globs` �
 - 产品 `#authors` 博主网络不再用 sessionStorage 或示例星图冒充已提交网络；没有真实 relationship projector 时显式失败，页面也不再 hydrate 入网。仍不是 owner-scoped network projection。
 - 产品侧栏历史重开不再把 localStorage 会话正文当成已提交 history；没有真实 conversation GET 时显式失败，列表只标为本地草稿。仍不是 owner-scoped exact reopen。
 - 产品 `#settings` 不再把写死用户或已上传 PDF 资料范围当成已提交 identity/sources；缺 provider 显式失败。密度、动效、思考深度仍是本地偏好。不得把原型登录态锁死整站。仍不是服务端 OAuth/session 或 committed source scope。
+- 产品侧栏账号不再把写死姓名当成已提交身份；缺 provider 时只标本地原型账号，主题和退出仍可用。不得锁死整站登录。仍不是服务端 OAuth/session。
 - 路径/知识算法实现与领域文档仍位于 `../算法/`，是实现/合同证据，不代表本 Web 已纵向接通。
 - `prototype`、`contracted`、`implemented`、`integrated`、`production-ready` 必须按当前证据逐级判断；目录存在、类型检查、fixture 或历史测试数不能越级证明完成。
 

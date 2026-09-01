@@ -2,6 +2,7 @@ import { useLayoutEffect, useEffect, useRef, useState, type ReactNode } from 're
 import { createPortal } from 'react-dom'
 import { Icon, MountainMark } from '../icons'
 import { ACTIVE_HISTORY_KEY, HISTORY_CHANGE_EVENT, readChatHistory } from '../history'
+import { resolveAccountIdentity } from '../resolve-account-identity'
 import { resolveHistoryReopen, type HistoryReopenResolution } from '../resolve-history-reopen'
 
 function profileMenuBox(button: HTMLElement, collapsed: boolean) {
@@ -14,6 +15,7 @@ function profileMenuBox(button: HTMLElement, collapsed: boolean) {
 export type RouteName = 'home' | 'chat' | 'paths' | 'path-3d' | 'knowledge' | 'knowledge-detail' | 'session-learning' | 'authors' | 'settings'
 
 const compactRoutes = new Set<RouteName>(['chat','knowledge','knowledge-detail','paths','path-3d','session-learning','authors'])
+const accountIdentity = resolveAccountIdentity()
 
 function go(route: RouteName) { location.hash = route }
 
@@ -85,7 +87,7 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
           <button type="button" role="menuitem" onClick={onThemeChange}><Icon name="moon" size={20}/><span>夜间模式</span><i className={`theme-switch ${theme==='dark'?'is-on':''}`} aria-hidden="true"><b/></i></button>
           <button type="button" role="menuitem" className="is-danger" onClick={onLogout}><Icon name="logout" size={20}/><span>退出登录</span></button>
         </div>,document.body)}
-        <button type="button" className="tp-profile" aria-label="打开账号菜单" aria-expanded={profileOpen} onClick={()=>setProfileOpen((value)=>!value)}><span><Icon name="user" size={21}/></span><b>吴贤明</b></button>
+        <button type="button" className="tp-profile" aria-label="打开账号菜单" aria-expanded={profileOpen} title={accountIdentity.message} onClick={()=>setProfileOpen((value)=>!value)}><span><Icon name="user" size={21}/></span><b>{accountIdentity.title}</b></button>
       </div>
     </aside>
     <section className="tp-panel">{children}</section>
