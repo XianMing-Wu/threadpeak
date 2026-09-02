@@ -1,7 +1,7 @@
 # Architecture status — GraphSurgeon bootstrap after canonical first answer
 
 - Time: 2026-09-01
-- Commits: pending GraphSurgeon bootstrap on `main`; prior `c0b70a9` canonical first answer; `6a45de0` Zhihu OAuth; `ddd77b1` server/path
+- Commits: `c77a47e` GraphSurgeon bootstrap; `c0b70a9` canonical first answer; `6a45de0` Zhihu OAuth; `ddd77b1` server/path
 - Environment: darwin, Node 24+, Vite 8, TypeScript 6
 - Maturity proposal:
   - `guard_status=verified` for Session/Chat/AskAuthor/AuthorSearch/Path document/stream cursor false-success closures
