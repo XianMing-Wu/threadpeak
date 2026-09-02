@@ -52,6 +52,7 @@ export type LearningTurn = {
   quoteFromId?: string
   nodeId?: string
   grow?: 'pred' | 'succ' | 'par'
+  failed?: boolean
 }
 
 export type ConversationRecord = {

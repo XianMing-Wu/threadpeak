@@ -8,7 +8,7 @@ import {
   readCanvasReturn as readCanvasReturnNav,
 } from './workspace/nav'
 
-export type LearningTurn = { role: 'user' | 'assistant'; text: string; mode?: AssistantMode }
+export type LearningTurn = { role: 'user' | 'assistant'; text: string; mode?: AssistantMode; failed?: boolean }
 
 export type LearningSessionState = {
   turns: LearningTurn[]

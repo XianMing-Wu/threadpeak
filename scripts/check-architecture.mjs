@@ -119,6 +119,32 @@ async function assertFileExists(resolved, specifier, fromFile) {
   throw new Error(`unresolved local import ${JSON.stringify(specifier)} from ${path.relative(repoRoot, fromFile)}`)
 }
 
+function specifierIsDeepPackage(source) {
+  return /@threadpeak\/(?:contracts|api-client|runtime-store)\/src\//.test(source)
+}
+
+function assertNoCycles(graph) {
+  const visiting = new Set()
+  const visited = new Set()
+  const stack = []
+
+  const visit = (node) => {
+    if (visited.has(node) || !graph.has(node)) return
+    if (visiting.has(node)) {
+      const start = stack.indexOf(node)
+      throw new Error(`import cycle: ${(start >= 0 ? stack.slice(start) : [node]).concat(node).join(' -> ')}`)
+    }
+    visiting.add(node)
+    stack.push(node)
+    for (const edge of graph.get(node) ?? []) visit(edge.resolved)
+    stack.pop()
+    visiting.delete(node)
+    visited.add(node)
+  }
+
+  for (const node of graph.keys()) visit(node)
+}
+
 export async function checkArchitecture() {
   const configFiles = [
     'package.json',
@@ -128,7 +154,7 @@ export async function checkArchitecture() {
     'path-lab.html',
   ].map((relative) => path.join(repoRoot, relative))
 
-  const sourceRoots = ['src', 'tests', 'scripts', 'packages'].map((relative) => path.join(repoRoot, relative))
+  const sourceRoots = ['src', 'tests', 'scripts', 'packages', 'server'].map((relative) => path.join(repoRoot, relative))
   const sourceFiles = (await Promise.all(sourceRoots.map(walkFiles))).flat()
     .filter((filePath) => !isSkippedFile(filePath))
 
@@ -159,7 +185,31 @@ export async function checkArchitecture() {
       edges.push({ specifier, resolved: path.relative(repoRoot, resolved) })
     }
     graph.set(relative, edges)
+
+    if (relative.startsWith(`src${path.sep}`) && !relative.includes(`${path.sep}vendor${path.sep}`)) {
+      assert.equal(/VITE_(?:ZHIHU|DEEPSEEK)_/.test(source), false, `${relative} must not expose provider keys to Vite`)
+      assert.equal(/import\.meta\.env\.(?:ZHIHU|DEEPSEEK|VITE_ZHIHU|VITE_DEEPSEEK)/.test(source), false, `${relative} must not read provider env in the browser`)
+      assert.equal(/\bfrom ['"]ai['"]|\bfrom ['"]@ai-sdk\//.test(source), false, `${relative} must not import AI SDK in the browser`)
+    }
+    if (relative.startsWith(`packages${path.sep}contracts${path.sep}`)) {
+      for (const edge of edges) {
+        assert.equal(edge.resolved.startsWith(`packages${path.sep}api-client${path.sep}`), false, `${relative} cannot import api-client`)
+        assert.equal(edge.resolved.startsWith(`packages${path.sep}runtime-store${path.sep}`), false, `${relative} cannot import runtime-store`)
+        assert.equal(edge.resolved.startsWith(`src${path.sep}`), false, `${relative} cannot import src`)
+        assert.equal(edge.resolved.startsWith(`server${path.sep}`), false, `${relative} cannot import server`)
+      }
+    }
+    if (specifierIsDeepPackage(source)) {
+      throw new Error(`${relative} uses a deep @threadpeak import`)
+    }
+    if (relative.startsWith(`src${path.sep}`)) {
+      for (const edge of edges) {
+        assert.equal(edge.resolved.startsWith(`server${path.sep}`), false, `${relative} cannot import server`)
+      }
+    }
   }
+
+  assertNoCycles(graph)
 
   const pkg = JSON.parse(await readFile(path.join(repoRoot, 'package.json'), 'utf8'))
   assert.ok(pkg.engines?.node?.includes('24'), 'package.json must declare Node >=24')

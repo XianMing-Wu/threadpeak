@@ -98,16 +98,18 @@ export function AskAuthorsPrompt({
       <blockquote id={quoteId} className="ask-authors-prompt__quote">{selection.text}</blockquote>
       <form className="ask-authors-prompt__form" onSubmit={submit}>
         <label className="ask-authors-prompt__sr-label" htmlFor={`${titleId}-input`}>输入想问博主的问题</label>
-        <textarea
-          ref={textareaRef}
-          id={`${titleId}-input`}
-          value={draft}
-          maxLength={MAX_ANNOTATION_QUESTION_LENGTH}
-          rows={3}
-          placeholder="例如：这段结论在实际学习中应该怎么应用？"
-          onChange={(event) => setDraft(event.currentTarget.value)}
-          onKeyDown={onTextareaKeyDown}
-        />
+        <div className="ask-authors-prompt__input-frame input-motion-frame">
+          <textarea
+            ref={textareaRef}
+            id={`${titleId}-input`}
+            value={draft}
+            maxLength={MAX_ANNOTATION_QUESTION_LENGTH}
+            rows={3}
+            placeholder="例如：这段结论在实际学习中应该怎么应用？"
+            onChange={(event) => setDraft(event.currentTarget.value)}
+            onKeyDown={onTextareaKeyDown}
+          />
+        </div>
         <div className="ask-authors-prompt__footer">
           <span>{draft.length}/{MAX_ANNOTATION_QUESTION_LENGTH} · ⌘/Ctrl + Enter 发送</span>
           <div className="ask-authors-prompt__actions">

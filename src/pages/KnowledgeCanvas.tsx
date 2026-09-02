@@ -16,7 +16,7 @@ import {
 } from '../knowledge-canvas/content'
 import { conceptTitle } from '../workspace/catalog'
 import { closeConceptKnowledge, readActiveConversationId, readActiveKnowledgeId, readCanvasReturn, readKnowledgeConceptId } from '../workspace/nav'
-import { blueprintOf, getConceptGraph, getKnowledge } from '../workspace/store'
+import { blueprintOf, getConceptGraph, getConversation, getKnowledge, saveConversationDraft } from '../workspace/store'
 import { resolveGraphMutation } from '../session/resolve-learning-entry'
 import { conversationGraphView, growGraph, growKindLabel, parseGrowCommand, resolveGrowHost } from '../knowledge-canvas/generate'
 import {
@@ -35,10 +35,10 @@ import {
 } from '../knowledge-canvas/layout'
 import {
   readLearningSession,
-  writeLearningSession,
 } from '../learningSession'
 import { readSelectionAnchor, type SelectionAnchor } from '../session/ask-authors'
 import { useAnnotations } from '../session/useAnnotations'
+import { requestOrdinaryAnswer } from '../chat/request-ordinary-answer'
 
 const NODE_PANEL_W = CARD_W
 const NODE_PANEL_GAP = 8
@@ -118,11 +118,18 @@ export function KnowledgeCanvasPage() {
   zoomRef.current = zoom
   panRef.current = pan
 
-  useEffect(() => {
-    writeLearningSession({ turns, value, quote, mode })
-  }, [mode, quote, turns, value])
+  const activeConversation = getConversation(readActiveConversationId())
+  const sessionConversationId = returnTo === 'session-learning'
+    && activeConversation?.kind === 'learning'
+    && activeConversation.routeId === knowledge?.routeId
+    && activeConversation.conceptId === conceptId
+    ? activeConversation.id
+    : ''
 
-  const sessionConversationId = returnTo === 'session-learning' ? readActiveConversationId() : ''
+  useEffect(() => {
+    if (!sessionConversationId) return
+    saveConversationDraft(sessionConversationId, { turns, value, quote, mode })
+  }, [mode, quote, sessionConversationId, turns, value])
   const view = useMemo(
     () => conversationGraphView(nodes, edges, sessionConversationId),
     [edges, nodes, sessionConversationId],
@@ -417,18 +424,40 @@ export function KnowledgeCanvasPage() {
     }
     const chosen = mode || detectMode(value)
     if (!value.trim() && !quote) return
+    const asked = value
+    const cited = quote
+    const userText = cited ? `引用「${cited}」\n${asked}` : asked
     setTurns((old) => [...old, {
       role: 'user',
-      text: quote ? `引用「${quote}」\n${value}` : value,
-      mode: chosen,
-    }, {
-      role: 'assistant',
-      text: chosen === 'authors' ? 'authors' : chosen === 'visual' ? 'visual' : 'coach',
+      text: userText,
       mode: chosen,
     }])
     setValue('')
     clearQuote()
     setMode('')
+    if (chosen === 'authors' || chosen === 'visual') {
+      setTurns((old) => [...old, {
+        role: 'assistant',
+        text: chosen === 'authors'
+          ? '问博主不能把这次请求写进知识脉络；请用划选问博主查看公开作者。'
+          : '图文模式还没有真实 VisualizationArtifact，不能把这次请求写进知识脉络。',
+        mode: chosen,
+        failed: true,
+      }])
+      return
+    }
+    void requestOrdinaryAnswer({
+      question: asked,
+      topic: title,
+      ...(cited ? { quote: cited } : {}),
+    }).then((result) => {
+      setTurns((old) => [...old, {
+        role: 'assistant',
+        text: result.kind === 'completed' ? result.text : result.message,
+        mode: chosen,
+        failed: result.kind !== 'completed',
+      }])
+    })
   }
 
   return <ProductWorkspace active="knowledge" page="knowledge-detail">

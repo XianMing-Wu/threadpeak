@@ -11,12 +11,13 @@
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 4301",
+    "server": "node --experimental-strip-types server/main.ts",
     "build": "tsc -b && vite build",
     "check": "tsc -b --pretty false",
     "check:architecture": "node --test tests/architecture-baseline.test.mjs",
     "check:contracts": "node --test packages/contracts/tests/*.test.mjs packages/api-client/tests/*.test.mjs tests/runtime-contracts-compat.test.mjs",
-    "check:product-invariants": "node --test tests/architecture-governance.test.mjs",
-    "test": "node --test tests/*.test.mjs packages/contracts/tests/*.test.mjs packages/api-client/tests/*.test.mjs packages/runtime-store/tests/*.test.mjs src/path-lab/*.test.mjs src/path-planning/*.test.mjs src/path-3d/*.test.mjs src/session/*.test.mjs src/chat/*.test.mjs src/*.test.mjs"
+    "check:product-invariants": "node --test tests/architecture-governance.test.mjs tests/product-invariants.test.mjs",
+    "test": "node --test tests/*.test.mjs packages/contracts/tests/*.test.mjs packages/api-client/tests/*.test.mjs packages/runtime-store/tests/*.test.mjs src/path-lab/*.test.mjs src/path-planning/*.test.mjs src/path-3d/*.test.mjs src/session/*.test.mjs src/chat/*.test.mjs src/*.test.mjs server/*.test.mjs"
   },
   "dependencies": {
     "@threadpeak/api-client": "0.1.0",

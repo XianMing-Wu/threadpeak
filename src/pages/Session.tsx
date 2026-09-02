@@ -16,7 +16,9 @@ import { parseGrowCommand } from '../knowledge-canvas/generate'
 import { MarkdownMath } from '../lib/MarkdownMath'
 import { resolveVisualAnswer } from '../chat/resolve-visual-answer'
 import { resolveAskAuthor } from '../session/resolve-ask-author'
-import { catalogLesson, coachReply, conceptTitle } from '../workspace/catalog'
+import { requestAskAuthor } from '../session/request-ask-author'
+import { requestOrdinaryAnswer } from '../chat/request-ordinary-answer'
+import { catalogLesson, blueprintConcepts, conceptTitle } from '../workspace/catalog'
 import {
   readActiveConceptId,
   readActiveConversationId,
@@ -78,9 +80,16 @@ export function SessionPage() {
     return () => removeEventListener(HISTORY_OPEN_EVENT, restore)
   }, [])
   const route = nav.routeId ? getRoute(nav.routeId) : undefined
+  const conceptIds = route
+    ? [...new Set([
+      ...blueprintConcepts(blueprintOf(route.id)).map((item) => item.id),
+      ...route.document.structure.concepts.map((item) => item.id),
+    ])]
+    : []
   const entry = resolveLearningEntry({
     routeId: nav.routeId,
     conceptId: nav.conceptId,
+    conceptIds,
     ...(route ? { route } : {}),
   })
   if (entry.kind === 'unavailable') return <SessionUnavailable title={entry.title} message={entry.message}/>
@@ -156,15 +165,46 @@ function SessionLearning({ routeId, conceptId }: { routeId: string; conceptId: s
     const fromId=cited?quoteFromId:''
     const grow=parseGrowCommand(asked)?.kind
     const userText=cited?`引用「${cited}」\n${asked}`:asked
-    const assistantText=chosen==='authors'?'authors':chosen==='visual'?'visual':coachReply(title, cited || asked.replace(/^[123]\s*/, '').trim() || title)
-    const createdId=appendLearningTurnToGraph(routeId, conceptId, conversationRef.current.id, {
-      question: asked,
-      quote: cited,
-      quoteFromId: fromId,
-      reply: assistantText,
-    })
-    setTurns((old)=>[...old,{role:'user',text:userText,mode:chosen,quote:cited,quoteFromId:fromId,grow},{role:'assistant',text:assistantText,mode:chosen,nodeId:createdId}])
+    const userTurn: LearningTurn = {role:'user',text:userText,mode:chosen,quote:cited,quoteFromId:fromId,grow}
     setValue(''); setQuote(''); setQuoteFromId(''); setMode('')
+    if (chosen === 'visual') {
+      setTurns((old)=>[...old,userTurn,{role:'assistant',text:resolveVisualAnswer().message,mode:chosen,failed:true}])
+      return
+    }
+    if (chosen === 'authors') {
+      if (!cited.trim()) {
+        setTurns((old)=>[...old,userTurn,{role:'assistant',text:'问博主需要先划选原文，不能在没有证据的情况下指定作者。',mode:chosen,failed:true}])
+        return
+      }
+      setTurns((old)=>[...old,userTurn])
+      void requestAskAuthor({ question: asked, quote: cited }).then((result) => {
+        if (result.kind === 'authors' && result.authors[0]) {
+          const text = result.authors.map((author) => `**${author.name}** ${author.bio}\n${author.text}\n${author.url}`).join('\n\n')
+          setTurns((old)=>[...old,{role:'assistant',text,mode:chosen}])
+          return
+        }
+        if (result.kind === 'direct') {
+          setTurns((old)=>[...old,{role:'assistant',text:result.text,mode:chosen}])
+          return
+        }
+        setTurns((old)=>[...old,{role:'assistant',text:result.kind === 'unavailable' ? result.message : resolveAskAuthor().message,mode:chosen,failed:true}])
+      })
+      return
+    }
+    setTurns((old)=>[...old,userTurn])
+    void requestOrdinaryAnswer({ question: asked, topic: title, ...(cited ? { quote: cited } : {}) }).then((result) => {
+      if (result.kind !== 'completed') {
+        setTurns((old)=>[...old,{role:'assistant',text:result.message,mode:chosen,failed:true}])
+        return
+      }
+      const createdId=appendLearningTurnToGraph(routeId, conceptId, conversationRef.current.id, {
+        question: asked,
+        quote: cited,
+        quoteFromId: fromId,
+        reply: result.text,
+      })
+      setTurns((old)=>[...old,{role:'assistant',text:result.text,mode:chosen,nodeId:createdId}])
+    })
   }
   const onSelect = () => {
     if (authorQuestion) return
@@ -220,7 +260,7 @@ function SessionLearning({ routeId, conceptId }: { routeId: string; conceptId: s
             {lesson.quote && <blockquote><AnnotatedText text={lesson.quote} annotations={annotations.annotations} activeId={annotations.active?.id} onOpen={annotations.open}/></blockquote>}
             {lesson.figureCaption && <BasisVisual caption={lesson.figureCaption}/>}
           </div></article>
-          {turns.map((turn,i)=>turn.role==='user'?<div className="user-turn" key={i}>{turn.text}</div>:<AssistantAnswer key={i} kind={turn.text} host={turn.nodeId || `turn:${i}`} topic={title}/>) }
+          {turns.map((turn,i)=>turn.role==='user'?<div className="user-turn" key={i}>{turn.text}</div>:<AssistantAnswer key={i} kind={turn.text} host={turn.nodeId || `turn:${i}`} topic={title} failed={turn.failed} mode={turn.mode}/>) }
         </div>
         <div className="mode-prompts"><button className={mode==='visual'?'is-active':''} onClick={()=>setMode(mode==='visual'?'':'visual')}><Icon name="image" size={17}/>图文模式</button></div>
         <Composer compact value={value} onChange={setValue} mode={mode} onMode={setMode} onSend={send} quote={quote} onClearQuote={()=>{setQuote('');setQuoteFromId('')}} showScope={false} showReference={false} showAttachment={false} placeholder={placeholder}/>
@@ -233,14 +273,10 @@ function SessionLearning({ routeId, conceptId }: { routeId: string; conceptId: s
   </ProductWorkspace>
 }
 
-function AssistantAnswer({kind,host}:{kind:string;host:string;topic:string}) {
-  if(kind==='authors') {
-    const authors=resolveAskAuthor()
-    return <section className="assistant-turn" data-canvas-host={host} role="alert"><span className="kanshan-avatar">山</span><div><h2>{authors.title}</h2><p>{authors.message}</p></div></section>
-  }
-  if(kind==='visual') {
-    const visual=resolveVisualAnswer()
-    return <section className="assistant-turn" data-canvas-host={host} role="alert"><span className="kanshan-avatar">山</span><div><h2>{visual.title}</h2><p>{visual.message}</p></div></section>
+function AssistantAnswer({kind,host,failed,mode}:{kind:string;host:string;topic:string;failed?:boolean;mode?:AssistantMode}) {
+  if(failed || kind==='authors' || kind==='visual') {
+    const unavailable = mode==='visual' || kind==='visual' ? resolveVisualAnswer() : mode==='authors' || kind==='authors' ? resolveAskAuthor() : { title: '无法生成本次回答', message: kind }
+    return <section className="assistant-turn" data-canvas-host={host} role="alert"><span className="kanshan-avatar">山</span><div><h2>{unavailable.title}</h2><p>{unavailable.message}</p></div></section>
   }
   return <section className="assistant-turn" data-canvas-host={host}><span className="kanshan-avatar">山</span><div><MarkdownMath source={kind}/></div></section>
 }

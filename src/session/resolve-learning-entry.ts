@@ -2,6 +2,7 @@ export type LearningEntryInput = {
   routeId: string
   conceptId: string
   route?: { id: string } | undefined
+  conceptIds?: readonly string[]
 }
 
 export type LearningEntry =
@@ -12,7 +13,7 @@ export type LearningEntry =
     }
   | {
       kind: 'unavailable'
-      reason: 'missing-route' | 'missing-concept'
+      reason: 'missing-route' | 'missing-concept' | 'concept-not-on-route'
       title: string
       message: string
     }
@@ -34,6 +35,14 @@ export function resolveLearningEntry(input: LearningEntryInput): LearningEntry {
       reason: 'missing-concept',
       title: '未选择学习概念',
       message: '这条路线还没有指定概念。请从 3D 路线进入一个概念；不能默认打开“线性变换”。',
+    }
+  }
+  if (!input.conceptIds || !input.conceptIds.includes(conceptId)) {
+    return {
+      kind: 'unavailable',
+      reason: 'concept-not-on-route',
+      title: '概念不属于这条路线',
+      message: '当前概念不在这条路线里。不能把另一条路线的概念接到这次学习会话。',
     }
   }
   return { kind: 'ready', routeId, conceptId }

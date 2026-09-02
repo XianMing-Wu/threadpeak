@@ -4,7 +4,9 @@ import { ProductWorkspace } from '../components/Shell'
 import { Icon } from '../icons'
 import { clearActiveHistory, CHAT_LAUNCH_KEY, HISTORY_OPEN_EVENT } from '../history'
 import { resolveChatLaunch, type ChatLaunchReady } from '../chat/resolve-chat-launch'
+import { requestOrdinaryAnswer } from '../chat/request-ordinary-answer'
 import { resolveOrdinaryAnswer } from '../chat/resolve-ordinary-answer'
+import { MarkdownMath } from '../lib/MarkdownMath'
 import { resolveVisualAnswer } from '../chat/resolve-visual-answer'
 import { linkedRouteIntro } from '../workspace/catalog'
 import { setActiveConversation } from '../workspace/nav'
@@ -43,6 +45,26 @@ function OrdinaryAnswerUnavailable() {
     <h2>{resolution.title}</h2>
     <p>{resolution.message}</p>
   </article>
+}
+
+function OrdinaryAnswerLive({ query }: { query: string }) {
+  const [text, setText] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    setText(null)
+    setError(null)
+    void requestOrdinaryAnswer({ question: query }).then((result) => {
+      if (cancelled) return
+      if (result.kind === 'completed') setText(result.text)
+      else setError(result.message)
+    })
+    return () => { cancelled = true }
+  }, [query])
+  if (!query.trim()) return <OrdinaryAnswerUnavailable/>
+  if (error) return <article className="chat-answer" role="alert"><h2>无法生成本次回答</h2><p>{error}</p></article>
+  if (!text) return <article className="chat-answer" aria-live="polite"><h2>正在检索公开证据并生成回答</h2><p>这次请求会走服务端知乎检索和 DeepSeek。没有真实配置时会显式失败。</p></article>
+  return <article className="chat-answer"><MarkdownMath source={text}/></article>
 }
 
 function VisualAnswerUnavailable() {
@@ -139,7 +161,7 @@ export function ChatPage() {
         {experience==='visual'?<VisualAnswerUnavailable/>:experience==='route'?<>
           {conversation?.kind==='route-followup'&&<article className="chat-answer"><h2>继续同一条路线</h2><p>{linkedRouteIntro(getRoute(routeId)?.title??query,followupOrdinal)}</p></article>}
           {conversation?.kind!=='route-followup'&&<ChatRoutePanel conversationId={conversationId} query={query} existingRouteId={routeId||undefined} onRouteReady={setRouteId}/>}
-        </>:<OrdinaryAnswerUnavailable/>}
+        </>:<OrdinaryAnswerLive query={query}/>}
       </div></section>
       {experience!=='route'&&<div className="query-chat-composer"><Composer compact value={value} onChange={setValue} mode="" onMode={()=>undefined} onSend={followUp} showScope={false} showReference={false}/></div>}
     </main>

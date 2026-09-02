@@ -6,7 +6,6 @@ import {
   catalogLesson,
   conceptAccent,
   conceptTitle,
-  documentFromBlueprint,
   draftFirstLesson,
   exampleBlueprints,
   exampleKnowledgeRecord,
@@ -486,9 +485,11 @@ export function saveKnowledgeGraph(knowledgeId: string, graph: KnowledgeRecord['
 }
 
 function replyParagraphs(reply: string) {
-  if (reply === 'visual') return ['这次用图把刚才引用的关系摊开，而不是再写一段定义。']
-  if (reply === 'authors') return ['这次把问题交给相关作者的公开回答，而不是直接给一条新定义。']
   return [reply]
+}
+
+function isFailureSentinel(reply: string) {
+  return reply === 'authors' || reply === 'visual' || reply === 'coach'
 }
 
 export function syncConversationGraph(
@@ -508,7 +509,7 @@ export function syncConversationGraph(
     id: 'root',
   }
   const existing = getConceptGraph(knowledge.id, conceptId)
-  const foreignNodes = (existing?.nodes ?? []).filter((node) => node.id !== 'root' && node.conversationId && node.conversationId !== conversationId)
+  const foreignNodes = (existing?.nodes ?? []).filter((node) => node.id !== 'root' && (!node.conversationId || node.conversationId !== conversationId))
   const keep = new Set(['root', ...foreignNodes.map((node) => node.id)])
   const foreignEdges = (existing?.edges ?? []).filter((edge) => keep.has(edge.from) && keep.has(edge.to))
   let branchNodes: KnowledgeGraph['nodes'] = [root]
@@ -520,7 +521,9 @@ export function syncConversationGraph(
   for (let index = 0; index < replay.length; index += 1) {
     const user = replay[index]
     const assistant = replay[index + 1]
-    if (user.role !== 'user' || assistant?.role !== 'assistant') continue
+    if (user.role !== 'user' || assistant?.role !== 'assistant' || user.failed || assistant.failed) continue
+    if (user.mode === 'authors' || user.mode === 'visual' || assistant.mode === 'authors' || assistant.mode === 'visual') continue
+    if (isFailureSentinel(assistant.text)) continue
     const assistantIndex = index + 1
     index += 1
     const parsed = parseQuotedUserTurn(user.text)
@@ -566,6 +569,7 @@ export function appendLearningTurnToGraph(
   conversationId: string,
   input: { question: string; quote?: string; quoteFromId?: string; reply: string },
 ) {
+  if (isFailureSentinel(input.reply)) return undefined
   const conversation = getConversation(conversationId)
   const quote = plainQuoteText(input.quote ?? '')
   const grow = parseGrowCommand(input.question)?.kind
@@ -612,15 +616,4 @@ export function startLearningConversation(routeId: string, conceptId: string): C
 
 export function recommendedExampleKnowledge() {
   return listKnowledge('example').slice(0, 2)
-}
-
-export function recommendedExampleRoutes() {
-  return listRoutes('example').slice(0, 2)
-}
-
-export function routeDocument(routeId: string) {
-  const route = getRoute(routeId)
-  if (route) return route.document
-  const example = findExampleBlueprint(routeId)
-  return example ? documentFromBlueprint(example) : undefined
 }

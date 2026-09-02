@@ -55,13 +55,13 @@ export function AnnotationPanel({
         ) : (
           <article className="annotation-card">
             <div className="annotation-card__author">
-              <span className="annotation-card__avatar" aria-hidden="true">{reply.name.slice(0, 1)}</span>
+              <span className="annotation-card__avatar" aria-hidden="true">{reply.name?.slice(0, 1) || '?'}</span>
               <div>
-                <b>{reply.name}</b>
-                <small>{reply.bio}</small>
+                <b>{reply.name || '未知作者'}</b>
+                <small>{reply.bio || ''}</small>
               </div>
             </div>
-            <p className="annotation-card__reply">{reply.text}</p>
+            <p className="annotation-card__reply">{reply.text || ''}</p>
             <div className="annotation-card__source">
               <strong>{reply.title}</strong>
               {href ? (

@@ -14,6 +14,7 @@ export interface BloggerReply {
   title: string
   url: string
   text: string
+  source?: 'zhihu-live'
 }
 
 export interface AskAuthorsAnnotation {
@@ -46,7 +47,7 @@ export function readAnnotationStore(): AnnotationStore {
     const raw = sessionStorage.getItem(ANNOTATION_KEY)
     if (!raw) return emptyAnnotationStore()
     const parsed = JSON.parse(raw) as Partial<AnnotationStore>
-    const items = Array.isArray(parsed.items) ? parsed.items.filter(isAnnotation) : []
+    const items = Array.isArray(parsed.items) ? parsed.items.filter(isPersistedAnnotation) : []
     return {
       items,
       activeId: typeof parsed.activeId === 'string' ? parsed.activeId : null,
@@ -62,10 +63,28 @@ export function writeAnnotationStore(store: AnnotationStore) {
   window.dispatchEvent(new Event(ANNOTATION_EVENT))
 }
 
-function isAnnotation(value: unknown): value is AskAuthorsAnnotation {
+const BLOCKED_AUTHOR_NAMES = new Set(['马同学', '李永乐老师', '刘看山'])
+
+function isLiveReply(value: unknown): value is BloggerReply {
+  if (!value || typeof value !== 'object') return false
+  const reply = value as BloggerReply
+  return reply.source === 'zhihu-live'
+    && typeof reply.name === 'string'
+    && !BLOCKED_AUTHOR_NAMES.has(reply.name)
+    && typeof reply.bio === 'string'
+    && typeof reply.title === 'string'
+    && typeof reply.text === 'string'
+    && isZhihuUrl(reply.url)
+}
+
+export function isPersistedAnnotation(value: unknown): value is AskAuthorsAnnotation {
   if (!value || typeof value !== 'object') return false
   const item = value as AskAuthorsAnnotation
-  return typeof item.id === 'string' && typeof item.ordinal === 'number' && typeof item.quote === 'string' && (typeof item.scopeId === 'string' || item.scopeId === undefined)
+  if (typeof item.id !== 'string' || typeof item.ordinal !== 'number' || typeof item.quote !== 'string') return false
+  if (typeof item.scopeId !== 'string') return false
+  if (item.status === 'ready') return isLiveReply(item.reply)
+  if (item.status === 'unavailable' || item.status === 'answering') return false
+  return false
 }
 
 export function annotationEventName() {

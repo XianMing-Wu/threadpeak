@@ -616,19 +616,6 @@ export function graphFromLesson(conceptTitleText: string, lesson: FirstLesson, a
   return { nodes: [root], edges }
 }
 
-export function coachReply(conceptTitleText: string, question: string) {
-  const asked = question.replace(/\s+/g, ' ').trim()
-  return `针对「${conceptTitleText}」，你刚刚问的是「${asked}」。
-
-先不要把问题扩大：用当前概念里已经出现的对象回答它，再决定要不要引入下一个概念。
-
-试着先用一句话判断对错，再补一个最小例子。线性对象要先满足：
-
-$$T(\\mathbf{u}+\\mathbf{v})=T(\\mathbf{u})+T(\\mathbf{v}),\\quad T(c\\mathbf{u})=c\\,T(\\mathbf{u})$$
-
-其中 $\\mathbf{u},\\mathbf{v}$ 是已经出现的对象，$c$ 是标量。`
-}
-
 export function linkedRouteIntro(routeTitle: string, conversationOrdinal: number) {
   return `这是「${routeTitle}」下的第 ${conversationOrdinal} 段对话。路线本身不会重做，知识脉络也还是同一份；我们只是换一个入口继续问。`
 }

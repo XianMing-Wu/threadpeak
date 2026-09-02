@@ -107,7 +107,19 @@ test('an explicitly selected route and concept can enter', () => {
   const entry = resolveLearningEntry({
     routeId: 'linear-algebra',
     conceptId: 'linear-map',
+    conceptIds: ['linear-map'],
     route: { id: 'linear-algebra' },
   })
   assert.deepEqual(entry, { kind: 'ready', routeId: 'linear-algebra', conceptId: 'linear-map' })
+})
+
+test('a concept that does not belong to the route cannot enter', () => {
+  const entry = resolveLearningEntry({
+    routeId: 'critical-thinking',
+    conceptId: 'linear-map',
+    conceptIds: ['argument', 'fallacy'],
+    route: { id: 'critical-thinking' },
+  })
+  assert.equal(entry.kind, 'unavailable')
+  assert.equal(entry.reason, 'concept-not-on-route')
 })

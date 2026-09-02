@@ -107,7 +107,7 @@ test('governance command and evidence boundary stay explicit', async () => {
   ])
   const pkg = JSON.parse(packageSource)
 
-  assert.equal(pkg.scripts['check:product-invariants'], 'node --test tests/architecture-governance.test.mjs')
+  assert.equal(pkg.scripts['check:product-invariants'], 'node --test tests/architecture-governance.test.mjs tests/product-invariants.test.mjs')
   assert.equal(pkg.scripts['check:architecture'], 'node --test tests/architecture-baseline.test.mjs')
   assert.equal(
     pkg.scripts['check:contracts'],
