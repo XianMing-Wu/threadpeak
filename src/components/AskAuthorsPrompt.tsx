@@ -99,6 +99,7 @@ export function AskAuthorsPrompt({
       <form className="ask-authors-prompt__form" onSubmit={submit}>
         <label className="ask-authors-prompt__sr-label" htmlFor={`${titleId}-input`}>输入想问博主的问题</label>
         <div className="ask-authors-prompt__input-frame input-motion-frame">
+          <span className="input-motion-glow" aria-hidden="true" />
           <textarea
             ref={textareaRef}
             id={`${titleId}-input`}

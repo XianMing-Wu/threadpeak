@@ -82,6 +82,7 @@ function AuthorSearchPane() {
           </g>
         </svg>
         {searchOpen ? <form className="radar-query input-motion-frame" onSubmit={(event) => { event.preventDefault(); submitSearch() }}>
+          <span className="input-motion-glow" aria-hidden="true" />
           <Icon name="search" size={20}/>
           <input autoFocus aria-label="输入想咨询博主的问题" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="你想找博主咨询什么？"/>
           <button type="button" aria-label="开始找博主" disabled={!query.trim()} onClick={submitSearch}><Icon name="send" size={19}/></button>
