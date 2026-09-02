@@ -17,7 +17,9 @@ const inRepoOldSource = await readFile(new URL(inRepoOldHref), 'utf8')
 const inRepoOldContracts = await import(inRepoOldHref)
 
 test('in-repo old path is a re-export, not a second schema copy', () => {
-  assert.match(inRepoOldSource, /export \* from ['\"]\.\.\/src\/index\.ts['\"]/)
+  assert.match(inRepoOldSource, /from ['\"]\.\.\/src\/runtime-contracts\.ts['\"]/)
+  assert.doesNotMatch(inRepoOldSource, /export \*/)
+  assert.doesNotMatch(inRepoOldSource, /PublicErrorSchema|StreamEventMetaSchema/)
   assert.doesNotMatch(inRepoOldSource, /z\.object\(/)
   assert.match(inRepoOldSource, /删除条件/)
 })
@@ -25,7 +27,9 @@ test('in-repo old path is a re-export, not a second schema copy', () => {
 test('sibling algorithm path, when present, is also a re-export', async () => {
   const siblingSource = await readFile(siblingOldPath, 'utf8').catch(() => '')
   if (!siblingSource) return
-  assert.match(siblingSource, /export \* from ['\"].*packages\/contracts\/src\/index\.ts['\"]/)
+  assert.match(siblingSource, /from ['\"].*packages\/contracts\/src\/runtime-contracts\.ts['\"]/)
+  assert.doesNotMatch(siblingSource, /export \*/)
+  assert.doesNotMatch(siblingSource, /PublicErrorSchema|StreamEventMetaSchema/)
   assert.doesNotMatch(siblingSource, /z\.object\(/)
   const siblingContracts = await import(pathToFileURL(siblingOldPath).href)
   assert.deepEqual(

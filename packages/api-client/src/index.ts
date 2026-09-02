@@ -5,6 +5,7 @@ export {
   decodeSseBlock,
   decodeStreamPayload,
   iterateNdjson,
+  iterateNdjsonStream,
   type DecodeFailure,
   type DecodeResult,
   type DecodeSuccess,
@@ -15,5 +16,6 @@ export {
   createApiClient,
   type FetchInit,
   type FetchPort,
+  type FetchResponse,
   type JsonRequestResult,
 } from './transport.ts'

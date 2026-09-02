@@ -7,12 +7,6 @@ export const UuidSchema = z
 
 export const TraceIdSchema = z.string().trim().min(1).max(128)
 
-export const OpenCodeGoProtocolSchema = z.enum([
-  'responses',
-  'chat_completions',
-  'completions',
-])
-
 export const EvidenceRecordSchema = z
   .object({
     id: UuidSchema,
@@ -41,6 +35,5 @@ export const SharedEventEnvelopeSchema = z
 
 export type Uuid = z.infer<typeof UuidSchema>
 export type TraceId = z.infer<typeof TraceIdSchema>
-export type OpenCodeGoProtocol = z.infer<typeof OpenCodeGoProtocolSchema>
 export type EvidenceRecord = z.infer<typeof EvidenceRecordSchema>
 export type SharedEventEnvelope = z.infer<typeof SharedEventEnvelopeSchema>

@@ -1,12 +1,10 @@
 export {
   EvidenceRecordSchema,
-  OpenCodeGoProtocolSchema,
   SharedEventEnvelopeSchema,
   TraceIdSchema,
   UuidSchema,
   sharedEventEnvelopeFields,
   type EvidenceRecord,
-  type OpenCodeGoProtocol,
   type SharedEventEnvelope,
   type TraceId,
   type Uuid,
@@ -15,6 +13,7 @@ export {
 export {
   PublicErrorCodeSchema,
   PublicErrorSchema,
+  STREAM_RESOURCE_KEYS,
   StreamCursorSchema,
   StreamEventMetaSchema,
   sharedStreamEventFields,

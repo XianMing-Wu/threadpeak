@@ -51,7 +51,7 @@ export function decideCommittedApply(
   next: StreamEventInput,
 ): ApplyDecision {
   if (current && current.lastEventId === next.eventId) return 'duplicate'
-  if (!current) return next.sequence === 0 ? 'apply' : 'gap'
+  if (!current) return next.sequence === 1 ? 'apply' : 'gap'
   if (next.sequence <= current.sequence) return 'late'
   if (next.sequence === current.sequence + 1) return 'apply'
   return 'gap'

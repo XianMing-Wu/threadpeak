@@ -2,6 +2,7 @@ import { type PublicError } from '@threadpeak/contracts'
 import {
   decodePublicError,
   iterateNdjson,
+  iterateNdjsonStream,
   type DecodeResult,
   type DecodedStreamEvent,
 } from './decoder.ts'
@@ -13,10 +14,17 @@ export type FetchInit = {
   signal?: AbortSignal
 }
 
+export type FetchResponse = {
+  ok: boolean
+  status: number
+  text: () => Promise<string>
+  body?: ReadableStream<Uint8Array> | null
+}
+
 export type FetchPort = (
   input: string,
   init?: FetchInit,
-) => Promise<{ ok: boolean; status: number; text: () => Promise<string> }>
+) => Promise<FetchResponse>
 
 export type JsonRequestResult =
   | { ok: true; status: number; value: unknown }
@@ -94,11 +102,10 @@ export function createApiClient(ports: { fetch: FetchPort }) {
     },
 
     async *readNdjson(url: string, traceId: string): AsyncGenerator<DecodeResult<DecodedStreamEvent>> {
-      let text: string
       try {
         const response = await ports.fetch(url, { method: 'GET' })
-        text = await response.text()
         if (!response.ok) {
+          const text = await response.text()
           const decoded = decodePublicError(safeJson(text), traceId)
           yield {
             ok: false,
@@ -108,11 +115,14 @@ export function createApiClient(ports: { fetch: FetchPort }) {
           }
           return
         }
+        if (response.body && typeof response.body.getReader === 'function') {
+          yield* iterateNdjsonStream(response.body, traceId)
+          return
+        }
+        yield* iterateNdjson(await response.text(), traceId)
       } catch {
         yield { ok: false, error: transportError('NDJSON request failed before a response body was available.', traceId) }
-        return
       }
-      yield* iterateNdjson(text, traceId)
     },
   }
 }

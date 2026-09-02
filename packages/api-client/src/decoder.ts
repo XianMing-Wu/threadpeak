@@ -1,5 +1,6 @@
 import {
   PublicErrorSchema,
+  STREAM_RESOURCE_KEYS,
   SharedEventEnvelopeSchema,
   StreamEventMetaSchema,
   type PublicError,
@@ -91,8 +92,12 @@ export function decodeStreamPayload(input: unknown, fallbackTraceId = DECODE_TRA
   }
   const envelope = decodeSharedEnvelope(record, fallbackTraceId)
   if (!envelope.ok) return envelope
+  const resourceId = STREAM_RESOURCE_KEYS
+    .map((key) => record[key])
+    .find((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    ?.trim()
   const meta = StreamEventMetaSchema.safeParse({
-    resourceId: record.resourceId,
+    resourceId,
     sequence: record.sequence,
   })
   if (!meta.success) {
@@ -155,5 +160,30 @@ export async function* iterateNdjson(
     const decoded = decodeNdjsonLine(line, fallbackTraceId)
     if ('skipped' in decoded) continue
     yield decoded
+  }
+}
+
+export async function* iterateNdjsonStream(
+  body: ReadableStream<Uint8Array>,
+  fallbackTraceId = DECODE_TRACE,
+): AsyncGenerator<DecodeResult<DecodedStreamEvent>> {
+  const reader = body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      buffer += decoder.decode(value ?? new Uint8Array(), { stream: !done })
+      const lines = buffer.split(/\r?\n/)
+      buffer = done ? '' : lines.pop() ?? ''
+      for (const line of lines) {
+        const decoded = decodeNdjsonLine(line, fallbackTraceId)
+        if ('skipped' in decoded) continue
+        yield decoded
+      }
+      if (done) return
+    }
+  } finally {
+    reader.releaseLock()
   }
 }

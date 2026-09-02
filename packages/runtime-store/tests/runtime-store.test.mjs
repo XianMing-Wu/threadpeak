@@ -6,14 +6,14 @@ const storeApi = await import('../src/index.ts')
 const first = {
   eventId: '11111111-1111-4111-8111-111111111111',
   resourceId: 'conversation-1',
-  sequence: 0,
+  sequence: 1,
   traceId: 'trace-1',
 }
 
 const second = {
   eventId: '22222222-2222-4222-8222-222222222222',
   resourceId: 'conversation-1',
-  sequence: 1,
+  sequence: 2,
   traceId: 'trace-1',
 }
 

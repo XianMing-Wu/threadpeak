@@ -25,10 +25,20 @@ export const StreamCursorSchema = z
   })
   .strict()
 
+export const STREAM_RESOURCE_KEYS = [
+  'resourceId',
+  'aggregateId',
+  'pathSessionId',
+  'sessionId',
+  'conversationId',
+  'knowledgeId',
+  'knowledgeGraphId',
+] as const
+
 export const sharedStreamEventFields = {
   ...sharedEventEnvelopeFields,
   resourceId: z.string().trim().min(1).max(200),
-  sequence: z.number().int().nonnegative(),
+  sequence: z.number().int().positive(),
 } as const
 
 export const StreamEventMetaSchema = z

@@ -37,10 +37,3 @@ test('canonical SharedEventEnvelopeSchema accepts v1 and rejects unknown version
     extra: true,
   }))
 })
-
-test('OpenCode protocol is a closed enum', () => {
-  for (const value of ['responses', 'chat_completions', 'completions']) {
-    assert.equal(contracts.OpenCodeGoProtocolSchema.parse(value), value)
-  }
-  assert.throws(() => contracts.OpenCodeGoProtocolSchema.parse('anthropic'))
-})

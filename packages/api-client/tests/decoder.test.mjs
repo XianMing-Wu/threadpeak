@@ -13,9 +13,27 @@ const envelope = {
 const streamEvent = {
   ...envelope,
   resourceId: 'path-session-fixture',
-  sequence: 0,
+  sequence: 1,
   type: 'path.delta',
 }
+
+test('stream decoder accepts aggregateId and rejects sequence 0', () => {
+  const decoded = client.decodeNdjsonLine(JSON.stringify({
+    ...envelope,
+    aggregateId: 'knowledge-aggregate',
+    sequence: 1,
+    type: 'answer.completed',
+  }))
+  assert.equal(decoded.ok, true)
+  if (!decoded.ok || !('value' in decoded)) throw new Error('expected event')
+  assert.equal(decoded.value.resourceId, 'knowledge-aggregate')
+  const zero = client.decodeNdjsonLine(JSON.stringify({
+    ...envelope,
+    resourceId: 'path-session-fixture',
+    sequence: 0,
+  }))
+  assert.equal(zero.ok, false)
+})
 
 test('NDJSON decoder accepts envelope plus cursor and keeps extra domain fields raw', () => {
   const decoded = client.decodeNdjsonLine(JSON.stringify(streamEvent))
@@ -23,7 +41,7 @@ test('NDJSON decoder accepts envelope plus cursor and keeps extra domain fields 
   if (!decoded.ok || !('value' in decoded)) throw new Error('expected event')
   assert.equal(decoded.value.envelope.eventId, envelope.eventId)
   assert.equal(decoded.value.resourceId, 'path-session-fixture')
-  assert.equal(decoded.value.sequence, 0)
+  assert.equal(decoded.value.sequence, 1)
   assert.equal(decoded.value.raw.type, 'path.delta')
 })
 
@@ -45,6 +63,27 @@ test('SSE decoder only reads data fields and rejects blocks without data', () =>
   assert.equal(missing.ok, false)
   if (missing.ok) throw new Error('expected failure')
   assert.equal(missing.error.code, 'SCHEMA_INVALID')
+})
+
+test('NDJSON transport yields lines before the connection closes', async () => {
+  const firstLine = JSON.stringify(streamEvent)
+  const secondLine = JSON.stringify({ ...streamEvent, sequence: 2, eventId: '22222222-2222-4222-8222-222222222222' })
+  const encoder = new TextEncoder()
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(encoder.encode(`${firstLine}\n`))
+      controller.enqueue(encoder.encode(`${secondLine}\n`))
+      controller.close()
+    },
+  })
+  const api = client.createApiClient({
+    fetch: async () => ({ ok: true, status: 200, text: async () => `${firstLine}\n${secondLine}\n`, body: stream }),
+  })
+  const events = []
+  for await (const item of api.readNdjson('/stream', 'trace-stream')) events.push(item)
+  assert.equal(events.length, 2)
+  assert.equal(events[0].ok, true)
+  assert.equal(events[0].value.sequence, 1)
 })
 
 test('public errors reject unknown keys and injected fetch never invents success', async () => {
