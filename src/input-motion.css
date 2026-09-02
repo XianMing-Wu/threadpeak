@@ -1,25 +1,42 @@
 @property --tp-input-motion-angle {
   syntax: "<angle>";
   inherits: false;
-  initial-value: -45deg;
+  initial-value: -28deg;
 }
 
 @keyframes tp-input-motion-orbit {
-  from { --tp-input-motion-angle: -45deg; }
-  to { --tp-input-motion-angle: 315deg; }
+  from { --tp-input-motion-angle: -28deg; }
+  to { --tp-input-motion-angle: 332deg; }
 }
 
 /*
- * Shared recreation of the supplied input reference: a neutral hairline stays
- * still while one coral-to-amber light band makes a two-second orbit around it.
- * The crisp ring and its blurred bloom are separate so text never animates.
+ * 1:1 of the supplied Seedream-style input: a dusty rose-to-peach band
+ * travels the hairline while a thicker, blurred copy sits on top of the
+ * white fill so the same light leaks 18–28px inward. Text stays above both.
  */
 .input-motion-frame {
+  --tp-input-motion-band: conic-gradient(
+    from var(--tp-input-motion-angle) at 50% 50%,
+    rgb(222, 168, 164) 0deg,
+    rgb(234, 196, 172) 16deg,
+    rgb(238, 214, 186) 34deg,
+    rgb(236, 208, 176) 52deg,
+    rgb(230, 196, 188) 68deg,
+    transparent 100deg,
+    transparent 300deg,
+    rgb(236, 200, 196) 336deg,
+    rgb(222, 168, 164) 360deg
+  );
   position: relative;
   isolation: isolate;
   overflow: visible;
   border-color: rgba(43, 48, 55, .15);
   box-shadow: 0 4px 14px rgba(31, 36, 43, .035);
+}
+
+.input-motion-frame > * {
+  position: relative;
+  z-index: 2;
 }
 
 .input-motion-frame:focus-within {
@@ -31,18 +48,10 @@
 .input-motion-frame::after {
   content: "";
   position: absolute;
+  z-index: 1;
   pointer-events: none;
   border-radius: inherit;
-  background: conic-gradient(
-    from var(--tp-input-motion-angle) at 50% 50%,
-    rgba(244, 137, 151, .72) 0deg,
-    rgba(246, 175, 118, .66) 25deg,
-    rgba(253, 216, 164, .34) 54deg,
-    transparent 94deg,
-    transparent 296deg,
-    rgba(252, 202, 208, .22) 330deg,
-    rgba(244, 137, 151, .72) 360deg
-  );
+  background: var(--tp-input-motion-band);
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
@@ -55,21 +64,18 @@
 }
 
 .input-motion-frame::before {
-  z-index: -1;
   inset: -1px;
-  padding: 1px;
-  opacity: .9;
+  padding: 1.5px;
+  opacity: .98;
 }
 
 .input-motion-frame::after {
-  z-index: -2;
-  inset: -1px;
-  padding: 1px;
-  opacity: .24;
-  filter: blur(6px) saturate(.92);
+  inset: 0;
+  padding: 28px;
+  opacity: .84;
+  filter: blur(16px) saturate(1.05);
 }
 
-/* Keyboard focus strengthens the same hairline instead of adding a second ring. */
 .input-motion-frame:has(input:focus-visible, textarea:focus-visible) {
   border-color: rgba(43, 48, 55, .32);
 }
@@ -89,6 +95,18 @@
 }
 
 html[data-theme="dark"] .input-motion-frame {
+  --tp-input-motion-band: conic-gradient(
+    from var(--tp-input-motion-angle) at 50% 50%,
+    rgb(236, 168, 162) 0deg,
+    rgb(240, 196, 164) 16deg,
+    rgb(242, 214, 176) 34deg,
+    rgb(240, 206, 168) 52deg,
+    rgb(232, 190, 184) 68deg,
+    transparent 100deg,
+    transparent 300deg,
+    rgb(238, 190, 186) 336deg,
+    rgb(236, 168, 162) 360deg
+  );
   border-color: rgba(255, 255, 255, .18);
   box-shadow: 0 5px 16px rgba(0, 0, 0, .18);
 }
@@ -101,6 +119,10 @@ html[data-theme="dark"] .input-motion-frame:has(input:focus-visible, textarea:fo
   border-color: rgba(255, 255, 255, .38);
 }
 
+html[data-theme="dark"] .input-motion-frame::after {
+  opacity: .82;
+}
+
 html[data-theme="dark"] .ask-authors-prompt__input-frame {
   background: #17191d;
 }
@@ -108,14 +130,14 @@ html[data-theme="dark"] .ask-authors-prompt__input-frame {
 @media (prefers-reduced-motion: reduce) {
   .input-motion-frame::before,
   .input-motion-frame::after {
-    --tp-input-motion-angle: 35deg;
+    --tp-input-motion-angle: 18deg;
     animation: none;
   }
 }
 
 html[data-reduce-motion="true"] .input-motion-frame::before,
 html[data-reduce-motion="true"] .input-motion-frame::after {
-  --tp-input-motion-angle: 35deg;
+  --tp-input-motion-angle: 18deg;
   animation: none !important;
 }
 
