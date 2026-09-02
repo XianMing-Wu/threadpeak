@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { isExampleFixtureDocumentId, resolvePath3DView } from './resolved-path-document.ts'
+import { isExampleFixtureDocumentId, isRenderableMineRoute, resolvePath3DView } from './resolved-path-document.ts'
 import { validRendererDocumentFixture, validateRendererDocument } from './validate-renderer-document.ts'
 
 const generatedDocument = validRendererDocumentFixture('generated-path')
@@ -48,6 +48,24 @@ test('incomplete flowGroup documents are not treated as validated', () => {
     route: { id: 'generated-path', owner: 'mine', title: '从目标到可验证作品', document: invalid },
   })
   assert.equal(view.kind, 'unavailable')
+})
+
+test('incomplete live-route stubs are not listed as enterable mine routes', () => {
+  assert.equal(isRenderableMineRoute({
+    owner: 'mine',
+    document: {
+      protocol: 'learning-path',
+      version: '1.0',
+      id: 'live-route',
+      metadata: { title: '核与像', locale: 'zh-CN' },
+      structure: { subjects: [], concepts: [{ id: 'live-concept' }], flowGroups: [] },
+      data: { cards: [{ id: 'card-1' }] },
+    },
+  }), false)
+  assert.equal(isRenderableMineRoute({
+    owner: 'mine',
+    document: generatedDocument,
+  }), true)
 })
 
 test('validated mine documents and marked example documents can render', () => {

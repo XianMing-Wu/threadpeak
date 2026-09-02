@@ -89,6 +89,16 @@ export function readGrowCommand(text: string): { kind: GrowKind; question: strin
   return { kind: last.kind, question: last.question || lines.slice(0, -1).join('\n').trim() }
 }
 
+export function inferGrowKind(question: string, quote = ''): GrowKind {
+  const explicit = parseGrowCommand(question) ?? readGrowCommand(question)
+  if (explicit) return explicit.kind
+  const text = question.trim()
+  if (/前提|先理解|之前需要|为什么先/.test(text)) return 'pred'
+  if (/举个例子|给我举个例|举例|给个例子|一个例子|比如|实例|另一种问法|换个说法|并列/.test(text)) return 'par'
+  if (quote.trim()) return 'par'
+  return 'succ'
+}
+
 /** Walk off a dashed card onto its flow host. Parallels never parent anything. */
 export function flowHostId(nodes: readonly CanvasNode[], id: string): string {
   const byId = new Map(nodes.map((node) => [node.id, node]))
@@ -169,8 +179,60 @@ function nextId(prefix: string, used: ReadonlySet<string>): string {
   return `${prefix}${n}`
 }
 
-function existingPal(nodes: readonly CanvasNode[], hostId: string): CanvasNode | undefined {
-  return nodes.find((node) => node.role === 'parallel' && node.hostId === hostId)
+export function similarQuestion(left: string, right: string): boolean {
+  const a = compactHay(plainQuoteText(left))
+  const b = compactHay(plainQuoteText(right))
+  if (a.length < 4 || b.length < 4) return false
+  if (a === b || a.includes(b) || b.includes(a)) return true
+  const grams = (text: string) => {
+    const set = new Set<string>()
+    for (let index = 0; index < text.length - 1; index += 1) set.add(text.slice(index, index + 2))
+    return set
+  }
+  const leftGrams = grams(a)
+  const rightGrams = grams(b)
+  if (leftGrams.size === 0 || rightGrams.size === 0) return false
+  let overlap = 0
+  for (const gram of leftGrams) if (rightGrams.has(gram)) overlap += 1
+  return overlap / Math.max(leftGrams.size, rightGrams.size) >= 0.55
+}
+
+function childNodesOf(
+  nodes: readonly CanvasNode[],
+  edges: readonly CanvasEdge[],
+  hostId: string,
+  kind: GrowKind,
+): CanvasNode[] {
+  if (kind === 'par') return nodes.filter((node) => node.role === 'parallel' && node.hostId === hostId)
+  if (kind === 'pred') {
+    const ids = new Set(edges.filter((edge) => edge.grow === 'pred' && edge.to === hostId).map((edge) => edge.from))
+    return nodes.filter((node) => ids.has(node.id))
+  }
+  const ids = new Set(edges.filter((edge) => edge.grow === 'succ' && edge.from === hostId).map((edge) => edge.to))
+  return nodes.filter((node) => ids.has(node.id))
+}
+
+export function findMergeTarget(
+  nodes: readonly CanvasNode[],
+  edges: readonly CanvasEdge[],
+  hostId: string,
+  kind: GrowKind,
+  question: string,
+  quote = '',
+  preferredId?: string | null,
+): CanvasNode | undefined {
+  const resolvedHostId = flowHostId(nodes, hostId)
+  const children = childNodesOf(nodes, edges, resolvedHostId, kind)
+  if (preferredId) {
+    const preferred = children.find((node) => node.id === preferredId)
+    if (preferred) return preferred
+  }
+  if (kind === 'par') return children[0]
+  const needle = question || quote
+  return children.find((node) => (
+    similarQuestion(node.title, needle)
+    || node.turns.some((turn) => similarQuestion(turn.question, needle) || similarQuestion(turn.title ?? '', needle))
+  ))
 }
 
 function mockTurn(
@@ -226,18 +288,46 @@ export function parseQuotedUserTurn(text: string): { quote: string; question: st
   return { quote: plainQuoteText(raw.slice(start[0].length)), question: '' }
 }
 
+export function ensureParallelEdges(
+  nodes: readonly CanvasNode[],
+  edges: readonly CanvasEdge[],
+): CanvasEdge[] {
+  const next = edges.slice()
+  const seen = new Set(
+    next.filter((edge) => edge.kind === 'parallel').map((edge) => `${edge.from}\0${edge.to}`),
+  )
+  for (const node of nodes) {
+    if (node.role !== 'parallel' || !node.hostId) continue
+    const key = `${node.hostId}\0${node.id}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    next.push({
+      id: `eg-par-${node.id}`,
+      from: node.hostId,
+      to: node.id,
+      kind: 'parallel',
+      grow: 'par',
+      reason: '并列问法，不打断主干。',
+    })
+  }
+  return next
+}
+
 export function conversationGraphView(
   nodes: readonly CanvasNode[],
   edges: readonly CanvasEdge[],
   conversationId?: string,
 ) {
-  if (!conversationId) return { nodes: nodes.slice(), edges: edges.slice() }
+  if (!conversationId) {
+    return { nodes: nodes.slice(), edges: ensureParallelEdges(nodes, edges) }
+  }
   const keep = new Set(
     nodes.filter((node) => node.id === 'root' || node.conversationId === conversationId).map((node) => node.id),
   )
+  const viewNodes = nodes.filter((node) => keep.has(node.id))
   return {
-    nodes: nodes.filter((node) => keep.has(node.id)),
-    edges: edges.filter((edge) => keep.has(edge.from) && keep.has(edge.to)),
+    nodes: viewNodes,
+    edges: ensureParallelEdges(viewNodes, edges.filter((edge) => keep.has(edge.from) && keep.has(edge.to))),
   }
 }
 
@@ -250,26 +340,26 @@ export function growGraph(
   quote = '',
   turn?: NodeTurn,
   conversationId?: string,
+  mergeNodeId?: string | null,
+  reason?: string,
 ): { nodes: CanvasNode[]; edges: CanvasEdge[]; created: CanvasNode } | null {
   const resolvedHostId = flowHostId(nodes, hostId)
   const host = nodes.find((node) => node.id === resolvedHostId)
   if (!host || host.role === 'parallel') return null
 
-  if (kind === 'par') {
-    const pal = existingPal(nodes, host.id)
-    if (pal) {
-      const title = defaultNodeTitle(question || quote, `并列问法 ${pal.turns.length + 1}`)
-      const created = {
-        ...pal,
-        grow: 'par' as const,
-        conversationId: pal.conversationId || conversationId,
-        turns: [...pal.turns, turn ?? mockTurn(kind, host, question, quote, { title })],
-      }
-      return {
-        nodes: nodes.map((node) => node.id === pal.id ? created : node),
-        edges: edges.slice(),
-        created,
-      }
+  const mergeInto = findMergeTarget(nodes, edges, host.id, kind, question, quote, mergeNodeId)
+  if (mergeInto) {
+    const title = turn?.title || defaultNodeTitle(question || quote, `问法 ${mergeInto.turns.length + 1}`)
+    const created = {
+      ...mergeInto,
+      grow: kind,
+      conversationId: mergeInto.conversationId || conversationId,
+      turns: [...mergeInto.turns, turn ?? mockTurn(kind, host, question, quote, { title })],
+    }
+    return {
+      nodes: nodes.map((node) => node.id === mergeInto.id ? created : node),
+      edges: edges.slice(),
+      created,
     }
   }
 
@@ -277,7 +367,7 @@ export function growGraph(
     id: nextId('g', new Set(nodes.map((node) => node.id))),
     accent: kind === 'par' ? '#6b7280' : host.accent,
     title: turn?.title || defaultNodeTitle(
-      turn?.paragraphs.join('') || question || quote,
+      question || quote || turn?.paragraphs.join('') || '',
       kind === 'pred' ? `前置 · ${host.title}` : kind === 'succ' ? `后置 · ${host.title}` : `并列 · ${host.title}`,
     ),
     role: kind === 'par' ? 'parallel' : 'flow',
@@ -290,6 +380,13 @@ export function growGraph(
   const edgeId = nextId('eg', new Set(edges.map((edge) => edge.id)))
   const quoted = quote.replace(/\s+/g, ' ').trim()
   const quoteHint = quoted ? `引用了「${quoted.length > 24 ? `${quoted.slice(0, 24)}…` : quoted}」，` : ''
+  const edgeReason = reason?.trim() || (
+    kind === 'pred'
+      ? `${quoteHint}在「${host.title}」之前补一层前提。`
+      : kind === 'succ'
+        ? `${quoteHint}从「${host.title}」继续追问，不沿用上一句的展开方式。`
+        : `${quoteHint}并列问法，不打断「${host.title}」主干。`
+  )
   let nextEdges = edges.slice()
   if (kind === 'pred') {
     nextEdges = nextEdges.map((edge) => (
@@ -301,7 +398,7 @@ export function growGraph(
       to: host.id,
       kind: 'flow',
       grow: 'pred',
-      reason: `${quoteHint}在「${host.title}」之前补一层前提。`,
+      reason: edgeReason,
     })
   } else if (kind === 'succ') {
     nextEdges.push({
@@ -310,7 +407,7 @@ export function growGraph(
       to: created.id,
       kind: 'flow',
       grow: 'succ',
-      reason: `${quoteHint}从「${host.title}」继续追问，不沿用上一句的展开方式。`,
+      reason: edgeReason,
     })
   } else {
     nextEdges.push({
@@ -319,11 +416,42 @@ export function growGraph(
       to: created.id,
       kind: 'parallel',
       grow: 'par',
-      reason: `${quoteHint}并列问法，不打断「${host.title}」主干。`,
+      reason: edgeReason,
     })
   }
 
   return { nodes: [...nodes, created], edges: nextEdges, created }
+}
+
+/** One host keeps exactly one dashed parallel card; extra pals stack their Q&A into it. */
+export function collapseParallelHosts(
+  nodes: readonly CanvasNode[],
+  edges: readonly CanvasEdge[],
+): { nodes: CanvasNode[]; edges: CanvasEdge[] } {
+  const keeper = new Map<string, string>()
+  const drop = new Map<string, string>()
+  const extraTurns = new Map<string, NodeTurn[]>()
+  for (const node of nodes) {
+    if (node.role !== 'parallel' || !node.hostId) continue
+    const keptId = keeper.get(node.hostId)
+    if (!keptId) {
+      keeper.set(node.hostId, node.id)
+      continue
+    }
+    drop.set(node.id, keptId)
+    extraTurns.set(keptId, [...(extraTurns.get(keptId) ?? []), ...node.turns])
+  }
+  const collapsedNodes = drop.size === 0
+    ? nodes.slice()
+    : nodes.flatMap((node) => {
+      if (drop.has(node.id)) return []
+      const extra = extraTurns.get(node.id)
+      return extra?.length ? [{ ...node, turns: [...node.turns, ...extra] }] : [node]
+    })
+  const collapsedEdges = drop.size === 0
+    ? edges.slice()
+    : edges.filter((edge) => !drop.has(edge.from) && !drop.has(edge.to))
+  return { nodes: collapsedNodes, edges: ensureParallelEdges(collapsedNodes, collapsedEdges) }
 }
 
 export function mergeConversationBranch(

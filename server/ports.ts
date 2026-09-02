@@ -9,6 +9,7 @@ export type HttpResponse = {
   ok: boolean
   status: number
   text(): Promise<string>
+  body?: ReadableStream<Uint8Array> | null
 }
 
 export type HttpPort = (url: string, init?: HttpRequestInit) => Promise<HttpResponse>
@@ -58,6 +59,27 @@ export type ModelResult =
   | { kind: 'completed'; text: string }
   | { kind: 'failed'; message: string }
 
+export type GrowDecisionPayload = {
+  kind: 'pred' | 'succ' | 'par'
+  title: string
+  reason: string
+  mergeNodeId: string | null
+}
+
+export type ModelStreamEvent =
+  | { kind: 'delta'; text: string }
+  | { kind: 'completed'; text: string }
+  | { kind: 'failed'; message: string }
+
+export type AnswerModelInput = {
+  question: string
+  topic?: string
+  quote?: string
+  evidence: readonly EvidenceHit[]
+  graphContext?: string
+  hostTitle?: string
+}
+
 export type ReviewPickResult =
   | { kind: 'selected'; authorKeys: readonly string[]; reasons: Readonly<Record<string, string>> }
   | { kind: 'none' }
@@ -72,7 +94,16 @@ export type ZhihuDirectAnswerProvider = {
 }
 
 export type AnswerModelProvider = {
-  answer(input: { question: string; topic?: string; quote?: string; evidence: readonly EvidenceHit[] }, signal?: AbortSignal): Promise<ModelResult>
+  answer(input: AnswerModelInput, signal?: AbortSignal): Promise<ModelResult>
+  answerStream?(input: AnswerModelInput, signal?: AbortSignal): AsyncIterable<ModelStreamEvent>
+  classifyGrow?(input: {
+    question: string
+    quote?: string
+    topic?: string
+    hostTitle?: string
+    graphContext?: string
+    candidates: readonly { id: string; kind: 'pred' | 'succ' | 'par'; title: string; questions: readonly string[] }[]
+  }, signal?: AbortSignal): Promise<ModelResult>
 }
 
 export type AuthorRelevanceReviewProvider = {

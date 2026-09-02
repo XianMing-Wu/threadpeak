@@ -10,7 +10,7 @@ import {
 } from '../path-lab/path-lab-session.ts'
 
 export const PATH_STREAM_URL = '/api/paths/generate/stream'
-export const PATH_STREAM_TIMEOUT_MS = 55_000
+export const PATH_STREAM_TIMEOUT_MS = 90_000
 
 type StreamSessionState = {
   sessionId: string

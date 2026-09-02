@@ -112,8 +112,47 @@ export function registerLiveRoutes(app: FastifyInstance, ports: LiveHttpPorts) {
       question: typeof payload.question === 'string' ? payload.question : '',
       ...(typeof payload.topic === 'string' ? { topic: payload.topic } : {}),
       ...(typeof payload.quote === 'string' ? { quote: payload.quote } : {}),
+      ...(typeof payload.graphContext === 'string' ? { graphContext: payload.graphContext } : {}),
+      ...(typeof payload.hostTitle === 'string' ? { hostTitle: payload.hostTitle } : {}),
     })
     return sendJson(reply, result.kind === 'completed' ? 200 : 503, { ...result, traceId })
+  })
+
+  app.post('/api/answers/stream', async (request, reply) => {
+    const traceId = traceIdOf(request)
+    if (!ports.config.ok || !ports.service) {
+      return sendJson(reply, 503, {
+        kind: 'failed',
+        code: 'CONFIG_INVALID',
+        message: 'Required Zhihu or DeepSeek configuration is missing.',
+        traceId,
+      })
+    }
+    const payload = asRecord(request.body) ?? {}
+    const abort = new AbortController()
+    request.raw.on('aborted', () => abort.abort())
+    reply.hijack()
+    reply.raw.writeHead(200, {
+      'content-type': 'application/x-ndjson; charset=utf-8',
+      'cache-control': 'no-store',
+      'x-accel-buffering': 'no',
+    })
+    try {
+      for await (const event of ports.service.ordinaryAnswerStream({
+        question: typeof payload.question === 'string' ? payload.question : '',
+        ...(typeof payload.topic === 'string' ? { topic: payload.topic } : {}),
+        ...(typeof payload.quote === 'string' ? { quote: payload.quote } : {}),
+        ...(typeof payload.graphContext === 'string' ? { graphContext: payload.graphContext } : {}),
+        ...(typeof payload.hostTitle === 'string' ? { hostTitle: payload.hostTitle } : {}),
+        ...(Array.isArray(payload.candidates) ? { candidates: payload.candidates as { id: string; kind: 'pred' | 'succ' | 'par'; title: string; questions: readonly string[] }[] } : {}),
+        signal: abort.signal,
+      })) {
+        reply.raw.write(`${JSON.stringify({ ...event, traceId })}\n`)
+      }
+    } catch {
+      reply.raw.write(`${JSON.stringify({ kind: 'failed', code: 'PROVIDER_UNAVAILABLE', message: '模型服务不可用，不能生成这次回答。', traceId })}\n`)
+    }
+    reply.raw.end()
   })
 
   app.post('/api/ask-author', async (request, reply) => {

@@ -67,6 +67,44 @@ export async function requestCanonicalAnswer(input: {
   }
 }
 
+export async function requestCanonicalSnapshot(input: {
+  routeId: string
+  conceptId: string
+  fetch?: FetchPort
+}): Promise<CanonicalAnswerResult> {
+  const missing = fallback()
+  const client = createLiveApiClient(input.fetch)
+  const query = new URLSearchParams({
+    routeId: input.routeId,
+    conceptId: input.conceptId,
+  })
+  const got = await client.requestJson({
+    url: `${LIVE_CANONICAL_ANSWER_URL}?${query.toString()}`,
+    method: 'GET',
+    traceId: 'canonical-snapshot',
+  })
+  const body = asRecord(got.value)
+  if (
+    got.ok
+    && body?.kind === 'completed'
+    && typeof body.text === 'string'
+    && body.text.trim()
+    && typeof body.contentHash === 'string'
+  ) {
+    return {
+      kind: 'completed',
+      text: body.text,
+      contentHash: body.contentHash,
+      evidenceCount: typeof body.evidenceCount === 'number' ? body.evidenceCount : 0,
+      reused: true,
+    }
+  }
+  return {
+    ...missing,
+    message: liveMessageOf(got.value, missing.message),
+  }
+}
+
 export function lessonFromCanonical(title: string, text: string) {
   const paragraphs = text.split(/\n{2,}/).map((part) => part.trim()).filter(Boolean)
   return {

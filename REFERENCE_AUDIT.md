@@ -23,7 +23,7 @@
 | `src/pages/Settings.tsx`、`src/resolve-settings-identity.ts` | 设置页不再把写死用户或已上传 PDF 资料范围当成已提交 identity/sources；缺 provider 显式失败。密度/动效仍是本地偏好 | 服务端 OAuth/session 身份与 committed source/attachment scope |
 | `src/components/Composer.tsx`、`src/resolve-composer-attachment.ts` | 路线、图文、问博主的输入外观与本地 UI state；附件和资料范围无真实 provider 时显式失败，不再用本地 file chip 或已上传 PDF 冒充来源 | 正向模式白名单；command 发往同源 API；来源/附件走 committed scope |
 | `src/pages/Chat.tsx`、`src/chat/`、`src/workspace/catalog.ts` | 普通回答经 `/api/answers`；缺配置或 provider 失败显式失败，不再渲染预写 Mock 或 `coachReply`；缺发送上下文不再预写「性价比高的显卡」；路线 generate 连接失败或超时显式失败 | 真实 Answer/Path provider、typed stream、持久 request/session、committed conversation GET |
-| `src/workspace/store.ts`、`src/history.ts`、`src/resolve-history-reopen.ts` | 侧栏重开不再把 localStorage 正文当成已提交 history；缺 provider 显式失败。workspace 存储仍是原型草稿 | owner-scoped 服务端事实、outbox/projector 和精确 history reopen |
+| `src/workspace/store.ts`、`src/history.ts`、`src/resolve-history-reopen.ts` | 侧栏可重开本地学习/问答草稿；缺失草稿显式失败，不冒充 committed GET | owner-scoped 服务端事实、outbox/projector 和精确 history reopen |
 | `src/pages/Session.tsx`、`src/session/`、`src/knowledge-canvas/`、`src/workspace/nav.ts` | 未选择或概念不属于路线时失败；我的路线首次回复经 `/api/learning/canonical-answer` 永久复用；settle 后经 `/api/learning/graph` 由 GraphSurgeon 创建唯一 root；失败不 settle、不建图 | canonical 初始回复 settle 后由 GraphSurgeon 创建并增量更新 |
 | `src/session/ask-authors.ts`、`resolve-ask-author.ts`、`request-ask-author.ts` | 问博主经 `/api/ask-author`；旧「马同学」storage 被拒绝；失败不持久化为成功批注 | 真实知乎搜索、稳定身份、逐作者 evidence、LLM 候选内筛选 |
 | `src/session/author-graph-rag.ts`、`resolve-author-search.ts`、`request-author-search.ts`、`resolve-author-network.ts` | 搜索经 `/api/authors/search`；网络投影未接通则失败且不去知乎凑人 | network-first AuthorSearch 与 committed relationship projector |

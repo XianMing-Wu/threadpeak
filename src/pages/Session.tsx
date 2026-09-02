@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { AnnotatedText } from '../components/AnnotatedText'
+import { AnnotatedMarkdown, AnnotatedText } from '../components/AnnotatedText'
 import { AnnotationPanel } from '../components/AnnotationPanel'
 import { AskAuthorsPrompt } from '../components/AskAuthorsPrompt'
 import { BasisVisual } from '../components/BasisVisual'
@@ -10,18 +10,22 @@ import { ProductWorkspace } from '../components/Shell'
 import { Icon } from '../icons'
 import { HISTORY_OPEN_EVENT } from '../history'
 import { openKnowledgeCanvas } from '../learningSession'
-import { readSelectionAnchor, type SelectionAnchor } from '../session/ask-authors'
-import { useAnnotations } from '../session/useAnnotations'
-import { parseGrowCommand } from '../knowledge-canvas/generate'
+import { annotationScopeId, readSelectionAnchor, type SelectionAnchor } from '../session/ask-authors'
+import { useAnnotations, type AskAuthorsAnnotation } from '../session/useAnnotations'
+import { parseGrowCommand, resolveQuotedHost } from '../knowledge-canvas/generate'
+import { allowedMergeIds, growCandidateList, heuristicGrowDecision, packGraphContext, parseGrowDecision } from '../knowledge-canvas/grow-decision'
+import { AgentStatus } from '../components/AgentStatus'
+import type { AnswerStatusStage } from '../chat/request-ordinary-answer'
 import { MarkdownMath } from '../lib/MarkdownMath'
 import { resolveVisualAnswer } from '../chat/resolve-visual-answer'
 import { resolveAskAuthor } from '../session/resolve-ask-author'
 import { requestAskAuthor } from '../session/request-ask-author'
-import { requestOrdinaryAnswer } from '../chat/request-ordinary-answer'
+import { requestOrdinaryAnswerStream } from '../chat/request-ordinary-answer'
 import { catalogLesson, blueprintConcepts, conceptTitle } from '../workspace/catalog'
 import {
   readActiveConceptId,
   readActiveConversationId,
+  closeConceptKnowledge,
   readActiveRouteId,
   readSessionReturn,
   setActiveConversation,
@@ -29,22 +33,40 @@ import {
 import {
   blueprintOf,
   ensureLearningConversation,
+  ensureMineKnowledgeFromCanonical,
   appendLearningTurnToGraph,
+  getConceptGraph,
   getConversation,
   getKnowledgeByRoute,
   getLesson,
   getRoute,
   saveConversationDraft,
   startLearningConversation,
-  syncConversationGraph,
 } from '../workspace/store'
 import type { FirstLesson, LearningTurn } from '../workspace/types'
 import { resolveFirstLesson, resolveLearningEntry } from '../session/resolve-learning-entry'
+import { resolvePath3DView } from '../path-3d/resolved-path-document'
 import { lessonFromCanonical, requestCanonicalAnswer } from '../session/request-canonical-answer'
 import { requestGraphBootstrap } from '../session/request-graph-bootstrap'
 
 function readLearningNav() {
   return { routeId: readActiveRouteId(), conceptId: readActiveConceptId() }
+}
+
+function leaveLearning(routeId: string) {
+  const target = readSessionReturn()
+  if (target === 'knowledge-detail') {
+    closeConceptKnowledge()
+    location.hash = 'knowledge-detail'
+    return
+  }
+  if (target !== 'path-3d') {
+    location.hash = target
+    return
+  }
+  const route = getRoute(routeId)
+  const view = resolvePath3DView({ routeId, ...(route ? { route } : {}) })
+  location.hash = view.kind === 'ready' ? 'path-3d' : 'paths'
 }
 
 function resolveLearningConversation(routeId: string, conceptId: string) {
@@ -59,7 +81,7 @@ function SessionUnavailable(props: { title: string; message: string }) {
       <section className="lesson-chat">
         <header>
           <div className="lesson-heading">
-            <button type="button" className="lesson-back" aria-label="返回上一级" onClick={()=>{location.hash=readSessionReturn()}}><Icon name="back" size={18}/></button>
+            <button type="button" className="lesson-back" aria-label="返回上一级" onClick={()=>leaveLearning(readActiveRouteId())}><Icon name="back" size={18}/></button>
             <div><small>刘看山陪你学</small><h1>{props.title}</h1></div>
           </div>
         </header>
@@ -129,7 +151,17 @@ function CanonicalSessionGate({ routeId, conceptId }: { routeId: string; concept
       setPhase('bootstrapping')
       const graph = await requestGraphBootstrap({ routeId, conceptId, title })
       if (cancelled) return
-      if (graph.kind === 'completed') setGraphReady(true)
+      if (graph.kind === 'completed') {
+        ensureMineKnowledgeFromCanonical({
+          routeId,
+          conceptId,
+          title,
+          text: answer.text,
+          contentHash: answer.contentHash,
+          graph: graph.graph,
+        })
+        setGraphReady(true)
+      }
       setPhase('ready')
     })()
     return () => { cancelled = true }
@@ -158,14 +190,28 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
   const title = conceptTitle(blueprint, conceptId) || conceptId
   const conversationRef = useRef(resolveLearningConversation(routeId, conceptId))
   const seed = getConversation(conversationRef.current.id)
+  const [conversationId,setConversationId] = useState(conversationRef.current.id)
   const [quote,setQuote] = useState(seed?.quote ?? '')
   const [quoteFromId,setQuoteFromId] = useState('')
   const [selection,setSelection] = useState<SelectionAnchor|null>(null)
   const [authorQuestion,setAuthorQuestion] = useState<SelectionAnchor|null>(null)
-  const annotations = useAnnotations(`${routeId}::${conceptId}`)
+  const annotations = useAnnotations(annotationScopeId(routeId, conceptId, conversationId), (item) => {
+    if (item.status !== 'ready' || !item.reply?.text) return
+    appendLearningTurnToGraph(routeId, conceptId, conversationRef.current.id, {
+      question: item.question,
+      quote: item.quote,
+      quoteFromId: item.nodeId,
+      reply: item.reply.text,
+      grow: 'par',
+      growSource: 'heuristic',
+    })
+  })
   const [mode,setMode] = useState<AssistantMode>(seed?.mode ?? '')
   const [value,setValue] = useState(seed?.value ?? '')
   const [turns,setTurns] = useState<LearningTurn[]>(seed?.turns ?? [])
+  const [awaiting,setAwaiting] = useState(false)
+  const [streamText,setStreamText] = useState('')
+  const [status,setStatus] = useState<AnswerStatusStage>('search')
   const lesson = lessonOverride ?? getLesson(routeId, conceptId) ?? {
     heading: title,
     paragraphs: [],
@@ -175,6 +221,23 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
   useEffect(() => {
     setActiveConversation(conversationRef.current.id)
   }, [])
+
+  useEffect(() => {
+    const restore = () => {
+      const next = getConversation(readActiveConversationId())
+      if (next?.kind !== 'learning' || next.routeId !== routeId || next.conceptId !== conceptId) return
+      conversationRef.current = next
+      setConversationId(next.id)
+      setTurns(next.turns ?? [])
+      setValue(next.value ?? '')
+      setQuote(next.quote ?? '')
+      setMode(next.mode ?? '')
+      setAwaiting(false)
+      setStreamText('')
+    }
+    addEventListener(HISTORY_OPEN_EVENT, restore)
+    return () => removeEventListener(HISTORY_OPEN_EVENT, restore)
+  }, [conceptId, routeId])
 
   useEffect(() => {
     const clear=(event:MouseEvent)=>{
@@ -187,7 +250,16 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
   },[])
 
   useEffect(() => {
-    saveConversationDraft(conversationRef.current.id, { turns, value, quote, mode })
+    const stored = getConversation(conversationRef.current.id)?.turns ?? []
+    const keyOf = (item: LearningTurn) => `${item.role}:${item.text}`
+    const storedKeys = new Set(stored.map(keyOf))
+    const extras = turns.filter((item) => !storedKeys.has(keyOf(item)))
+    saveConversationDraft(conversationRef.current.id, {
+      turns: stored.length || extras.length ? [...stored, ...extras] : turns,
+      value,
+      quote,
+      mode,
+    })
   }, [mode, quote, turns, value])
 
   const detect = (text:string):AssistantMode => /图|可视化|思维导图|时间线/.test(text)?'visual':/博主|作者|谁.*说/.test(text)?'authors':''
@@ -195,12 +267,15 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
     const next = startLearningConversation(routeId, conceptId)
     conversationRef.current = next
     setActiveConversation(next.id)
-    syncConversationGraph(routeId, conceptId, next.id, [])
+    setConversationId(next.id)
     setTurns([])
     setValue('')
     setQuote('')
     setQuoteFromId('')
     setMode('')
+    setAwaiting(false)
+    setStreamText('')
+    setStatus('search')
     setSelection(null)
     setAuthorQuestion(null)
   }
@@ -210,9 +285,18 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
     const asked=value
     const cited=quote
     const fromId=cited?quoteFromId:''
-    const grow=parseGrowCommand(asked)?.kind
+    const knowledge=getKnowledgeByRoute(routeId)
+    const graph=knowledge?getConceptGraph(knowledge.id, conceptId):undefined
+    const hostId=graph?resolveQuotedHost(graph.nodes, 'root', cited, fromId):'root'
+    const host=graph?.nodes.find((node)=>node.id===hostId)
+    const candidates=graph?growCandidateList(graph.nodes, graph.edges, hostId):[]
+    const packed=graph?packGraphContext(graph.nodes, graph.edges, hostId, cited):undefined
+    const explicit=parseGrowCommand(asked)
+    let growDecision=explicit
+      ? { ...heuristicGrowDecision(explicit.question || asked, cited, host?.title ?? title), kind: explicit.kind, source: 'command' as const }
+      : heuristicGrowDecision(asked, cited, host?.title ?? title)
     const userText=cited?`引用「${cited}」\n${asked}`:asked
-    const userTurn: LearningTurn = {role:'user',text:userText,mode:chosen,quote:cited,quoteFromId:fromId,grow}
+    const userTurn: LearningTurn = {role:'user',text:userText,mode:chosen,quote:cited,quoteFromId:fromId,grow:growDecision.kind,growSource:growDecision.source}
     setValue(''); setQuote(''); setQuoteFromId(''); setMode('')
     if (chosen === 'visual') {
       setTurns((old)=>[...old,userTurn,{role:'assistant',text:resolveVisualAnswer().message,mode:chosen,failed:true}])
@@ -228,10 +312,26 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
         if (result.kind === 'authors' && result.authors[0]) {
           const text = result.authors.map((author) => `**${author.name}** ${author.bio}\n${author.text}\n${author.url}`).join('\n\n')
           setTurns((old)=>[...old,{role:'assistant',text,mode:chosen}])
+          appendLearningTurnToGraph(routeId, conceptId, conversationRef.current.id, {
+            question: asked,
+            quote: cited,
+            quoteFromId: fromId,
+            reply: text,
+            grow: 'par',
+            growSource: 'heuristic',
+          })
           return
         }
         if (result.kind === 'direct') {
           setTurns((old)=>[...old,{role:'assistant',text:result.text,mode:chosen}])
+          appendLearningTurnToGraph(routeId, conceptId, conversationRef.current.id, {
+            question: asked,
+            quote: cited,
+            quoteFromId: fromId,
+            reply: result.text,
+            grow: 'par',
+            growSource: 'heuristic',
+          })
           return
         }
         setTurns((old)=>[...old,{role:'assistant',text:result.kind === 'unavailable' ? result.message : resolveAskAuthor().message,mode:chosen,failed:true}])
@@ -239,16 +339,55 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
       return
     }
     setTurns((old)=>[...old,userTurn])
-    void requestOrdinaryAnswer({ question: asked, topic: title, ...(cited ? { quote: cited } : {}) }).then((result) => {
+    setAwaiting(true)
+    setStatus('search')
+    setStreamText('')
+    void requestOrdinaryAnswerStream({
+      question: asked || cited,
+      topic: title,
+      ...(cited ? { quote: cited } : {}),
+      ...(packed ? { graphContext: packed.text } : {}),
+      ...(host?.title ? { hostTitle: host.title } : {}),
+      ...(candidates.length ? { candidates } : {}),
+      onStatus: (stage) => { setAwaiting(true); setStatus(stage) },
+      onGrow: (grow) => {
+        if (explicit) return
+        growDecision = parseGrowDecision(grow, allowedMergeIds(candidates), {
+          question: asked,
+          quote: cited,
+          hostTitle: host?.title ?? title,
+          palId: candidates.find((item) => item.kind === 'par')?.id,
+        })
+      },
+      onDelta: (text) => {
+        setAwaiting(false)
+        setStreamText(text)
+      },
+    }).then((result) => {
+      setAwaiting(false)
+      setStreamText('')
       if (result.kind !== 'completed') {
         setTurns((old)=>[...old,{role:'assistant',text:result.message,mode:chosen,failed:true}])
         return
       }
+      const decided = explicit ? growDecision : result.grow
+        ? parseGrowDecision(result.grow, allowedMergeIds(candidates), {
+          question: asked,
+          quote: cited,
+          hostTitle: host?.title ?? title,
+          palId: candidates.find((item) => item.kind === 'par')?.id,
+        })
+        : growDecision
       const createdId=appendLearningTurnToGraph(routeId, conceptId, conversationRef.current.id, {
         question: asked,
         quote: cited,
         quoteFromId: fromId,
         reply: result.text,
+        grow: decided.kind,
+        growSource: decided.source,
+        growTitle: decided.title,
+        growReason: decided.reason,
+        ...(decided.mergeNodeId ? { mergeNodeId: decided.mergeNodeId } : {}),
       })
       setTurns((old)=>[...old,{role:'assistant',text:result.text,mode:chosen,nodeId:createdId}])
     })
@@ -292,7 +431,7 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
       <section className="lesson-chat">
         <header>
           <div className="lesson-heading">
-            <button type="button" className="lesson-back" aria-label="返回上一级" onClick={()=>{location.hash=readSessionReturn()}}><Icon name="back" size={18}/></button>
+            <button type="button" className="lesson-back" aria-label="返回上一级" onClick={()=>leaveLearning(routeId)}><Icon name="back" size={18}/></button>
             <div><small>刘看山陪你学</small><h1>{title}</h1></div>
           </div>
           <div className="lesson-actions">
@@ -303,11 +442,26 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
         <div className="conversation" ref={selectRootRef} onMouseUp={onSelect}>
           <article data-canvas-host="root"><span className="kanshan-avatar">山</span><div>
             <h2>{lesson.heading}</h2>
-            {lesson.paragraphs.map((paragraph) => <p key={paragraph}><AnnotatedText text={paragraph} annotations={annotations.annotations} activeId={annotations.active?.id} onOpen={annotations.open}/></p>)}
+            <AnnotatedMarkdown
+              className="lesson-markdown"
+              source={lesson.paragraphs.join('\n\n')}
+              annotations={annotations.annotations.filter((item) => item.nodeId === 'root')}
+              activeId={annotations.active?.id}
+              onOpen={annotations.open}
+            />
             {lesson.quote && <blockquote><AnnotatedText text={lesson.quote} annotations={annotations.annotations} activeId={annotations.active?.id} onOpen={annotations.open}/></blockquote>}
             {lesson.figureCaption && <BasisVisual caption={lesson.figureCaption}/>}
           </div></article>
-          {turns.map((turn,i)=>turn.role==='user'?<div className="user-turn" key={i}>{turn.text}</div>:<AssistantAnswer key={i} kind={turn.text} host={turn.nodeId || `turn:${i}`} topic={title} failed={turn.failed} mode={turn.mode}/>) }
+          {turns.map((turn,i)=>{
+            const annotationTurn = turn.role==='user' && annotations.annotations.some((item)=>item.quote && turn.text.includes(`引用「${item.quote}」`) && turn.text.includes(item.question))
+            const afterAnnotation = turn.role==='assistant' && i>0 && annotations.annotations.some((item)=>item.quote && (turns[i-1]?.text.includes(`引用「${item.quote}」`) ?? false) && (turns[i-1]?.text.includes(item.question) ?? false))
+            if (annotationTurn || afterAnnotation) return null
+            return turn.role==='user'
+              ? <div className="user-turn" key={i}>{turn.text}</div>
+              : <AssistantAnswer key={i} kind={turn.text} host={turn.nodeId || `turn:${i}`} failed={turn.failed} mode={turn.mode} annotations={annotations.annotations.filter((item)=>item.nodeId===(turn.nodeId || `turn:${i}`))} activeId={annotations.active?.id} onOpen={annotations.open}/>
+          }) }
+          {awaiting && !streamText && <section className="assistant-turn" role="status" aria-live="polite"><span className="kanshan-avatar">山</span><div><AgentStatus items={[{ label: status === 'classify' ? '正在判断这个问题在知识脉络中的位置' : status === 'compose' ? '正在生成回答' : '正在检索公开证据并生成回答', detail: status === 'classify' ? '模型会同时给出前置、后置或并列，以及卡片标题和逻辑说明。' : '先检索知乎公开内容，再由模型写出这次回复。' }]}/></div></section>}
+          {streamText && <section className="assistant-turn" data-canvas-host="pending"><span className="kanshan-avatar">山</span><div><MarkdownMath source={streamText}/></div></section>}
         </div>
         <div className="mode-prompts"><button className={mode==='visual'?'is-active':''} onClick={()=>setMode(mode==='visual'?'':'visual')}><Icon name="image" size={17}/>图文模式</button></div>
         <Composer compact value={value} onChange={setValue} mode={mode} onMode={setMode} onSend={send} quote={quote} onClearQuote={()=>{setQuote('');setQuoteFromId('')}} showScope={false} showReference={false} showAttachment={false} placeholder={placeholder}/>
@@ -320,10 +474,10 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
   </ProductWorkspace>
 }
 
-function AssistantAnswer({kind,host,failed,mode}:{kind:string;host:string;topic:string;failed?:boolean;mode?:AssistantMode}) {
+function AssistantAnswer({kind,host,failed,mode,annotations,activeId,onOpen}:{kind:string;host:string;failed?:boolean;mode?:AssistantMode;annotations:readonly AskAuthorsAnnotation[];activeId?:string|null;onOpen:(id:string)=>void}) {
   if(failed || kind==='authors' || kind==='visual') {
     const unavailable = mode==='visual' || kind==='visual' ? resolveVisualAnswer() : mode==='authors' || kind==='authors' ? resolveAskAuthor() : { title: '无法生成本次回答', message: kind }
     return <section className="assistant-turn" data-canvas-host={host} role="alert"><span className="kanshan-avatar">山</span><div><h2>{unavailable.title}</h2><p>{unavailable.message}</p></div></section>
   }
-  return <section className="assistant-turn" data-canvas-host={host}><span className="kanshan-avatar">山</span><div><MarkdownMath source={kind}/></div></section>
+  return <section className="assistant-turn" data-canvas-host={host}><span className="kanshan-avatar">山</span><div><AnnotatedMarkdown source={kind} annotations={annotations} activeId={activeId} onOpen={onOpen}/></div></section>
 }

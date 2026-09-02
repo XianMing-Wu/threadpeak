@@ -114,8 +114,8 @@ load_settled_answer → verify_job_kind → a1_extract → evaluate_draft
 
 ## 当前原型迁移与验收
 
-- `src/pages/Session.tsx + growGraph` 改为 concept entry / `POST /turns` / graph SSE；删除页面写图。无 route/concept 时 fail-closed，不得回退线性代数 fixture，也不得用 `defaultConceptId`、`draftFirstLesson` 或 `growGraph` 为用户路线发明首答/节点。进入时不得用 1800ms「正在准备」冒充生成。我的路线经 `/api/learning/canonical-answer` settle 后走 `/api/learning/graph` bootstrap。KnowledgeCanvas 不得对 mine 做内存 grow 或 persist，只读 GraphSurgeon snapshot。`migrateKnowledge` 不得改写 mine 的 lesson/图。
-- `src/session/useAnnotations.ts` 只产生 Selector；贡献由 GraphSurgeon 落库。
+- `src/pages/Session.tsx + growGraph` 改为 concept entry / `POST /turns` / graph SSE；删除页面写图。无 route/concept 时 fail-closed，不得回退线性代数 fixture，也不得用 `defaultConceptId`、`draftFirstLesson` 或 `growGraph` 为用户路线发明首答/节点。进入时不得用 1800ms「正在准备」冒充生成。我的路线经 `/api/learning/canonical-answer` settle 后走 `/api/learning/graph` bootstrap。KnowledgeCanvas 不得在首次回复之前为 mine 发明根节点；canonical settle + GraphSurgeon bootstrap 之后，可用 GET canonical 投影唯一根，再对后续提问/问博主做增量更新。不得把结构占位当成首次回复。`migrateKnowledge` 不得改写 mine 的 lesson/图。
+- `src/session/useAnnotations.ts` 只产生 Selector；零可信作者展示刘看山直达且不 persist 为博主批注；贡献由 GraphSurgeon 落库。
 - `src/history.ts` 侧栏重开已 fail-closed，本地列表只是草稿缓存；改为 owner-scoped ConversationUseCases + GET。
 - 浏览器必须证明阶段顺序“生成首答 → 首答可读 → graph bootstrapping → ready”，以及并发首次进入、刷新、新对话、历史恢复和 graph 失败都复用同一首答。
 - 数据库/集成测试覆盖 unique/CAS、lease/fencing、bootstrap/incremental idempotency、revision、RLS、SSE cursor replay/gap 和 GraphSurgeon 不变量。

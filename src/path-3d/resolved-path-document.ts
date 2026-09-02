@@ -37,6 +37,11 @@ export function isExampleFixtureDocumentId(id: string): boolean {
   return EXAMPLE_FIXTURE_DOCUMENT_IDS.has(id)
 }
 
+export function isRenderableMineRoute(route: { owner: 'mine' | 'example'; document: unknown }): boolean {
+  if (route.owner !== 'mine' || !isLearningPathDocument(route.document)) return false
+  return !isExampleFixtureDocumentId(route.document.id)
+}
+
 export function resolvePath3DView(input: {
   routeId: string
   route?: Path3DRouteInput

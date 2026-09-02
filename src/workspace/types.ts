@@ -52,6 +52,10 @@ export type LearningTurn = {
   quoteFromId?: string
   nodeId?: string
   grow?: 'pred' | 'succ' | 'par'
+  growSource?: 'command' | 'model' | 'heuristic'
+  growTitle?: string
+  growReason?: string
+  mergeNodeId?: string
   failed?: boolean
 }
 

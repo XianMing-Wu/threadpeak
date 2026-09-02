@@ -88,9 +88,11 @@ export function createLiveService(ports: {
       question: string
       topic?: string
       quote?: string
+      graphContext?: string
+      hostTitle?: string
       signal?: AbortSignal
     }): Promise<OrdinaryAnswerResult> {
-      const question = input.question.trim()
+      const question = input.question.trim() || input.quote?.trim() || ''
       if (!question) return { kind: 'failed', code: 'PROVIDER_INVALID', message: '问题不能为空。' }
       const search = await ports.search.searchContent([input.topic, input.quote, question].filter(Boolean).join(' '), 8, input.signal)
       if (search.kind === 'failed') {
@@ -102,11 +104,120 @@ export function createLiveService(ports: {
         evidence,
         ...(input.topic ? { topic: input.topic } : {}),
         ...(input.quote ? { quote: input.quote } : {}),
+        ...(input.graphContext ? { graphContext: input.graphContext } : {}),
+        ...(input.hostTitle ? { hostTitle: input.hostTitle } : {}),
       }, input.signal)
       if (answered.kind === 'failed') {
         return { kind: 'failed', code: 'PROVIDER_UNAVAILABLE', message: '模型服务不可用，不能生成这次回答。' }
       }
-      return { kind: 'completed', text: answered.text, evidenceCount: evidence.length }
+      return { kind: 'completed', text: answered.text.slice(0, 200_000), evidenceCount: evidence.length }
+    },
+
+    async *ordinaryAnswerStream(input: {
+      question: string
+      topic?: string
+      quote?: string
+      graphContext?: string
+      hostTitle?: string
+      candidates?: readonly { id: string; kind: 'pred' | 'succ' | 'par'; title: string; questions: readonly string[] }[]
+      signal?: AbortSignal
+    }): AsyncGenerator<
+      | { kind: 'status'; stage: 'search' | 'classify' | 'compose' }
+      | { kind: 'grow'; grow: { kind: 'pred' | 'succ' | 'par'; title: string; reason: string; mergeNodeId: string | null } }
+      | { kind: 'delta'; text: string }
+      | { kind: 'completed'; text: string; evidenceCount: number }
+      | LiveFailure
+    > {
+      const question = input.question.trim() || input.quote?.trim() || ''
+      if (!question) {
+        yield { kind: 'failed', code: 'PROVIDER_INVALID', message: '问题不能为空。' }
+        return
+      }
+      yield { kind: 'status', stage: 'search' }
+      const search = await ports.search.searchContent([input.topic, input.quote, question].filter(Boolean).join(' '), 8, input.signal)
+      if (search.kind === 'failed') {
+        yield { kind: 'failed', code: 'PROVIDER_UNAVAILABLE', message: '知乎检索不可用，不能生成这次回答。' }
+        return
+      }
+      const evidence = search.kind === 'hits' ? search.items : []
+      if (ports.answer.classifyGrow && input.candidates) {
+        yield { kind: 'status', stage: 'classify' }
+        const classified = await ports.answer.classifyGrow({
+          question,
+          candidates: input.candidates,
+          ...(input.quote ? { quote: input.quote } : {}),
+          ...(input.topic ? { topic: input.topic } : {}),
+          ...(input.hostTitle ? { hostTitle: input.hostTitle } : {}),
+          ...(input.graphContext ? { graphContext: input.graphContext } : {}),
+        }, input.signal)
+        if (classified.kind === 'completed') {
+          const match = classified.text.match(/\{[\s\S]*\}/)
+          if (match) {
+            try {
+              const parsed = JSON.parse(match[0]) as {
+                kind?: string
+                title?: string
+                reason?: string
+                mergeNodeId?: string | null
+              }
+              const growKind = parsed.kind === 'pred' || parsed.kind === 'succ' || parsed.kind === 'par' ? parsed.kind : undefined
+              if (growKind) {
+                yield {
+                  kind: 'grow',
+                  grow: {
+                    kind: growKind,
+                    title: typeof parsed.title === 'string' ? parsed.title : '',
+                    reason: typeof parsed.reason === 'string' ? parsed.reason : '',
+                    mergeNodeId: typeof parsed.mergeNodeId === 'string' ? parsed.mergeNodeId : null,
+                  },
+                }
+              }
+            } catch {
+              /* classification is optional; answering still proceeds */
+            }
+          }
+        }
+      }
+      yield { kind: 'status', stage: 'compose' }
+      const payload = {
+        question,
+        evidence,
+        ...(input.topic ? { topic: input.topic } : {}),
+        ...(input.quote ? { quote: input.quote } : {}),
+        ...(input.graphContext ? { graphContext: input.graphContext } : {}),
+        ...(input.hostTitle ? { hostTitle: input.hostTitle } : {}),
+      }
+      if (!ports.answer.answerStream) {
+        const answered = await ports.answer.answer(payload, input.signal)
+        if (answered.kind === 'failed') {
+          yield { kind: 'failed', code: 'PROVIDER_UNAVAILABLE', message: '模型服务不可用，不能生成这次回答。' }
+          return
+        }
+        yield { kind: 'completed', text: answered.text.slice(0, 200_000), evidenceCount: evidence.length }
+        return
+      }
+      let full = ''
+      for await (const event of ports.answer.answerStream(payload, input.signal)) {
+        if (event.kind === 'delta') {
+          if (full.length >= 200_000) continue
+          const chunk = event.text.slice(0, Math.max(0, 200_000 - full.length))
+          if (!chunk) continue
+          full += chunk
+          yield { kind: 'delta', text: chunk }
+          continue
+        }
+        if (event.kind === 'failed') {
+          yield { kind: 'failed', code: 'PROVIDER_UNAVAILABLE', message: '模型服务不可用，不能生成这次回答。' }
+          return
+        }
+        yield { kind: 'completed', text: event.text.slice(0, 200_000), evidenceCount: evidence.length }
+        return
+      }
+      if (full.trim()) {
+        yield { kind: 'completed', text: full.trim().slice(0, 200_000), evidenceCount: evidence.length }
+        return
+      }
+      yield { kind: 'failed', code: 'PROVIDER_UNAVAILABLE', message: '模型服务不可用，不能生成这次回答。' }
     },
 
     async askAuthor(input: {

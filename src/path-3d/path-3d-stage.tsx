@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
+import { getRoute, useWorkspaceTick } from '../workspace/store'
 import type { NodeSemanticBadgeIcon } from 'liu-kanshan-learning-path-3d'
 import { defaultResourceNavigation, LearningPath3DView } from '../components/Path3D'
 import { Icon } from '../icons'
 import { openLearning, readActiveRouteId, readPathReturn } from '../workspace/nav'
-import { getRoute } from '../workspace/store'
+
 import { resolvePath3DView } from './resolved-path-document.ts'
 
 const exampleNodeBadgeIconById: Readonly<Record<string, NodeSemanticBadgeIcon>> = {
@@ -37,11 +38,12 @@ function conceptIdFromAction(detail: ContextualCardAction) {
 }
 
 export function Path3DStage() {
+  const tick = useWorkspaceTick()
   const routeId = readActiveRouteId()
   const view = useMemo(() => {
     const route = routeId ? getRoute(routeId) : undefined
     return resolvePath3DView({ routeId, route })
-  }, [routeId])
+  }, [routeId, tick])
   const goBack = () => { location.hash = readPathReturn() }
 
   if (view.kind === 'unavailable') {
@@ -56,6 +58,7 @@ export function Path3DStage() {
         <span className="learning-path-3d-error-mark" aria-hidden="true">×</span>
         <strong>无法打开这条路线</strong>
         <span>{view.message}</span>
+        <button type="button" onClick={() => { location.hash = 'paths' }}>返回路线列表</button>
       </div>
     </section>
   }

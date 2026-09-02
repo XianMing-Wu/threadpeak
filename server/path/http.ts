@@ -139,8 +139,8 @@ export const buildPathApp = async (deps: PathAppDeps = {}) => {
   const app = Fastify({
     logger: deps.logger ?? false,
     bodyLimit: PATH_HTTP_BODY_LIMIT_BYTES,
-    requestTimeout: 55_000,
-    connectionTimeout: 55_000,
+    requestTimeout: 90_000,
+    connectionTimeout: 90_000,
   });
   app.addHook("onClose", async () => {
     if (ownedStore !== undefined) await ownedStore.close();

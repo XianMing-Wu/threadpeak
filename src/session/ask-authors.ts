@@ -14,7 +14,7 @@ export interface BloggerReply {
   title: string
   url: string
   text: string
-  source?: 'zhihu-live'
+  source?: 'zhihu-live' | 'liu-kanshan-direct'
 }
 
 export interface AskAuthorsAnnotation {
@@ -51,7 +51,7 @@ export function readAnnotationStore(): AnnotationStore {
     return {
       items,
       activeId: typeof parsed.activeId === 'string' ? parsed.activeId : null,
-      panelOpen: parsed.panelOpen === true,
+      panelOpen: false,
     }
   } catch {
     return emptyAnnotationStore()
@@ -65,6 +65,21 @@ export function writeAnnotationStore(store: AnnotationStore) {
 
 const BLOCKED_AUTHOR_NAMES = new Set(['马同学', '李永乐老师', '刘看山'])
 
+export function liuKanshanDirectReply(text: string): BloggerReply {
+  return {
+    name: '刘看山',
+    bio: '不是博主身份',
+    title: '刘看山直达',
+    url: '',
+    text: text.trim(),
+    source: 'liu-kanshan-direct',
+  }
+}
+
+export function isLiuKanshanDirect(reply: BloggerReply | null | undefined): boolean {
+  return reply?.source === 'liu-kanshan-direct'
+}
+
 function isLiveReply(value: unknown): value is BloggerReply {
   if (!value || typeof value !== 'object') return false
   const reply = value as BloggerReply
@@ -77,12 +92,38 @@ function isLiveReply(value: unknown): value is BloggerReply {
     && isZhihuUrl(reply.url)
 }
 
+export function applyAskAuthorResult(
+  item: AskAuthorsAnnotation,
+  result:
+    | { kind: 'authors'; authors: readonly BloggerReply[] }
+    | { kind: 'direct'; text: string }
+    | { kind: 'unavailable'; message: string },
+): AskAuthorsAnnotation {
+  if (result.kind === 'authors') {
+    const author = result.authors[0]
+    if (author && isLiveReply(author)) {
+      return { ...item, status: 'ready', reply: author, error: undefined }
+    }
+  }
+  if (result.kind === 'direct' && result.text.trim()) {
+    return { ...item, status: 'ready', reply: liuKanshanDirectReply(result.text), error: undefined }
+  }
+  return {
+    ...item,
+    status: 'unavailable',
+    reply: null,
+    error: result.kind === 'unavailable' && result.message.trim()
+      ? result.message
+      : '无法完成本次问博主。',
+  }
+}
+
 export function isPersistedAnnotation(value: unknown): value is AskAuthorsAnnotation {
   if (!value || typeof value !== 'object') return false
   const item = value as AskAuthorsAnnotation
   if (typeof item.id !== 'string' || typeof item.ordinal !== 'number' || typeof item.quote !== 'string') return false
   if (typeof item.scopeId !== 'string') return false
-  if (item.status === 'ready') return isLiveReply(item.reply)
+  if (item.status === 'ready') return isLiveReply(item.reply) || isLiuKanshanDirect(item.reply)
   if (item.status === 'unavailable' || item.status === 'answering') return false
   return false
 }
@@ -91,8 +132,34 @@ export function annotationEventName() {
   return ANNOTATION_EVENT
 }
 
+function compactIndexToRaw(haystack: string, compactIndex: number) {
+  let compactPos = 0
+  for (let index = 0; index < haystack.length; index += 1) {
+    const ch = haystack[index]
+    if (ch == null || /\s/.test(ch)) continue
+    if (compactPos === compactIndex) return index
+    compactPos += 1
+  }
+  return haystack.length
+}
+
+/** Locate a user selection in source or rendered text; whitespace differences do not drop the hit. */
+export function findQuoteSpan(haystack: string, quote: string): { start: number; end: number } | null {
+  const needle = quote.replace(/\s+/g, ' ').trim()
+  if (!needle || !haystack) return null
+  const exact = haystack.indexOf(needle)
+  if (exact >= 0) return { start: exact, end: exact + needle.length }
+  const compactNeedle = needle.replace(/\s+/g, '')
+  if (!compactNeedle) return null
+  const compactIndex = haystack.replace(/\s+/g, '').indexOf(compactNeedle)
+  if (compactIndex < 0) return null
+  const start = compactIndexToRaw(haystack, compactIndex)
+  const end = compactIndexToRaw(haystack, compactIndex + compactNeedle.length)
+  return { start, end: Math.max(end, start + 1) }
+}
+
 export function annotationsForText(text: string, annotations: readonly AskAuthorsAnnotation[]) {
-  return annotations.filter((item) => item.quote && text.includes(item.quote))
+  return annotations.filter((item) => Boolean(item.quote && findQuoteSpan(text, item.quote)))
 }
 
 export function readSelectionAnchor(
@@ -120,8 +187,17 @@ export function isZhihuUrl(value: string) {
   }
 }
 
+export function annotationScopeId(routeId: string, conceptId: string, conversationId = '') {
+  const base = `${routeId}::${conceptId}`
+  const conversation = conversationId.trim()
+  return conversation ? `${base}::${conversation}` : base
+}
+
 export function annotationsInScope(items: readonly AskAuthorsAnnotation[], scopeId: string) {
-  return items.filter((item) => (item.scopeId || 'legacy') === scopeId)
+  return items.filter((item) => {
+    const id = item.scopeId || 'legacy'
+    return id === scopeId || id.startsWith(`${scopeId}::`)
+  })
 }
 
 export function nextOrdinal(items: readonly AskAuthorsAnnotation[], scopeId: string) {

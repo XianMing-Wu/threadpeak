@@ -1476,18 +1476,19 @@ export class PathGenerationService {
     };
 
     input.emitStage("stage.started", "generateCandidates");
-    let primaryRaw: unknown;
+    let primaryRaw: unknown
     try {
-      primaryRaw = await generateOnce();
+      primaryRaw = await generateOnce()
     } catch (error) {
-      input.emitStage("stage.completed", "generateCandidates");
-      if (input.signal.aborted) throw error;
-      return { kind: "failed", code: "PROVIDER_UNAVAILABLE", runSummary: emptyFailedSummary() };
+      if (input.signal.aborted) throw error
+      primaryRaw = undefined
     }
-    const primary = adopt(primaryRaw, "primary", []);
-    input.emitStage("stage.completed", "generateCandidates");
+    input.emitStage("stage.completed", "generateCandidates")
+    const primary = primaryRaw === undefined
+      ? { ok: false as const, issues: ["primary provider failed"], reason: "primarySchemaInvalid" as const }
+      : adopt(primaryRaw, "primary", [])
     if (primary.ok) {
-      return { kind: "ok", candidateSet: primary.value, catalog, ledger: searchLedger };
+      return { kind: "ok", candidateSet: primary.value, catalog, ledger: searchLedger }
     }
     const remainingMs = PATH_BUDGETS_MS.total - (Date.now() - input.startedAtMs);
     if (remainingMs < PATH_BUDGETS_MS.fallbackMinRemaining) {
@@ -1505,7 +1506,7 @@ export class PathGenerationService {
     let fallbackRaw: unknown;
     try {
       fallbackRaw = await generateOnce({
-        rejectedExcerpt: sanitizeRejectedExcerpt(primaryRaw),
+        rejectedExcerpt: sanitizeRejectedExcerpt(primaryRaw ?? { error: 'primary provider failed' }),
         issues: boundIssues(primary.issues),
       });
     } catch (error) {

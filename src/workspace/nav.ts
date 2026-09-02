@@ -47,6 +47,10 @@ export function setActiveConversation(id: string) {
   writeKey(ACTIVE_CONVERSATION_KEY, id)
 }
 
+export function setActiveKnowledgeId(id: string) {
+  writeKey(ACTIVE_KNOWLEDGE_KEY, id)
+}
+
 export function readPathReturn(): RouteName {
   const value = readKey(PATH_RETURN_KEY)
   return value === 'chat' || value === 'home' || value === 'paths' ? value : 'paths'

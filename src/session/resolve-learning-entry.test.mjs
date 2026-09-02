@@ -101,6 +101,9 @@ test('mine routes cannot invent conversation graph nodes', () => {
   assert.deepEqual(resolveGraphMutation({ routeId: 'linear-algebra', owner: 'example' }), {
     kind: 'allow-example',
   })
+  assert.deepEqual(resolveGraphMutation({ routeId: 'generated-path', owner: 'mine', hasRoot: true }), {
+    kind: 'allow-incremental',
+  })
 })
 
 test('an explicitly selected route and concept can enter', () => {

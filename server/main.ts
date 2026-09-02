@@ -31,7 +31,7 @@ function loadDotEnv(filePath: string): Record<string, string | undefined> {
 }
 
 const http: HttpPort = async (url, init) => {
-  const timeout = AbortSignal.timeout(20_000)
+  const timeout = AbortSignal.timeout(60_000)
   const signal = init?.signal ? AbortSignal.any([init.signal, timeout]) : timeout
   const response = await fetch(url, {
     method: init?.method ?? 'GET',
@@ -43,6 +43,7 @@ const http: HttpPort = async (url, init) => {
     ok: response.ok,
     status: response.status,
     text: () => response.text(),
+    body: response.body,
   }
 }
 

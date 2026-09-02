@@ -680,7 +680,7 @@ export const createDeepSeekProvider = (
         { role: "user", content: userPayload },
       ],
       response_format: { type: "json_object" },
-      max_tokens: 2_500,
+      max_tokens: 8_192,
     };
     const url = new URL(DEEPSEEK_CHAT_PATH, `${config.deepseekBaseUrl.replace(/\/$/u, "")}/`);
     let response: Response;

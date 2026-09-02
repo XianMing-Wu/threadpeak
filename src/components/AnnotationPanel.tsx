@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import { Icon } from '../icons'
-import { isZhihuUrl, type AskAuthorsAnnotation } from '../session/ask-authors'
+import { MarkdownMath } from '../lib/MarkdownMath'
+import { isLiuKanshanDirect, isZhihuUrl, type AskAuthorsAnnotation } from '../session/ask-authors'
 import { resolveAskAuthor } from '../session/resolve-ask-author'
 
 export function AnnotationPanel({
@@ -15,7 +16,8 @@ export function AnnotationPanel({
   style?: CSSProperties
 }) {
   const reply = annotation.reply
-  const href = reply && isZhihuUrl(reply.url) ? reply.url : null
+  const direct = isLiuKanshanDirect(reply)
+  const href = !direct && reply && isZhihuUrl(reply.url) ? reply.url : null
 
   return (
     <aside
@@ -27,8 +29,8 @@ export function AnnotationPanel({
     >
       <header className="annotation-panel__header">
         <div>
-          <h2>博主批注</h2>
-          <span>围绕所选原文的解答</span>
+          <h2>{direct ? '刘看山直达' : '博主批注'}</h2>
+          <span>{direct ? '没有可信作者时由刘看山根据知乎公开内容作答' : '围绕所选原文的解答'}</span>
         </div>
         <button type="button" className="annotation-panel__icon-button" aria-label="隐藏侧边面板" onClick={onClose}>
           <Icon name="close" size={16}/>
@@ -52,6 +54,13 @@ export function AnnotationPanel({
               <i className="annotation-waiting__dot"/><i className="annotation-waiting__dot"/><i className="annotation-waiting__dot"/>
             </span>
           </div>
+        ) : direct ? (
+          <article className="annotation-card annotation-card--direct">
+            <p className="annotation-card__kicker">刘看山直达 · 不是博主身份</p>
+            <div className="annotation-card__reply">
+              <MarkdownMath source={reply.text}/>
+            </div>
+          </article>
         ) : (
           <article className="annotation-card">
             <div className="annotation-card__author">

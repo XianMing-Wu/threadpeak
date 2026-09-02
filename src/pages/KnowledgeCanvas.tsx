@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { AnnotatedText } from '../components/AnnotatedText'
+import { AnnotatedMarkdown, AnnotatedText } from '../components/AnnotatedText'
 import { AnnotationPanel } from '../components/AnnotationPanel'
 import { AskAuthorsPrompt } from '../components/AskAuthorsPrompt'
 import { BasisVisual } from '../components/BasisVisual'
@@ -8,6 +8,7 @@ import { Composer } from '../components/Composer'
 import { SelectionToolbar } from '../components/SelectionToolbar'
 import { ProductWorkspace } from '../components/Shell'
 import { Icon } from '../icons'
+import { CanvasConversationAction } from '../knowledge-canvas/canvas-conversation-action'
 import {
   estimateNodeHeight,
   flowBranchLabel,
@@ -16,9 +17,11 @@ import {
 } from '../knowledge-canvas/content'
 import { conceptTitle } from '../workspace/catalog'
 import { closeConceptKnowledge, readActiveConversationId, readActiveKnowledgeId, readCanvasReturn, readKnowledgeConceptId } from '../workspace/nav'
-import { blueprintOf, getConceptGraph, getConversation, getKnowledge, saveConversationDraft } from '../workspace/store'
+import { appendLearningTurnToGraph, blueprintOf, ensureLearningConversation, getConceptGraph, getConversation, getKnowledge, saveConversationDraft, useWorkspaceTick } from '../workspace/store'
 import { resolveGraphMutation } from '../session/resolve-learning-entry'
-import { conversationGraphView, growGraph, growKindLabel, parseGrowCommand, resolveGrowHost } from '../knowledge-canvas/generate'
+import { conversationGraphView, growGraph, growKindLabel, parseGrowCommand, resolveGrowHost, resolveQuotedHost } from '../knowledge-canvas/generate'
+import { allowedMergeIds, growCandidateList, heuristicGrowDecision, packGraphContext, parseGrowDecision } from '../knowledge-canvas/grow-decision'
+import { AgentStatus } from '../components/AgentStatus'
 import {
   CARD_W,
   DEFAULT_SIZE,
@@ -36,9 +39,10 @@ import {
 import {
   readLearningSession,
 } from '../learningSession'
-import { readSelectionAnchor, type SelectionAnchor } from '../session/ask-authors'
+import { annotationScopeId, readSelectionAnchor, type SelectionAnchor } from '../session/ask-authors'
 import { useAnnotations } from '../session/useAnnotations'
-import { requestOrdinaryAnswer } from '../chat/request-ordinary-answer'
+import { requestOrdinaryAnswerStream, type AnswerStatusStage } from '../chat/request-ordinary-answer'
+import { MarkdownMath } from '../lib/MarkdownMath'
 
 const NODE_PANEL_W = CARD_W
 const NODE_PANEL_GAP = 8
@@ -79,11 +83,19 @@ function detectMode(text: string): AssistantMode {
   return /图|可视化|思维导图|时间线/.test(text) ? 'visual' : /博主|作者|谁.*说/.test(text) ? 'authors' : ''
 }
 
+function graphSignature(nodes: readonly CanvasNode[], edges: readonly CanvasEdge[]) {
+  return JSON.stringify({
+    nodes: nodes.map((node) => [node.id, node.title, node.turns.length]),
+    edges: edges.map((edge) => [edge.id, edge.from, edge.to, edge.kind]),
+  })
+}
+
 export function KnowledgeCanvasPage() {
   const returnTo = readCanvasReturn()
   const seed = readLearningSession()
   const knowledgeId = readActiveKnowledgeId()
   const conceptId = readKnowledgeConceptId()
+  const workspaceTick = useWorkspaceTick()
   const knowledge = getKnowledge(knowledgeId)
   const graph = knowledge && conceptId ? getConceptGraph(knowledge.id, conceptId) : undefined
   const title = knowledge && conceptId ? conceptTitle(blueprintOf(knowledge.routeId), conceptId) : knowledge?.title ?? '知识脉络'
@@ -104,10 +116,36 @@ export function KnowledgeCanvasPage() {
   const [quoteFromId, setQuoteFromId] = useState('')
   const [selection, setSelection] = useState<SelectionAnchor | null>(null)
   const [authorQuestion, setAuthorQuestion] = useState<SelectionAnchor | null>(null)
-  const annotations = useAnnotations(`${knowledgeId || 'knowledge'}::${conceptId || 'canvas'}`)
+  const activeConversation = getConversation(readActiveConversationId())
+  const sessionConversationId = activeConversation?.kind === 'learning'
+    && activeConversation.routeId === knowledge?.routeId
+    && activeConversation.conceptId === conceptId
+    ? activeConversation.id
+    : ''
+  const annotations = useAnnotations(annotationScopeId(knowledge?.routeId || knowledgeId || 'knowledge', conceptId || 'canvas'), (item) => {
+    if (item.status !== 'ready' || !item.reply?.text || !knowledge?.routeId || !conceptId) return
+    const conversationId = sessionConversationId || ensureLearningConversation(knowledge.routeId, conceptId).id
+    appendLearningTurnToGraph(knowledge.routeId, conceptId, conversationId, {
+      question: item.question,
+      quote: item.quote,
+      quoteFromId: item.nodeId,
+      reply: item.reply.text,
+      grow: 'par',
+      growSource: 'heuristic',
+    })
+    const nextGraph = getConceptGraph(knowledge.id, conceptId)
+    if (nextGraph) {
+      setNodes(nextGraph.nodes.slice())
+      setEdges(nextGraph.edges.slice())
+      setPins(new Map())
+    }
+  })
   const [mode, setMode] = useState<AssistantMode>(seed.mode)
   const [value, setValue] = useState(seed.value)
   const [turns, setTurns] = useState(seed.turns)
+  const [awaiting, setAwaiting] = useState(false)
+  const [streamText, setStreamText] = useState('')
+  const [status, setStatus] = useState<AnswerStatusStage>('search')
   const dragRef = useRef<DragState>(null)
   const ignoreClickRef = useRef(false)
   const nodeRefs = useRef(new Map<string, HTMLElement>())
@@ -118,21 +156,34 @@ export function KnowledgeCanvasPage() {
   zoomRef.current = zoom
   panRef.current = pan
 
-  const activeConversation = getConversation(readActiveConversationId())
-  const sessionConversationId = returnTo === 'session-learning'
-    && activeConversation?.kind === 'learning'
-    && activeConversation.routeId === knowledge?.routeId
-    && activeConversation.conceptId === conceptId
-    ? activeConversation.id
-    : ''
+  const graphRef = useRef({ nodes, edges })
+  graphRef.current = { nodes, edges }
+  useEffect(() => {
+    if (!knowledge || !conceptId) return
+    const nextGraph = getConceptGraph(knowledge.id, conceptId)
+    if (!nextGraph) return
+    if (graphSignature(graphRef.current.nodes, graphRef.current.edges) === graphSignature(nextGraph.nodes, nextGraph.edges)) return
+    setNodes(nextGraph.nodes.slice())
+    setEdges(nextGraph.edges.slice())
+    setPins(new Map())
+  }, [conceptId, knowledge?.id, workspaceTick])
 
   useEffect(() => {
     if (!sessionConversationId) return
-    saveConversationDraft(sessionConversationId, { turns, value, quote, mode })
+    const stored = getConversation(sessionConversationId)?.turns ?? []
+    const keyOf = (item: typeof turns[number]) => `${item.role}:${item.text}`
+    const storedKeys = new Set(stored.map(keyOf))
+    const extras = turns.filter((item) => !storedKeys.has(keyOf(item)))
+    saveConversationDraft(sessionConversationId, {
+      turns: stored.length || extras.length ? [...stored, ...extras] : turns,
+      value,
+      quote,
+      mode,
+    })
   }, [mode, quote, sessionConversationId, turns, value])
   const view = useMemo(
-    () => conversationGraphView(nodes, edges, sessionConversationId),
-    [edges, nodes, sessionConversationId],
+    () => conversationGraphView(nodes, edges),
+    [edges, nodes],
   )
 
   const autoPos = useMemo(
@@ -250,6 +301,11 @@ export function KnowledgeCanvasPage() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !isTypingTarget(event.target)) {
+        annotations.close()
+        setReason(null)
+        return
+      }
       if (!(event.metaKey || event.ctrlKey) || isTypingTarget(event.target)) return
       if (event.key === '=' || event.key === '+' || event.code === 'NumpadAdd') {
         event.preventDefault()
@@ -402,7 +458,11 @@ export function KnowledgeCanvasPage() {
   const send = () => {
     const command = parseGrowCommand(value)
     if (command) {
-      if (resolveGraphMutation({ routeId: knowledge?.routeId ?? '', owner: knowledge?.owner ?? 'mine' }).kind !== 'allow-example') return
+      if (resolveGraphMutation({
+        routeId: knowledge?.routeId ?? '',
+        owner: knowledge?.owner ?? 'mine',
+        hasRoot: Boolean(nodes.some((node) => node.id === 'root')),
+      }).kind === 'reject') return
       const hostId = resolveGrowHost(nodes, selected, quote, quoteFromId)
       const grown = growGraph(nodes, edges, hostId, command.kind, command.question, quote, undefined, sessionConversationId || undefined)
       if (grown) {
@@ -427,6 +487,14 @@ export function KnowledgeCanvasPage() {
     const asked = value
     const cited = quote
     const userText = cited ? `引用「${cited}」\n${asked}` : asked
+    const hostId = resolveQuotedHost(nodes, selected, cited, quoteFromId)
+    const host = nodes.find((node) => node.id === hostId)
+    const candidates = growCandidateList(nodes, edges, hostId)
+    const packed = packGraphContext(nodes, edges, hostId, cited)
+    const explicit = parseGrowCommand(asked)
+    let growDecision = explicit
+      ? { ...heuristicGrowDecision(explicit.question || asked, cited, host?.title ?? title), kind: explicit.kind, source: 'command' as const }
+      : heuristicGrowDecision(asked, cited, host?.title ?? title)
     setTurns((old) => [...old, {
       role: 'user',
       text: userText,
@@ -446,17 +514,80 @@ export function KnowledgeCanvasPage() {
       }])
       return
     }
-    void requestOrdinaryAnswer({
-      question: asked,
+    setAwaiting(true)
+    setStatus('search')
+    setStreamText('')
+    void requestOrdinaryAnswerStream({
+      question: asked || cited,
       topic: title,
       ...(cited ? { quote: cited } : {}),
+      graphContext: packed.text,
+      ...(host?.title ? { hostTitle: host.title } : {}),
+      ...(candidates.length ? { candidates } : {}),
+      onStatus: (stage) => { setAwaiting(true); setStatus(stage) },
+      onGrow: (grow) => {
+        if (explicit) return
+        growDecision = parseGrowDecision(grow, allowedMergeIds(candidates), {
+          question: asked,
+          quote: cited,
+          hostTitle: host?.title ?? title,
+          palId: candidates.find((item) => item.kind === 'par')?.id,
+        })
+      },
+      onDelta: (text) => {
+        setAwaiting(false)
+        setStreamText(text)
+      },
     }).then((result) => {
+      setAwaiting(false)
+      setStreamText('')
+      if (result.kind !== 'completed') {
+        setTurns((old) => [...old, {
+          role: 'assistant',
+          text: result.message,
+          mode: chosen,
+          failed: true,
+        }])
+        return
+      }
+      const decided = explicit ? growDecision : result.grow
+        ? parseGrowDecision(result.grow, allowedMergeIds(candidates), {
+          question: asked,
+          quote: cited,
+          hostTitle: host?.title ?? title,
+          palId: candidates.find((item) => item.kind === 'par')?.id,
+        })
+        : growDecision
       setTurns((old) => [...old, {
         role: 'assistant',
-        text: result.kind === 'completed' ? result.text : result.message,
+        text: result.text,
         mode: chosen,
-        failed: result.kind !== 'completed',
       }])
+      if (resolveGraphMutation({
+        routeId: knowledge?.routeId ?? '',
+        owner: knowledge?.owner ?? 'mine',
+        hasRoot: Boolean(nodes.some((node) => node.id === 'root')),
+      }).kind === 'reject') return
+      if (!knowledge?.routeId || !conceptId) return
+      const conversationId = sessionConversationId || ensureLearningConversation(knowledge.routeId, conceptId).id
+      const createdId = appendLearningTurnToGraph(knowledge.routeId, conceptId, conversationId, {
+        question: asked,
+        quote: cited,
+        quoteFromId,
+        reply: result.text,
+        grow: decided.kind,
+        growSource: decided.source,
+        growTitle: decided.title,
+        growReason: decided.reason,
+        ...(decided.mergeNodeId ? { mergeNodeId: decided.mergeNodeId } : {}),
+      })
+      const nextGraph = getConceptGraph(knowledge.id, conceptId)
+      if (nextGraph) {
+        setNodes(nextGraph.nodes)
+        setEdges(nextGraph.edges)
+        setPins(new Map())
+        setSelected(createdId || hostId)
+      }
     })
   }
 
@@ -465,27 +596,23 @@ export function KnowledgeCanvasPage() {
       <header className="canvas-header">
         <div>
           <button type="button" aria-label="返回" onClick={() => {
-            if (returnTo === 'session-learning') {
-              location.hash = 'session-learning'
-              return
-            }
             closeConceptKnowledge()
             location.hash = 'knowledge-detail'
           }}><Icon name="back" size={18}/></button>
           <span><small>{knowledge?.title ?? '知识脉络'}</small><strong>{title}</strong></span>
         </div>
-        <div className="canvas-header-actions">
-          {returnTo==='session-learning' && <button type="button" className="canvas-back-chat" onClick={() => { location.hash = 'session-learning' }}>
-            <Icon name="message" size={17}/>回到对话
-          </button>}
-        </div>
+        <CanvasConversationAction returnTo={returnTo} routeId={knowledge?.routeId ?? ''} conceptId={conceptId}/>
       </header>
       <section
         ref={canvasRef}
         className={`thread-canvas has-composer ${dragging ? `is-dragging is-dragging-${dragging}` : ''}`}
         aria-label="只读画布，可拖拽浏览的知识脉络"
         style={{ '--canvas-card-w': `${CARD_W}px` } as React.CSSProperties}
-        onClick={clearReason}
+        onClick={(event) => {
+          clearReason()
+          if ((event.target as Element).closest('.annotation-panel,.annotation-ball,.canvas-tools')) return
+          annotations.close()
+        }}
         onPointerDown={startPan}
         onPointerMove={moveDrag}
         onPointerUp={endDrag}
@@ -547,7 +674,7 @@ export function KnowledgeCanvasPage() {
                 <g
                   role="button"
                   tabIndex={0}
-                  aria-label={`查看第 ${edge.label} 条分支的流转依据`}
+                  aria-label={`查看第 ${label} 条分支的流转依据`}
                   onClick={open}
                   onKeyDown={(event)=>{if(event.key==='Enter'||event.key===' ')open(event)}}
                 >
@@ -579,6 +706,7 @@ export function KnowledgeCanvasPage() {
                 }
                 setSelected(node.id)
                 setReason(null)
+                if (!(event.target as Element).closest('.annotation-ball')) annotations.close()
               }}
             >
               <i className="node-handle is-target" aria-hidden="true"/>
@@ -589,9 +717,9 @@ export function KnowledgeCanvasPage() {
               </header>
               {node.turns.map((turn, index) => <section key={`${node.id}-${index}`} className={`node-turn is-${turn.replyKind}`}>
                 {turn.title && (index > 0 || turn.title !== node.title) && <h3 className="node-turn-title">{turn.title}</h3>}
-                <p className="node-question"><AnnotatedText text={turn.question} annotations={annotations.annotations} activeId={annotations.active?.id} onOpen={annotations.open}/></p>
+                <p className="node-question"><AnnotatedText text={turn.question} annotations={annotations.annotations.filter((item) => item.nodeId === node.id)} activeId={annotations.active?.id} onOpen={annotations.open}/></p>
                 <div className="node-reply">
-                  {turn.paragraphs.map((paragraph) => <p key={paragraph}><AnnotatedText text={paragraph} annotations={annotations.annotations} activeId={annotations.active?.id} onOpen={annotations.open}/></p>)}
+                  <AnnotatedMarkdown source={turn.paragraphs.join('\n\n')} annotations={annotations.annotations.filter((item) => item.nodeId === node.id)} activeId={annotations.active?.id} onOpen={annotations.open}/>
                   {turn.figure && <BasisVisual caption={turn.figure.caption}/>}
                 </div>
               </section>)}
@@ -624,6 +752,10 @@ export function KnowledgeCanvasPage() {
         </div>
       </section>
       <footer className="canvas-composer">
+        {(awaiting || streamText) && <div className="canvas-status" role="status" aria-live="polite">
+          {awaiting && !streamText && <AgentStatus items={[{ label: status === 'classify' ? '正在判断这个问题在知识脉络中的位置' : status === 'compose' ? '正在生成回答' : '正在检索公开证据并生成回答', detail: status === 'classify' ? '模型会同时给出前置、后置或并列，以及卡片标题和逻辑说明。' : '先检索知乎公开内容，再由模型写出这次回复。' }]}/>}
+          {streamText && <div className="canvas-stream"><MarkdownMath source={streamText}/></div>}
+        </div>}
         <Composer
           compact
           value={value}

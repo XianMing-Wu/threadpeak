@@ -4,7 +4,7 @@ import { ProductWorkspace } from '../components/Shell'
 import { Icon } from '../icons'
 import { clearActiveHistory, CHAT_LAUNCH_KEY, HISTORY_OPEN_EVENT } from '../history'
 import { resolveChatLaunch, type ChatLaunchReady } from '../chat/resolve-chat-launch'
-import { requestOrdinaryAnswer } from '../chat/request-ordinary-answer'
+import { requestOrdinaryAnswerStream } from '../chat/request-ordinary-answer'
 import { resolveOrdinaryAnswer } from '../chat/resolve-ordinary-answer'
 import { MarkdownMath } from '../lib/MarkdownMath'
 import { resolveVisualAnswer } from '../chat/resolve-visual-answer'
@@ -54,7 +54,13 @@ function OrdinaryAnswerLive({ query }: { query: string }) {
     let cancelled = false
     setText(null)
     setError(null)
-    void requestOrdinaryAnswer({ question: query }).then((result) => {
+    void requestOrdinaryAnswerStream({
+      question: query,
+      onDelta: (next) => {
+        if (cancelled) return
+        setText(next)
+      },
+    }).then((result) => {
       if (cancelled) return
       if (result.kind === 'completed') setText(result.text)
       else setError(result.message)
@@ -64,7 +70,7 @@ function OrdinaryAnswerLive({ query }: { query: string }) {
   if (!query.trim()) return <OrdinaryAnswerUnavailable/>
   if (error) return <article className="chat-answer" role="alert"><h2>无法生成本次回答</h2><p>{error}</p></article>
   if (!text) return <article className="chat-answer" aria-live="polite"><h2>正在检索公开证据并生成回答</h2><p>这次请求会走服务端知乎检索和 DeepSeek。没有真实配置时会显式失败。</p></article>
-  return <article className="chat-answer"><MarkdownMath source={text}/></article>
+  return <article className="chat-answer" aria-live="polite"><MarkdownMath source={text}/></article>
 }
 
 function VisualAnswerUnavailable() {

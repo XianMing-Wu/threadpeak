@@ -35,12 +35,15 @@ export function ChatRoutePanel(props: {
   }), [])
   const view = useRuntimeSelector(session.store, (next) => next)
   const published = useRef(Boolean(existing))
+  const launchedQuery = useRef('')
 
   useEffect(() => {
     if (existing) return
+    const key = `${props.conversationId}::${props.query}`
+    if (launchedQuery.current === key) return
+    launchedQuery.current = key
     session.submitNewGoal(props.query)
-    return () => session.abort() // keep the store; teardown() would freeze updates after StrictMode cleanup
-  }, [existing, props.query, session])
+  }, [existing, props.conversationId, props.query, session])
   useEffect(() => {
     if (published.current || view.runState !== 'ready' || !view.document) return
     const route = createMineRouteFromChat(

@@ -64,8 +64,8 @@ export function addChatHistory(query:string,experience:HistoryExperience,extra?:
   return entry
 }
 
-export function openChatHistory(_entry:ChatHistoryEntry):HistoryReopenResolution {
-  return resolveHistoryReopen()
+export function openChatHistory(entry:ChatHistoryEntry, conversation?: Parameters<typeof resolveHistoryReopen>[1]):HistoryReopenResolution {
+  return resolveHistoryReopen(entry, conversation)
 }
 
 export function clearActiveHistory() {
