@@ -1,9 +1,11 @@
-# Architecture status — Session prepare-theater, thinking-menu stacking, Path3D remount
+# Architecture status — live providers and fail-closed audit
 
-- Time: 2026-09-01
-- Commit: `2831aee`
-- Environment: darwin, Node v25.5.0 (engines `>=24`), npm 11.8.0, Vite 8.2.2, TypeScript 6.0.3
-- Maturity proposal: Session entry theater removal, Home thinking-menu stacking, and Path3D remount-on-id = `implemented`; PathStreamEvent/CAS, canonical first answer, and live Zhihu/DeepSeek = still `prototype`
+- Time: 2026-09-02
+- Commits: `341bd27` stream contracts, `8d21728` renderer validator, `076cbf3` live composition
+- Environment: darwin, Node 24+, Vite 8, TypeScript 6
+- Maturity proposal:
+  - `guard_status=verified` for Session/Chat/AskAuthor/AuthorSearch/Path document/stream cursor false-success closures
+  - `module_maturity=prototype` for AnswerPipeline, PathStreamEvent/CAS, GraphSurgeon, author network projector
 
 ## Commands
 
@@ -11,28 +13,33 @@
 | --- | --- |
 | `npm run check` | 0 |
 | `npm run check:architecture` | 0 |
-| `npm run check:contracts` | 0 (15 tests) |
-| `npm run check:product-invariants` | 0 |
-| `npm test` | 0 (133 tests) |
+| `npm run check:contracts` | 0 (16 tests) |
+| `npm run check:product-invariants` | 0 (10 tests) |
+| `npm test` | 0 (154 tests) |
 | `npm run build` | 0 |
 
-## Browser / HTTP
+## Live HTTP
 
-- Dev Vite `http://127.0.0.1:4301` at 1280×720
-- Home thinking menu (`z-index: 2`) sits above `.home-discovery` (`z-index: 0`); hover hits menu buttons, not suggestion chips
-- Home recommended example route 「批判性思维：从观点到论证」 opens `#path-3d` with a WebGL canvas and no 「3D 路线运行失败」 overlay
-- `#session-learning` without a selection still fail-closes; selected example lessons render immediately without 「正在准备当前学习内容」
+- `GET /ready` → 200, `ready=true`
+- `POST /api/paths/generate` without `PATH_GENERATE_UPSTREAM` → 503 `providers_unavailable`
+- `POST /api/authors/search` → 503 `NETWORK_UNAVAILABLE` (network projector missing; no Zhihu fallback)
+- `POST /api/answers` → 200 `completed`, `evidenceCount=8` via Zhihu search + DeepSeek
+- `POST /api/ask-author` → 200 `direct` 刘看山 fallback; Liu is not an author identity
 
 ## What this slice proves
 
-- Session no longer uses an 1800ms preparing theater
-- Composer isolation no longer lets the suggestion marquee paint through the thinking menu
-- Path3D remounts on document id, not parent callback/object identity, so sidebar collapse does not dispose an in-flight runtime
-- `store.ts` stayed at 626 lines
+- Server composition reads `.env` for Zhihu + DeepSeek; missing config fails `/ready`
+- Session/Chat ordinary answers no longer write linear-algebra `coachReply` or authors/visual success sentinels into the knowledge graph
+- Generate + Path3D share one renderer document validator that rejects incomplete `flowGroup`s
+- Decoder accepts aggregate/path session ids; RuntimeStore first event is sequence 1; NDJSON can emit incrementally
+- Concept must belong to the route; conversation graph keeps nodes without `conversationId`; canvas drafts stay on the matching concept conversation
+- Old 「马同学」 annotations are rejected; AskAuthor failures are not persisted as ready replies
+- Architecture gate now checks cycles, browser→server, deep package imports, and Vite provider keys
+- PRODUCT_SPEC / Authors copy no longer present undecided network topology or “route creates knowledge” as product fact
 
 ## What this slice does not prove
 
-- No PathStreamEvent/CAS snapshot or wire-id handoff
-- No live Zhihu/DeepSeek providers
-- WebGL still depends on the host browser; this is not a non-3D concept fallback
-- Input-motion WIP remains uncommitted and is not part of this slice
+- No committed conversation/graph GET, CAS snapshot, or live Zhihu/DeepSeek gate with production telemetry
+- AuthorSearch still fail-closes when the network projector is missing; that is required by network-first
+- Path generate on 4312 is not the algorithm PathStreamEvent pipeline unless `PATH_GENERATE_UPSTREAM` is set
+- `PRODUCT_SPEC`, state machines, and `算法/` live outside this git root

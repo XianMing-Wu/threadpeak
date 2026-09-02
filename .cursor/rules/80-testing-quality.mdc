@@ -57,7 +57,7 @@ alwaysApply: false
 
 目标 workspace 建立后，CI 至少提供：`format:check`、`lint`、`check`、`check:architecture`、`check:contracts`、`check:ownership`、`check:artifacts`、`check:product-invariants`、`validate:catalog`、unit/property/contract/integration/stream/security/migration/browser/a11y/visual/performance tests 和 `build`。
 
-`check:product-invariants` 必须证明：path 不建 knowledge；canonical 首答不重生成/覆盖；graph/root 只在首答后；AskAuthor 不是 contact proposal 且 Zhihu-first；AuthorSearch network-first；数量上限正确；刘看山不进 network；3D 不保存学习进度。
+`check:product-invariants` 必须证明：path 不建 knowledge；canonical 首答不重生成/覆盖；graph/root 只在首答后；AskAuthor 不是 contact proposal 且 Zhihu-first；AuthorSearch network-first；数量上限正确；刘看山不进 network；3D 不保存学习进度。文档关键词检查不够，必须包含失败不写图、概念属于路线、残缺 path 文档拒绝、序号从 1 起等行为测试。
 
 ## Definition of Done
 

@@ -43,7 +43,7 @@ Cursor 会自动读取根 `AGENTS.md`，并按 `.mdc` frontmatter 的 `globs` �
 | `.cursor/rules/30-authors.mdc` | 问博主、Chat/Session 问博主门、Authors 搜索/网络门、作者身份/evidence/network |
 | `.cursor/rules/40-visualization-3d.mdc` | 图文 artifact、Chat/Session 图文门、Surface Catalog、知识画布、3D renderer/vendor |
 | `.cursor/rules/50-frontend-runtime-ui.mdc` | React/TSX/CSS、RuntimeStore、页面、Chat 普通回答门、Chat 打开会话门、侧栏历史重开门、Settings identity/sources 门、Shell 账号身份门、Composer 附件/资料范围门、授权页 OAuth 门、可访问性和浏览器状态 |
-| `.cursor/rules/60-backend-platform.mdc` | API/worker/server/contracts、provider、事务、事件、幂等、安全和可观测性 |
+| `.cursor/rules/60-backend-platform.mdc` | API/worker/server/contracts、provider、事务、事件、幂等、安全和可观测性；当前 `server/` live Zhihu/DeepSeek composition |
 | `.cursor/rules/70-prototype-migration.mdc` | 当前 `src/` 原型、localStorage/fixture 清理和纵向迁移 |
 | `.cursor/rules/80-testing-quality.mdc` | 源码、测试、配置和 catalog：TypeScript 风格、门禁、验证矩阵与 DoD |
 | `.cursor/rules/90-docs-rules.mdc` | Markdown、AGENTS、`.cursor/rules`、架构证据和规则维护 |
@@ -54,18 +54,18 @@ Cursor 会自动读取根 `AGENTS.md`，并按 `.mdc` frontmatter 的 `globs` �
 
 - 当前目录仍是 React/Vite UX 原型，主页面存在 fixture、页面内状态和浏览器存储；它不是生产架构。
 - 运行时已不再借用兄弟项目 `node_modules` / `public` / `src`。图标、交互图引擎、3D 角色 GLB 与 3D 宿主合同摘录已落入本仓库 `vendor/`、`src/vendor/` 与 `public/assets/`。
-- 当前主产品尚未接通真实知乎/LLM provider；重构切片只有在真实服务端纵向链和 live gate 通过后才能标记 `integrated`。
+- 服务端 `server/` 已从项目根 `.env` 读取知乎开放平台检索与 DeepSeek；缺配置时 `/ready` 失败。这只证明 live composition 骨架，不是 AnswerPipeline / PathStreamEvent / 作者网络 projector，不能标 `integrated`。
 - 共享 runtime Zod 的唯一物理定义已在 `packages/contracts`。`../算法/shared/runtime-contracts.ts` 只保留兼容 re-export，删除条件见该文件与 `packages/contracts/COMPATIBILITY.md`。
 - `@threadpeak/api-client` 与 `@threadpeak/runtime-store` 已提供 decoder / headless store。Home 与路线/知识列表开始走 selector；投影仍来自原型 `workspace/store`，不是服务端 committed GET。
 - path-lab 的 JSON 实验请求已改走 api-client + RuntimeStore；它仍代理到本机 `4312`，不能证明主产品 PathStreamEvent/CAS session 已接通。
 - 产品 Chat 路线模式已去掉页面 timer 和 `draftMineBlueprint` 成功路径；用户请求必须拿到已校验 document，否则显式失败。实验室 API 不可达或等待超时时不再停在 pending。仍不是 PathStreamEvent/CAS。
-- 产品 Chat 普通回答不再渲染 `defaultAnswerMock` 预写正文；没有真实 Answer provider 时显式失败。仍不是 AnswerPipeline / committed artifact。
+- 产品 Chat / Session 普通回答经同源 `/api/answers` 调用服务端知乎检索 + DeepSeek；缺配置或 provider 失败显式失败，不再用 `coachReply` 线性代数公式或 authors/visual sentinel 写知识图。仍不是 AnswerPipeline / committed artifact。
 - 产品 `#chat` 不再在缺少发送上下文时预写「性价比高的显卡」或用 localStorage 正文冒充已打开会话；缺 launch 显式失败。Home 发送仍可写本地草稿 handoff。仍不是 owner-scoped conversation GET。
 - 产品 Chat / Session 图文模式不再用页面 timer 和 fixture frames 冒充成功；没有真实 VisualizationArtifact 时显式失败。仍不是 Surface Catalog / committed visual attachment。
 - 产品 `#path-3d` 对用户路线只渲染已校验 document；缺文档或示例 fixture 冒充用户路线时显式失败，不再回退 `threadPeakPathDocument`。示例路线仍用明确标记的示例文档。仍不是 CAS snapshot / wire-id handoff。
 - 产品 `#session-learning` 在未选择 route/concept 时 fail-closed，不再默认 `linear-algebra` / `linear-map` 或发明首段讲解。进入时不再用 1800ms「正在准备」冒充生成。`openLearning` 不再用 `defaultConceptId` 补第一个概念。已选中的**我的路线**在没有 canonical 首答时显式失败，不再 `draftFirstLesson` 建图，也不再用 `growGraph`/`syncConversationGraph` 发明节点。`#knowledge-detail` 也不对 mine 做内存 `growGraph` 或 persist。workspace 读取也不会用 `draftFirstLesson` 改写 mine 的 lesson/图。已选中的示例路线仍可读标记 catalog lesson，不是 canonical 首答。
-- 产品 Session / 划选问博主不再用固定作者或 720ms 预写回复冒充成功；没有真实 AskAuthorResolution 时显式失败，也不再因此写入博主网络。仍不是 Zhihu-first 检索或刘看山直达。
-- 产品 `#authors` 博主搜索不再用本地 GraphRAG、雷达扫描或示例作者冒充成功；没有真实 AuthorSearch provider 时显式失败。仍不是 network-first 检索或 committed `AuthorSearchResult`。
+- 产品 Session / 划选问博主经 `/api/ask-author` 走 Zhihu-first；旧 storage 里的「马同学」不会再被渲染，失败批注不写入 sessionStorage。仍不是 committed AskAuthorResolution / 作者入网。
+- 产品 `#authors` 博主搜索经 `/api/authors/search` 先查网络投影；投影未接通时显式失败，不会因此去知乎凑人。页面不再把未裁决的「载体→概念→问题」写成产品事实。仍不是 committed `AuthorSearchResult`。
 - 产品 `#authors` 博主网络不再用 sessionStorage 或示例星图冒充已提交网络；没有真实 relationship projector 时显式失败，页面也不再 hydrate 入网。仍不是 owner-scoped network projection。
 - 产品侧栏历史重开不再把 localStorage 会话正文当成已提交 history；没有真实 conversation GET 时显式失败，列表只标为本地草稿。仍不是 owner-scoped exact reopen。
 - 产品 `#settings` 不再把写死用户或已上传 PDF 资料范围当成已提交 identity/sources；缺 provider 显式失败。密度、动效、思考深度仍是本地偏好。不得把原型登录态锁死整站。仍不是服务端 OAuth/session 或 committed source scope。

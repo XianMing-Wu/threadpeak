@@ -21,8 +21,8 @@ ZhihuDirectAnswerProvider
 ```
 
 - 不得用一个 `unknown[]` 万能接口合并通用 evidence、作者发现、作者评审和知乎直达。
-- OpenCode Go/Vercel AI/知乎客户端都是 adapter，不是业务合同。协议显式配置；失败后禁止静默猜另一个协议。
-- Vercel AI SDK 只可出现在 provider adapter；business/domain/React 不得 import `ai`、`@ai-sdk/*`、OpenCode SDK 或知乎 response type。
+- DeepSeek/Vercel AI/知乎客户端都是 adapter，不是业务合同。DeepSeek 固定 `chat/completions`；失败后禁止静默改 endpoint。
+- Vercel AI SDK 只可出现在 provider adapter；business/domain/React 不得 import `ai`、`@ai-sdk/*` 或知乎 response type。
 - Adapter 将外部值按 `unknown → schema.parse → domain value` 转换；原始 response/error body/SDK object 不进入 event log 或 UI。
 - API key 只在服务端 secret manager/环境；禁止 `VITE_*`、`import.meta.env` 或 browser bundle。
 

@@ -66,7 +66,7 @@ domain → shared primitives；contracts → Zod + shared runtime contracts
 - 跨 bounded context 只能通过公开 contract、application port、committed artifact 或 event 交接；禁止跨表写、深层 import、共享可写 repository 和循环依赖。
 - 只有 composition root 可以实例化框架、数据库、provider、clock、ID factory、logger、store、timer 和 worker。
 - 禁止建立同时检索、生成、写图和推事件的万能 Agent/Supervisor。
-- LangGraph、CopilotKit remote agent、OpenCode prompt loop、Agent Zero、Cline/Deer-Flow runtime 不能成为产品调度核。
+- LangGraph、CopilotKit remote agent、通用模型 prompt loop、Agent Zero、Cline/Deer-Flow runtime 不能成为产品调度核。
 
 ## 目标物理结构
 

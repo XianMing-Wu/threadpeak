@@ -68,22 +68,23 @@ DEEPSEEK_MODEL_NAME
 运行：
 
 ```bash
+npm run server
 npm run dev
 ```
 
-打开 `http://127.0.0.1:4301/`。当前页面是迁移输入，不代表对应后端能力已完成：
+`npm run server` 在 `127.0.0.1:4312` 读取项目根 `.env` 并提供 `/api/answers`、`/api/ask-author`、`/api/authors/search`。缺配置时 readiness 失败，不会降级成 mock。Vite 把 `/api` 代理到该端口。打开 `http://127.0.0.1:4301/`。当前页面仍是迁移输入，不能因为服务端进程可启动就标 `integrated`：
 
 | 入口 | 当前原型职责 | 目标重构边界 |
 | --- | --- | --- |
 | 初始授权态 | 知乎授权视觉入口；无真实 OAuth 时显式失败，不再用延时动画冒充授权成功。进入本地原型仍可用，不得锁死整站 | 服务端 OAuth/session，密钥与 token 不进浏览器 |
 | `#home` | 路线/图文入口、Composer、示例推荐；侧栏历史重开无真实 conversation GET 时显式失败，列表只标本地草稿；侧栏账号无真实身份时只标本地原型，不再写死姓名；Composer 附件/资料范围无真实 provider 时显式失败，不再用本地文件或已上传 PDF 冒充来源 | command/query 进入同源 API，不在页面生成领域事实 |
-| `#chat` | 普通/图文无真实 provider 时显式失败，不再渲染预写 Mock 或 fixture 图；缺发送上下文不再预写「性价比高的显卡」；路线模式走 generate session，连接失败或超时显式报错，不再停在 pending | 普通回答接 AnswerPipeline；路线接 PathStreamEvent/CAS，图文接真实 visual artifact；打开会话走 committed GET |
+| `#chat` | 普通回答经 `/api/answers` 调知乎+DeepSeek，失败显式报错；图文无 VisualizationArtifact 时显式失败；缺发送上下文不再预写「性价比高的显卡」；路线模式走 generate session，连接失败或超时显式报错 | 普通回答接 AnswerPipeline；路线接 PathStreamEvent/CAS，图文接真实 visual artifact；打开会话走 committed GET |
 | `#paths` | 我的路线/示例路线列表 | 读取 committed path projection |
 | `#path-3d` | WebGL renderer；用户路线缺校验文档则显式失败，不再回退演示路径 | 只消费已校验 document 与 server handoff，不保存学习进度 |
 | `#knowledge` | 我的/示例知识脉络列表 | 读取 owner-scoped committed projection |
 | `#knowledge-detail` | 只读知识画布；我的路线不得内存 `growGraph` 或 persist | 只渲染 revision，不从消息或布局发明节点和边 |
-| `#session-learning` | 未选择 route/concept 时显式失败；不再用 1800ms「正在准备」冒充生成；我的路线不发明 lesson/图/conversation 节点；图文/问博主无真实 provider 时显式失败；示例仍用标记 catalog lesson | 严格执行 canonical 首答在前、知识图在后 |
-| `#authors` | 博主搜索与博主网络无真实 provider 时显式失败，不再用本地 GraphRAG、sessionStorage 或示例星图冒充成功 | 搜索与网络为两个 feature，执行不同检索顺序和写入规则 |
+| `#session-learning` | 未选择或概念不属于路线时显式失败；普通回答经 `/api/answers`；失败不得写知识图；问博主经 `/api/ask-author`，旧「马同学」storage 被拒绝；示例仍用标记 catalog lesson | 严格执行 canonical 首答在前、知识图在后 |
+| `#authors` | 搜索经 `/api/authors/search`：网络投影未接通则失败，不会去知乎凑人；页面不再把未裁决拓扑写成产品事实 | 搜索与网络为两个 feature，执行不同检索顺序和写入规则 |
 | `#settings` | 前端偏好与确认界面；身份与资料范围无真实 provider 时显式失败，不再写死登录用户或已上传 PDF | 偏好不能改变领域合同；身份与来源走服务端 session / committed scope |
 
 ## 独立路径算法实验台
@@ -108,9 +109,9 @@ npm run build
 ```
 
 - `check`：当前 TypeScript 工程检查。
-- `check:architecture`：解析本仓库 import graph，阻断兄弟目录与出仓路径。
-- `check:contracts`：共享 runtime/transport schema 的 golden fixture、api-client decoder，以及旧算法路径 re-export 双边一致。
-- `check:product-invariants`：验证渐进式规则元数据、规则路由、六条冻结语义、三份文档一致性和服务端环境合同。
+- `check:architecture`：解析本仓库 import graph，阻断兄弟目录、循环依赖、browser→server、deep package import 和 Vite provider key。
+- `check:contracts`：共享 runtime/transport schema 的 golden fixture、api-client decoder，以及旧算法路径具名 runtime re-export。
+- `check:product-invariants`：规则元数据之外，还验证失败不写图、概念属于路线、旧作者 storage 拒绝、序号从 1 起和残缺 path 文档拒绝。
 - `test`：当前页面与源码合同；其中大量 regex/fixture 只能证明原型结构，不能证明真实网络、事务、权限或恢复。
 - `build`：使用本仓库 lockfile 与本地 vendor 资产构建；不再读取兄弟项目 `node_modules`。
 - `../threadpeak-state-machines/npm run validate`：状态机文档验证，不能替代运行时集成测试。
@@ -119,8 +120,9 @@ npm run build
 
 ## 当前明确未完成
 
-- 主产品仍包含本地 catalog、预写回答、固定作者数据、页面 timer 和浏览器存储，尚不满足真实数据门禁。RuntimeStore 目前只投影原型列表，不是服务端 read model。
-- 知乎授权、真实回答/作者检索、LLM 生成、PostgreSQL、worker、outbox、SSE/projector 和 owner 隔离尚未纵向接通。
+- `guard_status` 可以是 verified：若干假成功入口已 fail-closed，并有服务端知乎/DeepSeek composition。对应领域的 `module_maturity` 仍是 `prototype`，因为还没有 committed GET、CAS、GraphSurgeon 或作者网络投影。
+- 主产品仍包含本地 catalog、页面状态和浏览器草稿存储。RuntimeStore 目前只投影原型列表，不是服务端 read model。
+- 知乎授权、AnswerPipeline、PathStreamEvent/CAS、PostgreSQL、worker、outbox、SSE/projector 和 owner 隔离尚未纵向接通。单个 Web commit 也不能原子证明 `../PRODUCT_SPEC.md`、`../threadpeak-state-machines/` 与 `../算法/` 已同步。
 - 首答永久性、并发 singleflight、graph bootstrap/incremental、作者网络事件和精确历史恢复尚无生产数据库证据。
 - 3D 当前只证明 renderer 交互；不能据此声称路线生成、概念进入或知识生命周期已完成。
 - 桌面基线为 1280×720；当前版本不声称完成移动端或生产安全验收。

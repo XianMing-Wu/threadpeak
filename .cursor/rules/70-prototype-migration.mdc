@@ -13,14 +13,14 @@ alwaysApply: false
 | 当前实现 | 迁移目标 |
 | --- | --- |
 | `src/workspace/store.ts` + `catalog.ts` 关键词拼路线 | 删除用户请求生产路径；只读示例与隔离测试 fixture 分开存放并明确标记 |
-| `src/pages/Chat.tsx` 页面内路线阶段/timer；普通/图文预写 Mock；缺 launch 预写显卡问题；路线 generate 连接失败/超时已 fail-closed，缺发送上下文已 fail-closed | `PathStreamEvent` decoder → projector → RuntimeStore；普通/图文走 AnswerPipeline，缺 provider 或 VisualizationArtifact 显式失败；打开会话走 committed GET |
-| `src/pages/Session.tsx` + `growGraph`；1800ms「正在准备」已去掉 | concept entry / `POST /turns` → AnswerPipeline；无 route/concept 不得回退线性代数 fixture；我的路线无 canonical 首答不得 `draftFirstLesson`/`growGraph` 建图；canvas 只听 committed `graph.*` |
-| `src/session/useAnnotations.ts` | 只产生 Selector；GraphSurgeon 落贡献 |
-| `src/session/ask-authors.ts` 固定作者；用户问博主已 fail-closed | Zhihu-first AskAuthorResolution，1–2 位或刘看山直达 |
+| `src/pages/Chat.tsx` 页面内路线阶段/timer；普通回答走 `/api/answers`；图文预写 Mock 已去掉；缺 launch 预写显卡问题；路线 generate 连接失败/超时已 fail-closed，缺发送上下文已 fail-closed | `PathStreamEvent` decoder → projector → RuntimeStore；普通/图文走 AnswerPipeline，缺 VisualizationArtifact 显式失败；打开会话走 committed GET |
+| `src/pages/Session.tsx` + `growGraph`；1800ms「正在准备」已去掉；普通回答走 `/api/answers`；authors/visual 失败与问博主结果不得先写图 | concept entry / `POST /turns` → AnswerPipeline；无 route/concept 不得回退线性代数 fixture；concept 必须属于路线；我的路线无 canonical 首答不得 `draftFirstLesson`/`growGraph` 建图；canvas 只听 committed `graph.*` |
+| `src/session/useAnnotations.ts` | 只产生 Selector；失败不写入 sessionStorage；GraphSurgeon 落贡献 |
+| `src/session/ask-authors.ts` 固定作者；旧「马同学」storage 已拒绝 | Zhihu-first AskAuthorResolution，1–2 位或刘看山直达 |
 | `src/session/author-graph-rag.ts`；产品 `#authors` 搜索已 fail-closed | network-first AuthorSearch，零命中才 Zhihu |
 | `src/session/author-network.ts` sessionStorage；产品 `#authors` 网络已 fail-closed | committed relationship event → owner-scoped network projector |
 | `src/history.ts` / workspace localStorage；侧栏重开已 fail-closed | ConversationUseCases + owner-scoped GET/exact reopen |
-| `src/pages/Authors.tsx` | 搜索与网络均已 fail-closed；保持两个 feature |
+| `src/pages/Authors.tsx` | 搜索走 `/api/authors/search`，网络 projector 失败则 fail-closed 且不得改走知乎；网络页仍 fail-closed；保持两个 feature |
 | `src/pages/Settings.tsx` 写死用户/已上传 PDF；产品设置身份与资料范围已 fail-closed | 服务端 identity + committed source scope；本地偏好不改变领域合同，也不得锁死整站登录 |
 | `src/components/Shell.tsx` 写死侧栏姓名；产品账号控件已标本地原型 | 服务端 session 身份；主题/退出仍是本地壳控件，不得锁死整站登录 |
 | `src/components/Composer.tsx` 本地 file chip /「你上传的文档」；产品附件与资料范围已 fail-closed | committed source/attachment scope；思考深度仍是本地偏好 |
