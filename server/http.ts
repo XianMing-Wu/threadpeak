@@ -6,6 +6,8 @@ import type { HttpPort } from './ports.ts'
 import { loadPathRuntimeConfig } from './path/config.ts'
 import { buildPathApp } from './path/http.ts'
 import { InMemoryPathSessionStore } from './path/service.ts'
+import { registerAuthRoutes } from './identity/http.ts'
+import type { OauthService } from './identity/oauth.ts'
 
 const LISTEN_HOST = '127.0.0.1'
 const LISTEN_PORT = 4312
@@ -17,6 +19,7 @@ export type LiveHttpPorts = {
   service?: LiveService
   pathGenerateUpstream?: string
   http: HttpPort
+  oauth?: OauthService
 }
 
 function traceIdOf(request: FastifyRequest): string {
@@ -162,6 +165,7 @@ export async function createCompositionApp(ports: LiveHttpPorts): Promise<Fastif
     })
   }
   registerLiveRoutes(app, ports)
+  if (ports.oauth) registerAuthRoutes(app, ports.oauth)
   return app
 }
 

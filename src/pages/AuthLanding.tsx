@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Icon, MountainMark } from '../icons'
 import { resolveAuthSession, type AuthSessionResolution } from '../resolve-auth-session'
+import { requestAuthStart } from '../runtime/request-auth-session'
 
 export function AuthLanding({ theme, onThemeChange, onAuthorize }: {
   theme: 'light' | 'dark'
@@ -8,6 +9,21 @@ export function AuthLanding({ theme, onThemeChange, onAuthorize }: {
   onAuthorize: () => void
 }) {
   const [oauthNotice,setOauthNotice]=useState<AuthSessionResolution|null>(null)
+
+  useEffect(() => {
+    const failed = new URLSearchParams(location.search).get('oauth') === 'failed'
+    if (failed) setOauthNotice(resolveAuthSession())
+  }, [])
+
+  const startOauth = () => {
+    void requestAuthStart().then((result) => {
+      if (result.kind === 'redirect') {
+        location.href = result.authorizeUrl
+        return
+      }
+      setOauthNotice(result)
+    })
+  }
 
   return <main className="auth-landing">
     <button type="button" className="auth-theme" aria-label="切换夜间模式" aria-pressed={theme==='dark'} onClick={onThemeChange}>
@@ -28,7 +44,7 @@ export function AuthLanding({ theme, onThemeChange, onAuthorize }: {
       <span className="auth-card-mark">知</span>
       <h2>使用知乎账号登录</h2>
       <p>授权后即可同步你的公开账号信息，并开始保存学习脉络与路线进度。</p>
-      <button type="button" className="zhihu-authorize" onClick={() => setOauthNotice(resolveAuthSession())}>
+      <button type="button" className="zhihu-authorize" onClick={startOauth}>
         知乎授权登录<Icon name="arrow-right" size={18}/>
       </button>
       {oauthNotice && <p className="auth-unavailable" role="alert"><b>{oauthNotice.title}</b> {oauthNotice.message}</p>}

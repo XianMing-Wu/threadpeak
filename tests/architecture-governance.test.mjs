@@ -26,6 +26,12 @@ const providerKeys = [
   'ZHIHU_API_BASE_URL',
 ]
 
+const optionalOauthKeys = [
+  'ZHIHU_OAUTH_APP_ID',
+  'ZHIHU_OAUTH_APP_KEY',
+  'ZHIHU_OAUTH_REDIRECT_URI',
+]
+
 test('Cursor rules expose complete progressive-disclosure metadata', async () => {
   const actual = (await readdir(new URL('.cursor/rules/', root)))
     .filter((name) => name.endsWith('.mdc'))
@@ -86,9 +92,9 @@ test('real-provider configuration is server-only and examples contain no values'
     .filter(Boolean)
     .map((line) => line.split('='))
 
-  assert.deepEqual(entries.map(([key]) => key).sort(), providerKeys)
+  assert.deepEqual(entries.map(([key]) => key).sort(), [...providerKeys, ...optionalOauthKeys].sort())
   assert.ok(entries.every(([, value]) => value === ''), '.env.example must never contain secrets')
-  for (const key of providerKeys) {
+  for (const key of [...providerKeys, ...optionalOauthKeys]) {
     assert.ok(backend.includes(key), `${key} missing from backend rule`)
     assert.ok(readme.includes(key), `${key} missing from README`)
     assert.ok(audit.includes(key), `${key} missing from reference audit`)

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Icon, MountainMark } from '../icons'
 import { ACTIVE_HISTORY_KEY, HISTORY_CHANGE_EVENT, readChatHistory } from '../history'
 import { resolveAccountIdentity } from '../resolve-account-identity'
+import { requestAuthSession } from '../runtime/request-auth-session'
 import { resolveHistoryReopen, type HistoryReopenResolution } from '../resolve-history-reopen'
 
 function profileMenuBox(button: HTMLElement, collapsed: boolean) {
@@ -15,7 +16,7 @@ function profileMenuBox(button: HTMLElement, collapsed: boolean) {
 export type RouteName = 'home' | 'chat' | 'paths' | 'path-3d' | 'knowledge' | 'knowledge-detail' | 'session-learning' | 'authors' | 'settings'
 
 const compactRoutes = new Set<RouteName>(['chat','knowledge','knowledge-detail','paths','path-3d','session-learning','authors'])
-const accountIdentity = resolveAccountIdentity()
+const prototypeAccount = resolveAccountIdentity()
 
 function go(route: RouteName) { location.hash = route }
 
@@ -26,6 +27,7 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
   const [activeHistoryId,setActiveHistoryId]=useState(()=>sessionStorage.getItem(ACTIVE_HISTORY_KEY)??'')
   const [reopen,setReopen]=useState<HistoryReopenResolution|null>(null)
   const [profileOpen,setProfileOpen]=useState(false)
+  const [accountIdentity,setAccountIdentity]=useState(prototypeAccount)
   const [menuBox,setMenuBox]=useState<{left:number;bottom:number}|null>(null)
   const previousRoute=useRef(route)
   const profileRef=useRef<HTMLDivElement>(null)
@@ -58,6 +60,17 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
     return()=>{removeEventListener('pointerdown',close);removeEventListener('keydown',escape)}
   },[])
   useEffect(()=>{setHistory(readChatHistory());setActiveHistoryId(sessionStorage.getItem(ACTIVE_HISTORY_KEY)??'')},[])
+  useEffect(()=>{
+    void requestAuthSession().then((session) => {
+      if (session.kind !== 'authenticated') return
+      setAccountIdentity({
+        kind: 'unavailable',
+        reason: 'missing-identity-provider',
+        title: '知乎已授权',
+        message: '当前会话来自服务端知乎 OAuth。官方文档未给出用户信息接口字段时，不编造姓名。',
+      })
+    })
+  },[])
   useEffect(()=>{const refresh=()=>{setHistory(readChatHistory());setActiveHistoryId(sessionStorage.getItem(ACTIVE_HISTORY_KEY)??'')};addEventListener(HISTORY_CHANGE_EVENT,refresh);addEventListener('storage',refresh);return()=>{removeEventListener(HISTORY_CHANGE_EVENT,refresh);removeEventListener('storage',refresh)}},[])
   const navigate=(target:RouteName)=>{if(compactRoutes.has(target))setCollapsed(true);go(target)}
   const active = route === 'chat' ? 'home' : route === 'path-3d' || route === 'session-learning' ? 'paths' : route === 'knowledge-detail' ? 'knowledge' : route

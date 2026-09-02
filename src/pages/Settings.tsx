@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { clearChatHistory } from '../history'
 import { resolveSettingsIdentity, resolveSettingsSources } from '../resolve-settings-identity'
+import { requestAuthSession } from '../runtime/request-auth-session'
 
 function SettingsIdentityUnavailable() {
   const resolution = resolveSettingsIdentity()
@@ -22,6 +23,7 @@ export function SettingsPage() {
   const [confirm,setConfirm]=useState(false)
   const [thinking,setThinking]=useState<'快速回答'|'智能思考'|'深度思考'>('快速回答')
   const [notice,setNotice]=useState('')
+  const [oauthSignedIn,setOauthSignedIn]=useState(false)
 
   useEffect(()=>{
     document.documentElement.dataset.density=compact?'compact':'comfortable'
@@ -37,6 +39,11 @@ export function SettingsPage() {
     addEventListener('keydown',escape)
     return()=>removeEventListener('keydown',escape)
   },[])
+  useEffect(()=>{
+    void requestAuthSession().then((session) => {
+      setOauthSignedIn(session.kind === 'authenticated')
+    })
+  },[])
 
   const cycleThinking=()=>setThinking((value)=>value==='快速回答'?'智能思考':value==='智能思考'?'深度思考':'快速回答')
 
@@ -44,7 +51,9 @@ export function SettingsPage() {
     <header><h1>设置</h1></header>
     <section>
       <h2>个人信息</h2>
-      <SettingsIdentityUnavailable/>
+      {oauthSignedIn
+        ? <article className="setting-row"><div><b>知乎已授权</b><small>当前会话来自服务端 OAuth。官方文档未给出用户信息接口字段时，不编造姓名或邮箱。</small></div></article>
+        : <SettingsIdentityUnavailable/>}
       <h2>回答偏好</h2>
       <div className="setting-row"><div><b>默认思考深度</b><small>{thinking}</small></div><button aria-label="切换默认思考深度" onClick={cycleThinking}>{thinking}</button></div>
       <h2>资料范围</h2>

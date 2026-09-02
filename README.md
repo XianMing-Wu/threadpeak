@@ -54,6 +54,9 @@ ZHIHU_API_BASE_URL
 DEEPSEEK_API_KEY
 DEEPSEEK_BASE_URL
 DEEPSEEK_MODEL_NAME
+ZHIHU_OAUTH_APP_ID
+ZHIHU_OAUTH_APP_KEY
+ZHIHU_OAUTH_REDIRECT_URI
 ```
 
 - `.env` 只由服务端 composition root 读取；React、Vite bundle 和浏览器不得读取、记录或回传这些变量。
@@ -76,7 +79,7 @@ npm run dev
 
 | 入口 | 当前原型职责 | 目标重构边界 |
 | --- | --- | --- |
-| 初始授权态 | 知乎授权视觉入口；无真实 OAuth 时显式失败，不再用延时动画冒充授权成功。进入本地原型仍可用，不得锁死整站 | 服务端 OAuth/session，密钥与 token 不进浏览器 |
+| 初始授权态 | 知乎授权走 `/api/auth/zhihu/start`；缺 OAuth 应用凭证显式失败，不把 Access Secret 当成用户登录。进入本地原型仍可用 | 服务端 OAuth/session，`app_key` 与 access_token 不进浏览器 |
 | `#home` | 路线/图文入口、Composer、示例推荐；侧栏历史重开无真实 conversation GET 时显式失败，列表只标本地草稿；侧栏账号无真实身份时只标本地原型，不再写死姓名；Composer 附件/资料范围无真实 provider 时显式失败，不再用本地文件或已上传 PDF 冒充来源 | command/query 进入同源 API，不在页面生成领域事实 |
 | `#chat` | 普通回答经 `/api/answers` 调知乎+DeepSeek，失败显式报错；图文无 VisualizationArtifact 时显式失败；缺发送上下文不再预写「性价比高的显卡」；路线模式走 `/api/paths/generate/stream`，`path.ready` 必须通过 renderer 校验 | 普通回答接 AnswerPipeline；路线接 PathStreamEvent/CAS，图文接真实 visual artifact；打开会话走 committed GET |
 | `#paths` | 我的路线/示例路线列表 | 读取 committed path projection |

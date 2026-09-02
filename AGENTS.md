@@ -71,7 +71,7 @@ Cursor 会自动读取根 `AGENTS.md`，并按 `.mdc` frontmatter 的 `globs` �
 - 产品 `#settings` 不再把写死用户或已上传 PDF 资料范围当成已提交 identity/sources；缺 provider 显式失败。密度、动效、思考深度仍是本地偏好。不得把原型登录态锁死整站。仍不是服务端 OAuth/session 或 committed source scope。
 - 产品侧栏账号不再把写死姓名当成已提交身份；缺 provider 时只标本地原型账号，主题和退出仍可用。不得锁死整站登录。仍不是服务端 OAuth/session。
 - 产品 Composer 不再把本地文件名或「已上传 PDF」资料范围当成已提交来源；缺 provider 显式失败。思考深度仍是本地偏好。仍不是 committed source/attachment scope。
-- 产品授权页不再用 900ms「正在连接知乎」冒充 OAuth 成功；缺 provider 显式失败。进入本地原型仍可用，不得锁死整站登录。仍不是服务端 OAuth/session。
+- 产品授权页经 `/api/auth/zhihu/start` 走官方 Authorization Code Flow；缺 `ZHIHU_OAUTH_APP_ID` / `APP_KEY` / `REDIRECT_URI` 显式失败，不把 Access Secret 或延时动画当成用户登录。进入本地原型仍可用。官方文档未给出用户信息字段时不编造姓名。仍不是 PostgreSQL session / PKCE（平台未文档化 PKCE）。
 - 路径/知识算法实现与领域文档仍位于 `../算法/`，是实现/合同证据，不代表本 Web 已纵向接通。
 - `prototype`、`contracted`、`implemented`、`integrated`、`production-ready` 必须按当前证据逐级判断；目录存在、类型检查、fixture 或历史测试数不能越级证明完成。
 

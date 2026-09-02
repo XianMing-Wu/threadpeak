@@ -28,7 +28,7 @@ ZhihuDirectAnswerProvider
 
 ## 真实 provider 与环境配置
 
-- 本地服务端从项目根 `.env` 读取并在 composition root 一次性校验：`ZHIHU_ACCESS_SECRET`、`ZHIHU_API_BASE_URL`、`DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、`DEEPSEEK_MODEL_NAME`。生产部署使用等价 secret manager 注入；业务模块不得自行读取环境变量。
+- 本地服务端从项目根 `.env` 读取并在 composition root 一次性校验：`ZHIHU_ACCESS_SECRET`、`ZHIHU_API_BASE_URL`、`DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、`DEEPSEEK_MODEL_NAME`。知乎第三方登录另需可选 `ZHIHU_OAUTH_APP_ID`、`ZHIHU_OAUTH_APP_KEY`、`ZHIHU_OAUTH_REDIRECT_URI`；缺这三项时 OAuth 显式失败，不得用 Access Secret 冒充用户登录。生产部署使用等价 secret manager 注入；业务模块不得自行读取环境变量。
 - `.env` 永不提交、复制进镜像、打印、回传 UI 或写入日志；仓库只保留无值的 `.env.example`。任何浏览器代码不得知道 key、provider base URL 或 model name。
 - 用户触发的回答、路径、知识、AskAuthor 与 AuthorSearch 运行时必须调用真实 provider adapter。mock/fake/stub/fixture adapter 只允许在 unit/contract 测试 composition 中实例化，不得进入生产依赖图或构建产物。
 - 必需变量缺失、为空或格式无效时 readiness 失败并返回安全配置错误；禁止切换成本地固定数据、预写回答、固定作者或“看起来成功”的 fallback。
@@ -85,6 +85,7 @@ ZhihuDirectAnswerProvider
 - 未知与跨 owner 资源不产生可枚举差异。
 - 每个 SSE/NDJSON/resource stream 在订阅前授权具体 resource；cursor 绑定 stream/resource/tenant/schema。
 - 禁止 tenant-wide event read 后在浏览器过滤。当前知识 `eventsAfter` 若仍 tenant-wide，是阻断级缺陷；修复前不能标 implemented。
+- 知乎用户登录按开放平台 OAuth 2.0 Authorization Code Flow：`https://openapi.zhihu.com/authorize`，回调读取 `authorization_code`，服务端 `POST https://openapi.zhihu.com/access_token` 换 token。`app_key` 与 `access_token` 不得进入浏览器。Access Secret 只调用数据 API。官方文档未列出 PKCE 参数，本切片用 `state` + HttpOnly cookie 防 CSRF，不发明未文档化的 user-info 字段。
 - OAuth/PKCE、secure cookie、CSRF、CORS 与 session rotation 必须按真实部署测试。
 
 ## 不可信内容与隐私

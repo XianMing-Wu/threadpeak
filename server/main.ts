@@ -6,6 +6,8 @@ import { createCompositionApp, listenLiveServer } from './http.ts'
 import { createLiveService } from './live-service.ts'
 import { createUnavailableAuthorNetwork, type HttpPort } from './ports.ts'
 import { createZhihuDirectAdapter, createZhihuSearchAdapter } from './zhihu.adapter.ts'
+import { resolveOauthConfig } from './identity/oauth-config.ts'
+import { createOauthService } from './identity/oauth.ts'
 
 function loadDotEnv(filePath: string): Record<string, string | undefined> {
   const env: Record<string, string | undefined> = { ...process.env }
@@ -59,9 +61,16 @@ const service = config.ok
   })
   : undefined
 
+const oauth = createOauthService({
+  oauth: resolveOauthConfig(env),
+  http,
+  clock,
+})
+
 const server = await createCompositionApp({
   config,
   http,
+  oauth,
   ...(service ? { service } : {}),
   ...(config.ok && config.config.pathGenerateUpstream
     ? { pathGenerateUpstream: config.config.pathGenerateUpstream }
