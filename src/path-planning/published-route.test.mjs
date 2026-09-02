@@ -108,3 +108,31 @@ test('Chat generate session timeout fail-closes when fetch ignores abort', async
   assert.match(view.error, /无法连接本地路径生成服务或等待超时/)
   session.teardown()
 })
+
+test('Chat generate session publishes only a validated path.ready document', async () => {
+  const event = {
+    eventId: '11111111-1111-4111-8111-111111111111',
+    occurredAt: '2030-01-02T03:04:05.000Z',
+    traceId: 'path-stream-test',
+    schemaVersion: 1,
+    requestId: '22222222-2222-4222-8222-222222222222',
+    sessionId: '33333333-3333-4333-8333-333333333333',
+    revision: 1,
+    seq: 1,
+    at: '2030-01-02T03:04:05.000Z',
+    type: 'path.ready',
+    document: rendererDocument,
+  }
+  const session = createPathGenerateSession({
+    fetch: async () => ({
+      ok: true,
+      status: 200,
+      text: async () => `${JSON.stringify(event)}\n`,
+    }),
+    now: () => 1,
+  })
+  session.submitNewGoal('给我制定一条机器学习数学路线')
+  const view = await waitFor(session, (next) => next.runState === 'ready')
+  assert.equal(view.document?.id, rendererDocument.id)
+  session.teardown()
+})

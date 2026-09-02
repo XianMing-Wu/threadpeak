@@ -98,7 +98,7 @@ export function decodeStreamPayload(input: unknown, fallbackTraceId = DECODE_TRA
     ?.trim()
   const meta = StreamEventMetaSchema.safeParse({
     resourceId,
-    sequence: record.sequence,
+    sequence: typeof record.sequence === 'number' ? record.sequence : record.seq,
   })
   if (!meta.success) {
     return {

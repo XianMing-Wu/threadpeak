@@ -102,26 +102,46 @@ export function createApiClient(ports: { fetch: FetchPort }) {
     },
 
     async *readNdjson(url: string, traceId: string): AsyncGenerator<DecodeResult<DecodedStreamEvent>> {
+      yield* this.postNdjson({ url, method: 'GET', traceId })
+    },
+
+    async *postNdjson(spec: {
+      url: string
+      method?: 'GET' | 'POST'
+      headers?: Record<string, string>
+      body?: string
+      signal?: AbortSignal
+      traceId: string
+    }): AsyncGenerator<DecodeResult<DecodedStreamEvent>> {
       try {
-        const response = await ports.fetch(url, { method: 'GET' })
+        const response = await ports.fetch(spec.url, {
+          method: spec.method ?? 'POST',
+          headers: spec.headers,
+          body: spec.body,
+          signal: spec.signal,
+        })
         if (!response.ok) {
           const text = await response.text()
-          const decoded = decodePublicError(safeJson(text), traceId)
+          const decoded = decodePublicError(safeJson(text), spec.traceId)
           yield {
             ok: false,
             error: decoded.ok
               ? decoded.value
-              : transportError('NDJSON request failed with an unsafe error body.', traceId),
+              : transportError('NDJSON request failed with an unsafe error body.', spec.traceId),
           }
           return
         }
         if (response.body && typeof response.body.getReader === 'function') {
-          yield* iterateNdjsonStream(response.body, traceId)
+          yield* iterateNdjsonStream(response.body, spec.traceId)
           return
         }
-        yield* iterateNdjson(await response.text(), traceId)
-      } catch {
-        yield { ok: false, error: transportError('NDJSON request failed before a response body was available.', traceId) }
+        yield* iterateNdjson(await response.text(), spec.traceId)
+      } catch (cause) {
+        if (isAbort(cause, spec.signal)) {
+          yield { ok: false, error: transportError('Request was aborted.', spec.traceId, false) }
+          return
+        }
+        yield { ok: false, error: transportError('NDJSON request failed before a response body was available.', spec.traceId) }
       }
     },
   }

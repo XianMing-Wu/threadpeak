@@ -30,6 +30,7 @@ export const STREAM_RESOURCE_KEYS = [
   'aggregateId',
   'pathSessionId',
   'sessionId',
+  'requestId',
   'conversationId',
   'knowledgeId',
   'knowledgeGraphId',

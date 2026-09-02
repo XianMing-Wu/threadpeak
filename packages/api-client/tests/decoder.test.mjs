@@ -17,6 +17,21 @@ const streamEvent = {
   type: 'path.delta',
 }
 
+test('stream decoder accepts path seq and requestId when sessionId is still null', () => {
+  const decoded = client.decodeNdjsonLine(JSON.stringify({
+    ...envelope,
+    requestId: '33333333-3333-4333-8333-333333333333',
+    sessionId: null,
+    seq: 1,
+    type: 'stage.started',
+    stage: 'validate',
+  }))
+  assert.equal(decoded.ok, true)
+  if (!decoded.ok || !('value' in decoded)) throw new Error('expected event')
+  assert.equal(decoded.value.resourceId, '33333333-3333-4333-8333-333333333333')
+  assert.equal(decoded.value.sequence, 1)
+})
+
 test('stream decoder accepts aggregateId and rejects sequence 0', () => {
   const decoded = client.decodeNdjsonLine(JSON.stringify({
     ...envelope,
