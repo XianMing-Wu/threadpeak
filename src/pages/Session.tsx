@@ -38,8 +38,9 @@ import {
   startLearningConversation,
   syncConversationGraph,
 } from '../workspace/store'
-import type { LearningTurn } from '../workspace/types'
+import type { FirstLesson, LearningTurn } from '../workspace/types'
 import { resolveFirstLesson, resolveLearningEntry } from '../session/resolve-learning-entry'
+import { lessonFromCanonical, requestCanonicalAnswer } from '../session/request-canonical-answer'
 
 function readLearningNav() {
   return { routeId: readActiveRouteId(), conceptId: readActiveConceptId() }
@@ -101,11 +102,48 @@ export function SessionPage() {
     route: { id: route.id, owner: route.owner },
     ...(cataloged ? { catalogLesson: cataloged } : {}),
   })
+  if (route.owner === 'mine') {
+    return <CanonicalSessionGate key={`${entry.routeId}::${entry.conceptId}`} routeId={entry.routeId} conceptId={entry.conceptId}/>
+  }
   if (firstLesson.kind === 'unavailable') return <SessionUnavailable title={firstLesson.title} message={firstLesson.message}/>
   return <SessionLearning key={`${entry.routeId}::${entry.conceptId}`} routeId={entry.routeId} conceptId={entry.conceptId}/>
 }
 
-function SessionLearning({ routeId, conceptId }: { routeId: string; conceptId: string }) {
+function CanonicalSessionGate({ routeId, conceptId }: { routeId: string; conceptId: string }) {
+  const title = conceptTitle(blueprintOf(routeId), conceptId) || conceptId
+  const [lesson, setLesson] = useState<FirstLesson | null>(null)
+  const [error, setError] = useState<{ title: string; message: string } | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    void requestCanonicalAnswer({ routeId, conceptId, title }).then((result) => {
+      if (cancelled) return
+      if (result.kind !== 'completed') {
+        setError({ title: result.title, message: result.message })
+        return
+      }
+      setLesson(lessonFromCanonical(title, result.text))
+    })
+    return () => { cancelled = true }
+  }, [conceptId, routeId, title])
+  if (error) return <SessionUnavailable title={error.title} message={error.message}/>
+  if (!lesson) {
+    return <ProductWorkspace active="paths" page="session-learning">
+      <main className="learning-session">
+        <section className="lesson-chat">
+          <div className="conversation" role="status" aria-live="polite">
+            <article>
+              <h2>正在生成这次概念的首次回复</h2>
+              <p>首次回复会经服务端知乎检索和 DeepSeek settle，之后永久复用，不会因此创建知识脉络。</p>
+            </article>
+          </div>
+        </section>
+      </main>
+    </ProductWorkspace>
+  }
+  return <SessionLearning routeId={routeId} conceptId={conceptId} lesson={lesson}/>
+}
+
+function SessionLearning({ routeId, conceptId, lesson: lessonOverride }: { routeId: string; conceptId: string; lesson?: FirstLesson }) {
   const selectRootRef = useRef<HTMLDivElement>(null)
   const blueprint = blueprintOf(routeId)
   const title = conceptTitle(blueprint, conceptId) || conceptId
@@ -119,7 +157,7 @@ function SessionLearning({ routeId, conceptId }: { routeId: string; conceptId: s
   const [mode,setMode] = useState<AssistantMode>(seed?.mode ?? '')
   const [value,setValue] = useState(seed?.value ?? '')
   const [turns,setTurns] = useState<LearningTurn[]>(seed?.turns ?? [])
-  const lesson = getLesson(routeId, conceptId) ?? {
+  const lesson = lessonOverride ?? getLesson(routeId, conceptId) ?? {
     heading: title,
     paragraphs: [],
     placeholder: `围绕“${title}”继续提问，或选择上方模式深入理解…`,

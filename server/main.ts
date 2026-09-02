@@ -8,6 +8,7 @@ import { createUnavailableAuthorNetwork, type HttpPort } from './ports.ts'
 import { createZhihuDirectAdapter, createZhihuSearchAdapter } from './zhihu.adapter.ts'
 import { resolveOauthConfig } from './identity/oauth-config.ts'
 import { createOauthService } from './identity/oauth.ts'
+import { createCanonicalAnswerStore } from './knowledge/canonical-answer.ts'
 
 function loadDotEnv(filePath: string): Record<string, string | undefined> {
   const env: Record<string, string | undefined> = { ...process.env }
@@ -66,11 +67,13 @@ const oauth = createOauthService({
   http,
   clock,
 })
+const canonical = createCanonicalAnswerStore()
 
 const server = await createCompositionApp({
   config,
   http,
   oauth,
+  canonical,
   ...(service ? { service } : {}),
   ...(config.ok && config.config.pathGenerateUpstream
     ? { pathGenerateUpstream: config.config.pathGenerateUpstream }

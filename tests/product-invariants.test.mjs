@@ -13,8 +13,14 @@ const authors = await readFile(new URL('../src/pages/Authors.tsx', import.meta.u
 const useAnnotations = await readFile(new URL('../src/session/useAnnotations.ts', import.meta.url), 'utf8')
 const askAuthors = await readFile(new URL('../src/session/ask-authors.ts', import.meta.url), 'utf8')
 const liveService = await readFile(new URL('../server/live-service.ts', import.meta.url), 'utf8')
+const canonical = await readFile(new URL('../server/knowledge/canonical-answer.ts', import.meta.url), 'utf8')
 
 test('routes do not create knowledge and failed session turns do not write graphs', () => {
+  assert.match(session, /requestCanonicalAnswer/)
+  assert.match(session, /不会因此创建知识脉络/)
+  assert.match(canonical, /reused: true/)
+  assert.match(canonical, /inflight/)
+  assert.doesNotMatch(canonical, /KnowledgeGraph/)
   assert.match(session, /requestOrdinaryAnswer/)
   assert.match(session, /requestAskAuthor/)
   assert.match(session, /appendLearningTurnToGraph/)

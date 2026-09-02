@@ -8,9 +8,10 @@ import { buildPathApp } from './path/http.ts'
 import { InMemoryPathSessionStore } from './path/service.ts'
 import { registerAuthRoutes } from './identity/http.ts'
 import type { OauthService } from './identity/oauth.ts'
+import type { CanonicalAnswerStore } from './knowledge/canonical-answer.ts'
 
 const LISTEN_HOST = '127.0.0.1'
-const LISTEN_PORT = 4312
+const LISTEN_PORT = 5033
 
 type Json = Record<string, unknown>
 
@@ -20,6 +21,7 @@ export type LiveHttpPorts = {
   pathGenerateUpstream?: string
   http: HttpPort
   oauth?: OauthService
+  canonical?: CanonicalAnswerStore
 }
 
 function traceIdOf(request: FastifyRequest): string {
@@ -145,6 +147,49 @@ export function registerLiveRoutes(app: FastifyInstance, ports: LiveHttpPorts) {
       query: typeof payload.query === 'string' ? payload.query : '',
     })
     return sendJson(reply, result.kind === 'failed' ? 503 : 200, { ...result, traceId })
+  })
+
+  app.get('/api/learning/canonical-answer', async (request, reply) => {
+    const traceId = traceIdOf(request)
+    if (!ports.canonical) {
+      return sendJson(reply, 503, { kind: 'failed', code: 'CONFIG_INVALID', message: '首次回复存储尚未接通。', traceId })
+    }
+    const query = request.query as Record<string, unknown>
+    const routeId = typeof query.routeId === 'string' ? query.routeId : ''
+    const conceptId = typeof query.conceptId === 'string' ? query.conceptId : ''
+    const found = ports.canonical.get(routeId, conceptId)
+    if (!found) return sendJson(reply, 404, { kind: 'missing', traceId })
+    return sendJson(reply, 200, { kind: 'completed', reused: true, ...found, traceId })
+  })
+
+  app.post('/api/learning/canonical-answer', async (request, reply) => {
+    const traceId = traceIdOf(request)
+    if (!ports.config.ok || !ports.service || !ports.canonical) {
+      return sendJson(reply, 503, {
+        kind: 'failed',
+        code: 'CONFIG_INVALID',
+        message: 'Required Zhihu or DeepSeek configuration is missing.',
+        traceId,
+      })
+    }
+    const payload = asRecord(request.body) ?? {}
+    const live = ports.service
+    const store = ports.canonical
+    const result = await store.ensure({
+      routeId: typeof payload.routeId === 'string' ? payload.routeId : '',
+      conceptId: typeof payload.conceptId === 'string' ? payload.conceptId : '',
+      title: typeof payload.title === 'string' ? payload.title : '',
+      generate: (input) => live.ordinaryAnswer(input),
+    })
+    if (result.kind !== 'completed') {
+      return sendJson(reply, 503, { ...result, traceId })
+    }
+    return sendJson(reply, 200, {
+      kind: 'completed',
+      reused: result.reused,
+      ...result.answer,
+      traceId,
+    })
   })
 }
 

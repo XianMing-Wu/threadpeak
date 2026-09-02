@@ -4,6 +4,7 @@ export const LIVE_READY_URL = '/api/ready'
 export const LIVE_ANSWER_URL = '/api/answers'
 export const LIVE_ASK_AUTHOR_URL = '/api/ask-author'
 export const LIVE_AUTHOR_SEARCH_URL = '/api/authors/search'
+export const LIVE_CANONICAL_ANSWER_URL = '/api/learning/canonical-answer'
 
 export function createBrowserFetchPort(): FetchPort {
   return async (url, init) => {

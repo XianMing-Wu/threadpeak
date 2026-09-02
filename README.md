@@ -86,7 +86,7 @@ npm run dev
 | `#path-3d` | WebGL renderer；用户路线缺校验文档则显式失败，不再回退演示路径 | 只消费已校验 document 与 server handoff，不保存学习进度 |
 | `#knowledge` | 我的/示例知识脉络列表 | 读取 owner-scoped committed projection |
 | `#knowledge-detail` | 只读知识画布；我的路线不得内存 `growGraph` 或 persist | 只渲染 revision，不从消息或布局发明节点和边 |
-| `#session-learning` | 未选择或概念不属于路线时显式失败；普通回答经 `/api/answers`；失败不得写知识图；问博主经 `/api/ask-author`，旧「马同学」storage 被拒绝；示例仍用标记 catalog lesson | 严格执行 canonical 首答在前、知识图在后 |
+| `#session-learning` | 未选择或概念不属于路线时显式失败；我的路线首次回复经 `/api/learning/canonical-answer` 永久复用，失败不 settle、不建图；普通回答经 `/api/answers`；问博主经 `/api/ask-author` | 严格执行 canonical 首答在前、知识图在后 |
 | `#authors` | 搜索经 `/api/authors/search`：网络投影未接通则失败，不会去知乎凑人；页面不再把未裁决拓扑写成产品事实 | 搜索与网络为两个 feature，执行不同检索顺序和写入规则 |
 | `#settings` | 前端偏好与确认界面；身份与资料范围无真实 provider 时显式失败，不再写死登录用户或已上传 PDF | 偏好不能改变领域合同；身份与来源走服务端 session / committed scope |
 
