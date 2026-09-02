@@ -71,28 +71,28 @@
 .input-motion-frame::before {
   background:
     radial-gradient(
-      circle 8px at var(--tp-input-orb-x) var(--tp-input-orb-y),
-      rgba(253, 220, 204, .58) 0%,
-      rgba(253, 228, 216, .2) 46%,
-      transparent 74%
+      circle 5px at var(--tp-input-orb-x) var(--tp-input-orb-y),
+      rgba(252, 214, 196, .88) 0%,
+      rgba(253, 224, 210, .34) 55%,
+      transparent 78%
     ),
     radial-gradient(
-      circle 16px at var(--tp-input-orb-x) var(--tp-input-orb-y),
-      rgba(255, 224, 210, .26) 0%,
-      rgba(255, 234, 224, .08) 42%,
-      transparent 70%
+      circle 14px at var(--tp-input-orb-x) var(--tp-input-orb-y),
+      rgba(255, 220, 204, .42) 0%,
+      rgba(255, 232, 220, .12) 48%,
+      transparent 72%
     );
-  filter: blur(2.4px);
+  filter: blur(1.6px);
 }
 
 .input-motion-frame::after {
   background: radial-gradient(
-    circle 13px at var(--tp-input-orb-x) var(--tp-input-orb-y),
-    rgba(255, 214, 206, .2) 0%,
-    rgba(255, 228, 218, .07) 40%,
-    transparent 68%
+    circle 11px at var(--tp-input-orb-x) var(--tp-input-orb-y),
+    rgba(255, 208, 196, .28) 0%,
+    rgba(255, 224, 214, .08) 42%,
+    transparent 70%
   );
-  filter: blur(5px);
+  filter: blur(4px);
   animation-delay: -.32s;
 }
 
@@ -122,25 +122,25 @@ html[data-theme="dark"] .input-motion-frame {
 html[data-theme="dark"] .input-motion-frame::before {
   background:
     radial-gradient(
-      circle 8px at var(--tp-input-orb-x) var(--tp-input-orb-y),
-      rgba(255, 214, 198, .62) 0%,
-      rgba(255, 222, 208, .22) 46%,
-      transparent 74%
+      circle 5px at var(--tp-input-orb-x) var(--tp-input-orb-y),
+      rgba(255, 210, 192, .9) 0%,
+      rgba(255, 222, 208, .36) 55%,
+      transparent 78%
     ),
     radial-gradient(
-      circle 16px at var(--tp-input-orb-x) var(--tp-input-orb-y),
-      rgba(255, 216, 200, .3) 0%,
-      rgba(255, 228, 216, .1) 42%,
-      transparent 70%
+      circle 14px at var(--tp-input-orb-x) var(--tp-input-orb-y),
+      rgba(255, 214, 198, .46) 0%,
+      rgba(255, 228, 214, .14) 48%,
+      transparent 72%
     );
 }
 
 html[data-theme="dark"] .input-motion-frame::after {
   background: radial-gradient(
-    circle 13px at var(--tp-input-orb-x) var(--tp-input-orb-y),
-    rgba(255, 208, 200, .24) 0%,
-    rgba(255, 220, 212, .08) 40%,
-    transparent 68%
+    circle 11px at var(--tp-input-orb-x) var(--tp-input-orb-y),
+    rgba(255, 200, 188, .32) 0%,
+    rgba(255, 218, 208, .1) 42%,
+    transparent 70%
   );
 }
 
