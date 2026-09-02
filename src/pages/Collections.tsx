@@ -3,10 +3,11 @@ import { ProductWorkspace } from '../components/Shell'
 import { Icon } from '../icons'
 import { Path3DStage } from '../path-3d/path-3d-stage'
 import { KnowledgeCanvasPage } from './KnowledgeCanvas'
-import { NAV_EVENT, openConceptKnowledge, openKnowledge, openRoute, readActiveKnowledgeId, readKnowledgeConceptId, readKnowledgeListReturn } from '../workspace/nav'
+import { NAV_EVENT, openConceptKnowledge, openKnowledge, openRoute, readActiveKnowledgeId, readActiveRouteId, readKnowledgeConceptId, readKnowledgeListReturn } from '../workspace/nav'
 import { useLibrarySelector } from '../runtime/use-library-selector'
 import { selectKnowledgeCards, selectRouteCards } from '../runtime/library-read-model'
-import { getKnowledge, listConceptCards, useWorkspaceTick } from '../workspace/store'
+import { getKnowledge, getRoute, listConceptCards, useWorkspaceTick } from '../workspace/store'
+import { MineGraphCanvasPage } from '../knowledge-canvas/mine-graph-canvas'
 
 export function KnowledgePage() {
   const [section, setSection] = useState<'mine' | 'example'>('mine')
@@ -93,5 +94,13 @@ export function KnowledgeDetailPage() {
       removeEventListener('storage', sync)
     }
   }, [])
-  return conceptId ? <KnowledgeCanvasPage key={`${readActiveKnowledgeId()}:${conceptId}`}/> : <KnowledgeConceptsPage/>
+  if (!conceptId) return <KnowledgeConceptsPage/>
+  const routeId = readActiveRouteId()
+  const knowledge = getKnowledge(readActiveKnowledgeId())
+  const route = getRoute(routeId)
+  const owner = route?.owner || (knowledge?.routeId === routeId ? knowledge.owner : undefined)
+  if (owner === 'mine') {
+    return <MineGraphCanvasPage key={`${routeId}:${conceptId}`} routeId={routeId} conceptId={conceptId}/>
+  }
+  return <KnowledgeCanvasPage key={`${readActiveKnowledgeId()}:${conceptId}`}/>
 }

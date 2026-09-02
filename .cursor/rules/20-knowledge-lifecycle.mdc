@@ -25,7 +25,7 @@ validate_handoff → resolve_concept_scope → resolve_canonical_initial_answer
 4. 只有初始 `AnswerArtifact` 完整 settle、hash 固定且 outbox 同事务提交后，才创建 `bootstrap` graph job。
 5. 首答存在而 graph/root 缺失时只修复 graph job；绝不重新生成首答。
 6. 并发首次进入只有一个 generation owner；等待者订阅同一 resource 或读取同一 canonical。失败 attempt 可以重试但不能成为 canonical。
-7. 页面可先显示首答已完成、图谱生成中；只有 committed graph snapshot / bootstrap completed 后，知识卡和画布才 ready。当前 `server/knowledge/canonical-answer.ts` 只 settle 并复用首次回复，不创建 graph/root。
+7. 页面可先显示首答已完成、图谱生成中；只有 committed graph snapshot / bootstrap completed 后，知识卡和画布才 ready。当前 `server/knowledge/canonical-answer.ts` 只 settle 并复用首次回复；`server/knowledge/graph-surgeon.ts` 在 canonical 已 settle 后创建唯一 graph/root，即使 A1 为 0 draft。仍不是 PostgreSQL unique/CAS 或 A1 incremental。
 
 ## Canonical 首答与 graph/root
 
@@ -114,7 +114,7 @@ load_settled_answer → verify_job_kind → a1_extract → evaluate_draft
 
 ## 当前原型迁移与验收
 
-- `src/pages/Session.tsx + growGraph` 改为 concept entry / `POST /turns` / graph SSE；删除页面写图。无 route/concept 时 fail-closed，不得回退线性代数 fixture，也不得用 `defaultConceptId`、`draftFirstLesson` 或 `growGraph` 为用户路线发明首答/节点。进入时不得用 1800ms「正在准备」冒充生成。KnowledgeCanvas 不得对 mine 做内存 grow 或 persist。`migrateKnowledge` 不得改写 mine 的 lesson/图。
+- `src/pages/Session.tsx + growGraph` 改为 concept entry / `POST /turns` / graph SSE；删除页面写图。无 route/concept 时 fail-closed，不得回退线性代数 fixture，也不得用 `defaultConceptId`、`draftFirstLesson` 或 `growGraph` 为用户路线发明首答/节点。进入时不得用 1800ms「正在准备」冒充生成。我的路线经 `/api/learning/canonical-answer` settle 后走 `/api/learning/graph` bootstrap。KnowledgeCanvas 不得对 mine 做内存 grow 或 persist，只读 GraphSurgeon snapshot。`migrateKnowledge` 不得改写 mine 的 lesson/图。
 - `src/session/useAnnotations.ts` 只产生 Selector；贡献由 GraphSurgeon 落库。
 - `src/history.ts` 侧栏重开已 fail-closed，本地列表只是草稿缓存；改为 owner-scoped ConversationUseCases + GET。
 - 浏览器必须证明阶段顺序“生成首答 → 首答可读 → graph bootstrapping → ready”，以及并发首次进入、刷新、新对话、历史恢复和 graph 失败都复用同一首答。

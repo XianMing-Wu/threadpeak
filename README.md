@@ -75,7 +75,7 @@ npm run server
 npm run dev
 ```
 
-`npm run server` 在 `127.0.0.1:4312` 读取项目根 `.env` 并提供 `/api/answers`、`/api/ask-author`、`/api/authors/search` 与产品 `/api/paths/generate/stream`。缺配置时 readiness 失败，不会降级成 mock。Vite 把 `/api` 代理到该端口。打开 `http://127.0.0.1:4301/`。当前页面仍是迁移输入，不能因为服务端进程可启动就标 `integrated`：
+`npm run server` 在 `127.0.0.1:4312` 读取项目根 `.env` 并提供 `/api/answers`、`/api/ask-author`、`/api/authors/search`、`/api/learning/canonical-answer`、`/api/learning/graph` 与产品 `/api/paths/generate/stream`。缺配置时 readiness 失败，不会降级成 mock。Vite 把 `/api` 代理到该端口。打开 `http://127.0.0.1:4301/`。当前页面仍是迁移输入，不能因为服务端进程可启动就标 `integrated`：
 
 | 入口 | 当前原型职责 | 目标重构边界 |
 | --- | --- | --- |
@@ -85,8 +85,8 @@ npm run dev
 | `#paths` | 我的路线/示例路线列表 | 读取 committed path projection |
 | `#path-3d` | WebGL renderer；用户路线缺校验文档则显式失败，不再回退演示路径 | 只消费已校验 document 与 server handoff，不保存学习进度 |
 | `#knowledge` | 我的/示例知识脉络列表 | 读取 owner-scoped committed projection |
-| `#knowledge-detail` | 只读知识画布；我的路线不得内存 `growGraph` 或 persist | 只渲染 revision，不从消息或布局发明节点和边 |
-| `#session-learning` | 未选择或概念不属于路线时显式失败；我的路线首次回复经 `/api/learning/canonical-answer` 永久复用，失败不 settle、不建图；普通回答经 `/api/answers`；问博主经 `/api/ask-author` | 严格执行 canonical 首答在前、知识图在后 |
+| `#knowledge-detail` | 只读知识画布；我的路线只读 `/api/learning/graph`，不得内存 `growGraph` 或 persist | 只渲染 revision，不从消息或布局发明节点和边 |
+| `#session-learning` | 未选择或概念不属于路线时显式失败；我的路线首次回复经 `/api/learning/canonical-answer` 永久复用，settle 后经 `/api/learning/graph` bootstrap 唯一 root；失败不 settle、不建图；普通回答经 `/api/answers`；问博主经 `/api/ask-author` | 严格执行 canonical 首答在前、知识图在后 |
 | `#authors` | 搜索经 `/api/authors/search`：网络投影未接通则失败，不会去知乎凑人；页面不再把未裁决拓扑写成产品事实 | 搜索与网络为两个 feature，执行不同检索顺序和写入规则 |
 | `#settings` | 前端偏好与确认界面；身份与资料范围无真实 provider 时显式失败，不再写死登录用户或已上传 PDF | 偏好不能改变领域合同；身份与来源走服务端 session / committed scope |
 
@@ -123,7 +123,7 @@ npm run build
 
 ## 当前明确未完成
 
-- `guard_status` 可以是 verified：若干假成功入口已 fail-closed，并有服务端知乎/DeepSeek composition。对应领域的 `module_maturity` 仍是 `prototype`，因为还没有 committed GET、CAS、GraphSurgeon 或作者网络投影。
+- `guard_status` 可以是 verified：若干假成功入口已 fail-closed，并有服务端知乎/DeepSeek composition。GraphSurgeon bootstrap 的 `module_maturity` 是 `implemented`（内存 store、canonical 门、唯一 graph/root），不是 `integrated`。AnswerPipeline、A1 incremental、作者网络投影仍是 `prototype`。
 - 主产品仍包含本地 catalog、页面状态和浏览器草稿存储。RuntimeStore 目前只投影原型列表，不是服务端 read model。
 - 知乎授权、AnswerPipeline、PathStreamEvent/CAS、PostgreSQL、worker、outbox、SSE/projector 和 owner 隔离尚未纵向接通。单个 Web commit 也不能原子证明 `../PRODUCT_SPEC.md`、`../threadpeak-state-machines/` 与 `../算法/` 已同步。
 - 首答永久性、并发 singleflight、graph bootstrap/incremental、作者网络事件和精确历史恢复尚无生产数据库证据。

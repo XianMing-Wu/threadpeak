@@ -41,6 +41,7 @@ import {
 import type { FirstLesson, LearningTurn } from '../workspace/types'
 import { resolveFirstLesson, resolveLearningEntry } from '../session/resolve-learning-entry'
 import { lessonFromCanonical, requestCanonicalAnswer } from '../session/request-canonical-answer'
+import { requestGraphBootstrap } from '../session/request-graph-bootstrap'
 
 function readLearningNav() {
   return { routeId: readActiveRouteId(), conceptId: readActiveConceptId() }
@@ -112,38 +113,46 @@ export function SessionPage() {
 function CanonicalSessionGate({ routeId, conceptId }: { routeId: string; conceptId: string }) {
   const title = conceptTitle(blueprintOf(routeId), conceptId) || conceptId
   const [lesson, setLesson] = useState<FirstLesson | null>(null)
+  const [graphReady, setGraphReady] = useState(false)
+  const [phase, setPhase] = useState<'generating' | 'bootstrapping' | 'ready'>('generating')
   const [error, setError] = useState<{ title: string; message: string } | null>(null)
   useEffect(() => {
     let cancelled = false
-    void requestCanonicalAnswer({ routeId, conceptId, title }).then((result) => {
+    void (async () => {
+      const answer = await requestCanonicalAnswer({ routeId, conceptId, title })
       if (cancelled) return
-      if (result.kind !== 'completed') {
-        setError({ title: result.title, message: result.message })
+      if (answer.kind !== 'completed') {
+        setError({ title: answer.title, message: answer.message })
         return
       }
-      setLesson(lessonFromCanonical(title, result.text))
-    })
+      setLesson(lessonFromCanonical(title, answer.text))
+      setPhase('bootstrapping')
+      const graph = await requestGraphBootstrap({ routeId, conceptId, title })
+      if (cancelled) return
+      if (graph.kind === 'completed') setGraphReady(true)
+      setPhase('ready')
+    })()
     return () => { cancelled = true }
   }, [conceptId, routeId, title])
   if (error) return <SessionUnavailable title={error.title} message={error.message}/>
-  if (!lesson) {
+  if (!lesson || phase !== 'ready') {
     return <ProductWorkspace active="paths" page="session-learning">
       <main className="learning-session">
         <section className="lesson-chat">
           <div className="conversation" role="status" aria-live="polite">
             <article>
-              <h2>正在生成这次概念的首次回复</h2>
-              <p>首次回复会经服务端知乎检索和 DeepSeek settle，之后永久复用，不会因此创建知识脉络。</p>
+              <h2>{phase === 'bootstrapping' ? '首次回复已 settle，正在创建知识脉络根节点' : '正在生成这次概念的首次回复'}</h2>
+              <p>首次回复会经服务端知乎检索和 DeepSeek settle，之后永久复用。知识脉络只在首次回复 settle 之后由 GraphSurgeon 创建。</p>
             </article>
           </div>
         </section>
       </main>
     </ProductWorkspace>
   }
-  return <SessionLearning routeId={routeId} conceptId={conceptId} lesson={lesson}/>
+  return <SessionLearning routeId={routeId} conceptId={conceptId} lesson={lesson} graphReady={graphReady}/>
 }
 
-function SessionLearning({ routeId, conceptId, lesson: lessonOverride }: { routeId: string; conceptId: string; lesson?: FirstLesson }) {
+function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphReady = false }: { routeId: string; conceptId: string; lesson?: FirstLesson; graphReady?: boolean }) {
   const selectRootRef = useRef<HTMLDivElement>(null)
   const blueprint = blueprintOf(routeId)
   const title = conceptTitle(blueprint, conceptId) || conceptId
@@ -275,7 +284,7 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride }: { route
     annotations.create(authorQuestion.text, question, authorQuestion.nodeId || 'root')
     setAuthorQuestion(null)
   }
-  const knowledgeReady = Boolean(getKnowledgeByRoute(routeId))
+  const knowledgeReady = graphReady || Boolean(getKnowledgeByRoute(routeId))
   const placeholder = lesson.placeholder || `围绕“${title}”继续提问，或选择上方模式深入理解…`
 
   return <ProductWorkspace active="paths" page="session-learning">

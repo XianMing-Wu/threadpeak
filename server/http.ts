@@ -9,9 +9,10 @@ import { InMemoryPathSessionStore } from './path/service.ts'
 import { registerAuthRoutes } from './identity/http.ts'
 import type { OauthService } from './identity/oauth.ts'
 import type { CanonicalAnswerStore } from './knowledge/canonical-answer.ts'
+import type { GraphSurgeonStore } from './knowledge/graph-surgeon.ts'
 
 const LISTEN_HOST = '127.0.0.1'
-const LISTEN_PORT = 5033
+const LISTEN_PORT = 4312
 
 type Json = Record<string, unknown>
 
@@ -22,6 +23,7 @@ export type LiveHttpPorts = {
   http: HttpPort
   oauth?: OauthService
   canonical?: CanonicalAnswerStore
+  graph?: GraphSurgeonStore
 }
 
 function traceIdOf(request: FastifyRequest): string {
@@ -188,6 +190,48 @@ export function registerLiveRoutes(app: FastifyInstance, ports: LiveHttpPorts) {
       kind: 'completed',
       reused: result.reused,
       ...result.answer,
+      traceId,
+    })
+  })
+
+  app.get('/api/learning/graph', async (request, reply) => {
+    const traceId = traceIdOf(request)
+    if (!ports.graph) {
+      return sendJson(reply, 503, { kind: 'failed', code: 'CONFIG_INVALID', message: '知识脉络存储尚未接通。', traceId })
+    }
+    const query = request.query as Record<string, unknown>
+    const routeId = typeof query.routeId === 'string' ? query.routeId : ''
+    const conceptId = typeof query.conceptId === 'string' ? query.conceptId : ''
+    const found = ports.graph.get(routeId, conceptId)
+    if (!found) return sendJson(reply, 404, { kind: 'missing', traceId })
+    return sendJson(reply, 200, { kind: 'completed', reused: true, draftCount: 0, ...found, traceId })
+  })
+
+  app.post('/api/learning/graph', async (request, reply) => {
+    const traceId = traceIdOf(request)
+    if (!ports.graph) {
+      return sendJson(reply, 503, {
+        kind: 'failed',
+        code: 'CONFIG_INVALID',
+        message: '知识脉络存储尚未接通。',
+        traceId,
+      })
+    }
+    const payload = asRecord(request.body) ?? {}
+    const result = await ports.graph.bootstrap({
+      routeId: typeof payload.routeId === 'string' ? payload.routeId : '',
+      conceptId: typeof payload.conceptId === 'string' ? payload.conceptId : '',
+      title: typeof payload.title === 'string' ? payload.title : '',
+    })
+    if (result.kind !== 'completed') {
+      const status = result.code === 'INVALID_SCOPE' ? 400 : result.code === 'CANONICAL_MISSING' ? 409 : 503
+      return sendJson(reply, status, { ...result, traceId })
+    }
+    return sendJson(reply, 200, {
+      kind: 'completed',
+      reused: result.reused,
+      draftCount: result.draftCount,
+      ...result.graph,
       traceId,
     })
   })

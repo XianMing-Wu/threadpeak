@@ -9,6 +9,7 @@ import { createZhihuDirectAdapter, createZhihuSearchAdapter } from './zhihu.adap
 import { resolveOauthConfig } from './identity/oauth-config.ts'
 import { createOauthService } from './identity/oauth.ts'
 import { createCanonicalAnswerStore } from './knowledge/canonical-answer.ts'
+import { createGraphSurgeon } from './knowledge/graph-surgeon.ts'
 
 function loadDotEnv(filePath: string): Record<string, string | undefined> {
   const env: Record<string, string | undefined> = { ...process.env }
@@ -68,12 +69,14 @@ const oauth = createOauthService({
   clock,
 })
 const canonical = createCanonicalAnswerStore()
+const graph = createGraphSurgeon(canonical)
 
 const server = await createCompositionApp({
   config,
   http,
   oauth,
   canonical,
+  graph,
   ...(service ? { service } : {}),
   ...(config.ok && config.config.pathGenerateUpstream
     ? { pathGenerateUpstream: config.config.pathGenerateUpstream }

@@ -1,13 +1,14 @@
-# Architecture status — canonical first answer, Zhihu OAuth, path stream
+# Architecture status — GraphSurgeon bootstrap after canonical first answer
 
-- Time: 2026-09-02
-- Commits: `c0b70a9` canonical first answer; `6a45de0` Zhihu OAuth; `ddd77b1` server/path
+- Time: 2026-09-01
+- Commits: pending GraphSurgeon bootstrap on `main`; prior `c0b70a9` canonical first answer; `6a45de0` Zhihu OAuth; `ddd77b1` server/path
 - Environment: darwin, Node 24+, Vite 8, TypeScript 6
 - Maturity proposal:
   - `guard_status=verified` for Session/Chat/AskAuthor/AuthorSearch/Path document/stream cursor false-success closures
-  - path generate `module_maturity=implemented` for in-process PathStreamEvent composition; not `integrated` (no PostgreSQL/CAS, live generateCandidates can still fail closed)
-  - identity OAuth `module_maturity=implemented` for authorization-code start/callback/session cookie; not `integrated` (no PKCE in official docs, no user-info schema, memory session)
-  - `module_maturity=prototype` for AnswerPipeline, GraphSurgeon, author network projector
+  - path generate `module_maturity=implemented` (in-process PathStreamEvent; not `integrated`)
+  - identity OAuth `module_maturity=implemented` (authorization-code; not `integrated`)
+  - GraphSurgeon bootstrap `module_maturity=implemented` (memory store, canonical gate, unique graph/root, A1 treated as 0 drafts); not `integrated` (no PostgreSQL unique/CAS, no A1 incremental, no committed conversation GET)
+  - `module_maturity=prototype` for AnswerPipeline, author network projector
 
 ## Commands
 
@@ -15,36 +16,38 @@
 | --- | --- |
 | `npm run check` | 0 |
 | `npm run check:architecture` | 0 |
-| `npm run check:contracts` | 0 (16 tests) |
+| `npm run check:contracts` | 0 (17 tests) |
 | `npm run check:product-invariants` | 0 (10 tests) |
-| `npm test` | 0 (154 tests) |
+| `npm test` | 0 (181 tests) |
 | `npm run build` | 0 |
 
-## Live HTTP
+## Live HTTP (`127.0.0.1:4312`)
 
-- `GET /ready` → 200, `ready=true`
-- `POST /api/paths/generate` without `PATH_GENERATE_UPSTREAM` → 503 `providers_unavailable`
-- `POST /api/authors/search` → 503 `NETWORK_UNAVAILABLE` (network projector missing; no Zhihu fallback)
-- `POST /api/answers` → 200 `completed`, `evidenceCount=8` via Zhihu search + DeepSeek
-- `POST /api/ask-author` → 200 `direct` 刘看山 fallback; Liu is not an author identity
+- Accidental `5033` / Vite `5032` remaps reverted to `4312` / `4301`
+- `GET /api/learning/graph?routeId=live-route&conceptId=live-concept` before canonical → 404 `missing`
+- `POST /api/learning/graph` before canonical → 409 `CANONICAL_MISSING`
+- `POST /api/learning/canonical-answer` first → 200 `reused=false`, `contentHash=56137d02…`, `evidenceCount=8`
+- `POST /api/learning/graph` first → 200 `reused=false`, `revision=1`, `draftCount=0`, one `root`, same hash
+- `POST /api/learning/graph` second → 200 `reused=true`, same `graphId` / hash / revision
+- `POST /api/learning/canonical-answer` second → 200 `reused=true`, same hash (graph bootstrap did not regenerate the first answer)
+
+## Browser
+
+- `#session-learning` without route/concept fail-closes (no linear-algebra default)
+- Mine concept entry reuses canonical first answer, then GraphSurgeon root; 知识脉络 shows structural root bound to the same hash
+- Example `#knowledge-detail` canvas and example `#path-3d` still open
+- `#path-3d` for a mine route without a validated document fail-closes and does not fall back to the demo path
 
 ## What this slice proves
 
-- Server composition reads `.env` for Zhihu + DeepSeek; missing config fails `/ready`
-- Zhihu login follows official Authorization Code Flow; missing `ZHIHU_OAUTH_*` returns 503 on `/api/auth/zhihu/start` and does not invent a session
-- Mine-route concept entry settles `/api/learning/canonical-answer` once (live evidence: first `reused=false`, second `reused=true`, same hash) and does not create a knowledge graph
-- Session/Chat ordinary answers no longer write linear-algebra `coachReply` or authors/visual success sentinels into the knowledge graph
-- Generate + Path3D share one renderer document validator that rejects incomplete `flowGroup`s
-- Decoder accepts aggregate/path session ids; RuntimeStore first event is sequence 1; NDJSON can emit incrementally
-- Concept must belong to the route; conversation graph keeps nodes without `conversationId`; canvas drafts stay on the matching concept conversation
-- Old 「马同学」 annotations are rejected; AskAuthor failures are not persisted as ready replies
-- Architecture gate now checks cycles, browser→server, deep package imports, and Vite provider keys
-- PRODUCT_SPEC / Authors copy no longer present undecided network topology or “route creates knowledge” as product fact
+- Graph/root is created only after a settled canonical first answer
+- One graph, one root, bootstrap revision `+1`, concurrent reuse, zero A1 drafts still leave the root
+- Pages do not `growGraph` for mine routes; canvas reads `GET /api/learning/graph`
+- Product listen ports stay `4301` / `4312`
 
 ## What this slice does not prove
 
-- No committed conversation/graph GET, CAS snapshot, or live Zhihu/DeepSeek gate with production telemetry
-- AuthorSearch still fail-closes when the network projector is missing; that is required by network-first
-- Path generate on 4312 now hosts in-repo `server/path` PathStreamEvent; live generateCandidates can still fail closed as `PROVIDER_UNAVAILABLE`
-- Memory session store is not PostgreSQL/CAS crash recovery
-- `PRODUCT_SPEC`, state machines, and remaining algorithm packages live outside this git root
+- Not PostgreSQL unique constraint / CAS / RLS
+- Not GraphProjectionPipeline A1/A2/A3 incremental
+- Not AnswerPipeline, committed conversation GET, or author-network projector
+- Memory store is lost on process restart

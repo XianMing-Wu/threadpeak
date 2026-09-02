@@ -109,8 +109,12 @@ export function openLearning(routeId: string, conceptId?: string, returnTo: Rout
 
 export function openKnowledgeFromSession() {
   const routeId = readActiveRouteId()
-  const knowledgeId = getRoute(routeId)?.knowledgeId || readActiveKnowledgeId()
   const conceptId = readActiveConceptId()
-  if (!knowledgeId || !conceptId) return
-  openConceptKnowledge(knowledgeId, conceptId, 'session-learning')
+  if (!routeId || !conceptId) return
+  const route = getRoute(routeId)
+  writeKey(ACTIVE_ROUTE_KEY, routeId)
+  writeKey(KNOWLEDGE_CONCEPT_KEY, conceptId)
+  writeKey(CANVAS_RETURN_KEY, 'session-learning')
+  writeKey(ACTIVE_KNOWLEDGE_KEY, route?.knowledgeId ?? '')
+  location.hash = 'knowledge-detail'
 }

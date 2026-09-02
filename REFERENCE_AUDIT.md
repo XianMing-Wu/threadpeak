@@ -24,7 +24,7 @@
 | `src/components/Composer.tsx`、`src/resolve-composer-attachment.ts` | 路线、图文、问博主的输入外观与本地 UI state；附件和资料范围无真实 provider 时显式失败，不再用本地 file chip 或已上传 PDF 冒充来源 | 正向模式白名单；command 发往同源 API；来源/附件走 committed scope |
 | `src/pages/Chat.tsx`、`src/chat/`、`src/workspace/catalog.ts` | 普通回答经 `/api/answers`；缺配置或 provider 失败显式失败，不再渲染预写 Mock 或 `coachReply`；缺发送上下文不再预写「性价比高的显卡」；路线 generate 连接失败或超时显式失败 | 真实 Answer/Path provider、typed stream、持久 request/session、committed conversation GET |
 | `src/workspace/store.ts`、`src/history.ts`、`src/resolve-history-reopen.ts` | 侧栏重开不再把 localStorage 正文当成已提交 history；缺 provider 显式失败。workspace 存储仍是原型草稿 | owner-scoped 服务端事实、outbox/projector 和精确 history reopen |
-| `src/pages/Session.tsx`、`src/session/`、`src/knowledge-canvas/`、`src/workspace/nav.ts` | 未选择或概念不属于路线时失败；我的路线首次回复经 `/api/learning/canonical-answer` 永久复用；失败不 settle、不建图 | canonical 初始回复 settle 后由 GraphSurgeon 创建并增量更新 |
+| `src/pages/Session.tsx`、`src/session/`、`src/knowledge-canvas/`、`src/workspace/nav.ts` | 未选择或概念不属于路线时失败；我的路线首次回复经 `/api/learning/canonical-answer` 永久复用；settle 后经 `/api/learning/graph` 由 GraphSurgeon 创建唯一 root；失败不 settle、不建图 | canonical 初始回复 settle 后由 GraphSurgeon 创建并增量更新 |
 | `src/session/ask-authors.ts`、`resolve-ask-author.ts`、`request-ask-author.ts` | 问博主经 `/api/ask-author`；旧「马同学」storage 被拒绝；失败不持久化为成功批注 | 真实知乎搜索、稳定身份、逐作者 evidence、LLM 候选内筛选 |
 | `src/session/author-graph-rag.ts`、`resolve-author-search.ts`、`request-author-search.ts`、`resolve-author-network.ts` | 搜索经 `/api/authors/search`；网络投影未接通则失败且不去知乎凑人 | network-first AuthorSearch 与 committed relationship projector |
 | `src/path-3d/`、`src/components/Path3D.tsx`、`src/vendor/learning-path-3d/` | 可运行 WebGL renderer；用户路线不再回退演示 fixture | 只消费已校验 path document 和服务端 handoff，不拥有学习事实 |
@@ -69,9 +69,9 @@
 | 领域 | 冻结顺序/不变量 | 当前原型状态 |
 | --- | --- | --- |
 | 路线→概念 | 路线只生成 path；已校验 handoff 后才进入概念 | 尚未形成生产 handoff |
-| 概念首次进入 | 先生成并 settle 唯一 canonical 初始回复，再创建 graph/root | 当前仍由本地 lesson/catalog 与页面写图模拟 |
+| 概念首次进入 | 先生成并 settle 唯一 canonical 初始回复，再创建 graph/root | 我的路线经 `/api/learning/canonical-answer` 再 `/api/learning/graph` bootstrap；内存 store，不是 PostgreSQL unique/CAS |
 | 再次进入/新对话/history | 永久复用 canonical；精确恢复，不重跑模型/projector | 侧栏重开已 fail-closed；浏览器存储只能证明交互草稿 |
-| 后续回答→知识图 | 只有 settled answer 进入 GraphProjectionPipeline；GraphSurgeon 唯一写图 | 当前页面函数仍直接修改本地图 |
+| 后续回答→知识图 | 只有 settled answer 进入 GraphProjectionPipeline；GraphSurgeon 唯一写图 | bootstrap 已接通；incremental / A1 仍未实现，示例路线仍可本地 grow |
 | 问博主 | 知乎站内搜索多个真实用户与内容→逐作者 evidence→LLM 选 1–2→0 才直达 | 当前固定数据必须删除出用户请求链 |
 | 博主搜索 | 当前用户网络优先；有 1–3 位即停止；0 位才查知乎并由 LLM 选最多 3 位 | 用户搜索已 fail-closed；本地 GraphRAG 不得冒充成功 |
 | 博主网络 | 只有最终回答采用真实作者后产生 committed relationship event | 用户网络页已 fail-closed；sessionStorage/示例星图不得冒充成功 |
