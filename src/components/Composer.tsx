@@ -32,7 +32,7 @@ export function Composer({ value, onChange, mode, onMode, onSend, compact = fals
   const notice = attachmentNotice ?? sourcesNotice
 
   return <div className={`composer input-motion-frame ${compact ? 'composer--compact' : ''}`}>
-    <span className="input-motion-glow" aria-hidden="true" />
+    <span className="input-motion-glow" aria-hidden="true"><span className="ambient-glow" /></span>
     {(quote || notice) && <div className="composer-chips">
       {quote && <div className="quote-chip">
         <Icon name="quote" size={14}/>

@@ -49,7 +49,7 @@ export function GoalInput({
   }
 
   return <form className={`goal-input input-motion-frame${pending ? ' is-pending' : ''}`} onSubmit={submit} aria-busy={pending}>
-    <span className="input-motion-glow" aria-hidden="true" />
+    <span className="input-motion-glow" aria-hidden="true"><span className="ambient-glow" /></span>
     <label htmlFor="path-lab-goal">目标</label>
     <textarea
       id="path-lab-goal"
