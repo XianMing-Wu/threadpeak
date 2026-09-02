@@ -6,7 +6,7 @@ import { createOauthService, OAUTH_STATE_COOKIE, serializeCookie } from './oauth
 const env = {
   ZHIHU_OAUTH_APP_ID: 'app-id-fixture',
   ZHIHU_OAUTH_APP_KEY: 'app-key-fixture',
-  ZHIHU_OAUTH_REDIRECT_URI: 'http://127.0.0.1:4301/api/auth/zhihu/callback',
+  ZHIHU_OAUTH_REDIRECT_URI: 'http://127.0.0.1:5032/api/auth/zhihu/callback',
 }
 
 function service(http) {

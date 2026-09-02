@@ -75,7 +75,7 @@ npm run server
 npm run dev
 ```
 
-`npm run server` 在 `127.0.0.1:4312` 读取项目根 `.env` 并提供 `/api/answers`、`/api/ask-author`、`/api/authors/search` 与产品 `/api/paths/generate/stream`。缺配置时 readiness 失败，不会降级成 mock。Vite 把 `/api` 代理到该端口。打开 `http://127.0.0.1:4301/`。当前页面仍是迁移输入，不能因为服务端进程可启动就标 `integrated`：
+`npm run server` 在 `127.0.0.1:5033` 读取项目根 `.env` 并提供 `/api/answers`、`/api/ask-author`、`/api/authors/search` 与产品 `/api/paths/generate/stream`。缺配置时 readiness 失败，不会降级成 mock。Vite 把 `/api` 代理到该端口。打开 `http://127.0.0.1:5032/`。当前页面仍是迁移输入，不能因为服务端进程可启动就标 `integrated`：
 
 | 入口 | 当前原型职责 | 目标重构边界 |
 | --- | --- | --- |
@@ -95,7 +95,7 @@ npm run dev
 `path-lab.html` 是隔离的算法/renderer 验证入口，不属于主产品壳：
 
 ```text
-http://127.0.0.1:4301/path-lab.html
+http://127.0.0.1:5032/path-lab.html
 ```
 
 产品 Chat 经 `@threadpeak/api-client` 调用 `POST /api/paths/generate/stream`；path-lab 仍使用 JSON `/api/paths/generate`。只把通过 renderer validator 的 document 交给 3D。`server/path` 是迁入本仓库的路径六文件，缺 `DATABASE_URL` 时用内存 session store，不能证明 PostgreSQL/CAS 崩溃恢复。目标生产 workspace 必须使用本项目服务端 adapter、真实 provider、持久化合同和可复现构建。

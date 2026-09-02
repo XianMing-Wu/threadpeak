@@ -11,7 +11,7 @@ test('auth start does not invent a Zhihu authorize URL when the server is unavai
 })
 
 test('auth start accepts the official openapi.zhihu.com authorize URL', async () => {
-  const authorizeUrl = 'https://openapi.zhihu.com/authorize?app_id=x&redirect_uri=http://127.0.0.1:4301/api/auth/zhihu/callback&response_type=code&state=s'
+  const authorizeUrl = 'https://openapi.zhihu.com/authorize?app_id=x&redirect_uri=http://127.0.0.1:5032/api/auth/zhihu/callback&response_type=code&state=s'
   const result = await requestAuthStart(async () => ({
     ok: true,
     status: 200,

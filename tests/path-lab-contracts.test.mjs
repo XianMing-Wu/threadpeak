@@ -53,7 +53,7 @@ test('生成请求只发送 canonical raw_goal 与服务端标识的澄清答案
   assert.doesNotMatch(session, /JSON\.stringify\(\{ goal:/)
   assert.doesNotMatch(app, /fetch\(/)
   assert.match(labMain, /createPathLabSession/)
-  assert.match(vite, /target: 'http:\/\/127\.0\.0\.1:4312'/)
+  assert.match(vite, /target: 'http:\/\/127\.0\.0\.1:5033'/)
   for (const source of [app, session, labMain, input, contracts, vite]) {
     assert.doesNotMatch(source, /import\.meta\.env|OPEN(?:CODE)?_?GO|ZHIHU_?API|API_?KEY/i)
   }

@@ -52,7 +52,7 @@ const PathRuntimeConfigSchema = z
     zhihuAccessSecret: z.string().min(1),
     allowLiveCalls: z.boolean(),
     listenHost: z.literal("127.0.0.1"),
-    listenPort: z.literal(4312),
+    listenPort: z.literal(5033),
   })
   .strict();
 
@@ -126,7 +126,7 @@ export const loadPathRuntimeConfig = (
     zhihuAccessSecret: input.ZHIHU_ACCESS_SECRET ?? readEnv("ZHIHU_ACCESS_SECRET", fileEnv),
     allowLiveCalls: allowLiveRaw === "1" || allowLiveRaw === "true",
     listenHost: "127.0.0.1",
-    listenPort: 4312,
+    listenPort: 5033,
   });
 };
 
@@ -139,5 +139,5 @@ export const loadTestConfig = (): PathRuntimeConfig =>
     zhihuAccessSecret: "test-zhihu-secret",
     allowLiveCalls: false,
     listenHost: "127.0.0.1",
-    listenPort: 4312,
+    listenPort: 5033,
   });

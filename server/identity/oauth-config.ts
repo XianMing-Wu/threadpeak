@@ -65,7 +65,7 @@ export function resolveOauthConfig(env: Record<string, string | undefined>): Oau
       appId,
       appKey,
       redirectUri,
-      successRedirect: successRedirect && isHttpUrl(successRedirect) ? successRedirect : 'http://127.0.0.1:4301/#home',
+      successRedirect: successRedirect && isHttpUrl(successRedirect) ? successRedirect : 'http://127.0.0.1:5032/#home',
     },
   }
 }

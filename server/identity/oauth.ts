@@ -183,7 +183,7 @@ export function createOauthService(ports: {
     },
 
     successRedirect(): string {
-      return ports.oauth.ok ? ports.oauth.config.successRedirect : 'http://127.0.0.1:4301/'
+      return ports.oauth.ok ? ports.oauth.config.successRedirect : 'http://127.0.0.1:5032/'
     },
 
     failureRedirect(): string {
@@ -194,7 +194,7 @@ export function createOauthService(ports: {
         url.searchParams.set('oauth', 'failed')
         return url.toString()
       } catch {
-        return 'http://127.0.0.1:4301/?oauth=failed'
+        return 'http://127.0.0.1:5032/?oauth=failed'
       }
     },
   }
