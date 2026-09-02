@@ -1,7 +1,7 @@
-# Architecture status — Zhihu OAuth login and in-repo path stream
+# Architecture status — canonical first answer, Zhihu OAuth, path stream
 
 - Time: 2026-09-02
-- Commits: `6a45de0` Zhihu OAuth authorization-code login; `ddd77b1` server/path six files; Chat PathStreamEvent client
+- Commits: `c0b70a9` canonical first answer; `6a45de0` Zhihu OAuth; `ddd77b1` server/path
 - Environment: darwin, Node 24+, Vite 8, TypeScript 6
 - Maturity proposal:
   - `guard_status=verified` for Session/Chat/AskAuthor/AuthorSearch/Path document/stream cursor false-success closures
@@ -32,6 +32,7 @@
 
 - Server composition reads `.env` for Zhihu + DeepSeek; missing config fails `/ready`
 - Zhihu login follows official Authorization Code Flow; missing `ZHIHU_OAUTH_*` returns 503 on `/api/auth/zhihu/start` and does not invent a session
+- Mine-route concept entry settles `/api/learning/canonical-answer` once (live evidence: first `reused=false`, second `reused=true`, same hash) and does not create a knowledge graph
 - Session/Chat ordinary answers no longer write linear-algebra `coachReply` or authors/visual success sentinels into the knowledge graph
 - Generate + Path3D share one renderer document validator that rejects incomplete `flowGroup`s
 - Decoder accepts aggregate/path session ids; RuntimeStore first event is sequence 1; NDJSON can emit incrementally
