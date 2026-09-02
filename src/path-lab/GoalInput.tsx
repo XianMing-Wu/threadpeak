@@ -48,7 +48,7 @@ export function GoalInput({
     composingRef.current = false
   }
 
-  return <form className={`goal-input${pending ? ' is-pending' : ''}`} onSubmit={submit} aria-busy={pending}>
+  return <form className={`goal-input input-motion-frame${pending ? ' is-pending' : ''}`} onSubmit={submit} aria-busy={pending}>
     <label htmlFor="path-lab-goal">目标</label>
     <textarea
       id="path-lab-goal"

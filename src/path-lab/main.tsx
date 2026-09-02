@@ -4,6 +4,7 @@ import { PathLabApp } from './App'
 import { createPathLabSession } from './path-lab-session'
 import '../vendor/learning-path-3d/styles.css'
 import './styles.css'
+import '../input-motion.css'
 
 const session = createPathLabSession({
   fetch: (input, init) => fetch(input, init),

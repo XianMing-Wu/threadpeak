@@ -1,0 +1,131 @@
+@property --tp-input-motion-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: -45deg;
+}
+
+@keyframes tp-input-motion-orbit {
+  from { --tp-input-motion-angle: -45deg; }
+  to { --tp-input-motion-angle: 315deg; }
+}
+
+/*
+ * Shared recreation of the supplied input reference: a neutral hairline stays
+ * still while one coral-to-amber light band makes a two-second orbit around it.
+ * The crisp ring and its blurred bloom are separate so text never animates.
+ */
+.input-motion-frame {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  border-color: rgba(43, 48, 55, .15);
+  box-shadow: 0 4px 14px rgba(31, 36, 43, .035);
+}
+
+.input-motion-frame:focus-within {
+  border-color: rgba(43, 48, 55, .2);
+  box-shadow: 0 5px 16px rgba(31, 36, 43, .045);
+}
+
+.input-motion-frame::before,
+.input-motion-frame::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--tp-input-motion-angle) at 50% 50%,
+    rgba(244, 137, 151, .72) 0deg,
+    rgba(246, 175, 118, .66) 25deg,
+    rgba(253, 216, 164, .34) 54deg,
+    transparent 94deg,
+    transparent 296deg,
+    rgba(252, 202, 208, .22) 330deg,
+    rgba(244, 137, 151, .72) 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: tp-input-motion-orbit 2s linear infinite;
+}
+
+.input-motion-frame::before {
+  z-index: -1;
+  inset: -1px;
+  padding: 1px;
+  opacity: .9;
+}
+
+.input-motion-frame::after {
+  z-index: -2;
+  inset: -1px;
+  padding: 1px;
+  opacity: .24;
+  filter: blur(6px) saturate(.92);
+}
+
+/* Keyboard focus strengthens the same hairline instead of adding a second ring. */
+.input-motion-frame:has(input:focus-visible, textarea:focus-visible) {
+  border-color: rgba(43, 48, 55, .32);
+}
+
+.ask-authors-prompt__input-frame {
+  border: 1px solid rgba(43, 48, 55, .15);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.ask-authors-prompt__input-frame > textarea,
+.ask-authors-prompt__input-frame > textarea:focus {
+  display: block;
+  border: 0;
+  border-radius: inherit;
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .input-motion-frame {
+  border-color: rgba(255, 255, 255, .18);
+  box-shadow: 0 5px 16px rgba(0, 0, 0, .18);
+}
+
+html[data-theme="dark"] .input-motion-frame:focus-within {
+  border-color: rgba(255, 255, 255, .25);
+}
+
+html[data-theme="dark"] .input-motion-frame:has(input:focus-visible, textarea:focus-visible) {
+  border-color: rgba(255, 255, 255, .38);
+}
+
+html[data-theme="dark"] .ask-authors-prompt__input-frame {
+  background: #17191d;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input-motion-frame::before,
+  .input-motion-frame::after {
+    --tp-input-motion-angle: 35deg;
+    animation: none;
+  }
+}
+
+html[data-reduce-motion="true"] .input-motion-frame::before,
+html[data-reduce-motion="true"] .input-motion-frame::after {
+  --tp-input-motion-angle: 35deg;
+  animation: none !important;
+}
+
+@media (forced-colors: active) {
+  .input-motion-frame {
+    border-color: CanvasText;
+  }
+
+  .input-motion-frame::before,
+  .input-motion-frame::after {
+    display: none;
+  }
+}
