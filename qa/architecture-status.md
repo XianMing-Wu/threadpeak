@@ -1,11 +1,12 @@
-# Architecture status — live providers and fail-closed audit
+# Architecture status — in-repo path stream and live fail-closed audit
 
 - Time: 2026-09-02
-- Commits: `341bd27` stream contracts, `8d21728` renderer validator, `076cbf3` live composition
+- Commits: `ddd77b1` server/path six files, plus Chat PathStreamEvent client
 - Environment: darwin, Node 24+, Vite 8, TypeScript 6
 - Maturity proposal:
   - `guard_status=verified` for Session/Chat/AskAuthor/AuthorSearch/Path document/stream cursor false-success closures
-  - `module_maturity=prototype` for AnswerPipeline, PathStreamEvent/CAS, GraphSurgeon, author network projector
+  - path generate `module_maturity=implemented` for in-process PathStreamEvent composition; not `integrated` (no PostgreSQL/CAS, live generateCandidates can still fail closed)
+  - `module_maturity=prototype` for AnswerPipeline, GraphSurgeon, author network projector
 
 ## Commands
 
@@ -41,5 +42,6 @@
 
 - No committed conversation/graph GET, CAS snapshot, or live Zhihu/DeepSeek gate with production telemetry
 - AuthorSearch still fail-closes when the network projector is missing; that is required by network-first
-- Path generate on 4312 is not the algorithm PathStreamEvent pipeline unless `PATH_GENERATE_UPSTREAM` is set
-- `PRODUCT_SPEC`, state machines, and `算法/` live outside this git root
+- Path generate on 4312 now hosts in-repo `server/path` PathStreamEvent; live generateCandidates can still fail closed as `PROVIDER_UNAVAILABLE`
+- Memory session store is not PostgreSQL/CAS crash recovery
+- `PRODUCT_SPEC`, state machines, and remaining algorithm packages live outside this git root

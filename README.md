@@ -72,13 +72,13 @@ npm run server
 npm run dev
 ```
 
-`npm run server` 在 `127.0.0.1:4312` 读取项目根 `.env` 并提供 `/api/answers`、`/api/ask-author`、`/api/authors/search`。缺配置时 readiness 失败，不会降级成 mock。Vite 把 `/api` 代理到该端口。打开 `http://127.0.0.1:4301/`。当前页面仍是迁移输入，不能因为服务端进程可启动就标 `integrated`：
+`npm run server` 在 `127.0.0.1:4312` 读取项目根 `.env` 并提供 `/api/answers`、`/api/ask-author`、`/api/authors/search` 与产品 `/api/paths/generate/stream`。缺配置时 readiness 失败，不会降级成 mock。Vite 把 `/api` 代理到该端口。打开 `http://127.0.0.1:4301/`。当前页面仍是迁移输入，不能因为服务端进程可启动就标 `integrated`：
 
 | 入口 | 当前原型职责 | 目标重构边界 |
 | --- | --- | --- |
 | 初始授权态 | 知乎授权视觉入口；无真实 OAuth 时显式失败，不再用延时动画冒充授权成功。进入本地原型仍可用，不得锁死整站 | 服务端 OAuth/session，密钥与 token 不进浏览器 |
 | `#home` | 路线/图文入口、Composer、示例推荐；侧栏历史重开无真实 conversation GET 时显式失败，列表只标本地草稿；侧栏账号无真实身份时只标本地原型，不再写死姓名；Composer 附件/资料范围无真实 provider 时显式失败，不再用本地文件或已上传 PDF 冒充来源 | command/query 进入同源 API，不在页面生成领域事实 |
-| `#chat` | 普通回答经 `/api/answers` 调知乎+DeepSeek，失败显式报错；图文无 VisualizationArtifact 时显式失败；缺发送上下文不再预写「性价比高的显卡」；路线模式走 generate session，连接失败或超时显式报错 | 普通回答接 AnswerPipeline；路线接 PathStreamEvent/CAS，图文接真实 visual artifact；打开会话走 committed GET |
+| `#chat` | 普通回答经 `/api/answers` 调知乎+DeepSeek，失败显式报错；图文无 VisualizationArtifact 时显式失败；缺发送上下文不再预写「性价比高的显卡」；路线模式走 `/api/paths/generate/stream`，`path.ready` 必须通过 renderer 校验 | 普通回答接 AnswerPipeline；路线接 PathStreamEvent/CAS，图文接真实 visual artifact；打开会话走 committed GET |
 | `#paths` | 我的路线/示例路线列表 | 读取 committed path projection |
 | `#path-3d` | WebGL renderer；用户路线缺校验文档则显式失败，不再回退演示路径 | 只消费已校验 document 与 server handoff，不保存学习进度 |
 | `#knowledge` | 我的/示例知识脉络列表 | 读取 owner-scoped committed projection |
@@ -95,7 +95,7 @@ npm run dev
 http://127.0.0.1:4301/path-lab.html
 ```
 
-它经 `@threadpeak/api-client` 调用 `POST /api/paths/generate`，由 RuntimeStore 保存已发布 document；只把通过校验的 `renderer_document` 交给 3D renderer。前端与图表/3D 资产已在本仓库内构建；实验 API 仍可能指向本机 `127.0.0.1:4312`，不能证明主产品的回答、知识、作者或历史链路已经接通。目标生产 workspace 必须使用本项目服务端 adapter、真实 provider、持久化合同和可复现构建。
+产品 Chat 经 `@threadpeak/api-client` 调用 `POST /api/paths/generate/stream`；path-lab 仍使用 JSON `/api/paths/generate`。只把通过 renderer validator 的 document 交给 3D。`server/path` 是迁入本仓库的路径六文件，缺 `DATABASE_URL` 时用内存 session store，不能证明 PostgreSQL/CAS 崩溃恢复。目标生产 workspace 必须使用本项目服务端 adapter、真实 provider、持久化合同和可复现构建。
 
 ## 当前验证
 

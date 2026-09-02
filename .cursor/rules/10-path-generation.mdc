@@ -51,7 +51,7 @@ validate → planSearch → searchRecentYear → [searchExpandedWindow]
 | 当前文件 | 目标 |
 | --- | --- |
 | `src/workspace/store.ts` / `catalog.ts` 关键词拼路线 | 删除用户请求生产路径；只读示例与隔离测试 fixture 必须分离且明确标记 |
-| `src/pages/Chat.tsx` / `src/path-planning/` JSON generate adapter；连接失败/超时已 fail-closed | PathStreamEvent decoder → path projector → RuntimeStore selector；删除 path-lab re-export |
+| `src/pages/Chat.tsx` / `src/path-planning/` 产品已走 `/api/paths/generate/stream`；连接失败/超时已 fail-closed | PathStreamEvent decoder → path projector → RuntimeStore selector；删除 path-lab JSON re-export |
 | `src/path-lab/contracts.ts` | 迁移到唯一 `packages/contracts/path` 后删除兼容层 |
 | `src/path-3d/` / `src/components/Path3D.tsx` 本地 document 宿主 | validated document + wire UUID mapping + server handoff；删除 hash/session 导航事实 |
 

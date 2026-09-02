@@ -57,8 +57,8 @@ Cursor 会自动读取根 `AGENTS.md`，并按 `.mdc` frontmatter 的 `globs` �
 - 服务端 `server/` 已从项目根 `.env` 读取知乎开放平台检索与 DeepSeek；缺配置时 `/ready` 失败。这只证明 live composition 骨架，不是 AnswerPipeline / PathStreamEvent / 作者网络 projector，不能标 `integrated`。
 - 共享 runtime Zod 的唯一物理定义已在 `packages/contracts`。`../算法/shared/runtime-contracts.ts` 只保留兼容 re-export，删除条件见该文件与 `packages/contracts/COMPATIBILITY.md`。
 - `@threadpeak/api-client` 与 `@threadpeak/runtime-store` 已提供 decoder / headless store。Home 与路线/知识列表开始走 selector；投影仍来自原型 `workspace/store`，不是服务端 committed GET。
-- path-lab 的 JSON 实验请求已改走 api-client + RuntimeStore；它仍代理到本机 `4312`，不能证明主产品 PathStreamEvent/CAS session 已接通。
-- 产品 Chat 路线模式已去掉页面 timer 和 `draftMineBlueprint` 成功路径；用户请求必须拿到已校验 document，否则显式失败。实验室 API 不可达或等待超时时不再停在 pending。仍不是 PathStreamEvent/CAS。
+- path-lab 的 JSON 实验请求仍走 `/api/paths/generate`；产品 Chat 路线制定已改走 `/api/paths/generate/stream`。`server/path` 是迁入本仓库的路径六文件，缺 `DATABASE_URL` 时用内存 session store。仍不是 PostgreSQL/CAS 崩溃恢复证据。
+- 产品 Chat 路线模式消费 PathStreamEvent；`path.ready` 必须通过 renderer validator 才发布。provider 失败显式失败，不再用页面 timer 或 `draftMineBlueprint`。仍不是 durable CAS snapshot。
 - 产品 Chat / Session 普通回答经同源 `/api/answers` 调用服务端知乎检索 + DeepSeek；缺配置或 provider 失败显式失败，不再用 `coachReply` 线性代数公式或 authors/visual sentinel 写知识图。仍不是 AnswerPipeline / committed artifact。
 - 产品 `#chat` 不再在缺少发送上下文时预写「性价比高的显卡」或用 localStorage 正文冒充已打开会话；缺 launch 显式失败。Home 发送仍可写本地草稿 handoff。仍不是 owner-scoped conversation GET。
 - 产品 Chat / Session 图文模式不再用页面 timer 和 fixture frames 冒充成功；没有真实 VisualizationArtifact 时显式失败。仍不是 Surface Catalog / committed visual attachment。

@@ -30,7 +30,7 @@
 | `src/path-3d/`、`src/components/Path3D.tsx`、`src/vendor/learning-path-3d/` | 可运行 WebGL renderer；用户路线不再回退演示 fixture | 只消费已校验 path document 和服务端 handoff，不拥有学习事实 |
 | `src/vendor/icons-v15.svg`、`vendor/charts/` | 图标与三类交互图已落入本仓库，不再读兄弟目录 | 仍是示例图文资产，不能冒充用户请求结果 |
 | `packages/contracts` | 共享 Uuid/Evidence/Envelope/PublicError/StreamCursor 的唯一 Zod 定义；旧算法路径只 re-export | 路径/知识领域 schema 仍在算法包，本切片未接通 Web 写链 |
-| `packages/api-client`、`packages/runtime-store`、`src/runtime/`、`server/` | decoder 接受 aggregate/pathSession 字段且序号从 1 起；NDJSON 可按行产出；server 从 `.env` 调知乎/DeepSeek | 投影仍读原型 `workspace/store`；不是 PathStreamEvent/CAS 或 committed GET |
+| `packages/api-client`、`packages/runtime-store`、`src/runtime/`、`server/`、`server/path/` | decoder 接受 aggregate/`seq`/`requestId`；产品 Chat 走 PathStreamEvent；server/path 是迁入的路径六文件 | 投影仍读原型 `workspace/store`；内存 session 不是 PostgreSQL/CAS；generateCandidates provider 失败必须显式失败 |
 | `src/path-lab/path-lab-session.ts` | 实验台 JSON generate 经 api-client，页面只读 selector | 仍是 JSON 实验 API，不是 PathStreamEvent NDJSON / CAS restore |
 
 ## 视觉参考映射
