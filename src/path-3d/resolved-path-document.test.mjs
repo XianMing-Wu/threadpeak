@@ -1,21 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { isExampleFixtureDocumentId, resolvePath3DView } from './resolved-path-document.ts'
+import { validRendererDocumentFixture, validateRendererDocument } from './validate-renderer-document.ts'
 
-const generatedDocument = {
-  protocol: 'learning-path',
-  version: '1.0',
-  id: 'generated-path',
-  metadata: { title: '从目标到可验证作品', locale: 'zh-CN' },
-  structure: {
-    entrySubjectId: 'subject-start',
-    goalSubjectIds: ['subject-goal'],
-    subjects: [{ id: 'subject-start', cardRef: 'card-start' }],
-    concepts: [],
-    flow: [],
-    flowGroups: [],
-  },
-}
+const generatedDocument = validRendererDocumentFixture('generated-path')
 
 test('missing route id does not fall back to the linear-algebra fixture', () => {
   const view = resolvePath3DView({ routeId: '' })
@@ -44,6 +32,22 @@ test('mine routes require a validated document and never use the example fixture
   assert.equal(fixture.kind, 'unavailable')
   assert.equal(fixture.reason, 'invalid-mine-document')
   assert.equal(isExampleFixtureDocumentId('threadpeak-linear-algebra-v1'), true)
+})
+
+test('incomplete flowGroup documents are not treated as validated', () => {
+  const invalid = {
+    ...generatedDocument,
+    structure: {
+      ...generatedDocument.structure,
+      flowGroups: [{ id: 'group-1' }],
+    },
+  }
+  assert.equal(validateRendererDocument(invalid).ok, false)
+  const view = resolvePath3DView({
+    routeId: 'generated-path',
+    route: { id: 'generated-path', owner: 'mine', title: '从目标到可验证作品', document: invalid },
+  })
+  assert.equal(view.kind, 'unavailable')
 })
 
 test('validated mine documents and marked example documents can render', () => {

@@ -1,4 +1,5 @@
 import type { LearningPathDocument } from 'liu-kanshan-learning-path-3d'
+import { isLearningPathRendererDocument } from '../path-3d/validate-renderer-document.ts'
 
 type JsonRecord = Record<string, unknown>
 
@@ -193,89 +194,8 @@ function parseClarification(root: JsonRecord): ClarificationPrompt | undefined {
   return { questionId, question, step, total, options }
 }
 
-function hasUniqueIds(values: readonly unknown[]): boolean {
-  const ids = values.map((value) => isRecord(value) ? value.id : undefined)
-  return ids.every(isIdentifier) && new Set(ids).size === ids.length
-}
-
-function isSafeResourceHref(value: unknown): value is string {
-  if (!isBoundedText(value, 1, 2048)) return false
-  if (value.startsWith('#')) return /^#[a-zA-Z][a-zA-Z0-9_-]*$/.test(value)
-  if (value.startsWith('/') && !value.startsWith('//')) {
-    return !value.includes('\\') && !value.split(/[?#]/u, 1)[0]?.split('/').includes('..')
-  }
-  try {
-    const url = new URL(value)
-    return url.protocol === 'https:' && !url.username && !url.password
-  } catch {
-    return false
-  }
-}
-
 function isRendererDocument(value: unknown): value is LearningPathDocument {
-  if (!isRecord(value) || value.protocol !== 'learning-path' || value.version !== '1.0' || !isIdentifier(value.id)) return false
-  if (!isRecord(value.metadata)
-    || !isBoundedText(value.metadata.title, 1, 160)
-    || (value.metadata.description !== undefined && !isBoundedText(value.metadata.description, 1, 500))
-    || !isBoundedText(value.metadata.locale, 2, 16)) return false
-  if (!isRecord(value.structure) || !isRecord(value.data) || !isRecord(value.presentation)) return false
-
-  const subjects = value.structure.subjects
-  const concepts = value.structure.concepts
-  const flow = value.structure.flow
-  const flowGroups = value.structure.flowGroups
-  const cards = value.data.cards
-  const resources = value.data.resources
-  const actions = value.data.actions
-  if (!Array.isArray(subjects) || subjects.length < 1 || subjects.length > 128 || !hasUniqueIds(subjects)) return false
-  if (!Array.isArray(concepts) || concepts.length > 1024 || !hasUniqueIds(concepts)) return false
-  if (!Array.isArray(flow) || flow.length > 2048 || !hasUniqueIds(flow)) return false
-  if (!Array.isArray(flowGroups) || flowGroups.length > 256 || !hasUniqueIds(flowGroups)) return false
-  if (!Array.isArray(cards) || cards.length < 1 || cards.length > 1152 || !hasUniqueIds(cards)) return false
-  if (!Array.isArray(resources) || resources.length > 1024 || !hasUniqueIds(resources)) return false
-  if (!Array.isArray(actions) || actions.length > 1024 || !hasUniqueIds(actions)) return false
-
-  const subjectIds = new Set(subjects.map((subject) => (subject as JsonRecord).id as string))
-  const cardIds = new Set(cards.map((card) => (card as JsonRecord).id as string))
-  const resourceIds = new Set(resources.map((resource) => (resource as JsonRecord).id as string))
-  const actionIds = new Set(actions.map((action) => (action as JsonRecord).id as string))
-  if (!isIdentifier(value.structure.entrySubjectId) || !subjectIds.has(value.structure.entrySubjectId)) return false
-  if (!Array.isArray(value.structure.goalSubjectIds)
-    || value.structure.goalSubjectIds.length < 1
-    || !value.structure.goalSubjectIds.every((id) => isIdentifier(id) && subjectIds.has(id))) return false
-  if (!subjects.every((subject) => isRecord(subject) && isIdentifier(subject.id) && isIdentifier(subject.cardRef) && cardIds.has(subject.cardRef))) return false
-  if (!cards.every((card) => isRecord(card)
-    && isIdentifier(card.id)
-    && isBoundedText(card.title, 1, 160)
-    && isBoundedText(card.summary, 1, 500)
-    && (card.tags === undefined || (Array.isArray(card.tags) && card.tags.length <= 12 && card.tags.every((tag) => isBoundedText(tag, 1, 40)))))) return false
-  if (!resources.every((resource) => isRecord(resource)
-    && isIdentifier(resource.id)
-    && isSafeResourceHref(resource.href))) return false
-  if (!actions.every((action) => isRecord(action)
-    && isIdentifier(action.id)
-    && action.kind === 'open-resource'
-    && isBoundedText(action.label, 1, 80)
-    && isIdentifier(action.resourceId)
-    && resourceIds.has(action.resourceId)
-    && (action.target === undefined || action.target === 'self' || action.target === 'blank'))) return false
-  if (!concepts.every((concept) => isRecord(concept)
-    && isIdentifier(concept.id)
-    && isIdentifier(concept.subjectId)
-    && subjectIds.has(concept.subjectId)
-    && isIdentifier(concept.cardRef)
-    && cardIds.has(concept.cardRef)
-    && isIdentifier(concept.actionRef)
-    && actionIds.has(concept.actionRef))) return false
-  if (!flow.every((edge) => isRecord(edge)
-    && isIdentifier(edge.id)
-    && isIdentifier(edge.fromSubjectId)
-    && isIdentifier(edge.toSubjectId)
-    && edge.fromSubjectId !== edge.toSubjectId
-    && subjectIds.has(edge.fromSubjectId)
-    && subjectIds.has(edge.toSubjectId))) return false
-
-  return isRecord(value.presentation.layout) && value.presentation.layout.direction === 'top-to-bottom'
+  return isLearningPathRendererDocument(value)
 }
 
 function knownQualityIssueCode(value: unknown): QualityIssueCode | undefined {

@@ -132,6 +132,12 @@ test('部分检索成功必须以登记降级状态呈现', () => {
   assert.match(diagnostics.degradationLabels[0], /部分证据检索/)
 })
 
+test('缺少 flowGroup type/policy/anchor 的文档不能进入生成链', () => {
+  const payload = validEnvelope()
+  payload.renderer_document.structure.flowGroups = [{ id: 'group-1' }]
+  assert.throws(() => parseGenerationResponse(payload), /renderer v1/)
+})
+
 test('renderer 关键字段类型异常不会进入 3D 发布', () => {
   const payload = validEnvelope()
   payload.renderer_document.metadata.title = { unsafe: true }

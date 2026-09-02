@@ -1,4 +1,5 @@
 import type { LearningPathDocument } from 'liu-kanshan-learning-path-3d'
+import { isLearningPathRendererDocument } from './validate-renderer-document.ts'
 
 const EXAMPLE_FIXTURE_DOCUMENT_IDS = new Set([
   'threadpeak-linear-algebra-v1',
@@ -29,17 +30,7 @@ export type Path3DResolution =
     }
 
 export function isLearningPathDocument(value: unknown): value is LearningPathDocument {
-  if (!value || typeof value !== 'object') return false
-  const document = value as Record<string, unknown>
-  if (document.protocol !== 'learning-path' || document.version !== '1.0') return false
-  if (typeof document.id !== 'string' || document.id.length === 0) return false
-  const metadata = document.metadata
-  if (!metadata || typeof metadata !== 'object') return false
-  if (typeof (metadata as { title?: unknown }).title !== 'string') return false
-  const structure = document.structure
-  if (!structure || typeof structure !== 'object') return false
-  const subjects = (structure as { subjects?: unknown }).subjects
-  return Array.isArray(subjects) && subjects.length > 0
+  return isLearningPathRendererDocument(value)
 }
 
 export function isExampleFixtureDocumentId(id: string): boolean {
