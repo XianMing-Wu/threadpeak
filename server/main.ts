@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { resolveProviderConfig } from './config.ts'
 import { createDeepSeekAnswerAdapter, createDeepSeekReviewAdapter } from './deepseek.adapter.ts'
-import { createLiveServer, listenLiveServer } from './http.ts'
+import { createCompositionApp, listenLiveServer } from './http.ts'
 import { createLiveService } from './live-service.ts'
 import { createUnavailableAuthorNetwork, type HttpPort } from './ports.ts'
 import { createZhihuDirectAdapter, createZhihuSearchAdapter } from './zhihu.adapter.ts'
@@ -59,7 +59,7 @@ const service = config.ok
   })
   : undefined
 
-const server = createLiveServer({
+const server = await createCompositionApp({
   config,
   http,
   ...(service ? { service } : {}),
