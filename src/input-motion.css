@@ -142,6 +142,17 @@ html[data-reduce-motion="true"] .input-motion-frame::after {
   animation: none !important;
 }
 
+.ux-ui-cloud-mark {
+  margin: -4px 9px 12px;
+  color: #7a8290;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.tp-shell.is-collapsed .ux-ui-cloud-mark {
+  display: none;
+}
+
 @media (forced-colors: active) {
   .input-motion-frame {
     border-color: CanvasText;

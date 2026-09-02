@@ -10,6 +10,7 @@ test('every visible text-entry surface uses the shared input motion frame', () =
   const askAuthors = read('../src/components/AskAuthorsPrompt.tsx')
   const goalInput = read('../src/path-lab/GoalInput.tsx')
 
+  assert.match(read('../src/components/Shell.tsx'), /cloud ux-ui :5032/)
   assert.match(composer, /composer input-motion-frame/)
   assert.match(authors, /radar-query input-motion-frame/)
   assert.match(askAuthors, /ask-authors-prompt__input-frame input-motion-frame/)

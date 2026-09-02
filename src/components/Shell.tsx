@@ -86,6 +86,7 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
     <aside className="tp-sidebar" aria-label="问山主导航">
       <button type="button" className="tp-collapse" aria-label={collapsed?'展开侧栏':'收起侧栏'} onClick={()=>setCollapsed((value)=>!value)}><Icon name="collapse" size={18}/></button>
       <button type="button" className="tp-wordmark" aria-label="问山首页" onClick={() => navigate('home')}><MountainMark size={28}/><strong>问山</strong></button>
+      <p className="ux-ui-cloud-mark">cloud ux-ui :5032</p>
       <nav>
         {nav.map(([id, glyph, label]) => <button type="button" key={id} className={`tp-nav ${active === id ? 'is-active' : ''}`} aria-label={label} onClick={() => navigate(id)} aria-current={active === id ? 'page' : undefined}>
           <Icon name={glyph} size={id === 'home' ? 18 : 20}/><span>{label}</span>{id === 'home' && <span className="tp-shortcut"><kbd>⌘</kbd><kbd>K</kbd></span>}
