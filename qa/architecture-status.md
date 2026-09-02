@@ -1,11 +1,12 @@
-# Architecture status — in-repo path stream and live fail-closed audit
+# Architecture status — Zhihu OAuth login and in-repo path stream
 
 - Time: 2026-09-02
-- Commits: `ddd77b1` server/path six files, plus Chat PathStreamEvent client
+- Commits: `6a45de0` Zhihu OAuth authorization-code login; `ddd77b1` server/path six files; Chat PathStreamEvent client
 - Environment: darwin, Node 24+, Vite 8, TypeScript 6
 - Maturity proposal:
   - `guard_status=verified` for Session/Chat/AskAuthor/AuthorSearch/Path document/stream cursor false-success closures
   - path generate `module_maturity=implemented` for in-process PathStreamEvent composition; not `integrated` (no PostgreSQL/CAS, live generateCandidates can still fail closed)
+  - identity OAuth `module_maturity=implemented` for authorization-code start/callback/session cookie; not `integrated` (no PKCE in official docs, no user-info schema, memory session)
   - `module_maturity=prototype` for AnswerPipeline, GraphSurgeon, author network projector
 
 ## Commands
@@ -30,6 +31,7 @@
 ## What this slice proves
 
 - Server composition reads `.env` for Zhihu + DeepSeek; missing config fails `/ready`
+- Zhihu login follows official Authorization Code Flow; missing `ZHIHU_OAUTH_*` returns 503 on `/api/auth/zhihu/start` and does not invent a session
 - Session/Chat ordinary answers no longer write linear-algebra `coachReply` or authors/visual success sentinels into the knowledge graph
 - Generate + Path3D share one renderer document validator that rejects incomplete `flowGroup`s
 - Decoder accepts aggregate/path session ids; RuntimeStore first event is sequence 1; NDJSON can emit incrementally
