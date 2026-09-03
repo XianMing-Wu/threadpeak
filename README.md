@@ -119,7 +119,7 @@ npm run dev
 - 当前服务的用户请求走 R1–R5、L0a/L0b、G1/G2、A1–A3、N0–N2；存储仍是进程内存，重启即忘。
 - `path-lab` 与 `/api/paths/generate` 已从源码删除。产品路线制定只走 Chat 的 `/api/path-runs`。
 
-当前源码的逐页面控件、实际调用顺序和 29 项重构差距见 [`as-implemented-logic.md`](as-implemented-logic.md)。
+当前源码的逐页面控件、实际调用顺序和对照问题账本见 [`as-implemented-logic.md`](as-implemented-logic.md)。
 
 ## 真实数据与环境配置
 

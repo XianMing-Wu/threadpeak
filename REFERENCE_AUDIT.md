@@ -29,20 +29,20 @@
 
 | 当前源码落点 | 当前事实 | 已确认重构目标 |
 | --- | --- | --- |
-| `server/agent-runtime/` | 共用上下文组装、500k/300k 压缩、输出校验和真实 DeepSeek/知乎端口已存在；产品 HTTP 尚未改走该运行时 | 所有 Agent 共用同一套预算/压缩/校验后再进入各域编排；用户请求不得回退 fixture |
-| `src/pages/AuthLanding.tsx`、`src/resolve-auth-session.ts`、`server/identity/` | 知乎授权会请求官方地址；缺配置明确失败；进入本地原型只设置本机开关；用户协议/隐私政策只是无内容文字 | 保留授权与进入本地原型两条入口；不假登录；删除无内容的协议/隐私项 |
-| `src/components/Shell.tsx`、`src/history.ts`、`src/resolve-history-reopen.ts` | 侧栏历史主要是本地草稿；Chat 只带发送上下文重开；账号菜单没有设置入口 | 学习历史点哪条开哪条；Chat 历史原样恢复整段对话；清历史只清列表；账号菜单增加设置 |
-| `src/pages/Home.tsx`、`src/components/Composer.tsx` | 首页只有路线/图文快捷；附件与资料范围只报错；建议芯片只填字；思考深度不进请求 | 不增加首页问博主；芯片选中路线模式并填字、不发送；只在首页上传 pdf/md/txt；资料范围继续失败；只有快速/深度 |
-| `src/pages/Chat.tsx`、`src/path-planning/`、`server/path-generation/` | 产品路线制定走 R1–R4 `/api/path-runs`；旧 CandidateSet stream 仍在 `server/path/` 标为 prototype | R1/R-S/R2/R3/R3b/R4；最多 3 轮；校验后发布且不建知识；Composer 一直存在；发布后普通发送走 R5 |
-| `src/pages/Collections.tsx`、`src/path-3d/`、`src/components/Path3D.tsx` | 我的路线只显示校验文档；3D 返回按来源；位置只在本次打开保留 | 空态回首页并选中路线模式；全部 3D 返回路线列表；边不锁节点；每条路线恢复上次位置，具体字段仍未裁决 |
-| `src/pages/Session.tsx`、`server/knowledge/` | 首次回复走旧普通回答；成功后另请求 GraphSurgeon 建根；图失败仍可能保留首次回复；永久性只在进程内存 | L0a 三路并联直答 → L0b；canonical 首次回复与确定性唯一根作为同一成功结果，根不再调用 LLM，并永久复用 |
-| `src/session/`、`src/knowledge-canvas/` | 追问按检索→分类→回答串行；整图纯文本；前端本机长图；点节点会影响宿主；画布回对话入口不完整 | 显式引用/默认最近回复决定宿主；G1 邻域 JSON 与 G2 当前 conversation 全文并发；双成功才长图；画布与最新对话实时同步 |
-| `src/session/ask-authors.ts`、`resolve-ask-author.ts`、`server/http.ts` | 单次检索后挑作者；找到后会在本机另长并列节点；零作者直达没有目标中的完整 A1/A2/A3 合同 | 有效划选 + 问题 → A1 2–3 问 → A-S 并联 → A2 选 1–2 位；零位才 A3；只形成批注；真实作者高权入网 |
-| `src/pages/Authors.tsx`、`src/session/author-graph-rag.ts`、`resolve-author-search.ts` | 网络投影未接通会整次失败；旧设计是网络有命中就停、零命中才知乎；搜索结果不入网；网络 Tab 只显示失败 | N0 高权→低权；合计不足 3 人才 N1/N-S/N2 补位；候选不足全部返回；知乎新作者低权入网；网络有人列名单、没人显示空态 |
-| `src/pages/Settings.tsx`、`src/resolve-settings-identity.ts` | 身份和资料没有 provider 时明确失败；页面仍有密度、减少动效和默认思考深度 | 保留退出、夜间模式、清空历史、身份、资料；删除密度、减少动效、默认思考深度 |
-| `src/visuals/`、图文分支 | 图文发送只会失败，不产生用户 artifact | 在真实图文编排未裁决前继续明确失败，不得用 fixture 假成功 |
+| `server/agent-runtime/` | 共用上下文组装、500k/300k 压缩、输出校验和真实 DeepSeek/知乎端口；产品 HTTP 已走该运行时 | 所有 Agent 共用同一套预算/压缩/校验后再进入各域编排；用户请求不得回退 fixture |
+| `src/pages/AuthLanding.tsx`、`src/resolve-auth-session.ts`、`server/identity/` | 知乎授权会请求官方地址；缺配置明确失败；进入本地原型只设置本机开关；用户协议/隐私政策已删除 | 保留授权与进入本地原型两条入口；不假登录；删除无内容的协议/隐私项 |
+| `src/components/Shell.tsx`、`src/history.ts`、`src/resolve-history-reopen.ts` | 侧栏历史是本地草稿；学习记录点哪条开哪条；Chat 重开整段对话；账号菜单有设置 | 学习历史点哪条开哪条；Chat 历史原样恢复整段对话；清历史只清列表；账号菜单增加设置 |
+| `src/pages/Home.tsx`、`src/components/Composer.tsx` | 首页只有路线/图文快捷；附件仅 pdf/md/txt；芯片选中路线并填字；资料范围继续失败 | 不增加首页问博主；芯片选中路线模式并填字、不发送；只在首页上传 pdf/md/txt；资料范围继续失败；只有快速/深度 |
+| `src/pages/Chat.tsx`、`src/path-planning/`、`server/path-generation/` | 产品路线制定只走 R1–R4 `/api/path-runs`；旧 CandidateSet `/api/paths/generate` 已删除 | R1/R-S/R2/R3/R3b/R4；最多 3 轮；校验后发布且不建知识；Composer 一直存在；发布后普通发送走 R5 |
+| `src/pages/Collections.tsx`、`src/path-3d/`、`src/components/Path3D.tsx` | 我的路线只显示校验文档；3D 返回路线列表；再次进入交回 renderer 不透明 progress | 空态回首页并选中路线模式；全部 3D 返回路线列表；边不锁节点；每条路线恢复上次位置，具体字段仍未裁决 |
+| `src/pages/Session.tsx`、`server/first-learning/`、`server/knowledge/` | 我的路线第一次进概念走 L0a/L0b；首轮与确定性唯一根同一 settle；跨重启仍只在进程内存 | L0a 三路并联直答 → L0b；canonical 首次回复与确定性唯一根作为同一成功结果，根不再调用 LLM，并永久复用 |
+| `src/session/`、`src/knowledge-canvas/`、`server/follow-up/` | 追问走 G1/G2 并发；点击节点不选宿主；画布与最新对话同一份记录 | 显式引用/默认最近回复决定宿主；G1 邻域 JSON 与 G2 当前 conversation 全文并发；双成功才长图；画布与最新对话实时同步 |
+| `src/session/ask-authors.ts`、`server/authors/` | 划选后 A1→A-S→A2；零位才 A3；结果只做批注；真实作者高权入网 | 有效划选 + 问题 → A1 2–3 问 → A-S 并联 → A2 选 1–2 位；零位才 A3；只形成批注；真实作者高权入网 |
+| `src/pages/Authors.tsx`、`src/session/resolve-author-search.ts` | N0 高权→低权，不足再查知乎；投影不可用 503；网络 Tab 有人列名单、没人空态 | N0 高权→低权；合计不足 3 人才 N1/N-S/N2 补位；候选不足全部返回；知乎新作者低权入网；网络有人列名单、没人显示空态 |
+| `src/pages/Settings.tsx`、`src/resolve-settings-identity.ts` | 身份和资料没有 provider 时明确失败；已删除密度、减少动效和默认思考深度 | 保留退出、夜间模式、清空历史、身份、资料；删除密度、减少动效、默认思考深度 |
+| `src/visuals/`、图文分支 | 图文发送只会失败，不产生用户 artifact；隔离的图表资产不能冒充成功 | 在真实图文编排未裁决前继续明确失败，不得用 fixture 假成功 |
 | `path-lab.html`、`src/path-lab/`、`/api/paths/generate` | 已从源码删除 | 产品路线制定只走 Chat `/api/path-runs` |
-| `packages/contracts`、`packages/api-client`、`packages/runtime-store` | 已有部分 Zod、decoder 和 headless store，可用于迁移 | 它们是工程材料，不代表 R1–N2、持久化或恢复已经接通 |
+| `packages/contracts`、`packages/api-client`、`packages/runtime-store` | 已有部分 Zod、decoder 和 headless store | 它们是工程材料，不代表持久化或恢复已经接通 |
 
 上表的“当前事实”来自当前审查基线，不是允许保留的产品行为。源码更新后应同步本表，不能把历史现状写成永久说明。
 
@@ -120,11 +120,9 @@ ZHIHU_OAUTH_REDIRECT_URI
 
 ## 当前未达到的完成条件
 
-- 当前路径仍是一次 CandidateSet 加本地剪枝，不是 R1–R4。
-- 当前首次学习仍把 canonical 首次回复和建根拆成两个请求/状态，不是同一个成功结果。
-- 当前追问仍是串行旧管线和本地长图，不是 G1/G2 并发。
-- 当前问博主与博主搜索未完成 A1–A3、N0–N2、高权/低权写入和批注边界。
-- 当前附件、思考深度、历史、设置、返回关系、独立 404 和 path-lab 清理仍有账本差距。
-- 当前内存 store、浏览器草稿、fixture、schema 或 renderer 测试都不能证明 canonical 永久性、真实 provider、跨重启恢复、权限隔离或 production-ready。
+- 真实图文编排尚未裁决；当前只有 fail-closed 过渡入口。
+- 首次回复、路线会话和博主网络仍在进程内存；跨重启永久复用见 4.2，不能由实现者自行编表。
+- 附件大小/数量/删除、取消/超时/刷新恢复、芯片最终文案、OAuth 回调可见状态、3D 位置字段形态仍未裁决。
+- 当前内存 store、浏览器草稿、schema 或 renderer 测试都不能证明 canonical 永久性、跨重启恢复、权限隔离或 production-ready。
 
 更新本审计时必须同时核对两份重构文档、AGENTS、匹配规则、现场源码和当次验证结果。只完成文档同步时，只能报告文档一致，不能报告产品已经实现。

@@ -1,6 +1,6 @@
 ---
 description: "约束 A1–A3 问博主、N0–N2 博主搜索、作者证据 ID、批注和高低权博主网络。"
-globs: "src/pages/Authors.tsx,src/pages/Session.tsx,src/session/ask-authors.ts,src/session/resolve-ask-author.ts,src/session/resolve-author-search.ts,src/session/resolve-author-network.ts,src/session/useAnnotations.ts,src/session/author-graph-rag.ts,src/session/author-network.ts,src/components/AskAuthorsPrompt.tsx,src/components/AuthorNetworkGraph.tsx,src/components/AnnotationPanel.tsx,apps/web/**/concept-learning/**,apps/web/**/author-search/**,apps/web/**/author-network/**,packages/contracts/authors/**,server/authors/**"
+globs: "src/pages/Authors.tsx,src/pages/Session.tsx,src/session/ask-authors.ts,src/session/resolve-ask-author.ts,src/session/resolve-author-search.ts,src/session/resolve-author-network.ts,src/session/request-ask-author.ts,src/session/request-author-search.ts,src/session/request-author-network.ts,src/session/useAnnotations.ts,src/components/AskAuthorsPrompt.tsx,src/components/AnnotationPanel.tsx,apps/web/**/concept-learning/**,apps/web/**/author-search/**,apps/web/**/author-network/**,packages/contracts/authors/**,server/authors/**"
 alwaysApply: false
 ---
 

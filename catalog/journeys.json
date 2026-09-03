@@ -1,16 +1,16 @@
 {
   "schemaVersion": "2.0.0",
   "items": [
-    { "id": "authorize", "name": "从知乎授权入口进入首页", "flow": ["auth", "authorizing", "home"] },
-    { "id": "default-answer", "name": "发送普通问题并继续追问", "flow": ["home", "chat", "answer-thinking", "answer-complete", "follow-up"] },
-    { "id": "route-generation", "name": "经状态条分析并以追加方式澄清目标", "flow": ["home", "chat", "route-analyzing", "route-question-one", "route-question-one-answered", "route-question-two-appended", "route-ready", "path-3d"] },
-    { "id": "visual-answer", "name": "文字与两个独立图块依次流式生成", "flow": ["home", "chat", "visual-text-streaming", "visual-frame-one-generating", "visual-frame-one-ready", "visual-frame-two-generating", "visual-interactive-ready"] },
+    { "id": "authorize", "name": "从知乎授权入口进入首页", "flow": ["auth", "home"] },
+    { "id": "default-answer", "name": "发送普通问题并继续追问", "flow": ["home", "chat", "answer-streaming", "answer-complete", "follow-up"] },
+    { "id": "route-generation", "name": "经 R1–R4 澄清目标并发布路线", "flow": ["home", "chat", "route-questions", "route-ready", "path-3d"] },
+    { "id": "visual-answer", "name": "图文快捷发送后明确失败", "flow": ["home", "chat", "visual-failed"] },
     { "id": "concept-learning", "name": "从路线进入概念学习", "flow": ["path-3d", "concept-selected", "session-learning"] },
     { "id": "knowledge-tree", "name": "从知识脉络查看总结树", "flow": ["knowledge", "mine-or-example", "knowledge-detail", "edge-reason-open"] },
-    { "id": "author-answer", "name": "以作者视角显示固定两位作者回答", "flow": ["session-learning", "authors-mode", "two-author-fixture"] },
+    { "id": "author-answer", "name": "划选后问博主并展示批注", "flow": ["session-learning", "quote-ready", "ask-authors"] },
     { "id": "restore-history", "name": "从侧边栏恢复本地聊天", "flow": ["history-expanded", "history-current", "chat-restored"] },
-    { "id": "author-network", "name": "输入临时问题并用雷达查找博主", "flow": ["authors", "search-tab", "radar-idle", "query-open", "radar-scanning", "dynamic-concepts", "advisor-revealing", "top-three", "advisor-detail", "related-article"] },
-    { "id": "author-graph", "name": "在搜索博主输入问题后沿图谱检索相关博主", "flow": ["authors", "search-tab", "query-open", "graph-rag-extracting", "graph-rag-ready", "network-tab"] },
-    { "id": "clear-history", "name": "清空本地历史并显示空态", "flow": ["settings", "confirm-open", "history-cleared", "history-empty"] }
+    { "id": "author-network", "name": "搜索博主：高权后低权再补知乎", "flow": ["authors", "search-tab", "query-open", "results"] },
+    { "id": "author-graph", "name": "博主网络名单或空态", "flow": ["authors", "network-tab", "empty-network"] },
+    { "id": "clear-history", "name": "清空本地历史并显示空态", "flow": ["settings", "history-cleared", "history-empty"] }
   ]
 }

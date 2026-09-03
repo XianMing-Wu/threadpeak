@@ -1,5 +1,5 @@
 import type { FetchPort } from '@threadpeak/api-client'
-import { createLiveApiClient, liveMessageOf, LIVE_GRAPH_URL, LIVE_READY_URL } from '../runtime/live-client.ts'
+import { createLiveApiClient, liveMessageOf, LIVE_GRAPH_URL } from '../runtime/live-client.ts'
 
 export type GraphRootView = {
   nodeId: string
@@ -77,43 +77,6 @@ function missingGraph(): Extract<GraphBootstrapResult, { kind: 'unavailable' }> 
     kind: 'unavailable',
     title: '还没有这次概念的知识脉络',
     message: '这条用户路线还没有 GraphSurgeon 提交的 graph/root。不能用页面 growGraph 发明节点，也不能在首次回复之前创建知识脉络。',
-  }
-}
-
-export async function requestGraphBootstrap(input: {
-  routeId: string
-  conceptId: string
-  title: string
-  fetch?: FetchPort
-}): Promise<GraphBootstrapResult> {
-  const missing = missingGraph()
-  const client = createLiveApiClient(input.fetch)
-  const ready = await client.requestJson({
-    url: LIVE_READY_URL,
-    method: 'GET',
-    traceId: 'graph-ready',
-  })
-  const readyBody = asRecord(ready.value)
-  if (!ready.ok || readyBody?.ready !== true) return missing
-  const posted = await client.requestJson({
-    url: LIVE_GRAPH_URL,
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      routeId: input.routeId,
-      conceptId: input.conceptId,
-      title: input.title,
-    }),
-    traceId: 'graph-bootstrap',
-  })
-  const body = asRecord(posted.value)
-  if (posted.ok && body?.kind === 'completed') {
-    const graph = snapshotFrom(body, body.reused === true)
-    if (graph) return { kind: 'completed', graph }
-  }
-  return {
-    ...missing,
-    message: liveMessageOf(posted.value, missing.message),
   }
 }
 

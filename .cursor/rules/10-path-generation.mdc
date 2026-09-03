@@ -1,6 +1,6 @@
 ---
 description: "约束 R1–R5 路线制定、澄清题轮次、附件、最终路线 JSON、发布与 3D handoff。"
-globs: "src/path-lab/**,src/path-planning/**,src/path-3d/**,src/pathDocument.ts,src/pages/Chat.tsx,src/pages/Home.tsx,src/pages/Collections.tsx,src/workspace/**,src/components/Path3D.tsx,apps/web/**/path-planning/**,apps/web/**/path-3d/**,packages/contracts/path/**,packages/path-3d-host/**,server/path/**"
+globs: "src/path-planning/**,src/path-3d/**,src/pathDocument.ts,src/pages/Chat.tsx,src/pages/Home.tsx,src/pages/Collections.tsx,src/workspace/**,src/components/Path3D.tsx,src/chat/**,apps/web/**/path-planning/**,apps/web/**/path-3d/**,packages/contracts/path/**,packages/path-3d-host/**,server/path-generation/**,server/ordinary-chat/**"
 alwaysApply: false
 ---
 
