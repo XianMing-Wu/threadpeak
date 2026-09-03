@@ -207,7 +207,7 @@
 
 现场是**一个**本机 HTTP 进程里的分阶段函数。没有 worker。界面「agent 进度」不是运行时。
 
-`server/agent-runtime` 已提供 agent-specs.md 要求的共用上下文组装、500k/300k 预算压缩、输出结构校验，以及真实 DeepSeek / 知乎 provider 端口（快速/深度两档）。**产品 HTTP 仍走下面旧的 5 个调用**；新旧链不得共同写同一份路线、首轮、知识图或作者网络事实。该切片不接通 R1–R4 / L0 / G1–G2 / A1–A3 / N0–N2 编排，也不解决第 4.2 节持久化或异步空位。
+`server/agent-runtime` 提供共用上下文组装、500k/300k 预算压缩、输出结构校验，以及真实 DeepSeek / 知乎端口。`server/path-generation` 已把产品路线制定接到 R1 → R-S 并联检索 → R2 → R3/R3b → R4 → 3D 校验发布；发布不写知识图。旧的 CandidateSet / `/api/paths/generate/stream` 仍在源码中，标为 prototype，产品 Chat 不再走它。首次学习、追问、问博主和博主搜索仍走下面旧调用。第 4.2 节持久化与异步空位未裁决。
 
 #### 不是独立 agent（列出来以免对照时找幽灵）
 

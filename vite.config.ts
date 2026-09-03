@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url'
 const localRuntime = fileURLToPath(new URL('./src/vendor/learning-path-3d/index.js', import.meta.url))
 const chartsRoot = fileURLToPath(new URL('./vendor/charts/', import.meta.url))
 const mainEntry = fileURLToPath(new URL('./index.html', import.meta.url))
-const pathLabEntry = fileURLToPath(new URL('./path-lab.html', import.meta.url))
 
 export default defineConfig({
   plugins: [react()],
@@ -37,7 +36,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: mainEntry,
-        pathLab: pathLabEntry,
       },
     },
   },

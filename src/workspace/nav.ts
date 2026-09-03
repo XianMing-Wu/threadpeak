@@ -52,8 +52,7 @@ export function setActiveKnowledgeId(id: string) {
 }
 
 export function readPathReturn(): RouteName {
-  const value = readKey(PATH_RETURN_KEY)
-  return value === 'chat' || value === 'home' || value === 'paths' ? value : 'paths'
+  return 'paths'
 }
 
 export function readKnowledgeListReturn(): RouteName {

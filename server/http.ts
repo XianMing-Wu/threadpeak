@@ -6,6 +6,8 @@ import type { HttpPort } from './ports.ts'
 import { loadPathRuntimeConfig } from './path/config.ts'
 import { buildPathApp } from './path/http.ts'
 import { InMemoryPathSessionStore } from './path/service.ts'
+import { registerPathRunRoutes } from './path-generation/http.ts'
+import type { PathOrchestrator } from './path-generation/orchestrator.ts'
 import { registerAuthRoutes } from './identity/http.ts'
 import type { OauthService } from './identity/oauth.ts'
 import type { CanonicalAnswerStore } from './knowledge/canonical-answer.ts'
@@ -24,6 +26,7 @@ export type LiveHttpPorts = {
   oauth?: OauthService
   canonical?: CanonicalAnswerStore
   graph?: GraphSurgeonStore
+  pathOrchestrator?: PathOrchestrator
 }
 
 function traceIdOf(request: FastifyRequest): string {
@@ -293,6 +296,10 @@ export async function createCompositionApp(ports: LiveHttpPorts): Promise<Fastif
     })
   }
   registerLiveRoutes(app, ports)
+  registerPathRunRoutes(app, {
+    ready: ports.config.ok,
+    ...(ports.pathOrchestrator ? { orchestrator: ports.pathOrchestrator } : {}),
+  })
   if (ports.oauth) registerAuthRoutes(app, ports.oauth)
   return app
 }

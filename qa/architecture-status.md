@@ -1,44 +1,41 @@
-# Architecture status — shared agent runtime (context, budget, compression, validation)
+# Architecture status — path generation R1–R4
 
 - Time: 2026-09-02
-- Slice: `server/agent-runtime` only. Product HTTP still uses the prototype live-service / path CandidateSet chain.
+- Slice: `server/path-generation` + Chat/Home/3D/list handoff. Old CandidateSet stream remains prototype.
 - Environment: darwin, Node 24+, Vite 8, TypeScript 6
 - Maturity proposal:
-  - shared agent runtime `module_maturity=implemented` for context assembly, 500k/300k compression, output schemas, and provider ports
-  - live DeepSeek R1 + Zhihu search + Zhihu direct `integrated` for this isolated runtime, not for the product pipelines
-  - path / first-answer / follow-up / ask-author / author-search remain `prototype` on the old chain
-  - persistence, cancel/timeout/refresh, and other 4.2 vacancies remain `unresolved`
+  - path generation `module_maturity=implemented` for R1/R-S/R2/R3/R3b/R4, 3D projection, publish-without-knowledge
+  - live Zhihu + DeepSeek path run `integrated` for this isolated orchestrator
+  - first-answer / follow-up / ask-author / author-search remain `prototype` on the old chain
+  - persistence, cancel/timeout/refresh, 3D last-position schema, chip copy remain `unresolved`
 
 ## Commands
 
 | Command | Exit |
 | --- | --- |
 | `npm run check` | 0 |
-| `npm run check:architecture` | 0 |
-| `npm run check:product-invariants` | 0 |
-| `npm run test:agent-runtime` | 0 (19 tests) |
-| `npm run test:agent-runtime:live` | 0 (6 tests, real Zhihu + DeepSeek) |
+| `npm run test:path-generation` | 0 (8 tests) |
+| `npm run test:path-generation:live` | 0 (1 test, real Zhihu + DeepSeek) |
 
-## Live gate (real providers, sequential)
+## Live gate
 
-- Zhihu search `线性映射 入门` → public hits with stable evidenceId; 刘看山 is not an authorId
-- DeepSeek R1 (fast) → 4–5 queries covering `normal_learning` and `pitfall_or_dispute`
-- Zhihu direct L0a `concrete_explanation` → non-empty text
-- Over-budget attachment is compressed in a copy; original unchanged; compressed R1 still validates
-- DeepSeek R1 with thinking enabled still returns parseable JSON after raising max_tokens
+- R1 → parallel Zhihu search → R2 → R3 questions → select → R4 → renderer document
+- `knowledgeCreated=false`
+- R5 after publish returns non-empty text
+- Retry from R1 does not keep the previous published document
 
 ## What this slice proves
 
-- All Agent system prompts share the agent-specs 0.7 prefix
-- Total budget 500k; attachment branch 300k; no “still too long” error; originals are not overwritten
-- R2 exploration objects cannot pass the R4 validator
-- A2/N2 reject unknown IDs and 刘看山
-- User-triggered runtime calls use real Zhihu and DeepSeek; missing config / non-success HTTP stay explicit
+- Product Chat uses `/api/path-runs`, not the CandidateSet stream
+- Attachments are visible to R1/R2/R3/R4
+- Superseded question sets remain; only the active set is answerable
+- 3D return goes to the path list; empty list selects 路线制定 without sending
+- Composer stays on the route Chat; thinking menu is 快速/深度
+- path-lab is removed from the product Vite build
 
 ## What this slice does not prove
 
-- Not R1–R4 / R3b product orchestration, publish, or 3D handoff
-- Not L0a×3 ∥ L0b first-answer + unique root as one product success state
-- Not G1/G2 concurrency, A1–A3, or N0–N2
-- Not product HTTP replacement; old `server/live-service.ts` and `server/deepseek.adapter.ts` remain prototype
-- Not persistence tables, cancel/timeout/refresh, or attachment lifecycle
+- Not L0a/L0b first-answer + unique root
+- Not G1/G2, A1–A3, or N0–N2
+- Not ordinary Chat history/retry contract beyond R5 after a published path
+- Not PostgreSQL persistence or 3D last-position fields

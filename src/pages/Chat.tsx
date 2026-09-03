@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
-import { Composer } from '../components/Composer'
+import { useEffect, useRef, useState } from 'react'
+import type { AssistantMode } from '../assistant-mode'
+import { Composer, QuickModes } from '../components/Composer'
 import { ProductWorkspace } from '../components/Shell'
 import { Icon } from '../icons'
 import { clearActiveHistory, CHAT_LAUNCH_KEY, HISTORY_OPEN_EVENT } from '../history'
@@ -11,6 +12,7 @@ import { resolveVisualAnswer } from '../chat/resolve-visual-answer'
 import { linkedRouteIntro } from '../workspace/catalog'
 import { setActiveConversation } from '../workspace/nav'
 import { ChatRoutePanel } from '../path-planning/chat-route-panel'
+import { pathLaunchAttachments, type PathAttachment } from '../path-planning/path-run-client'
 import {
   createHomeConversation,
   getConversation,
@@ -20,8 +22,9 @@ import {
 
 export type ChatExperience = 'answer' | 'route' | 'visual'
 
-export function launchChat(query:string,mode:ChatExperience) {
+export function launchChat(query:string,mode:ChatExperience,attachments: PathAttachment[] = []) {
   const conversation=createHomeConversation(query,mode)
+  if (attachments.length > 0) pathLaunchAttachments.set(conversation.id, attachments)
   sessionStorage.setItem(CHAT_LAUNCH_KEY,JSON.stringify({query,mode,conversationId:conversation.id,routeId:conversation.routeId}))
   setActiveConversation(conversation.id)
   location.hash='chat'
@@ -118,6 +121,8 @@ export function ChatPage() {
   const [conversationId,setConversationId]=useState(initial?.conversationId??'')
   const [routeId,setRouteId]=useState(initial?.routeId??'')
   const [value,setValue]=useState('')
+  const [composerMode,setComposerMode]=useState<AssistantMode>('')
+  const routeSender=useRef<(text:string,mode:AssistantMode)=>void>(()=>undefined)
   useEffect(()=>{if(conversationId)setActiveConversation(conversationId)},[conversationId])
   useEffect(()=>{
     const restore=()=>{
@@ -141,7 +146,19 @@ export function ChatPage() {
     return()=>removeEventListener(HISTORY_OPEN_EVENT,restore)
   },[])
   if(launch.kind==='unavailable')return <ChatLaunchUnavailable title={launch.title} message={launch.message}/>
-  const followUp=()=>{const next=value.trim();if(!next)return;setQuery(next);setExperience(experience==='visual'?'visual':'answer');setValue('')}
+  const followUp=()=>{
+    const next=value.trim()
+    if(!next)return
+    if(experience==='route'){
+      routeSender.current(next,composerMode)
+      setValue('')
+      setComposerMode('')
+      return
+    }
+    setQuery(next)
+    setExperience(experience==='visual'?'visual':'answer')
+    setValue('')
+  }
   const newChat=()=>{
     if(routeId){
       const linked=startLinkedConversation(routeId)
@@ -166,10 +183,13 @@ export function ChatPage() {
         <div className="query-user-bubble">{query}</div>
         {experience==='visual'?<VisualAnswerUnavailable/>:experience==='route'?<>
           {conversation?.kind==='route-followup'&&<article className="chat-answer"><h2>继续同一条路线</h2><p>{linkedRouteIntro(getRoute(routeId)?.title??query,followupOrdinal)}</p></article>}
-          {conversation?.kind!=='route-followup'&&<ChatRoutePanel conversationId={conversationId} query={query} existingRouteId={routeId||undefined} onRouteReady={setRouteId}/>}
+          {conversation?.kind!=='route-followup'&&<ChatRoutePanel conversationId={conversationId} query={query} existingRouteId={routeId||undefined} onRouteReady={setRouteId} onSender={(handler)=>{routeSender.current=handler}}/>}
         </>:<OrdinaryAnswerLive query={query}/>}
       </div></section>
-      {experience!=='route'&&<div className="query-chat-composer"><Composer compact value={value} onChange={setValue} mode="" onMode={()=>undefined} onSend={followUp} showScope={false} showReference={false}/></div>}
+      <div className="query-chat-composer">
+        {experience==='route'&&<QuickModes selected={composerMode} onSelect={setComposerMode}/>}
+        <Composer compact value={value} onChange={setValue} mode={experience==='route'?composerMode:''} onMode={setComposerMode} onSend={followUp} showScope={false} showReference={false} showAttachment={false}/>
+      </div>
     </main>
   </ProductWorkspace>
 }

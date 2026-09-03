@@ -43,7 +43,7 @@ export function PathsPage() {
       </div>
       <section className="route-grid">
         {shown.length === 0
-          ? <div className="square-empty"><strong>还没有自己的路线</strong><p>在问山里用路线制定生成后，会出现在这里；知识脉络要等第一次进入学习才会同步生成</p><button type="button" onClick={() => { location.hash = 'home' }}>去问山制定路线</button></div>
+          ? <div className="square-empty"><strong>还没有自己的路线</strong><p>在问山里用路线制定生成后，会出现在这里；知识脉络要等第一次进入学习才会同步生成</p><button type="button" onClick={() => { sessionStorage.setItem('threadpeak-home-select-route', '1'); location.hash = 'home' }}>去问山制定路线</button></div>
           : shown.map((route) => <button key={route.id} className="route-card" onClick={() => { openRoute(route.id, 'paths'); location.hash='path-3d' }}>
             <span className="route-cover"><Icon name={route.icon} size={26}/></span>
             <span><strong>{route.title}</strong><p>{route.summary}</p><small>{route.owner === 'mine' ? '我的路线' : '示例路线'} · {route.carriers} 个载体 · {route.concepts} 个最终概念 · {route.duration}</small></span>

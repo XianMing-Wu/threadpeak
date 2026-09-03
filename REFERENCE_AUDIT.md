@@ -33,7 +33,7 @@
 | `src/pages/AuthLanding.tsx`、`src/resolve-auth-session.ts`、`server/identity/` | 知乎授权会请求官方地址；缺配置明确失败；进入本地原型只设置本机开关；用户协议/隐私政策只是无内容文字 | 保留授权与进入本地原型两条入口；不假登录；删除无内容的协议/隐私项 |
 | `src/components/Shell.tsx`、`src/history.ts`、`src/resolve-history-reopen.ts` | 侧栏历史主要是本地草稿；Chat 只带发送上下文重开；账号菜单没有设置入口 | 学习历史点哪条开哪条；Chat 历史原样恢复整段对话；清历史只清列表；账号菜单增加设置 |
 | `src/pages/Home.tsx`、`src/components/Composer.tsx` | 首页只有路线/图文快捷；附件与资料范围只报错；建议芯片只填字；思考深度不进请求 | 不增加首页问博主；芯片选中路线模式并填字、不发送；只在首页上传 pdf/md/txt；资料范围继续失败；只有快速/深度 |
-| `src/pages/Chat.tsx`、`src/chat/`、`server/path/` | 路线使用固定五角检索和一次 CandidateSet，答题后本地剪枝；路线模式隐藏 Composer；普通追问替换旧问答 | R1/R-S/R2/R3/R3b/R4；最多 3 轮；校验后发布；Composer 一直存在；发布后普通发送走 R5 |
+| `src/pages/Chat.tsx`、`src/path-planning/`、`server/path-generation/` | 产品路线制定走 R1–R4 `/api/path-runs`；旧 CandidateSet stream 仍在 `server/path/` 标为 prototype | R1/R-S/R2/R3/R3b/R4；最多 3 轮；校验后发布且不建知识；Composer 一直存在；发布后普通发送走 R5 |
 | `src/pages/Collections.tsx`、`src/path-3d/`、`src/components/Path3D.tsx` | 我的路线只显示校验文档；3D 返回按来源；位置只在本次打开保留 | 空态回首页并选中路线模式；全部 3D 返回路线列表；边不锁节点；每条路线恢复上次位置，具体字段仍未裁决 |
 | `src/pages/Session.tsx`、`server/knowledge/` | 首次回复走旧普通回答；成功后另请求 GraphSurgeon 建根；图失败仍可能保留首次回复；永久性只在进程内存 | L0a 三路并联直答 → L0b；canonical 首次回复与确定性唯一根作为同一成功结果，根不再调用 LLM，并永久复用 |
 | `src/session/`、`src/knowledge-canvas/` | 追问按检索→分类→回答串行；整图纯文本；前端本机长图；点节点会影响宿主；画布回对话入口不完整 | 显式引用/默认最近回复决定宿主；G1 邻域 JSON 与 G2 当前 conversation 全文并发；双成功才长图；画布与最新对话实时同步 |

@@ -156,6 +156,8 @@ npm run check:contracts
 npm run check:product-invariants
 npm run test:agent-runtime
 npm run test:agent-runtime:live
+npm run test:path-generation
+npm run test:path-generation:live
 npm test
 npm run build
 ```

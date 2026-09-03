@@ -1,3 +1,4 @@
+/** prototype: CandidateSet / NDJSON stream. Product Chat uses /api/path-runs. */
 import { randomUUID } from "node:crypto";
 import { PassThrough } from "node:stream";
 import Fastify from "fastify";
@@ -139,8 +140,8 @@ export const buildPathApp = async (deps: PathAppDeps = {}) => {
   const app = Fastify({
     logger: deps.logger ?? false,
     bodyLimit: PATH_HTTP_BODY_LIMIT_BYTES,
-    requestTimeout: 90_000,
-    connectionTimeout: 90_000,
+    requestTimeout: 180_000,
+    connectionTimeout: 180_000,
   });
   app.addHook("onClose", async () => {
     if (ownedStore !== undefined) await ownedStore.close();

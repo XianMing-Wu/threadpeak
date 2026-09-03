@@ -16,16 +16,11 @@ const path3dStage = await read('../src/path-3d/path-3d-stage.tsx')
 const path3dResolve = await read('../src/path-3d/resolved-path-document.ts')
 const vite = await read('../vite.config.ts')
 
-test('path-lab 是独立多入口且不装载产品侧栏或其他页面', () => {
+test('path-lab 已从产品构建入口移除，且不装载产品侧栏', () => {
   assert.match(html, /id="path-lab-root"/)
-  assert.match(html, /src="\/src\/path-lab\/main\.tsx"/)
-  assert.match(vite, /pathLabEntry/)
-  assert.match(vite, /pathLab: pathLabEntry/)
+  assert.doesNotMatch(vite, /pathLab: pathLabEntry/)
   assert.doesNotMatch(app, /WideShell|ProductWorkspace|HomePage|SessionPage|SettingsPage|ChatPage/)
   assert.doesNotMatch(styles, /tp-sidebar|tp-history|settings-page|auth-landing/)
-  assert.match(app, /lazy\(async \(\) =>/)
-  assert.match(app, /import\('\.\.\/components\/Path3D'\)/)
-  assert.doesNotMatch(app, /import \{ LearningPath3DView \} from/)
 })
 
 test('受控目标输入覆盖 Enter、Shift+Enter、IME、pending、abort 与安全错误', () => {

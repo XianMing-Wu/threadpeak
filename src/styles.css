@@ -229,6 +229,10 @@
 .route-agent-status p:before{content:"└ ";color:#a4abb5}
 .clarification-card{padding:22px 24px;border:1px solid #e1e6eb;border-radius:14px;background:#fff;box-shadow:none;transition:border-color .18s,background .18s}
 .clarification-card.is-answered{border-color:#cfe0f7;background:#fbfdff}
+.clarification-card.is-superseded{opacity:.55;filter:grayscale(.15);pointer-events:none}
+.home-attachments{display:flex;flex-wrap:wrap;gap:8px;margin:0 auto 10px;width:min(880px,100%)}
+.attachment-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:#f3f5f7;font-size:12px}
+.attachment-chip button{border:0;background:transparent;cursor:pointer;font-size:14px}
 .clarification-card>small{color:#1772f6;font-size:10px;font-weight:700}
 .clarification-card h2{margin:9px 0 7px;font-size:19px;line-height:1.45}
 .clarification-card>p{margin:0 0 17px;color:#8590a6;font-size:12px;line-height:1.65}

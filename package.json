@@ -11,6 +11,7 @@
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 4301",
+    "ux-ui": "vite --config ../ux-ui/vite.config.ts --host 127.0.0.1 --port 4303",
     "server": "node --experimental-strip-types server/main.ts",
     "build": "tsc -b && vite build",
     "check": "tsc -b --pretty false",
@@ -19,7 +20,9 @@
     "check:product-invariants": "node --test tests/architecture-governance.test.mjs tests/product-invariants.test.mjs",
     "test:agent-runtime": "node --test server/agent-runtime/*.test.mjs",
     "test:agent-runtime:live": "node --test --test-concurrency=1 --test-timeout=180000 server/agent-runtime/live.gate.mjs",
-    "test": "node --test tests/*.test.mjs packages/contracts/tests/*.test.mjs packages/api-client/tests/*.test.mjs packages/runtime-store/tests/*.test.mjs src/path-lab/*.test.mjs src/path-planning/*.test.mjs src/path-3d/*.test.mjs src/session/*.test.mjs src/chat/*.test.mjs src/knowledge-canvas/*.test.mjs src/workspace/*.test.mjs src/*.test.mjs server/*.test.mjs server/identity/*.test.mjs server/knowledge/*.test.mjs server/agent-runtime/*.test.mjs"
+    "test:path-generation": "node --test server/path-generation/*.test.mjs",
+    "test:path-generation:live": "node --test --test-concurrency=1 --test-timeout=180000 server/path-generation/live.gate.mjs",
+    "test": "node --test tests/*.test.mjs packages/contracts/tests/*.test.mjs packages/api-client/tests/*.test.mjs packages/runtime-store/tests/*.test.mjs src/path-lab/*.test.mjs src/path-planning/*.test.mjs src/path-3d/*.test.mjs src/session/*.test.mjs src/chat/*.test.mjs src/knowledge-canvas/*.test.mjs src/workspace/*.test.mjs src/*.test.mjs server/*.test.mjs server/identity/*.test.mjs server/knowledge/*.test.mjs server/agent-runtime/*.test.mjs server/path-generation/*.test.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.16",

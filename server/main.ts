@@ -10,6 +10,11 @@ import { resolveOauthConfig } from './identity/oauth-config.ts'
 import { createOauthService } from './identity/oauth.ts'
 import { createCanonicalAnswerStore } from './knowledge/canonical-answer.ts'
 import { createGraphSurgeon } from './knowledge/graph-surgeon.ts'
+import { createAgentLlmProvider } from './agent-runtime/llm-provider.ts'
+import { createAgentZhihuProvider } from './agent-runtime/zhihu-provider.ts'
+import { invokeStructuredAgent, invokeTextAgent } from './agent-runtime/invoke.ts'
+import { createLlmSummarizer } from './agent-runtime/summarizer.ts'
+import { createPathOrchestrator } from './path-generation/orchestrator.ts'
 
 function loadDotEnv(filePath: string): Record<string, string | undefined> {
   const env: Record<string, string | undefined> = { ...process.env }
@@ -31,7 +36,7 @@ function loadDotEnv(filePath: string): Record<string, string | undefined> {
 }
 
 const http: HttpPort = async (url, init) => {
-  const timeout = AbortSignal.timeout(60_000)
+  const timeout = AbortSignal.timeout(90_000)
   const signal = init?.signal ? AbortSignal.any([init.signal, timeout]) : timeout
   const response = await fetch(url, {
     method: init?.method ?? 'GET',
@@ -71,6 +76,19 @@ const oauth = createOauthService({
 })
 const canonical = createCanonicalAnswerStore()
 const graph = createGraphSurgeon(canonical)
+const pathOrchestrator = config.ok
+  ? (() => {
+    const llm = createAgentLlmProvider({ config: config.config, http })
+    const zhihu = createAgentZhihuProvider({ config: config.config, http, clock })
+    const summarizer = createLlmSummarizer({ llm })
+    const agentPorts = { llm, zhihu, summarizer }
+    return createPathOrchestrator({
+      invokeStructured: (agentId, context, options) => invokeStructuredAgent(agentPorts, agentId, context, options),
+      invokeText: (agentId, context, options) => invokeTextAgent(agentPorts, agentId, context, options),
+      search: (query, count) => zhihu.search(query, count),
+    })
+  })()
+  : undefined
 
 const server = await createCompositionApp({
   config,
@@ -79,6 +97,7 @@ const server = await createCompositionApp({
   canonical,
   graph,
   ...(service ? { service } : {}),
+  ...(pathOrchestrator ? { pathOrchestrator } : {}),
   ...(config.ok && config.config.pathGenerateUpstream
     ? { pathGenerateUpstream: config.config.pathGenerateUpstream }
     : {}),

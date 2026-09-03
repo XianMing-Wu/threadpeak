@@ -3,7 +3,7 @@ import { getRoute, useWorkspaceTick } from '../workspace/store'
 import type { NodeSemanticBadgeIcon } from 'liu-kanshan-learning-path-3d'
 import { defaultResourceNavigation, LearningPath3DView } from '../components/Path3D'
 import { Icon } from '../icons'
-import { openLearning, readActiveRouteId, readPathReturn } from '../workspace/nav'
+import { openLearning, readActiveRouteId } from '../workspace/nav'
 
 import { resolvePath3DView } from './resolved-path-document.ts'
 
@@ -44,7 +44,7 @@ export function Path3DStage() {
     const route = routeId ? getRoute(routeId) : undefined
     return resolvePath3DView({ routeId, route })
   }, [routeId, tick])
-  const goBack = () => { location.hash = readPathReturn() }
+  const goBack = () => { location.hash = 'paths' }
 
   if (view.kind === 'unavailable') {
     return <section className="path3d-stage" aria-label="3D 学习路线">
@@ -67,9 +67,9 @@ export function Path3DStage() {
     const conceptId = conceptIdFromAction(detail)
     if (conceptId) sessionStorage.setItem('threadpeak-active-concept', conceptId)
     const shouldLearn = detail.actionId?.startsWith('learn:') || detail.actionId?.startsWith('action-')
-    if (!shouldLearn) return
+    if (!shouldLearn || !conceptId) return
     event.preventDefault()
-    openLearning(view.routeId, conceptId || undefined, 'path-3d')
+    openLearning(view.routeId, conceptId, 'path-3d')
   }
   const onResourceNavigate = (href: string, target: 'self' | 'blank') => {
     if (href === '#session-learning' || href.startsWith('#session-learning')) {

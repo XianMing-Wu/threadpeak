@@ -1,10 +1,20 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AgentStatus } from '../components/AgentStatus'
 import { Icon } from '../icons'
-import { useRuntimeSelector } from '../runtime/use-runtime-selector'
 import { openRoute } from '../workspace/nav'
 import { createMineRouteFromChat, getRoute } from '../workspace/store'
-import { createPathGenerateSession } from './path-generate-session.ts'
+import {
+  commitPathAnswers,
+  followUpPathRun,
+  pathLaunchAttachments,
+  replyPathRun,
+  retryPathRun,
+  selectPathAnswer,
+  startPathRun,
+  type PathRunView,
+} from './path-run-client.ts'
+import type { AssistantMode } from '../assistant-mode'
+import { MarkdownMath } from '../lib/MarkdownMath'
 
 const optionLetters = ['A', 'B', 'C', 'D'] as const
 
@@ -15,11 +25,17 @@ function RouteReadyCard(props: { title: string; routeId: string }) {
       <small>路线已生成</small>
       <h2>{props.title}</h2>
       <p>这条路线来自已校验的生成结果。知识脉络仍要等第一次进入学习并看到首段讲解后才会同步生成。</p>
-      <button type="button" onClick={() => { openRoute(props.routeId, 'chat'); location.hash = 'path-3d' }}>
+      <button type="button" onClick={() => { openRoute(props.routeId, 'paths'); location.hash = 'path-3d' }}>
         进入学习路线 <Icon name="arrow-right" size={16}/>
       </button>
     </div>
   </section>
+}
+
+function publish(view: PathRunView, query: string, conversationId: string, onRouteReady: (id: string) => void) {
+  if (!view.document || view.knowledgeCreated !== false) return
+  const route = createMineRouteFromChat(query, [], conversationId, view.document as Parameters<typeof createMineRouteFromChat>[3])
+  onRouteReady(route.id)
 }
 
 export function ChatRoutePanel(props: {
@@ -27,73 +43,137 @@ export function ChatRoutePanel(props: {
   query: string
   existingRouteId?: string
   onRouteReady: (routeId: string) => void
+  onSender?: (handler: (text: string, mode: AssistantMode) => void) => void
 }) {
   const existing = props.existingRouteId ? getRoute(props.existingRouteId) : undefined
-  const session = useMemo(() => createPathGenerateSession({
-    fetch: (input, init) => fetch(input, init),
-    now: () => performance.now(),
-  }), [])
-  const view = useRuntimeSelector(session.store, (next) => next)
-  const published = useRef(Boolean(existing))
-  const launchedQuery = useRef('')
+  const [view, setView] = useState<PathRunView | null>(null)
+  const [pending, setPending] = useState(false)
+  const [replies, setReplies] = useState<{ user: string; assistant: string }[]>([])
+  const launched = useRef('')
+
+  const apply = (next: PathRunView) => {
+    setView(next)
+    if (next.status === 'published' && next.document) {
+      publish(next, props.query, props.conversationId, props.onRouteReady)
+    }
+  }
+
+  const run = async (work: () => Promise<PathRunView>) => {
+    setPending(true)
+    try {
+      apply(await work())
+    } catch (error) {
+      setView({
+        runId: view?.runId ?? '',
+        goal: props.query,
+        status: 'failed',
+        stage: 'failed',
+        questionSets: view?.questionSets ?? [],
+        knowledgeCreated: false,
+        error: { code: 'PROVIDER_UNAVAILABLE', message: error instanceof Error ? error.message : '路线服务不可用。' },
+      })
+    } finally {
+      setPending(false)
+    }
+  }
 
   useEffect(() => {
     if (existing) return
     const key = `${props.conversationId}::${props.query}`
-    if (launchedQuery.current === key) return
-    launchedQuery.current = key
-    session.submitNewGoal(props.query)
-  }, [existing, props.conversationId, props.query, session])
-  useEffect(() => {
-    if (published.current || view.runState !== 'ready' || !view.document) return
-    const route = createMineRouteFromChat(
-      props.query,
-      view.clarificationHistory.map((item) => item.option.label),
-      props.conversationId,
-      view.document,
-    )
-    published.current = true
-    props.onRouteReady(route.id)
-  }, [props.conversationId, props.onRouteReady, props.query, view.clarificationHistory, view.document, view.runState])
+    if (launched.current === key) return
+    launched.current = key
+    const attachments = pathLaunchAttachments.get(props.conversationId)
+    void run(() => startPathRun({ goal: props.query, ...(attachments ? { attachments } : {}) }))
+  }, [existing, props.conversationId, props.query])
 
-  if (existing) {
+  useEffect(() => {
+    props.onSender?.((text, mode) => {
+      if (!view) return
+      if (mode === 'route' && view.status === 'published') {
+        setReplies([])
+        void run(() => startPathRun({ goal: text }))
+        return
+      }
+      if (view.status === 'awaiting_answers') {
+        void run(() => followUpPathRun(view.runId, text))
+        return
+      }
+      if (view.status === 'published') {
+        void run(async () => {
+          const next = await replyPathRun(view.runId, text)
+          if (next.reply) setReplies((current) => [...current, { user: text, assistant: next.reply ?? '' }])
+          return next
+        })
+      }
+    })
+  }, [props, view])
+
+  if (existing && !view) {
     return <article className="route-clarification"><RouteReadyCard title={existing.title} routeId={existing.id}/></article>
   }
 
-  const prompt = view.clarification
-  const readyTitle = view.document ? (getRoute(view.document.id)?.title ?? view.document.metadata.title) : ''
+  const active = view?.questionSets.filter((item) => item.status === 'active') ?? []
+  const superseded = view?.questionSets.filter((item) => item.status === 'superseded') ?? []
+  const current = active[0]
+  const unanswered = current?.questions.filter((question) => !current.selectedOptionIds[question.id]) ?? []
+  const prompt = unanswered[0] ?? current?.questions[0]
+  const publishedTitle = view?.document?.metadata?.title ?? view?.route?.title ?? props.query
+  const publishedId = view?.document?.id
 
   return <article className="route-clarification">
-    {view.runState === 'pending' && <AgentStatus items={[{ label: view.status, done: false }]}/>}
-    {view.runState === 'error' && <section className="route-ready-card" role="alert">
+    {(pending || view?.status === 'running') && <AgentStatus items={[{ label: view?.stage || '正在制定路线', done: false }]}/>}
+    {view?.status === 'failed' && <section className="route-ready-card" role="alert">
       <div>
         <small>本次生成未完成</small>
         <h2>无法发布这条路线</h2>
-        <p>{view.error}</p>
-        <button type="button" onClick={() => session.submitNewGoal(props.query)}>重试</button>
+        <p>{view.error?.message}</p>
+        <button type="button" onClick={() => view.runId && run(() => retryPathRun(view.runId))}>重试</button>
       </div>
     </section>}
-    {prompt && <section className="clarification-card" data-question={prompt.step}>
-      <small>第 {prompt.step} 题 · 共 {prompt.total} 题</small>
-      <h2>{prompt.question}</h2>
+    {superseded.map((set) => <section key={`old-${set.round}`} className="clarification-card is-superseded" aria-disabled="true">
+      <small>第 {set.round} 轮 · 已替换</small>
+      {set.questions.map((question) => <div key={question.id}>
+        <h2>{question.prompt}</h2>
+        <div className="clarification-options">
+          {question.options.map((option, index) => (
+            <button key={option.id} type="button" disabled className={set.selectedOptionIds[question.id] === option.id ? 'is-selected' : ''}>
+              <span className="option-letter">{optionLetters[index]}</span>
+              <strong>{option.label}</strong>
+            </button>
+          ))}
+        </div>
+      </div>)}
+    </section>)}
+    {view?.followUpMessage && view.status === 'awaiting_answers' && <article className="chat-answer"><MarkdownMath source={view.followUpMessage}/></article>}
+    {prompt && view?.status === 'awaiting_answers' && <section className="clarification-card" data-question={current.round}>
+      <small>第 {current.round} 轮 · 最多 3 轮</small>
+      <h2>{prompt.prompt}</h2>
       <div className="clarification-options">
         {prompt.options.map((option, index) => (
           <button
             key={option.id}
             type="button"
-            className={view.selectedOptionId === option.id ? 'is-selected' : ''}
-            disabled={view.runState === 'pending'}
-            onClick={() => session.selectOption(option.id)}
+            className={current.selectedOptionIds[prompt.id] === option.id ? 'is-selected' : ''}
+            disabled={pending}
+            onClick={() => run(() => selectPathAnswer(view.runId, prompt.id, option.id))}
           >
             <span className="option-letter">{optionLetters[index]}</span>
             <strong>{option.label}</strong>
           </button>
         ))}
       </div>
-      <button type="button" disabled={!view.selectedOptionId || view.runState === 'pending'} onClick={() => session.continueClarification(props.query)}>
-        {prompt.step === prompt.total ? '生成完整路径' : '下一题'}
-      </button>
+      {current.questions.every((question) => current.selectedOptionIds[question.id]) && <button
+        type="button"
+        disabled={pending}
+        onClick={() => run(() => commitPathAnswers(view.runId))}
+      >
+        生成完整路径
+      </button>}
     </section>}
-    {view.runState === 'ready' && view.document && <RouteReadyCard title={readyTitle} routeId={view.document.id}/>}
+    {view?.status === 'published' && publishedId && <RouteReadyCard title={publishedTitle} routeId={publishedId}/>}
+    {replies.map((item, index) => <div key={index}>
+      <div className="query-user-bubble">{item.user}</div>
+      <article className="chat-answer"><MarkdownMath source={item.assistant}/></article>
+    </div>)}
   </article>
 }
