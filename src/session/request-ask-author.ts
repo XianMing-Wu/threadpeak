@@ -1,6 +1,7 @@
 import type { FetchPort } from '@threadpeak/api-client'
 import { createLiveApiClient, liveMessageOf, LIVE_ASK_AUTHOR_URL, LIVE_READY_URL } from '../runtime/live-client.ts'
 import { resolveAskAuthor, type AskAuthorResolution } from './resolve-ask-author.ts'
+import { formatAuthorAnnotation } from './ask-authors.ts'
 
 export type LiveAuthorCard = {
   name: string
@@ -9,6 +10,14 @@ export type LiveAuthorCard = {
   url: string
   text: string
   source: 'zhihu-live'
+}
+
+export type AskAuthorRequestContext = {
+  hostNodeId: string
+  hostContent: string
+  carrier?: { id?: string; title?: string }
+  concept?: { id?: string; title?: string }
+  thinkingDepth?: 'fast' | 'deep'
 }
 
 export type AskAuthorLiveResult =
@@ -33,19 +42,21 @@ function isZhihuUrl(value: string): boolean {
 function asAuthor(value: unknown): LiveAuthorCard | undefined {
   const item = asRecord(value)
   if (!item) return undefined
-  const name = typeof item.displayName === 'string' ? item.displayName.trim() : ''
-  const url = typeof item.sourceUrl === 'string' ? item.sourceUrl.trim() : ''
-  const profile = typeof item.profileUrl === 'string' ? item.profileUrl.trim() : ''
-  const bio = typeof item.bio === 'string' ? item.bio.trim() : ''
-  const reason = typeof item.reason === 'string' ? item.reason.trim() : ''
+  const name = (typeof item.authorName === 'string' ? item.authorName : typeof item.displayName === 'string' ? item.displayName : '').trim()
+  const url = (typeof item.evidenceUrl === 'string' ? item.evidenceUrl : typeof item.sourceUrl === 'string' ? item.sourceUrl : '').trim()
+  const summary = (typeof item.evidenceSummary === 'string' ? item.evidenceSummary : '').trim()
+  const displayText = (typeof item.displayText === 'string' ? item.displayText : typeof item.reason === 'string' ? item.reason : '').trim()
   if (!name || name === '刘看山' || name === '马同学' || name === '李永乐老师') return undefined
-  if (!isZhihuUrl(url) || (profile && !isZhihuUrl(profile))) return undefined
+  if (!isZhihuUrl(url)) return undefined
+  const text = displayText.includes('详细内容可以阅读我的文章')
+    ? displayText
+    : formatAuthorAnnotation(summary || displayText, url)
   return {
     name,
-    bio: bio || '知乎作者',
+    bio: '知乎作者',
     title: name,
     url,
-    text: reason || '来自该作者的公开知乎内容，这是摘要而不是作者新写的回复。',
+    text,
     source: 'zhihu-live',
   }
 }
@@ -53,9 +64,20 @@ function asAuthor(value: unknown): LiveAuthorCard | undefined {
 export async function requestAskAuthor(input: {
   question: string
   quote: string
+  hostNodeId?: string
+  hostContent?: string
+  carrier?: { id?: string; title?: string }
+  concept?: { id?: string; title?: string }
+  thinkingDepth?: 'fast' | 'deep'
   fetch?: FetchPort
 }): Promise<AskAuthorLiveResult> {
   const fallback = resolveAskAuthor()
+  if (!input.question.trim() || !input.quote.trim()) {
+    return {
+      ...fallback,
+      message: '问博主必须先划选原文，再写下问题。',
+    }
+  }
   const client = createLiveApiClient(input.fetch)
   const ready = await client.requestJson({ url: LIVE_READY_URL, method: 'GET', traceId: 'ask-author-ready' })
   const readyBody = ready.ok ? asRecord(ready.value) : undefined
@@ -64,7 +86,14 @@ export async function requestAskAuthor(input: {
     url: LIVE_ASK_AUTHOR_URL,
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ question: input.question, quote: input.quote }),
+    body: JSON.stringify({
+      question: input.question,
+      selection: { text: input.quote, anchor: input.hostNodeId ?? '' },
+      host: { nodeId: input.hostNodeId ?? '', content: input.hostContent ?? '' },
+      carrier: input.carrier ?? {},
+      concept: input.concept ?? {},
+      thinkingDepth: input.thinkingDepth === 'deep' ? 'deep' : 'fast',
+    }),
     traceId: 'ask-author',
   })
   const body = asRecord(posted.value)

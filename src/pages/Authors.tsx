@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ProductWorkspace } from '../components/Shell'
 import { Icon } from '../icons'
+import { requestAuthorNetwork, type AuthorNetworkLiveResult } from '../session/request-author-network'
 import { resolveAuthorNetwork } from '../session/resolve-author-network'
 import { requestAuthorSearch, type AuthorSearchLiveResult } from '../session/request-author-search'
 import { resolveAuthorSearch, type AuthorSearchResolution } from '../session/resolve-author-search'
@@ -8,6 +9,12 @@ import { resolveAuthorSearch, type AuthorSearchResolution } from '../session/res
 type AuthorSection = 'search' | 'network'
 
 const center = { x: 390, y: 236 }
+
+function originLabel(origin: 'high-weight' | 'low-weight' | 'zhihu') {
+  if (origin === 'high-weight') return '高权网络'
+  if (origin === 'low-weight') return '低权网络'
+  return '知乎检索'
+}
 
 function AuthorSearchUnavailable({ message }: { message?: string }) {
   const resolution = resolveAuthorSearch()
@@ -18,12 +25,12 @@ function AuthorSearchUnavailable({ message }: { message?: string }) {
   </section>
 }
 
-function AuthorNetworkUnavailable() {
+function AuthorNetworkUnavailable({ message }: { message?: string }) {
   const resolution = resolveAuthorNetwork()
   return <section className="radar-search-status" role="alert">
     <small>博主网络</small>
     <h2>{resolution.title}</h2>
-    <p>{resolution.message}</p>
+    <p>{message || resolution.message}</p>
   </section>
 }
 
@@ -34,7 +41,7 @@ export function AuthorsPage() {
     <main className="consultation-page">
       <header className="consultation-header">
         <h1>博主网络</h1>
-        <p>{section === 'network' ? '已提交的博主关系会显示在这里。载体→概念→问题的分层还没有冻结，不能当成产品事实。' : '先查你的博主网络；没有相关作者时再检索知乎，最多 3 位，不凑数。'}</p>
+        <p>{section === 'network' ? '已入网的真实作者会列在这里。关系图画法还没有冻结，不能当成产品事实。' : '先查你的博主网络；没有相关作者时再检索知乎，最多 3 位，不凑数。'}</p>
       </header>
       <div className="square-tabs author-tabs">
         <button type="button" className={section === 'search' ? 'is-active' : ''} onClick={() => setSection('search')}>搜索博主</button>
@@ -94,9 +101,13 @@ function AuthorSearchPane() {
     </section>
     <aside className="consultation-sidebar">
       {live?.kind === 'results' ? <section className="radar-search-status" role="status">
-        <small>{live.origin === 'network' ? '来自博主网络' : '来自知乎检索'}</small>
-        <h2>找到 {live.names.length} 位相关博主</h2>
-        <p>{live.names.join('、')}</p>
+        <small>最多 3 位，按高权、低权、知乎补位</small>
+        <h2>找到 {live.authors.length} 位相关博主</h2>
+        <div className="radar-found-list">
+          {live.authors.map((author, index) => (
+            <span key={author.authorId}><i>{index + 1}</i><span>{author.name} · {originLabel(author.origin)}</span></span>
+          ))}
+        </div>
       </section> : live?.kind === 'empty' ? <section className="radar-search-status" role="status">
         <h2>没有相关博主</h2>
         <p>网络和知乎都没有可展示的相关作者，不会凑数。</p>
@@ -104,16 +115,41 @@ function AuthorSearchPane() {
         <span className="radar-status-icon"><Icon name="network" size={21}/></span>
         <small>从一个具体问题开始</small>
         <h2>你想咨询谁，先由问题来决定</h2>
-        <p>问题越具体，找到的博主和原文证据就越准确。发送后会走 network-first 检索；当前没有真实检索时会显式失败，不会用本地图谱或固定作者凑结果。</p>
+        <p>问题越具体，找到的博主和原文证据就越准确。发送后会走 network-first 检索；网络投影不可用时会显式失败，不会用本地图谱或固定作者凑结果。</p>
       </section>}
     </aside>
   </section>
 }
 
 function AuthorNetworkPane() {
+  const [live, setLive] = useState<AuthorNetworkLiveResult | null>(null)
+
+  useEffect(() => {
+    void requestAuthorNetwork().then(setLive)
+  }, [])
+
   return <section className="consultation-body is-network">
     <div className="author-network-pane">
-      <AuthorNetworkUnavailable/>
+      {!live ? <section className="radar-search-status" aria-live="polite">
+        <small>博主网络</small>
+        <h2>正在读取已入网作者</h2>
+        <p>只列出服务端已经写入的真实作者，不展示示例星图。</p>
+      </section> : live.kind === 'unavailable' ? <AuthorNetworkUnavailable message={live.message}/> : live.authors.length === 0 ? <section className="radar-search-status" role="status">
+        <small>博主网络</small>
+        <h2>还没有入网博主</h2>
+        <p>问博主选中的真实作者会写入高权；搜索补位的新作者会写入低权。关系图画法尚未冻结，这里只显示名单。</p>
+      </section> : <section className="radar-search-status" role="status">
+        <small>博主网络</small>
+        <h2>已入网 {live.authors.length} 位博主</h2>
+        <div className="radar-found-list">
+          {live.authors.map((author, index) => (
+            <span key={author.authorId}>
+              <i>{index + 1}</i>
+              <span>{author.name} · {author.weight === 'high' ? '高权' : '低权'}{author.question ? ` · ${author.question}` : ''}</span>
+            </span>
+          ))}
+        </div>
+      </section>}
     </div>
   </section>
 }

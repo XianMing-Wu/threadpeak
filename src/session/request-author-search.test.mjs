@@ -25,3 +25,24 @@ test('author search surfaces live network-unavailable instead of a generic fallb
   assert.equal(result.kind, 'unavailable')
   assert.match(result.message, /关系投影/)
 })
+
+test('author search maps mixed high/low/zhihu people without inventing Liu Kanshan', async () => {
+  const result = await requestAuthorSearch({
+    query: '线性代数',
+    fetch: async (url) => {
+      if (url === '/api/ready') return jsonResponse(200, { ready: true })
+      return jsonResponse(200, {
+        kind: 'results',
+        authors: [
+          { authorId: 'a', displayName: '作者甲', origin: 'high-weight' },
+          { authorId: 'b', displayName: '作者乙', origin: 'zhihu' },
+          { authorId: 'liu', displayName: '刘看山', origin: 'zhihu' },
+        ],
+      })
+    },
+  })
+  assert.equal(result.kind, 'results')
+  assert.equal(result.authors.length, 2)
+  assert.equal(result.authors[0].origin, 'high-weight')
+  assert.equal(result.authors[1].origin, 'zhihu')
+})

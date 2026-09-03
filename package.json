@@ -25,7 +25,9 @@
     "test:first-learning:live": "node --test --test-concurrency=1 --test-timeout=180000 server/first-learning/live.gate.mjs",
     "test:follow-up": "node --test server/follow-up/*.test.mjs src/session/resolve-follow-up-host.test.mjs src/session/request-follow-up.test.mjs",
     "test:follow-up:live": "node --test --test-concurrency=1 --test-timeout=180000 server/follow-up/live.gate.mjs",
-    "test": "node --test tests/*.test.mjs packages/contracts/tests/*.test.mjs packages/api-client/tests/*.test.mjs packages/runtime-store/tests/*.test.mjs src/path-lab/*.test.mjs src/path-planning/*.test.mjs src/path-3d/*.test.mjs src/session/*.test.mjs src/chat/*.test.mjs src/knowledge-canvas/*.test.mjs src/workspace/*.test.mjs src/*.test.mjs server/*.test.mjs server/identity/*.test.mjs server/knowledge/*.test.mjs server/agent-runtime/*.test.mjs server/path-generation/*.test.mjs server/first-learning/*.test.mjs server/follow-up/*.test.mjs"
+    "test:authors": "node --test server/authors/*.test.mjs src/session/request-ask-author.test.mjs src/session/request-author-search.test.mjs src/session/request-author-network.test.mjs src/session/resolve-ask-author.test.mjs src/session/resolve-author-search.test.mjs src/session/resolve-author-network.test.mjs src/session/ask-authors.test.mjs",
+    "test:authors:live": "node --test --test-concurrency=1 --test-timeout=180000 server/authors/live.gate.mjs",
+    "test": "node --test tests/*.test.mjs packages/contracts/tests/*.test.mjs packages/api-client/tests/*.test.mjs packages/runtime-store/tests/*.test.mjs src/path-lab/*.test.mjs src/path-planning/*.test.mjs src/path-3d/*.test.mjs src/session/*.test.mjs src/chat/*.test.mjs src/knowledge-canvas/*.test.mjs src/workspace/*.test.mjs src/*.test.mjs server/*.test.mjs server/identity/*.test.mjs server/knowledge/*.test.mjs server/agent-runtime/*.test.mjs server/path-generation/*.test.mjs server/first-learning/*.test.mjs server/follow-up/*.test.mjs server/authors/*.test.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.16",

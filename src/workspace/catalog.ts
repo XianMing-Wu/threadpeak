@@ -277,6 +277,15 @@ export function conceptTitle(blueprint: RouteBlueprint, conceptId: string) {
   return conceptId
 }
 
+export function conceptCarrier(blueprint: RouteBlueprint, conceptId: string) {
+  for (const carrier of blueprint.carriers) {
+    if (carrier.concepts.some(([id]) => id === conceptId)) {
+      return { id: carrier.id, title: carrier.title }
+    }
+  }
+  return { id: '', title: '' }
+}
+
 export function conceptSummary(blueprint: RouteBlueprint, conceptId: string) {
   for (const carrier of blueprint.carriers) {
     const hit = carrier.concepts.find(([id]) => id === conceptId)

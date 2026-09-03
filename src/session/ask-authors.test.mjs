@@ -84,12 +84,20 @@ test('zero trusted authors become 刘看山直达 and are not live blogger repli
       bio: '公开内容',
       title: '线性映射',
       url: 'https://www.zhihu.com/question/1',
-      text: '摘要',
+      text: '摘要\n\n详细内容可以阅读我的文章 https://www.zhihu.com/question/1',
+      source: 'zhihu-live',
+    }, {
+      name: '另一位作者',
+      bio: '公开内容',
+      title: '线性映射',
+      url: 'https://www.zhihu.com/question/2',
+      text: '数乘\n\n详细内容可以阅读我的文章 https://www.zhihu.com/question/2',
       source: 'zhihu-live',
     }],
   })
   assert.equal(live.status, 'ready')
   assert.equal(live.reply?.source, 'zhihu-live')
+  assert.equal(live.replies?.length, 2)
   assert.equal(isLiuKanshanDirect(live.reply), false)
   assert.equal(isPersistedAnnotation(live), true)
 

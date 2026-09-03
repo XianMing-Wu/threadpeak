@@ -55,7 +55,12 @@ export function useAnnotations(scopeId: string, onSettled?: (item: AskAuthorsAnn
   const annotations = annotationsInScope(store.items, scopeId)
   const active = annotations.find((item) => item.id === store.activeId) ?? null
 
-  const create = (quote: string, question: string, nodeId: string) => {
+  const create = (quote: string, question: string, nodeId: string, context?: {
+    hostContent?: string
+    carrier?: { id?: string; title?: string }
+    concept?: { id?: string; title?: string }
+    thinkingDepth?: 'fast' | 'deep'
+  }) => {
     const ordinal = nextOrdinal(store.items, scopeId)
     const created = createAskAuthorsAnnotation(quote, question, nodeId, ordinal, scopeId)
     commit({
@@ -63,7 +68,15 @@ export function useAnnotations(scopeId: string, onSettled?: (item: AskAuthorsAnn
       activeId: created.id,
       panelOpen: true,
     }, false)
-    void requestAskAuthor({ question, quote }).then((result) => {
+    void requestAskAuthor({
+      question,
+      quote,
+      hostNodeId: nodeId,
+      hostContent: context?.hostContent,
+      carrier: context?.carrier,
+      concept: context?.concept,
+      thinkingDepth: context?.thinkingDepth,
+    }).then((result) => {
       const applied = applyAskAuthorResult(created, result)
       setStore((current) => {
         const items = current.items.map((item) => (item.id === created.id ? applied : item))

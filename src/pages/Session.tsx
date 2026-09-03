@@ -19,7 +19,7 @@ import { requestFollowUp } from '../session/request-follow-up'
 import { buildFollowUpMessages, buildFollowUpNeighborhood, followUpQuoteForG2 } from '../session/build-follow-up-context'
 import { readLearningThinking, subscribeLearningThinking, writeLearningThinking } from '../session/learning-thinking'
 import { resolveFollowUpHost, turnAllowsSelection } from '../session/resolve-follow-up-host'
-import { catalogLesson, blueprintConcepts, conceptTitle } from '../workspace/catalog'
+import { catalogLesson, blueprintConcepts, conceptCarrier, conceptTitle } from '../workspace/catalog'
 import {
   readActiveConceptId,
   readActiveConversationId,
@@ -383,7 +383,19 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
   }
   const submitAskAuthors = (question: string) => {
     if (!authorQuestion) return
-    annotations.create(authorQuestion.text, question, authorQuestion.nodeId || 'root')
+    const nodeId = authorQuestion.nodeId || 'root'
+    const knowledge = getKnowledgeByRoute(routeId)
+    const graph = knowledge ? getConceptGraph(knowledge.id, conceptId) : undefined
+    const node = graph?.nodes.find((item) => item.id === nodeId)
+    const hostContent = node
+      ? node.turns.flatMap((turn) => turn.paragraphs).join('\n\n')
+      : lesson.paragraphs.join('\n\n')
+    annotations.create(authorQuestion.text, question, nodeId, {
+      hostContent,
+      carrier: conceptCarrier(blueprint, conceptId),
+      concept: { id: conceptId, title },
+      thinkingDepth,
+    })
     setAuthorQuestion(null)
   }
   const knowledgeReady = graphReady || Boolean(getKnowledgeByRoute(routeId))

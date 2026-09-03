@@ -12,6 +12,8 @@ import { registerFirstLearningRoutes } from './first-learning/http.ts'
 import type { FirstLearningOrchestrator } from './first-learning/orchestrator.ts'
 import { registerFollowUpRoutes } from './follow-up/http.ts'
 import type { FollowUpOrchestrator } from './follow-up/orchestrator.ts'
+import { registerAuthorRoutes } from './authors/http.ts'
+import type { AuthorsOrchestrator } from './authors/orchestrator.ts'
 import { registerAuthRoutes } from './identity/http.ts'
 import type { OauthService } from './identity/oauth.ts'
 import type { CanonicalAnswerStore } from './knowledge/canonical-answer.ts'
@@ -33,6 +35,7 @@ export type LiveHttpPorts = {
   pathOrchestrator?: PathOrchestrator
   firstLearning?: FirstLearningOrchestrator
   followUp?: FollowUpOrchestrator
+  authors?: AuthorsOrchestrator
 }
 
 function traceIdOf(request: FastifyRequest): string {
@@ -162,41 +165,6 @@ export function registerLiveRoutes(app: FastifyInstance, ports: LiveHttpPorts) {
       reply.raw.write(`${JSON.stringify({ kind: 'failed', code: 'PROVIDER_UNAVAILABLE', message: '模型服务不可用，不能生成这次回答。', traceId })}\n`)
     }
     reply.raw.end()
-  })
-
-  app.post('/api/ask-author', async (request, reply) => {
-    const traceId = traceIdOf(request)
-    if (!ports.config.ok || !ports.service) {
-      return sendJson(reply, 503, {
-        kind: 'failed',
-        code: 'CONFIG_INVALID',
-        message: 'Required Zhihu or DeepSeek configuration is missing.',
-        traceId,
-      })
-    }
-    const payload = asRecord(request.body) ?? {}
-    const result = await ports.service.askAuthor({
-      question: typeof payload.question === 'string' ? payload.question : '',
-      quote: typeof payload.quote === 'string' ? payload.quote : '',
-    })
-    return sendJson(reply, result.kind === 'failed' ? 503 : 200, { ...result, traceId })
-  })
-
-  app.post('/api/authors/search', async (request, reply) => {
-    const traceId = traceIdOf(request)
-    if (!ports.config.ok || !ports.service) {
-      return sendJson(reply, 503, {
-        kind: 'failed',
-        code: 'CONFIG_INVALID',
-        message: 'Required Zhihu or DeepSeek configuration is missing.',
-        traceId,
-      })
-    }
-    const payload = asRecord(request.body) ?? {}
-    const result = await ports.service.authorSearch({
-      query: typeof payload.query === 'string' ? payload.query : '',
-    })
-    return sendJson(reply, result.kind === 'failed' ? 503 : 200, { ...result, traceId })
   })
 
   app.get('/api/learning/canonical-answer', async (request, reply) => {
@@ -332,6 +300,10 @@ export async function createCompositionApp(ports: LiveHttpPorts): Promise<Fastif
   registerFollowUpRoutes(app, {
     ready: ports.config.ok,
     ...(ports.followUp ? { followUp: ports.followUp } : {}),
+  })
+  registerAuthorRoutes(app, {
+    ready: ports.config.ok,
+    ...(ports.authors ? { authors: ports.authors } : {}),
   })
   if (ports.oauth) registerAuthRoutes(app, ports.oauth)
   return app

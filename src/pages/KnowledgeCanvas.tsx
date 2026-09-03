@@ -15,7 +15,7 @@ import {
   type CanvasEdge,
   type CanvasNode,
 } from '../knowledge-canvas/content'
-import { conceptTitle } from '../workspace/catalog'
+import { conceptCarrier, conceptTitle } from '../workspace/catalog'
 import { closeConceptKnowledge, readActiveConversationId, readActiveKnowledgeId, readCanvasReturn, readKnowledgeConceptId } from '../workspace/nav'
 import { appendFollowUpTurn, blueprintOf, ensureLearningConversation, getConceptGraph, getConversation, getKnowledge, getLesson, saveConversationDraft, useWorkspaceTick } from '../workspace/store'
 import { conversationGraphView, growKindLabel } from '../knowledge-canvas/generate'
@@ -427,7 +427,18 @@ export function KnowledgeCanvasPage() {
   }
   const submitAskAuthors = (question: string) => {
     if (!authorQuestion) return
-    annotations.create(authorQuestion.text, question, authorQuestion.nodeId || selected)
+    const nodeId = authorQuestion.nodeId || selected
+    const node = nodes.find((item) => item.id === nodeId)
+    const hostContent = node
+      ? node.turns.flatMap((turn) => turn.paragraphs).join('\n\n')
+      : ''
+    const routeId = knowledge?.routeId ?? ''
+    annotations.create(authorQuestion.text, question, nodeId, {
+      hostContent,
+      carrier: conceptCarrier(blueprintOf(routeId), conceptId || ''),
+      concept: { id: conceptId || '', title },
+      thinkingDepth,
+    })
     setAuthorQuestion(null)
   }
 

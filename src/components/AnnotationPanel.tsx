@@ -17,7 +17,6 @@ export function AnnotationPanel({
 }) {
   const reply = annotation.reply
   const direct = isLiuKanshanDirect(reply)
-  const href = !direct && reply && isZhihuUrl(reply.url) ? reply.url : null
 
   return (
     <aside
@@ -61,26 +60,29 @@ export function AnnotationPanel({
               <MarkdownMath source={reply.text}/>
             </div>
           </article>
-        ) : (
-          <article className="annotation-card">
-            <div className="annotation-card__author">
-              <span className="annotation-card__avatar" aria-hidden="true">{reply.name?.slice(0, 1) || '?'}</span>
-              <div>
-                <b>{reply.name || '未知作者'}</b>
-                <small>{reply.bio || ''}</small>
+        ) : (annotation.replies ?? [reply]).filter((item) => item && !isLiuKanshanDirect(item)).map((item) => {
+          const source = item.url && isZhihuUrl(item.url) ? item.url : null
+          return (
+            <article className="annotation-card" key={`${item.name}-${item.url}`}>
+              <div className="annotation-card__author">
+                <span className="annotation-card__avatar" aria-hidden="true">{item.name?.slice(0, 1) || '?'}</span>
+                <div>
+                  <b>{item.name || '未知作者'}</b>
+                  <small>{item.bio || ''}</small>
+                </div>
               </div>
-            </div>
-            <p className="annotation-card__reply">{reply.text || ''}</p>
-            <div className="annotation-card__source">
-              <strong>{reply.title}</strong>
-              {href ? (
-                <a href={href} target="_blank" rel="noopener noreferrer">{href}</a>
-              ) : (
-                <span>链接不可用</span>
-              )}
-            </div>
-          </article>
-        )}
+              <p className="annotation-card__reply">{item.text || ''}</p>
+              <div className="annotation-card__source">
+                <strong>{item.title}</strong>
+                {source ? (
+                  <a href={source} target="_blank" rel="noopener noreferrer">{source}</a>
+                ) : (
+                  <span>链接不可用</span>
+                )}
+              </div>
+            </article>
+          )
+        })}
       </div>
     </aside>
   )

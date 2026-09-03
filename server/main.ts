@@ -17,6 +17,8 @@ import { createLlmSummarizer } from './agent-runtime/summarizer.ts'
 import { createPathOrchestrator } from './path-generation/orchestrator.ts'
 import { createFirstLearningOrchestrator } from './first-learning/orchestrator.ts'
 import { createFollowUpOrchestrator } from './follow-up/orchestrator.ts'
+import { createAuthorsOrchestrator } from './authors/orchestrator.ts'
+import { createInMemoryAuthorNetworkProjector } from './authors/network.ts'
 
 function loadDotEnv(filePath: string): Record<string, string | undefined> {
   const env: Record<string, string | undefined> = { ...process.env }
@@ -108,6 +110,14 @@ const followUp = agentRuntime
     invokeText: (agentId, context, options) => invokeTextAgent(agentRuntime, agentId, context, options),
   })
   : undefined
+const authors = agentRuntime
+  ? createAuthorsOrchestrator({
+    invokeStructured: (agentId, context, options) => invokeStructuredAgent(agentRuntime, agentId, context, options),
+    invokeText: (agentId, context, options) => invokeTextAgent(agentRuntime, agentId, context, options),
+    search: (query, count) => agentRuntime.zhihu.search(query, count),
+    network: createInMemoryAuthorNetworkProjector(),
+  })
+  : undefined
 
 const server = await createCompositionApp({
   config,
@@ -119,6 +129,7 @@ const server = await createCompositionApp({
   ...(pathOrchestrator ? { pathOrchestrator } : {}),
   ...(firstLearning ? { firstLearning } : {}),
   ...(followUp ? { followUp } : {}),
+  ...(authors ? { authors } : {}),
   ...(config.ok && config.config.pathGenerateUpstream
     ? { pathGenerateUpstream: config.config.pathGenerateUpstream }
     : {}),

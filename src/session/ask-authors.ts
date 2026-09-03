@@ -26,6 +26,7 @@ export interface AskAuthorsAnnotation {
   question: string
   status: 'answering' | 'ready' | 'unavailable'
   reply: BloggerReply | null
+  replies?: BloggerReply[]
   error?: string
 }
 
@@ -65,6 +66,11 @@ export function writeAnnotationStore(store: AnnotationStore) {
 
 const BLOCKED_AUTHOR_NAMES = new Set(['马同学', '李永乐老师', '刘看山'])
 
+export function formatAuthorAnnotation(summary: string, url: string) {
+  const body = summary.trim()
+  return body ? `${body}\n\n详细内容可以阅读我的文章 ${url}` : `详细内容可以阅读我的文章 ${url}`
+}
+
 export function liuKanshanDirectReply(text: string): BloggerReply {
   return {
     name: '刘看山',
@@ -100,13 +106,14 @@ export function applyAskAuthorResult(
     | { kind: 'unavailable'; message: string },
 ): AskAuthorsAnnotation {
   if (result.kind === 'authors') {
-    const author = result.authors[0]
-    if (author && isLiveReply(author)) {
-      return { ...item, status: 'ready', reply: author, error: undefined }
+    const authors = result.authors.filter(isLiveReply).slice(0, 2)
+    const author = authors[0]
+    if (author) {
+      return { ...item, status: 'ready', reply: author, replies: authors, error: undefined }
     }
   }
   if (result.kind === 'direct' && result.text.trim()) {
-    return { ...item, status: 'ready', reply: liuKanshanDirectReply(result.text), error: undefined }
+    return { ...item, status: 'ready', reply: liuKanshanDirectReply(result.text), replies: undefined, error: undefined }
   }
   return {
     ...item,

@@ -110,8 +110,10 @@ test('mine canvas projects the settled first answer onto the unique GraphSurgeon
 
 test('Liu Kanshan cannot become an author identity and author search fails closed without a network', () => {
   assert.match(liveService, /isLiuKanshanName/)
-  assert.match(liveService, /NETWORK_UNAVAILABLE/)
   assert.match(authors, /还没有冻结，不能当成产品事实/)
+  assert.match(authors, /还没有入网博主/)
+  assert.match(authors, /requestAuthorNetwork/)
+  assert.doesNotMatch(authors, /AuthorNetworkGraph/)
 })
 
 test('stream cursors start at sequence 1 and incomplete path documents fail', () => {
