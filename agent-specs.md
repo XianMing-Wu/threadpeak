@@ -330,7 +330,7 @@ replace_questions 的 round 只能是 activeRound + 1，且不得大于 3；新�
 
 | | |
 | --- | --- |
-| 触发 | 路径已发布后，用户在同一 Chat 里普通发送（未再点路线制定） |
+| 触发 | 首页非路线普通发送，或路径已发布后用户在同一 Chat 里普通发送（未再点路线制定） |
 | 上下文获取 | 读取这个 Chat 从开始到当前消息的完整消息序列，包括路线题组、用户选择、路线发布结果和发布后的普通消息；读取只绑定于这个 Chat 的附件。不读取学习页或知识画布的对话 |
 | 压缩算法 | 有附件时按 0.2，并对非附件对话使用 0.4；没有附件时只用 0.4。当前消息、已经发布的 routeId、题目轮次与用户已选 optionId 保留 |
 
@@ -689,7 +689,7 @@ queries 必须为 2–3 项；id 在本次输出内唯一；text 去重。
 }
 ~~~
 
-status 只能是 selected 或 no_suitable_author。selected 时 selections 为 1–2 项且 authorId 不重复；no_suitable_author 时 selections 必须为空数组。authorName、evidenceId、evidenceSummary、evidenceUrl 必须与同项 authorId 的输入记录一致。
+status 只能是 selected 或 no_suitable_author。selected 时 selections 为 1–2 项且 authorId 不重复；no_suitable_author 时 selections 必须为空数组。authorName、evidenceId、evidenceSummary、evidenceUrl 必须与同项 authorId 的输入记录一致。`no_suitable_author` 只是程序分支，编排用它立刻调用 A3，不得把该英文值作为用户可见文案发送或展示。
 
 没找到时的完整输出为：
 
@@ -850,4 +850,5 @@ R1、R2、R3、R3b、R4、R5、L0a、L0b、G1、G2、A1、A2、A3、N1、N2 都�
 
 - 首轮与唯一根具体落在哪个持久化表、怎样做跨重启事务；
 - 请求去重、取消、超时、迟到响应与刷新恢复；
+- R5 失败重试与跨重启历史落盘；
 - 尚未接通的真实图文生成编排。

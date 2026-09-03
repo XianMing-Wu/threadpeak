@@ -2,11 +2,9 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { resolveChatLaunch } from './resolve-chat-launch.ts'
 
-test('chat without a send context does not invent a prewritten query', () => {
+test('chat without a send context is an independent 404, not a prewritten query', () => {
   const resolution = resolveChatLaunch(null)
-  assert.equal(resolution.kind, 'unavailable')
-  assert.equal(resolution.reason, 'missing-chat-launch')
-  assert.match(resolution.message, /不能用预写问题或 localStorage 会话正文/)
+  assert.equal(resolution.kind, 'not-found')
 })
 
 test('a user-triggered launch payload can still open chat', () => {

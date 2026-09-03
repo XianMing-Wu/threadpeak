@@ -9,14 +9,11 @@ export type ChatLaunchReady = {
   generate?: boolean
 }
 
-export type ChatLaunchUnavailable = {
-  kind: 'unavailable'
-  reason: 'missing-chat-launch'
-  title: string
-  message: string
+export type ChatLaunchNotFound = {
+  kind: 'not-found'
 }
 
-export type ChatLaunchResolution = ChatLaunchReady | ChatLaunchUnavailable
+export type ChatLaunchResolution = ChatLaunchReady | ChatLaunchNotFound
 
 function normalizeMode(value: unknown): ChatLaunchExperience {
   return value === 'route' || value === 'visual' || value === 'answer' ? value : 'answer'
@@ -25,14 +22,7 @@ function normalizeMode(value: unknown): ChatLaunchExperience {
 export function resolveChatLaunch(raw: unknown): ChatLaunchResolution {
   const record = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {}
   const query = typeof record.query === 'string' ? record.query.trim() : ''
-  if (!query) {
-    return {
-      kind: 'unavailable',
-      reason: 'missing-chat-launch',
-      title: '无法打开这次对话',
-      message: '这次对话没有可用的发送上下文。不能用预写问题或 localStorage 会话正文冒充已打开的会话。',
-    }
-  }
+  if (!query) return { kind: 'not-found' }
   const conversationId = typeof record.conversationId === 'string' ? record.conversationId : ''
   const routeId = typeof record.routeId === 'string' && record.routeId ? record.routeId : undefined
   return {

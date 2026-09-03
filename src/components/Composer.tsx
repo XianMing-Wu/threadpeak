@@ -8,11 +8,10 @@ import {
   type ComposerSourcesResolution,
 } from '../resolve-composer-attachment'
 
-const modeLabel: Record<Exclude<AssistantMode,''>, string> = { route:'路线制定', visual:'图文模式', authors:'问博主' }
+const modeLabel: Record<Exclude<AssistantMode,''>, string> = { route:'路线制定', visual:'图文模式' }
 const modePlaceholder: Record<Exclude<AssistantMode,''>, string> = {
   route:'说说你的学习目标、当前基础或期望的节奏…',
   visual:'输入你想用图形、时间线或可交互可视化理解的内容…',
-  authors:'输入问题，我会筛选最相关的知乎博主与回答…',
 }
 
 export function QuickModes({ selected, onSelect }: { selected: AssistantMode; onSelect: (mode: AssistantMode) => void }) {

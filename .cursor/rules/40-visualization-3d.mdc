@@ -13,7 +13,7 @@ alwaysApply: false
 ## 图文模式
 
 - 当前真实图文编排尚未裁决，也没有图文 Agent。
-- 首页或学习页保留图文入口时，发送必须显式失败；不得用 timer、固定图、旧 BasisVisual、fixture frames、普通回答或知识图截图冒充成功。
+- 首页图文快捷在未接通期间保留，作为已确认的过渡体验；首页或学习页发送必须显式失败。不得用 timer、固定图、旧 BasisVisual、fixture frames、普通回答或知识图截图冒充成功。
 - 图文失败不能写知识节点、批注、路线或作者网络。
 - 未裁决前不得新增任意 HTML/JavaScript、动态组件、工具循环或图文 schema 并称为正式合同。
 

@@ -1,6 +1,6 @@
-export type AssistantMode = 'route' | 'visual' | 'authors' | ''
+export type AssistantMode = 'route' | 'visual' | ''
 
 export function normalizeAssistantMode(value: unknown): AssistantMode {
-  if (value === 'route' || value === 'visual' || value === 'authors') return value
+  if (value === 'route' || value === 'visual') return value
   return ''
 }

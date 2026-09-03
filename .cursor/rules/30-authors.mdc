@@ -12,7 +12,7 @@ alwaysApply: false
 
 ## A1–A3：划选问博主
 
-入口必须来自学习页或知识画布中的有效单卡划选。没有划选时不显示问博主入口；普通输入框里出现“博主/作者”不能绕过划选要求。
+入口必须来自学习页或知识画布中的有效单卡划选。没有划选时不显示问博主入口。首页快捷、Composer 模式和普通输入框里出现“博主/作者”都不能进入问博主。
 
 ~~~text
 用户问题 + 划选原文 + 宿主卡正文
@@ -42,7 +42,7 @@ alwaysApply: false
 - 必须读取全部候选，不先按热度截断。
 - 只能返回输入中存在且绑定正确的 authorId、authorName、evidenceId、evidenceSummary、evidenceUrl。
 - selected 分支选择 1–2 位不同作者，每位选择最能回答问题的一条 evidence。
-- no_suitable_author 分支 selections 必须为空；provider/解析失败不能伪装成 no_suitable_author。
+- no_suitable_author 分支 selections 必须为空；provider/解析失败不能伪装成 no_suitable_author。该英文值只作程序分支，立刻走 A3，不得作为用户可见文案发送或展示。
 - A2 同时输出含义不变的 normalizedQuestion，供高权网络记录。
 - 算法按 authorId/evidenceId 回查原候选后展示“姓名 + 总结 + 详细内容可以阅读我的文章 {链接}”；不再让模型重写姓名、总结或链接。
 

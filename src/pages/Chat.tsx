@@ -5,6 +5,7 @@ import { ProductWorkspace } from '../components/Shell'
 import { Icon } from '../icons'
 import { clearActiveHistory, CHAT_LAUNCH_KEY, HISTORY_OPEN_EVENT } from '../history'
 import { resolveChatLaunch, type ChatLaunchReady } from '../chat/resolve-chat-launch'
+import { buildOrdinaryChatContext } from '../chat/build-ordinary-chat-context'
 import { requestOrdinaryAnswerStream } from '../chat/request-ordinary-answer'
 import { resolveOrdinaryAnswer } from '../chat/resolve-ordinary-answer'
 import { MarkdownMath } from '../lib/MarkdownMath'
@@ -13,6 +14,7 @@ import { linkedRouteIntro } from '../workspace/catalog'
 import { setActiveConversation } from '../workspace/nav'
 import { ChatRoutePanel } from '../path-planning/chat-route-panel'
 import { pathLaunchAttachments, type PathAttachment } from '../path-planning/path-run-client'
+import { NotFoundPage } from './NotFound'
 import {
   createHomeConversation,
   getConversation,
@@ -52,7 +54,17 @@ function OrdinaryAnswerUnavailable() {
   </article>
 }
 
-function OrdinaryAnswerLive({ query, onSettled }: { query: string; onSettled?: (text: string) => void }) {
+function OrdinaryAnswerLive({
+  query,
+  turns,
+  attachments,
+  onSettled,
+}: {
+  query: string
+  turns: LearningTurn[]
+  attachments: PathAttachment[]
+  onSettled?: (text: string) => void
+}) {
   const [text, setText] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const settled = useRef(onSettled)
@@ -61,8 +73,15 @@ function OrdinaryAnswerLive({ query, onSettled }: { query: string; onSettled?: (
     let cancelled = false
     setText(null)
     setError(null)
+    const context = buildOrdinaryChatContext({
+      currentMessage: query,
+      turns: turns.map((turn) => ({ role: turn.role, text: turn.text })),
+      attachments,
+    })
     void requestOrdinaryAnswerStream({
-      question: query,
+      currentMessage: context.currentMessage,
+      conversation: context.conversation,
+      attachments: context.attachments,
       onDelta: (next) => {
         if (cancelled) return
         setText(next)
@@ -80,7 +99,7 @@ function OrdinaryAnswerLive({ query, onSettled }: { query: string; onSettled?: (
   }, [query])
   if (!query.trim()) return <OrdinaryAnswerUnavailable/>
   if (error) return <article className="chat-answer" role="alert"><h2>无法生成本次回答</h2><p>{error}</p></article>
-  if (!text) return <article className="chat-answer" aria-live="polite"><h2>正在检索公开证据并生成回答</h2><p>这次请求会走服务端知乎检索和 DeepSeek。没有真实配置时会显式失败。</p></article>
+  if (!text) return <article className="chat-answer" aria-live="polite"><h2>正在生成本次回答</h2><p>这次请求会走服务端 R5。没有真实配置时会显式失败。</p></article>
   return <article className="chat-answer" aria-live="polite"><MarkdownMath source={text}/></article>
 }
 
@@ -90,25 +109,6 @@ function VisualAnswerUnavailable() {
     <h2>{resolution.title}</h2>
     <p>{resolution.message}</p>
   </article>
-}
-
-function ChatLaunchUnavailable({ title, message }: { title: string; message: string }) {
-  return <ProductWorkspace active="paths" page="chat">
-    <main className="query-chat">
-      <header className="query-chat-header">
-        <div>
-          <button aria-label="返回首页" onClick={()=>location.hash='home'}><Icon name="back" size={18}/></button>
-          <h1>{title}</h1>
-        </div>
-      </header>
-      <section className="query-chat-body">
-        <article className="chat-answer" role="alert">
-          <h2>{title}</h2>
-          <p>{message}</p>
-        </article>
-      </section>
-    </main>
-  </ProductWorkspace>
 }
 
 function fieldsFromLaunch(next: ChatLaunchReady) {
@@ -166,7 +166,7 @@ export function ChatPage() {
     addEventListener(HISTORY_OPEN_EVENT,restore)
     return()=>removeEventListener(HISTORY_OPEN_EVENT,restore)
   },[])
-  if(launch.kind==='unavailable')return <ChatLaunchUnavailable title={launch.title} message={launch.message}/>
+  if(launch.kind!=='ready')return <NotFoundPage/>
   const followUp=()=>{
     const next=value.trim()
     if(!next)return
@@ -231,7 +231,7 @@ export function ChatPage() {
               ? <div className="query-user-bubble" key={`u-${index}`}>{turn.text}</div>
               : <article className="chat-answer" key={`a-${index}`}><MarkdownMath source={turn.text}/></article>
           ))}
-          {pendingQuestion ? <OrdinaryAnswerLive query={pendingQuestion} onSettled={settleAnswer}/> : null}
+          {pendingQuestion ? <OrdinaryAnswerLive query={pendingQuestion} turns={turns} attachments={pathLaunchAttachments.get(conversationId) ?? []} onSettled={settleAnswer}/> : null}
         </>}
       </div></section>
       <div className="query-chat-composer">
