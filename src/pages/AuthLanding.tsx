@@ -50,7 +50,6 @@ export function AuthLanding({ theme, onThemeChange, onAuthorize }: {
       {oauthNotice && <p className="auth-unavailable" role="alert"><b>{oauthNotice.title}</b> {oauthNotice.message}</p>}
       <button type="button" className="auth-prototype-enter" onClick={onAuthorize}>进入本地原型</button>
       <small>当前为认证交互原型。正式接入后，授权凭证将由服务端安全交换，不会保存在浏览器中。</small>
-      <p className="auth-agreement">继续即表示你同意 <span>用户协议</span> 和 <span>隐私政策</span></p>
     </section>
     <footer>问山 · 让知识成为可以行走的路径</footer>
   </main>

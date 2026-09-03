@@ -23,9 +23,7 @@ import { catalogLesson, blueprintConcepts, conceptCarrier, conceptTitle } from '
 import {
   readActiveConceptId,
   readActiveConversationId,
-  closeConceptKnowledge,
   readActiveRouteId,
-  readSessionReturn,
   setActiveConversation,
 } from '../workspace/nav'
 import {
@@ -53,16 +51,6 @@ function readLearningNav() {
 }
 
 function leaveLearning(routeId: string) {
-  const target = readSessionReturn()
-  if (target === 'knowledge-detail') {
-    closeConceptKnowledge()
-    location.hash = 'knowledge-detail'
-    return
-  }
-  if (target !== 'path-3d') {
-    location.hash = target
-    return
-  }
   const route = getRoute(routeId)
   const view = resolvePath3DView({ routeId, ...(route ? { route } : {}) })
   location.hash = view.kind === 'ready' ? 'path-3d' : 'paths'
@@ -218,7 +206,7 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
   const [quoteFromId,setQuoteFromId] = useState('')
   const [selection,setSelection] = useState<SelectionAnchor|null>(null)
   const [authorQuestion,setAuthorQuestion] = useState<SelectionAnchor|null>(null)
-  const annotations = useAnnotations(annotationScopeId(routeId, conceptId, conversationId))
+  const annotations = useAnnotations(annotationScopeId(routeId, conceptId))
   const [mode,setMode] = useState<AssistantMode>(seed?.mode ?? '')
   const [value,setValue] = useState(seed?.value ?? '')
   const [turns,setTurns] = useState<LearningTurn[]>(seed?.turns ?? [])

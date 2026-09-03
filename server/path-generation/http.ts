@@ -74,6 +74,25 @@ export function registerPathRunRoutes(app: FastifyInstance, ports: {
     return send(reply, statusOf(view), { ...view, traceId })
   })
 
+  app.get('/api/path-runs/:runId', async (request: FastifyRequest, reply: FastifyReply) => {
+    const traceId = String(request.headers['x-trace-id'] ?? `path-${Date.now()}`)
+    if (!ports.ready || !ports.orchestrator) return missing(reply, traceId)
+    const runId = String((request.params as { runId?: string }).runId ?? '')
+    const view = ports.orchestrator.get(runId)
+    if (!view) {
+      return send(reply, 404, {
+        kind: 'failed',
+        status: 'failed',
+        stage: 'failed',
+        questionSets: [],
+        knowledgeCreated: false,
+        error: { code: 'PROVIDER_INVALID', message: '找不到这次路线制定。' },
+        traceId,
+      })
+    }
+    return send(reply, 200, { ...view, traceId })
+  })
+
   app.post('/api/path-runs/:runId/select', async (request: FastifyRequest, reply: FastifyReply) => {
     const traceId = String(request.headers['x-trace-id'] ?? `path-${Date.now()}`)
     if (!ports.ready || !ports.orchestrator) return missing(reply, traceId)

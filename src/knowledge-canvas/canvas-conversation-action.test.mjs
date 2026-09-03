@@ -8,10 +8,9 @@ const mine = await readFile(new URL('./mine-graph-canvas.tsx', import.meta.url),
 
 test('from a learning session the canvas shows 回到对话; from the knowledge list it does not show 新对话', () => {
   assert.match(action, /Icon name="message"[\s\S]{0,20}回到对话/)
-  assert.match(action, /returnTo !== 'session-learning'/)
+  assert.match(action, /returnToLatestLearning/)
   assert.doesNotMatch(action, /新对话/)
   assert.doesNotMatch(action, /openNewLearningFromCanvas/)
-  assert.doesNotMatch(action, /openLearning/)
   assert.match(canvas, /CanvasConversationAction/)
   assert.match(canvas, /closeConceptKnowledge\(\)/)
   assert.doesNotMatch(canvas, /location.hash = 'session-learning'/)

@@ -17,15 +17,17 @@ import {
   createHomeConversation,
   getConversation,
   getRoute,
+  saveConversation,
   startLinkedConversation,
 } from '../workspace/store'
+import type { LearningTurn } from '../workspace/types'
 
 export type ChatExperience = 'answer' | 'route' | 'visual'
 
 export function launchChat(query:string,mode:ChatExperience,attachments: PathAttachment[] = []) {
   const conversation=createHomeConversation(query,mode)
   if (attachments.length > 0) pathLaunchAttachments.set(conversation.id, attachments)
-  sessionStorage.setItem(CHAT_LAUNCH_KEY,JSON.stringify({query,mode,conversationId:conversation.id,routeId:conversation.routeId}))
+  sessionStorage.setItem(CHAT_LAUNCH_KEY,JSON.stringify({query,mode,conversationId:conversation.id,routeId:conversation.routeId,generate:true}))
   setActiveConversation(conversation.id)
   location.hash='chat'
 }
@@ -50,9 +52,11 @@ function OrdinaryAnswerUnavailable() {
   </article>
 }
 
-function OrdinaryAnswerLive({ query }: { query: string }) {
+function OrdinaryAnswerLive({ query, onSettled }: { query: string; onSettled?: (text: string) => void }) {
   const [text, setText] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const settled = useRef(onSettled)
+  settled.current = onSettled
   useEffect(() => {
     let cancelled = false
     setText(null)
@@ -65,8 +69,12 @@ function OrdinaryAnswerLive({ query }: { query: string }) {
       },
     }).then((result) => {
       if (cancelled) return
-      if (result.kind === 'completed') setText(result.text)
-      else setError(result.message)
+      if (result.kind === 'completed') {
+        setText(result.text)
+        settled.current?.(result.text)
+        return
+      }
+      setError(result.message)
     })
     return () => { cancelled = true }
   }, [query])
@@ -110,7 +118,14 @@ function fieldsFromLaunch(next: ChatLaunchReady) {
     experience: experienceOf(conversation?.experience, next.mode),
     conversationId: conversation?.id ?? next.conversationId,
     routeId: conversation?.routeId ?? next.routeId ?? '',
+    generate: next.generate === true,
+    turns: conversation?.turns ?? [],
   }
+}
+
+function writeTurns(conversationId: string, turns: LearningTurn[]) {
+  if (!conversationId) return
+  saveConversation(conversationId, { turns })
 }
 
 export function ChatPage() {
@@ -122,6 +137,8 @@ export function ChatPage() {
   const [routeId,setRouteId]=useState(initial?.routeId??'')
   const [value,setValue]=useState('')
   const [composerMode,setComposerMode]=useState<AssistantMode>('')
+  const [turns,setTurns]=useState<LearningTurn[]>(initial?.turns ?? [])
+  const [pendingQuestion,setPendingQuestion]=useState(initial?.generate && initial.experience === 'answer' && !(initial.turns.length) ? initial.query : '')
   const routeSender=useRef<(text:string,mode:AssistantMode)=>void>(()=>undefined)
   useEffect(()=>{if(conversationId)setActiveConversation(conversationId)},[conversationId])
   useEffect(()=>{
@@ -133,6 +150,8 @@ export function ChatPage() {
         setConversationId('')
         setRouteId('')
         setValue('')
+        setTurns([])
+        setPendingQuestion('')
         return
       }
       const fields=fieldsFromLaunch(next)
@@ -140,6 +159,8 @@ export function ChatPage() {
       setExperience(fields.experience)
       setConversationId(fields.conversationId)
       setRouteId(fields.routeId)
+      setTurns(fields.turns)
+      setPendingQuestion(fields.generate && fields.experience === 'answer' && fields.turns.length === 0 ? fields.query : '')
       setValue('')
     }
     addEventListener(HISTORY_OPEN_EVENT,restore)
@@ -155,9 +176,28 @@ export function ChatPage() {
       setComposerMode('')
       return
     }
-    setQuery(next)
-    setExperience(experience==='visual'?'visual':'answer')
+    if(experience==='visual'){
+      setQuery(next)
+      setValue('')
+      return
+    }
+    setTurns((current) => {
+      const following = [...current, { role: 'user' as const, text: next }]
+      writeTurns(conversationId, following)
+      return following
+    })
+    setPendingQuestion(next)
     setValue('')
+  }
+  const settleAnswer = (text: string) => {
+    setTurns((current) => {
+      const following = [...current]
+      if (following.at(-1)?.role !== 'user') following.push({ role: 'user', text: pendingQuestion || query })
+      following.push({ role: 'assistant', text })
+      writeTurns(conversationId, following)
+      return following
+    })
+    setPendingQuestion('')
   }
   const newChat=()=>{
     if(routeId){
@@ -166,6 +206,8 @@ export function ChatPage() {
       setConversationId(linked.id)
       setQuery(linked.query)
       setExperience('route')
+      setTurns([])
+      setPendingQuestion('')
       setValue('')
       setActiveConversation(linked.id)
       return
@@ -180,11 +222,17 @@ export function ChatPage() {
     <main className="query-chat">
       <header className="query-chat-header"><div><button aria-label="返回首页" onClick={()=>location.hash='home'}><Icon name="back" size={18}/></button><h1>{query}</h1></div><button className="new-chat-only" onClick={newChat}><Icon name="new-chat" size={17}/>新对话</button></header>
       <section className="query-chat-body"><div className="query-chat-flow">
-        <div className="query-user-bubble">{query}</div>
-        {experience==='visual'?<VisualAnswerUnavailable/>:experience==='route'?<>
+        {experience==='visual'?<><div className="query-user-bubble">{query}</div><VisualAnswerUnavailable/></>:experience==='route'?<>
           {conversation?.kind==='route-followup'&&<article className="chat-answer"><h2>继续同一条路线</h2><p>{linkedRouteIntro(getRoute(routeId)?.title??query,followupOrdinal)}</p></article>}
           {conversation?.kind!=='route-followup'&&<ChatRoutePanel conversationId={conversationId} query={query} existingRouteId={routeId||undefined} onRouteReady={setRouteId} onSender={(handler)=>{routeSender.current=handler}}/>}
-        </>:<OrdinaryAnswerLive query={query}/>}
+        </>:<>
+          {(turns.length ? turns : pendingQuestion ? [{ role: 'user' as const, text: pendingQuestion }] : [{ role: 'user' as const, text: query }]).map((turn, index) => (
+            turn.role === 'user'
+              ? <div className="query-user-bubble" key={`u-${index}`}>{turn.text}</div>
+              : <article className="chat-answer" key={`a-${index}`}><MarkdownMath source={turn.text}/></article>
+          ))}
+          {pendingQuestion ? <OrdinaryAnswerLive query={pendingQuestion} onSettled={settleAnswer}/> : null}
+        </>}
       </div></section>
       <div className="query-chat-composer">
         {experience==='route'&&<QuickModes selected={composerMode} onSelect={setComposerMode}/>}

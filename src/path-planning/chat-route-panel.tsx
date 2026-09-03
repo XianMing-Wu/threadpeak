@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { AgentStatus } from '../components/AgentStatus'
 import { Icon } from '../icons'
 import { openRoute } from '../workspace/nav'
-import { createMineRouteFromChat, getRoute } from '../workspace/store'
+import { createMineRouteFromChat, getConversation, getRoute, saveConversation } from '../workspace/store'
 import {
   commitPathAnswers,
   followUpPathRun,
+  getPathRun,
   pathLaunchAttachments,
   replyPathRun,
   retryPathRun,
@@ -53,6 +54,7 @@ export function ChatRoutePanel(props: {
 
   const apply = (next: PathRunView) => {
     setView(next)
+    if (next.runId) saveConversation(props.conversationId, { pathRunId: next.runId })
     if (next.status === 'published' && next.document) {
       publish(next, props.query, props.conversationId, props.onRouteReady)
     }
@@ -78,6 +80,27 @@ export function ChatRoutePanel(props: {
   }
 
   useEffect(() => {
+    const stored = getConversation(props.conversationId)
+    if (stored?.pathRunId) {
+      const runId = stored.pathRunId
+      const key = `restore:${runId}`
+      if (launched.current === key) return
+      launched.current = key
+      void getPathRun(runId).then(apply).catch(() => {
+        launched.current = `missing:${runId}`
+        if (existing) return
+        setView({
+          runId,
+          goal: props.query,
+          status: 'failed',
+          stage: 'failed',
+          questionSets: [],
+          knowledgeCreated: false,
+          error: { code: 'PROVIDER_INVALID', message: '找不到这次路线制定。记录丢了只显示失败，不会重新生成。' },
+        })
+      })
+      return
+    }
     if (existing) return
     const key = `${props.conversationId}::${props.query}`
     if (launched.current === key) return

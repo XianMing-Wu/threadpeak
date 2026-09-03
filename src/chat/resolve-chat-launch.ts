@@ -6,6 +6,7 @@ export type ChatLaunchReady = {
   mode: ChatLaunchExperience
   conversationId: string
   routeId?: string
+  generate?: boolean
 }
 
 export type ChatLaunchUnavailable = {
@@ -40,5 +41,6 @@ export function resolveChatLaunch(raw: unknown): ChatLaunchResolution {
     mode: normalizeMode(record.mode),
     conversationId,
     ...(routeId ? { routeId } : {}),
+    ...(record.generate === true ? { generate: true } : {}),
   }
 }

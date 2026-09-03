@@ -44,7 +44,7 @@ export function HomePage() {
   if (initial) sessionStorage.removeItem('threadpeak-home-prefill')
   const selectRoute = sessionStorage.getItem(HOME_SELECT_ROUTE) === '1'
   if (selectRoute) sessionStorage.removeItem(HOME_SELECT_ROUTE)
-  const [mode,setMode] = useState<AssistantMode>(()=>selectRoute || /路线|学习计划/.test(initial)?'route':/博主|作者/.test(initial)?'authors':'')
+  const [mode,setMode] = useState<AssistantMode>(()=>selectRoute || /路线|学习计划/.test(initial)?'route':'')
   const [value,setValue] = useState(initial)
   const [attachments,setAttachments] = useState<PathAttachment[]>([])
   const [attachError,setAttachError] = useState('')

@@ -385,6 +385,10 @@ export function startLinkedConversation(routeId: string): ConversationRecord {
   return conversation
 }
 
+export function latestLearningConversation(routeId: string, conceptId: string): ConversationRecord | undefined {
+  return readWorkspace().conversations.find((item) => item.kind === 'learning' && item.routeId === routeId && item.conceptId === conceptId)
+}
+
 export function ensureLearningConversation(routeId: string, conceptId: string): ConversationRecord {
   const snapshot = readWorkspace()
   const existing = snapshot.conversations.find((item) => item.kind === 'learning' && item.routeId === routeId && item.conceptId === conceptId)

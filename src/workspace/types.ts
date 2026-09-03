@@ -76,6 +76,7 @@ export type ConversationRecord = {
   quote: string
   mode: AssistantMode
   canvasHostId?: string
+  pathRunId?: string
   updatedAt: number
 }
 

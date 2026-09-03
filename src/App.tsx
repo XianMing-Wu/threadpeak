@@ -42,6 +42,6 @@ export function App(){
     setAuthenticated(false)
   }
   const authorize=()=>{localStorage.setItem(AUTH_KEY,'true');setAuthenticated(true);location.hash='home'}
-  const page=route==='home'?<HomePage/>:route==='chat'?<ChatPage/>:route==='knowledge'?<KnowledgePage/>:route==='knowledge-detail'?<KnowledgeDetailPage/>:route==='paths'?<PathsPage/>:route==='path-3d'?<Path3DPage/>:route==='session-learning'?<SessionPage/>:route==='authors'?<AuthorsPage/>:route==='not-found'?<NotFoundPage/>:<SettingsPage/>
+  const page=route==='home'?<HomePage/>:route==='chat'?<ChatPage/>:route==='knowledge'?<KnowledgePage/>:route==='knowledge-detail'?<KnowledgeDetailPage/>:route==='paths'?<PathsPage/>:route==='path-3d'?<Path3DPage/>:route==='session-learning'?<SessionPage/>:route==='authors'?<AuthorsPage/>:route==='not-found'?<NotFoundPage/>:<SettingsPage theme={theme} onThemeChange={toggleTheme} onLogout={logout}/>
   return <><IconSprite/>{authenticated?<WideShell route={route} theme={theme} onThemeChange={toggleTheme} onLogout={logout}>{page}</WideShell>:<AuthLanding theme={theme} onThemeChange={toggleTheme} onAuthorize={authorize}/>}</>
 }

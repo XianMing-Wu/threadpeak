@@ -124,10 +124,12 @@ test('annotation ordinals start at 1 and quotes match markdown source or rendere
   assert.equal(findQuoteSpan('没有这句话', '局部线性化'), null)
 })
 
-test('new conversations use a separate annotation scope so 新对话 does not inherit 批注', () => {
+test('concept-level annotation scope keeps marks across new conversations', () => {
   assert.equal(annotationScopeId('route', 'concept'), 'route::concept')
-  assert.equal(annotationScopeId('route', 'concept', 'learn-1'), 'route::concept::learn-1')
-  assert.notEqual(annotationScopeId('route', 'concept', 'learn-1'), annotationScopeId('route', 'concept', 'learn-2'))
+  assert.equal(annotationsInScope([
+    { id: 'a', scopeId: 'route::concept', ordinal: 1, nodeId: 'root', quote: '甲', question: 'q', status: 'ready', reply: liuKanshanDirectReply('1') },
+    { id: 'b', scopeId: 'route::concept::learn-2', ordinal: 2, nodeId: 'root', quote: '乙', question: 'q', status: 'ready', reply: liuKanshanDirectReply('2') },
+  ], 'route::concept').length, 2)
 })
 
 test('the concept canvas sees annotations from every conversation on that concept', () => {

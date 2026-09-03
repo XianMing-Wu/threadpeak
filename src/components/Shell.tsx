@@ -122,6 +122,7 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
       </section>
       <div className="tp-profile-wrap" ref={profileRef}>
         {profileOpen&&menuBox&&createPortal(<div ref={menuRef} className="tp-profile-menu" role="menu" aria-label="账号菜单" style={menuBox}>
+          <button type="button" role="menuitem" onClick={() => { setProfileOpen(false); go('settings') }}><Icon name="panel" size={20}/><span>设置</span></button>
           <button type="button" role="menuitem" onClick={onThemeChange}><Icon name="moon" size={20}/><span>夜间模式</span><i className={`theme-switch ${theme==='dark'?'is-on':''}`} aria-hidden="true"><b/></i></button>
           <button type="button" role="menuitem" className="is-danger" onClick={onLogout}><Icon name="logout" size={20}/><span>退出登录</span></button>
         </div>,document.body)}

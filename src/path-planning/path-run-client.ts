@@ -58,6 +58,25 @@ export function startPathRun(input: { goal: string; attachments?: PathAttachment
   return post('/api/path-runs', input)
 }
 
+export async function getPathRun(runId: string): Promise<PathRunView> {
+  const response = await fetch(`/api/path-runs/${encodeURIComponent(runId)}`, {
+    method: 'GET',
+    headers: { accept: 'application/json' },
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  })
+  let payload: unknown
+  try {
+    payload = await response.json()
+  } catch {
+    throw new Error('路线服务返回了无法解析的响应。')
+  }
+  const record = payload && typeof payload === 'object' ? payload as PathRunView : undefined
+  if (!record || !record.status || record.status === 'failed' && !record.runId) {
+    throw new Error('找不到这次路线制定。')
+  }
+  return record
+}
+
 export function selectPathAnswer(runId: string, questionId: string, optionId: string) {
   return post(`/api/path-runs/${runId}/select`, { questionId, optionId })
 }

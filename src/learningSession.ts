@@ -1,12 +1,15 @@
 import type { AssistantMode } from './assistant-mode'
 import type { RouteName } from './components/Shell'
-import { getConversation, replayConceptGraph, saveConversationDraft } from './workspace/store'
+import { getConversation, latestLearningConversation, replayConceptGraph, saveConversationDraft, startLearningConversation } from './workspace/store'
 import {
   openKnowledge,
   openKnowledgeFromSession,
+  openLearning,
   readActiveConversationId,
   readCanvasReturn as readCanvasReturnNav,
+  setActiveConversation,
 } from './workspace/nav'
+import { HISTORY_OPEN_EVENT } from './history'
 
 export type LearningTurn = { role: 'user' | 'assistant'; text: string; mode?: AssistantMode; failed?: boolean }
 
@@ -50,4 +53,15 @@ export function openKnowledgeCanvas(returnTo: RouteName = 'knowledge') {
 
 export function readCanvasReturn(): RouteName {
   return readCanvasReturnNav()
+}
+
+export function returnToLatestLearning(routeId: string, conceptId: string) {
+  const trimmedRoute = routeId.trim()
+  const trimmedConcept = conceptId.trim()
+  if (!trimmedRoute || !trimmedConcept) return
+  const conversation = latestLearningConversation(trimmedRoute, trimmedConcept)
+    ?? startLearningConversation(trimmedRoute, trimmedConcept)
+  setActiveConversation(conversation.id)
+  openLearning(trimmedRoute, trimmedConcept, 'path-3d')
+  window.dispatchEvent(new Event(HISTORY_OPEN_EVENT))
 }

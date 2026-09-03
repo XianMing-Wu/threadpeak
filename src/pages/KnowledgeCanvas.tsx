@@ -16,8 +16,8 @@ import {
   type CanvasNode,
 } from '../knowledge-canvas/content'
 import { conceptCarrier, conceptTitle } from '../workspace/catalog'
-import { closeConceptKnowledge, readActiveConversationId, readActiveKnowledgeId, readCanvasReturn, readKnowledgeConceptId } from '../workspace/nav'
-import { appendFollowUpTurn, blueprintOf, ensureLearningConversation, getConceptGraph, getConversation, getKnowledge, getLesson, saveConversationDraft, useWorkspaceTick } from '../workspace/store'
+import { closeConceptKnowledge, readActiveKnowledgeId, readKnowledgeConceptId, setActiveConversation } from '../workspace/nav'
+import { appendFollowUpTurn, blueprintOf, ensureLearningConversation, getConceptGraph, getConversation, getKnowledge, getLesson, latestLearningConversation, saveConversationDraft, useWorkspaceTick } from '../workspace/store'
 import { conversationGraphView, growKindLabel } from '../knowledge-canvas/generate'
 import { AgentStatus } from '../components/AgentStatus'
 import {
@@ -88,12 +88,16 @@ function graphSignature(nodes: readonly CanvasNode[], edges: readonly CanvasEdge
 }
 
 export function KnowledgeCanvasPage() {
-  const returnTo = readCanvasReturn()
-  const seed = readLearningSession()
   const knowledgeId = readActiveKnowledgeId()
   const conceptId = readKnowledgeConceptId()
   const workspaceTick = useWorkspaceTick()
   const knowledge = getKnowledge(knowledgeId)
+  const latestConversation = knowledge?.routeId && conceptId
+    ? latestLearningConversation(knowledge.routeId, conceptId)
+    : undefined
+  const seed = latestConversation
+    ? { turns: latestConversation.turns, value: latestConversation.value, quote: latestConversation.quote, mode: latestConversation.mode }
+    : readLearningSession()
   const graph = knowledge && conceptId ? getConceptGraph(knowledge.id, conceptId) : undefined
   const title = knowledge && conceptId ? conceptTitle(blueprintOf(knowledge.routeId), conceptId) : knowledge?.title ?? '知识脉络'
   const initialNodes = graph?.nodes ?? []
@@ -113,12 +117,7 @@ export function KnowledgeCanvasPage() {
   const [quoteFromId, setQuoteFromId] = useState('')
   const [selection, setSelection] = useState<SelectionAnchor | null>(null)
   const [authorQuestion, setAuthorQuestion] = useState<SelectionAnchor | null>(null)
-  const activeConversation = getConversation(readActiveConversationId())
-  const sessionConversationId = activeConversation?.kind === 'learning'
-    && activeConversation.routeId === knowledge?.routeId
-    && activeConversation.conceptId === conceptId
-    ? activeConversation.id
-    : ''
+  const sessionConversationId = latestConversation?.id ?? ''
   const annotations = useAnnotations(annotationScopeId(knowledge?.routeId || knowledgeId || 'knowledge', conceptId || 'canvas'))
   const [mode, setMode] = useState<AssistantMode>(seed.mode)
   const [value, setValue] = useState(seed.value)
@@ -468,6 +467,7 @@ export function KnowledgeCanvasPage() {
     })
     if (!neighborhood) return
     const conversationId = sessionConversationId || ensureLearningConversation(knowledge.routeId, conceptId).id
+    setActiveConversation(conversationId)
     const messages = buildFollowUpMessages({ lessonText, turns, annotations: annotations.annotations })
     const g2Quote = followUpQuoteForG2(resolved, messages)
     const cited = resolved.quote.text || ''
@@ -523,7 +523,7 @@ export function KnowledgeCanvasPage() {
           }}><Icon name="back" size={18}/></button>
           <span><small>{knowledge?.title ?? '知识脉络'}</small><strong>{title}</strong></span>
         </div>
-        <CanvasConversationAction returnTo={returnTo} routeId={knowledge?.routeId ?? ''} conceptId={conceptId}/>
+        <CanvasConversationAction routeId={knowledge?.routeId ?? ''} conceptId={conceptId || ''}/>
       </header>
       <section
         ref={canvasRef}
