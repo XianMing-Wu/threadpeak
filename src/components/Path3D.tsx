@@ -3,11 +3,11 @@ import {
   mountLearningPath,
   type LearningPathDocument,
   type LearningPathModule,
-  type LearningProgressStoragePort,
   type LearningResourceNavigationResult,
   type LearningResourceNavigatorPort,
   type NodeSemanticBadgeIcon,
 } from 'liu-kanshan-learning-path-3d'
+import { createPathProgressStorage, pathProgressKey, sessionPathProgressCache } from '../path-3d/path-progress-storage'
 
 let serial = 0
 
@@ -18,20 +18,7 @@ const characterAssets = {
   turn: new URL('../vendor/learning-path-3d/assets/liu-kanshan-turn.glb', import.meta.url).href,
 } as const
 
-const memoryStorage = (): LearningProgressStoragePort & { values: Map<string, string> } => {
-  const values = new Map<string, string>()
-  return {
-    values,
-    read({ key }, { signal }) {
-      if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
-      return values.get(key) ?? null
-    },
-    write({ key, value }, { signal }) {
-      if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
-      values.set(key, value)
-    },
-  }
-}
+const pathProgressStorage = createPathProgressStorage(sessionPathProgressCache())
 
 type ContextualCardAction = Readonly<{
   actionId?: string
@@ -113,7 +100,6 @@ export function LearningPath3DView({
     let disposed = false
     serial += 1
     const instanceSerial = serial
-    const storage = memoryStorage()
     const navigator: LearningResourceNavigatorPort = {
       navigate(request, { signal }) {
         if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
@@ -129,21 +115,33 @@ export function LearningPath3DView({
     mount.addEventListener('learning-path:contextual-card-action', handleContextualAction, true)
 
     void (async () => {
+      const progressKey = pathProgressKey(documentId)
+      const existing = await Promise.resolve(pathProgressStorage.read({
+        key: progressKey,
+      }, { signal: new AbortController().signal }))
       const instance = await mountLearningPath({
         mount,
         instanceId: `${instanceIdPrefix}-${instanceSerial}`,
         navigator,
-        storage,
-        progressKey: `threadpeak:path-progress:document:${documentId}:instance:${instanceSerial}`,
+        storage: pathProgressStorage,
+        progressKey,
         document,
         characterAssets,
-        launchMode: 'reset',
+        launchMode: existing ? 'continue' : 'reset',
         reducedMotion: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
         subjectCardTrigger:'activate',
         progressionMode:'open',
         nodeBadgeIconById,
-        onError: ({ message }) => {
-          if (!disposed) setError(safeRuntimeMessage(message, '3D 路线运行失败'))
+        onReady: (snapshot) => {
+          if (!disposed) mount.dataset.snapshot = JSON.stringify(snapshot)
+        },
+        onProgressChange: () => {
+          if (!disposed && moduleRef.current) mount.dataset.snapshot = JSON.stringify(moduleRef.current.getSnapshot())
+        },
+        onError: ({ phase, message }) => {
+          if (disposed) return
+          if (phase === 'runtime') return
+          setError(safeRuntimeMessage(message, '3D 路线运行失败'))
         },
       })
 

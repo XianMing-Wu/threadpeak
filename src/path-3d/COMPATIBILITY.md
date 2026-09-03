@@ -3,7 +3,7 @@
 | 项 | 值 |
 | --- | --- |
 | Owner | `src/path-3d/` |
-| 新路径 | `resolvePath3DView` → 已校验 LearningPath 1.0 document → `LearningPath3DView` |
+| 新路径 | `resolvePath3DView` → 已校验 LearningPath 1.0 document → `LearningPath3DView`。同一 document 用稳定 progressKey 和 `launchMode: continue` 把 renderer 自己写出的不透明 progress 交回；产品代码不解析位置字段 |
 | 旧路径 | `readActiveRouteId() \|\| 'linear-algebra'` + `routeDocument() ?? threadPeakPathDocument` |
 | 删除条件 | 产品 3D 从 CAS `PublishedPathSnapshot` GET 恢复 document，并完成 wire-id → domain UUID handoff |
 
