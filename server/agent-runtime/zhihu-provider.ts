@@ -42,6 +42,16 @@ function assertAllowed(url: string, origin: string) {
   if (new URL(url).origin !== origin) throw new Error('ssrf')
 }
 
+const DIRECT_RATE_LIMIT_ATTEMPTS = 3
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function rateLimitDelay(attempt: number) {
+  return 800 * (2 ** attempt) + Math.floor(Math.random() * 200)
+}
+
 function zhihuHeaders(config: ProviderConfig, clock: ClockPort): Record<string, string> {
   return {
     Authorization: `Bearer ${config.zhihuAccessSecret}`,
@@ -100,31 +110,43 @@ export function createAgentZhihuProvider(ports: {
       const url = new URL(zhihuDirectUrl(ports.config.zhihuApiBaseUrl))
       try {
         assertAllowed(url.toString(), origin)
-        const response = await ports.http(url.toString(), {
-          method: 'POST',
-          headers: zhihuHeaders(ports.config, ports.clock),
-          signal: input.signal,
-          body: JSON.stringify({
-            model: ZHIDA_FAST_MODEL,
-            messages: input.messages,
-            ...(input.thinkingDepth === 'deep' ? { thinking: { type: 'enabled' } } : {}),
-          }),
+        const body = JSON.stringify({
+          model: ZHIDA_FAST_MODEL,
+          messages: input.messages,
+          ...(input.thinkingDepth === 'deep' ? { thinking: { type: 'enabled' } } : {}),
         })
-        const text = await response.text()
-        if (!response.ok) return { kind: 'failed', message: '知乎直答不可用。' }
-        let payload: unknown
-        try {
-          payload = JSON.parse(text) as unknown
-        } catch {
-          return { kind: 'failed', message: '知乎直答返回了无法解析的响应。' }
+        for (let attempt = 0; attempt < DIRECT_RATE_LIMIT_ATTEMPTS; attempt += 1) {
+          const response = await ports.http(url.toString(), {
+            method: 'POST',
+            headers: zhihuHeaders(ports.config, ports.clock),
+            signal: input.signal,
+            body,
+          })
+          const text = await response.text()
+          if (response.status === 429 && attempt < DIRECT_RATE_LIMIT_ATTEMPTS - 1) {
+            await sleep(rateLimitDelay(attempt))
+            continue
+          }
+          if (!response.ok) {
+            if (response.status === 429) return { kind: 'failed', message: '知乎直答限流。' }
+            if (response.status === 401 || response.status === 403) return { kind: 'failed', message: '知乎直答鉴权失败。' }
+            return { kind: 'failed', message: `知乎直答不可用（HTTP ${response.status}）。` }
+          }
+          let payload: unknown
+          try {
+            payload = JSON.parse(text) as unknown
+          } catch {
+            return { kind: 'failed', message: '知乎直答返回了无法解析的响应。' }
+          }
+          const root = asRecord(payload)
+          const choices = pick(root, 'choices', 'Choices')
+          const first = Array.isArray(choices) ? asRecord(choices[0]) : undefined
+          const message = asRecord(pick(first, 'message', 'Message'))
+          const content = asText(pick(message, 'content', 'Content') ?? pick(root, 'answer', 'Answer', 'output', 'Output'))
+          if (!content) return { kind: 'failed', message: '知乎直答返回了空内容。' }
+          return { kind: 'completed', text: content.slice(0, OUTPUT_LIMIT) }
         }
-        const root = asRecord(payload)
-        const choices = pick(root, 'choices', 'Choices')
-        const first = Array.isArray(choices) ? asRecord(choices[0]) : undefined
-        const message = asRecord(pick(first, 'message', 'Message'))
-        const content = asText(pick(message, 'content', 'Content') ?? pick(root, 'answer', 'Answer', 'output', 'Output'))
-        if (!content) return { kind: 'failed', message: '知乎直答返回了空内容。' }
-        return { kind: 'completed', text: content.slice(0, OUTPUT_LIMIT) }
+        return { kind: 'failed', message: '知乎直答限流。' }
       } catch (cause) {
         if (cause instanceof Error && cause.name === 'AbortError') return { kind: 'failed', message: '知乎直答已中止。' }
         return { kind: 'failed', message: '知乎直答不可用。' }

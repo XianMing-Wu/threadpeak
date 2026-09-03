@@ -46,8 +46,9 @@ import {
 import type { FirstLesson, LearningTurn } from '../workspace/types'
 import { resolveFirstLesson, resolveLearningEntry } from '../session/resolve-learning-entry'
 import { resolvePath3DView } from '../path-3d/resolved-path-document'
-import { lessonFromCanonical, requestCanonicalAnswer } from '../session/request-canonical-answer'
-import { requestGraphBootstrap } from '../session/request-graph-bootstrap'
+import { lessonFromCanonical } from '../session/request-canonical-answer'
+import { requestFirstEntry, requestFirstEntrySnapshot } from '../session/request-first-entry'
+import { NotFoundPage } from './NotFound.tsx'
 
 function readLearningNav() {
   return { routeId: readActiveRouteId(), conceptId: readActiveConceptId() }
@@ -116,8 +117,8 @@ export function SessionPage() {
     conceptIds,
     ...(route ? { route } : {}),
   })
-  if (entry.kind === 'unavailable') return <SessionUnavailable title={entry.title} message={entry.message}/>
-  if (!route) return <SessionUnavailable title="未选择学习概念" message="没有可进入的学习概念。"/>
+  if (entry.kind === 'unavailable') return <NotFoundPage/>
+  if (!route) return <NotFoundPage/>
   const cataloged = catalogLesson(entry.routeId, entry.conceptId)
   const firstLesson = resolveFirstLesson({
     routeId: entry.routeId,
@@ -132,56 +133,80 @@ export function SessionPage() {
   return <SessionLearning key={`${entry.routeId}::${entry.conceptId}`} routeId={entry.routeId} conceptId={entry.conceptId}/>
 }
 
+function publishedConceptFromRoute(routeId: string, conceptId: string) {
+  const route = getRoute(routeId)
+  const node = route?.document?.structure.concepts.find((item) => item.id === conceptId)
+  const card = node ? route?.document.data.cards.find((item) => item.id === node.cardRef) : undefined
+  return {
+    title: card?.title || conceptTitle(blueprintOf(routeId), conceptId) || conceptId,
+    detailedDescription: (typeof card?.body === 'string' && card.body.trim() ? card.body : card?.summary) || '',
+    hasDispute: card?.eyebrow === '有争议',
+    attachmentSourceIds: [] as string[],
+  }
+}
+
 function CanonicalSessionGate({ routeId, conceptId }: { routeId: string; conceptId: string }) {
-  const title = conceptTitle(blueprintOf(routeId), conceptId) || conceptId
+  const published = publishedConceptFromRoute(routeId, conceptId)
+  const title = published.title
   const [lesson, setLesson] = useState<FirstLesson | null>(null)
-  const [graphReady, setGraphReady] = useState(false)
-  const [phase, setPhase] = useState<'generating' | 'bootstrapping' | 'ready'>('generating')
   const [error, setError] = useState<{ title: string; message: string } | null>(null)
+  const [generating, setGenerating] = useState(false)
   useEffect(() => {
     let cancelled = false
     void (async () => {
-      const answer = await requestCanonicalAnswer({ routeId, conceptId, title })
+      const existing = await requestFirstEntrySnapshot({ routeId, conceptId })
       if (cancelled) return
-      if (answer.kind !== 'completed') {
-        setError({ title: answer.title, message: answer.message })
-        return
-      }
-      setLesson(lessonFromCanonical(title, answer.text))
-      setPhase('bootstrapping')
-      const graph = await requestGraphBootstrap({ routeId, conceptId, title })
-      if (cancelled) return
-      if (graph.kind === 'completed') {
+      const apply = (result: { text: string; contentHash: string; title: string; graph: Parameters<typeof ensureMineKnowledgeFromCanonical>[0]['graph'] }) => {
+        setLesson(lessonFromCanonical(result.title || title, result.text))
         ensureMineKnowledgeFromCanonical({
           routeId,
           conceptId,
-          title,
-          text: answer.text,
-          contentHash: answer.contentHash,
-          graph: graph.graph,
+          title: result.title || title,
+          text: result.text,
+          contentHash: result.contentHash,
+          graph: result.graph,
         })
-        setGraphReady(true)
       }
-      setPhase('ready')
+      if (existing.kind === 'completed') {
+        apply(existing)
+        return
+      }
+      setGenerating(true)
+      const created = await requestFirstEntry({
+        routeId,
+        conceptId,
+        title,
+        hasDispute: published.hasDispute,
+        detailedDescription: published.detailedDescription,
+        attachmentSourceIds: published.attachmentSourceIds,
+      })
+      if (cancelled) return
+      if (created.kind !== 'completed') {
+        setGenerating(false)
+        setError({ title: created.title, message: created.message })
+        return
+      }
+      apply(created)
+      setGenerating(false)
     })()
     return () => { cancelled = true }
-  }, [conceptId, routeId, title])
+  }, [conceptId, published.detailedDescription, published.hasDispute, routeId, title])
   if (error) return <SessionUnavailable title={error.title} message={error.message}/>
-  if (!lesson || phase !== 'ready') {
+  if (!lesson) {
     return <ProductWorkspace active="paths" page="session-learning">
       <main className="learning-session">
         <section className="lesson-chat">
           <div className="conversation" role="status" aria-live="polite">
             <article>
-              <h2>{phase === 'bootstrapping' ? '首次回复已 settle，正在创建知识脉络根节点' : '正在生成这次概念的首次回复'}</h2>
-              <p>首次回复会经服务端知乎检索和 DeepSeek settle，之后永久复用。知识脉络只在首次回复 settle 之后由 GraphSurgeon 创建。</p>
+              <h2>{generating ? '正在生成这次概念的首次回复' : '正在读取这次概念的首次回复'}</h2>
+              <p>第一次进入会并联三路知乎直答并整理成唯一首轮，同时确定性创建唯一根。再次进入只读取已 settle 的首次回复，不再生成。</p>
             </article>
           </div>
         </section>
       </main>
     </ProductWorkspace>
   }
-  return <SessionLearning routeId={routeId} conceptId={conceptId} lesson={lesson} graphReady={graphReady}/>
+  return <SessionLearning routeId={routeId} conceptId={conceptId} lesson={lesson} graphReady/>
 }
 
 function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphReady = false }: { routeId: string; conceptId: string; lesson?: FirstLesson; graphReady?: boolean }) {

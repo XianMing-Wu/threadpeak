@@ -7,12 +7,17 @@ import { AuthorsPage } from './pages/Authors'
 import { SettingsPage } from './pages/Settings'
 import { ChatPage } from './pages/Chat'
 import { AuthLanding } from './pages/AuthLanding'
+import { NotFoundPage } from './pages/NotFound'
 import { IconSprite } from './icons'
 import { ensurePrototypeRuntimeListeners } from './runtime/prototype-runtime'
 import { requestAuthLogout, requestAuthSession } from './runtime/request-auth-session'
 
 const routes = new Set<RouteName>(['home','chat','paths','path-3d','knowledge','knowledge-detail','session-learning','authors','settings'])
-function readRoute():RouteName { const key=location.hash.slice(1).split('?')[0] as RouteName; return routes.has(key)?key:'home' }
+function readRoute():RouteName {
+  const key=location.hash.slice(1).split('?')[0] as RouteName
+  if (!key) return 'home'
+  return routes.has(key)?key:'not-found'
+}
 const AUTH_KEY='threadpeak-authenticated'
 const THEME_KEY='threadpeak-theme'
 export function App(){
@@ -33,6 +38,6 @@ export function App(){
     setAuthenticated(false)
   }
   const authorize=()=>{localStorage.setItem(AUTH_KEY,'true');setAuthenticated(true);location.hash='home'}
-  const page=route==='home'?<HomePage/>:route==='chat'?<ChatPage/>:route==='knowledge'?<KnowledgePage/>:route==='knowledge-detail'?<KnowledgeDetailPage/>:route==='paths'?<PathsPage/>:route==='path-3d'?<Path3DPage/>:route==='session-learning'?<SessionPage/>:route==='authors'?<AuthorsPage/>:<SettingsPage/>
+  const page=route==='home'?<HomePage/>:route==='chat'?<ChatPage/>:route==='knowledge'?<KnowledgePage/>:route==='knowledge-detail'?<KnowledgeDetailPage/>:route==='paths'?<PathsPage/>:route==='path-3d'?<Path3DPage/>:route==='session-learning'?<SessionPage/>:route==='authors'?<AuthorsPage/>:route==='not-found'?<NotFoundPage/>:<SettingsPage/>
   return <><IconSprite/>{authenticated?<WideShell route={route} theme={theme} onThemeChange={toggleTheme} onLogout={logout}>{page}</WideShell>:<AuthLanding theme={theme} onThemeChange={toggleTheme} onAuthorize={authorize}/>}</>
 }

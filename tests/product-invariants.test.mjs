@@ -5,7 +5,9 @@ import { resolveLearningEntry } from '../src/session/resolve-learning-entry.ts'
 import { validateRendererDocument } from '../src/path-3d/validate-renderer-document.ts'
 import { decideCommittedApply } from '../packages/runtime-store/src/runtime-store.ts'
 
+const appPage = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
 const session = await readFile(new URL('../src/pages/Session.tsx', import.meta.url), 'utf8')
+const notFound = await readFile(new URL('../src/pages/NotFound.tsx', import.meta.url), 'utf8')
 const store = await readFile(new URL('../src/workspace/store.ts', import.meta.url), 'utf8')
 const catalog = await readFile(new URL('../src/workspace/catalog.ts', import.meta.url), 'utf8')
 const canvas = await readFile(new URL('../src/pages/KnowledgeCanvas.tsx', import.meta.url), 'utf8')
@@ -22,9 +24,14 @@ const http = await readFile(new URL('../server/http.ts', import.meta.url), 'utf8
 const pkg = await readFile(new URL('../package.json', import.meta.url), 'utf8')
 
 test('routes do not create knowledge and failed session turns do not write graphs', () => {
-  assert.match(session, /requestCanonicalAnswer/)
-  assert.match(session, /requestGraphBootstrap/)
-  assert.match(session, /知识脉络只在首次回复 settle 之后由 GraphSurgeon 创建/)
+  assert.match(session, /requestFirstEntry/)
+  assert.match(session, /requestFirstEntrySnapshot/)
+  assert.doesNotMatch(session, /requestGraphBootstrap/)
+  assert.doesNotMatch(session, /正在创建知识脉络根节点/)
+  assert.match(session, /NotFoundPage/)
+  assert.match(appPage, /not-found/)
+  assert.match(notFound, /页面不存在/)
+  assert.doesNotMatch(notFound, /无法进入这次学习/)
   assert.match(canonical, /reused: true/)
   assert.match(canonical, /inflight/)
   assert.doesNotMatch(canonical, /KnowledgeGraph/)

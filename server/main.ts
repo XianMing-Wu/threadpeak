@@ -15,6 +15,7 @@ import { createAgentZhihuProvider } from './agent-runtime/zhihu-provider.ts'
 import { invokeStructuredAgent, invokeTextAgent } from './agent-runtime/invoke.ts'
 import { createLlmSummarizer } from './agent-runtime/summarizer.ts'
 import { createPathOrchestrator } from './path-generation/orchestrator.ts'
+import { createFirstLearningOrchestrator } from './first-learning/orchestrator.ts'
 
 function loadDotEnv(filePath: string): Record<string, string | undefined> {
   const env: Record<string, string | undefined> = { ...process.env }
@@ -76,18 +77,29 @@ const oauth = createOauthService({
 })
 const canonical = createCanonicalAnswerStore()
 const graph = createGraphSurgeon(canonical)
-const pathOrchestrator = config.ok
+const agentRuntime = config.ok
   ? (() => {
     const llm = createAgentLlmProvider({ config: config.config, http })
     const zhihu = createAgentZhihuProvider({ config: config.config, http, clock })
     const summarizer = createLlmSummarizer({ llm })
-    const agentPorts = { llm, zhihu, summarizer }
-    return createPathOrchestrator({
-      invokeStructured: (agentId, context, options) => invokeStructuredAgent(agentPorts, agentId, context, options),
-      invokeText: (agentId, context, options) => invokeTextAgent(agentPorts, agentId, context, options),
-      search: (query, count) => zhihu.search(query, count),
-    })
+    return { llm, zhihu, summarizer }
   })()
+  : undefined
+const pathOrchestrator = agentRuntime
+  ? createPathOrchestrator({
+    invokeStructured: (agentId, context, options) => invokeStructuredAgent(agentRuntime, agentId, context, options),
+    invokeText: (agentId, context, options) => invokeTextAgent(agentRuntime, agentId, context, options),
+    search: (query, count) => agentRuntime.zhihu.search(query, count),
+  })
+  : undefined
+const firstLearning = agentRuntime
+  ? createFirstLearningOrchestrator({
+    invokeStructured: (agentId, context, options) => invokeStructuredAgent(agentRuntime, agentId, context, options),
+    invokeText: (agentId, context, options) => invokeTextAgent(agentRuntime, agentId, context, options),
+    ...(pathOrchestrator
+      ? { lookupConcept: (routeId, conceptId) => pathOrchestrator.getPublishedConcept(routeId, conceptId) }
+      : {}),
+  })
   : undefined
 
 const server = await createCompositionApp({
@@ -98,6 +110,7 @@ const server = await createCompositionApp({
   graph,
   ...(service ? { service } : {}),
   ...(pathOrchestrator ? { pathOrchestrator } : {}),
+  ...(firstLearning ? { firstLearning } : {}),
   ...(config.ok && config.config.pathGenerateUpstream
     ? { pathGenerateUpstream: config.config.pathGenerateUpstream }
     : {}),

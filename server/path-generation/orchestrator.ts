@@ -160,14 +160,46 @@ function pushConversation(run: PathRun, turn: Omit<ConversationTurn, 'messageId'
   run.conversation.push({ ...turn, messageId: `m-${run.conversation.length + 1}` })
 }
 
+export type PublishedConcept = {
+  conceptId: string
+  title: string
+  hasDispute: boolean
+  detailedDescription: string
+  attachmentSourceIds: string[]
+}
+
+export type PublishedPath = {
+  documentId: string
+  route: R4Output
+  conceptIdByWireId: Record<string, string>
+}
+
 export function createPathRunStore() {
   const runs = new Map<string, PathRun>()
+  const published = new Map<string, PublishedPath>()
   return {
     get(runId: string): PathRun | undefined {
       return runs.get(runId)
     },
     save(run: PathRun) {
       runs.set(run.runId, run)
+    },
+    savePublished(record: PublishedPath) {
+      published.set(record.documentId, record)
+    },
+    getPublishedConcept(routeId: string, conceptId: string): PublishedConcept | undefined {
+      const record = published.get(routeId.trim())
+      if (!record) return undefined
+      const originalId = record.conceptIdByWireId[conceptId] ?? conceptId
+      const concept = record.route.concepts.find((item) => item.id === originalId)
+      if (!concept) return undefined
+      return {
+        conceptId,
+        title: concept.title,
+        hasDispute: concept.hasDispute,
+        detailedDescription: concept.detailedDescription,
+        attachmentSourceIds: [...concept.attachmentSourceIds],
+      }
     },
   }
 }
@@ -208,6 +240,11 @@ export function createPathOrchestrator(ports: {
     run.route = generated.value
     run.document = projected.value.document
     run.conceptIdByWireId = projected.value.conceptIdByWireId
+    store.savePublished({
+      documentId: projected.value.document.id,
+      route: generated.value,
+      conceptIdByWireId: projected.value.conceptIdByWireId,
+    })
     run.status = 'published'
     run.stage = '已发布'
     run.knowledgeCreated = false
@@ -302,6 +339,9 @@ export function createPathOrchestrator(ports: {
     get(runId: string): PathRunView | undefined {
       const run = store.get(runId)
       return run ? viewOf(run) : undefined
+    },
+    getPublishedConcept(routeId: string, conceptId: string) {
+      return store.getPublishedConcept(routeId, conceptId)
     },
 
     async start(input: {

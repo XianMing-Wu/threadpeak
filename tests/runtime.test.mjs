@@ -8,7 +8,7 @@ const chat = await readFile(new URL('../src/pages/Chat.tsx',import.meta.url),'ut
 const authors = await readFile(new URL('../src/pages/Authors.tsx',import.meta.url),'utf8')
 const canvas = await readFile(new URL('../src/pages/KnowledgeCanvas.tsx',import.meta.url),'utf8')
 
-test('授权入口包裹九个 Hash 页面且非法 Hash 回落到首页',()=>{for(const id of ['home','chat','paths','path-3d','knowledge','knowledge-detail','session-learning','authors','settings'])assert.match(app,new RegExp(id));assert.match(app,/<AuthLanding/);assert.match(app,/routes\.has\(key\)\?key:'home'/)})
+test('授权入口包裹 Hash 页面且非法 Hash 进入独立 404',()=>{for(const id of ['home','chat','paths','path-3d','knowledge','knowledge-detail','session-learning','authors','settings','not-found'])assert.match(app,new RegExp(id));assert.match(app,/<AuthLanding/);assert.match(app,/routes\.has\(key\)\?key:'not-found'/);assert.match(app,/NotFoundPage/)})
 test('问题会话支持普通回答、路线澄清与相关图文三种入口',()=>{assert.match(chat,/resolveOrdinaryAnswer/);assert.match(chat,/OrdinaryAnswerUnavailable/);assert.match(chat,/ChatRoutePanel/);assert.match(chat,/resolveVisualAnswer/);assert.match(chat,/VisualAnswerUnavailable/);assert.match(chat,/followUp/);assert.match(chat,/resolveChatLaunch/);assert.doesNotMatch(chat,/DefaultAnswer|defaultAnswerMock|function VisualAnswer\b|selectVisualFrames|性价比高的显卡/)})
 test('明确意图可自动进入图文或博主模式',()=>{assert.match(session,/图\|可视化\|思维导图\|时间线/);assert.match(session,/博主\|作者/);assert.match(session,/mode\|\|detect\(value\)/)})
 test('新对话清空当前会话并形成后续树分支入口',()=>{assert.match(session,/setTurns\(\[\]\)/);assert.match(session,/new-chat/)})

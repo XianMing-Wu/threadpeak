@@ -78,7 +78,7 @@ export function MineGraphCanvasPage({ routeId, conceptId }: { routeId: string; c
         <section className="thread-canvas" role="status" aria-live="polite">
           <article className="square-empty">
             <strong>正在读取已提交的知识脉络</strong>
-            <p>我的路线先读取 GraphSurgeon 提交的 graph/root 和同一份首次回复，再显示可缩放的知识脉络。</p>
+            <p>我的路线先读取已 settle 的首次回复和唯一根，再显示可缩放的知识脉络。</p>
           </article>
         </section>
       </main>

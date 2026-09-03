@@ -15,7 +15,7 @@ function profileMenuBox(button: HTMLElement, collapsed: boolean) {
     : { left: Math.round(rect.left), bottom: Math.round(window.innerHeight - rect.top + 8) }
 }
 
-export type RouteName = 'home' | 'chat' | 'paths' | 'path-3d' | 'knowledge' | 'knowledge-detail' | 'session-learning' | 'authors' | 'settings'
+export type RouteName = 'home' | 'chat' | 'paths' | 'path-3d' | 'knowledge' | 'knowledge-detail' | 'session-learning' | 'authors' | 'settings' | 'not-found'
 
 const compactRoutes = new Set<RouteName>(['chat','knowledge','knowledge-detail','paths','path-3d','session-learning','authors'])
 const prototypeAccount = resolveAccountIdentity()

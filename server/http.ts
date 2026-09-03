@@ -8,6 +8,8 @@ import { buildPathApp } from './path/http.ts'
 import { InMemoryPathSessionStore } from './path/service.ts'
 import { registerPathRunRoutes } from './path-generation/http.ts'
 import type { PathOrchestrator } from './path-generation/orchestrator.ts'
+import { registerFirstLearningRoutes } from './first-learning/http.ts'
+import type { FirstLearningOrchestrator } from './first-learning/orchestrator.ts'
 import { registerAuthRoutes } from './identity/http.ts'
 import type { OauthService } from './identity/oauth.ts'
 import type { CanonicalAnswerStore } from './knowledge/canonical-answer.ts'
@@ -27,6 +29,7 @@ export type LiveHttpPorts = {
   canonical?: CanonicalAnswerStore
   graph?: GraphSurgeonStore
   pathOrchestrator?: PathOrchestrator
+  firstLearning?: FirstLearningOrchestrator
 }
 
 function traceIdOf(request: FastifyRequest): string {
@@ -201,14 +204,14 @@ export function registerLiveRoutes(app: FastifyInstance, ports: LiveHttpPorts) {
     const query = request.query as Record<string, unknown>
     const routeId = typeof query.routeId === 'string' ? query.routeId : ''
     const conceptId = typeof query.conceptId === 'string' ? query.conceptId : ''
-    const found = ports.canonical.get(routeId, conceptId)
+    const found = ports.firstLearning?.getCanonical(routeId, conceptId) ?? ports.canonical.get(routeId, conceptId)
     if (!found) return sendJson(reply, 404, { kind: 'missing', traceId })
     return sendJson(reply, 200, { kind: 'completed', reused: true, ...found, traceId })
   })
 
   app.post('/api/learning/canonical-answer', async (request, reply) => {
     const traceId = traceIdOf(request)
-    if (!ports.config.ok || !ports.service || !ports.canonical) {
+    if (!ports.config.ok || !ports.firstLearning) {
       return sendJson(reply, 503, {
         kind: 'failed',
         code: 'CONFIG_INVALID',
@@ -217,21 +220,26 @@ export function registerLiveRoutes(app: FastifyInstance, ports: LiveHttpPorts) {
       })
     }
     const payload = asRecord(request.body) ?? {}
-    const live = ports.service
-    const store = ports.canonical
-    const result = await store.ensure({
+    const result = await ports.firstLearning.enter({
       routeId: typeof payload.routeId === 'string' ? payload.routeId : '',
       conceptId: typeof payload.conceptId === 'string' ? payload.conceptId : '',
-      title: typeof payload.title === 'string' ? payload.title : '',
-      generate: (input) => live.ordinaryAnswer(input),
+      title: typeof payload.title === 'string' ? payload.title : undefined,
+      hasDispute: payload.hasDispute === true,
+      detailedDescription: typeof payload.detailedDescription === 'string' ? payload.detailedDescription : undefined,
+      attachmentSourceIds: Array.isArray(payload.attachmentSourceIds)
+        ? payload.attachmentSourceIds.filter((item): item is string => typeof item === 'string')
+        : undefined,
+      thinkingDepth: payload.thinkingDepth === 'deep' ? 'deep' : 'fast',
     })
     if (result.kind !== 'completed') {
-      return sendJson(reply, 503, { ...result, traceId })
+      return sendJson(reply, result.code === 'PROVIDER_INVALID' ? 400 : 503, { ...result, traceId })
     }
     return sendJson(reply, 200, {
       kind: 'completed',
       reused: result.reused,
       ...result.answer,
+      graph: result.graph,
+      draftCount: 0,
       traceId,
     })
   })
@@ -244,7 +252,7 @@ export function registerLiveRoutes(app: FastifyInstance, ports: LiveHttpPorts) {
     const query = request.query as Record<string, unknown>
     const routeId = typeof query.routeId === 'string' ? query.routeId : ''
     const conceptId = typeof query.conceptId === 'string' ? query.conceptId : ''
-    const found = ports.graph.get(routeId, conceptId)
+    const found = ports.firstLearning?.getGraph(routeId, conceptId) ?? ports.graph.get(routeId, conceptId)
     if (!found) return sendJson(reply, 404, { kind: 'missing', traceId })
     return sendJson(reply, 200, { kind: 'completed', reused: true, draftCount: 0, ...found, traceId })
   })
@@ -260,9 +268,23 @@ export function registerLiveRoutes(app: FastifyInstance, ports: LiveHttpPorts) {
       })
     }
     const payload = asRecord(request.body) ?? {}
+    const routeId = typeof payload.routeId === 'string' ? payload.routeId : ''
+    const conceptId = typeof payload.conceptId === 'string' ? payload.conceptId : ''
+    if (ports.firstLearning) {
+      const settled = ports.firstLearning.getGraph(routeId, conceptId)
+      if (settled) {
+        return sendJson(reply, 200, { kind: 'completed', reused: true, draftCount: 0, ...settled, traceId })
+      }
+      return sendJson(reply, 409, {
+        kind: 'failed',
+        code: 'CANONICAL_MISSING',
+        message: '首次回复尚未成功，不能单独创建知识脉络。',
+        traceId,
+      })
+    }
     const result = await ports.graph.bootstrap({
-      routeId: typeof payload.routeId === 'string' ? payload.routeId : '',
-      conceptId: typeof payload.conceptId === 'string' ? payload.conceptId : '',
+      routeId,
+      conceptId,
       title: typeof payload.title === 'string' ? payload.title : '',
     })
     if (result.kind !== 'completed') {
@@ -299,6 +321,10 @@ export async function createCompositionApp(ports: LiveHttpPorts): Promise<Fastif
   registerPathRunRoutes(app, {
     ready: ports.config.ok,
     ...(ports.pathOrchestrator ? { orchestrator: ports.pathOrchestrator } : {}),
+  })
+  registerFirstLearningRoutes(app, {
+    ready: ports.config.ok,
+    ...(ports.firstLearning ? { firstLearning: ports.firstLearning } : {}),
   })
   if (ports.oauth) registerAuthRoutes(app, ports.oauth)
   return app
