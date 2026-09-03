@@ -1,80 +1,123 @@
 ---
-description: "约束问博主、博主搜索、作者身份、关系事件和博主网络的固定流程。"
+description: "约束 A1–A3 问博主、N0–N2 博主搜索、作者证据 ID、批注和高低权博主网络。"
 globs: "src/pages/Authors.tsx,src/pages/Session.tsx,src/session/ask-authors.ts,src/session/resolve-ask-author.ts,src/session/resolve-author-search.ts,src/session/resolve-author-network.ts,src/session/useAnnotations.ts,src/session/author-graph-rag.ts,src/session/author-network.ts,src/components/AskAuthorsPrompt.tsx,src/components/AuthorNetworkGraph.tsx,src/components/AnnotationPanel.tsx,apps/web/**/concept-learning/**,apps/web/**/author-search/**,apps/web/**/author-network/**,packages/contracts/authors/**,server/authors/**"
 alwaysApply: false
 ---
 
-# 问博主、博主搜索与作者网络
+# 问博主、博主搜索与网络
 
-问博主和博主搜索是两个不同 use case。两者共享稳定 `AuthorIdentity` 与逐作者 evidence pack，但检索顺序、输出和写入后果不同，禁止合并成万能 authors agent。
+目标行为以 [as-implemented-logic.md](../../as-implemented-logic.md) 第 2.4、2.11、4.1 节为准；A1、A2、A3、N1、N2 的完整上下文、压缩、提示词和输出结构以 [agent-specs.md](../../agent-specs.md) 第四、五节为准。
 
-## AskAuthorResolution：问博主
+问博主和搜索博主是两条不同流程：前者针对划选内容回答并形成批注，后者只找人。两者只共享稳定 authorId、evidenceId 和博主网络，不得合成一个“authors agent”。
 
-```text
-validate → search_zhihu_users_and_content → normalize_author_identity
-  → group_evidence_by_author → llm_relevance_review
-  → selected_1_or_2 ───────────────→ return_author_resolution
-  → selected_0 → call_zhihu_direct → return_liu_kanshan_fallback
-```
+## A1–A3：划选问博主
 
-1. 只由 `AnswerPipeline(mode=ask_author)` 触发，第一步永远是知乎站内搜索；不得先查博主图谱。
-2. 搜索取得多个真实用户及其回答/文章等内容。adapter 用知乎稳定外部用户标识归一 `AuthorIdentity`；显示名、头像和相似文案不能合并身份。
-3. 每位作者形成独立 `AuthorEvidencePack`，不同作者 evidence 不能混合。
-4. LLM 只能在给定 author id/evidence id 中判定相关性、排序并给简短理由；不能新增候选、改身份、虚构作者说法或将多人合成一人。
-5. 通过 1 位返回 1 位，通过 2 位返回 2 位，最多 2 位；不得凑数。最终回答逐作者分卡/分段，保留真实内容链接与 evidence reference。
-6. AI 摘要必须标记为摘要，不得伪装成作者针对当前用户新写的第一人称回复。
-7. 只有检索与评审正常完成且可信作者数为 0，才调用 `ZhihuDirectAnswerProvider`。检索不可用、LLM invalid 或直达失败返回 typed failure，不能伪装成零命中。
-8. 刘看山直达结果可以 settle、进入 history 并增量更新知识图，但不得创建任何 author identity/candidate/relation/network node。
-9. Authors 子流程只返回 typed `AskAuthorResolution`。最终 conversation turn、settlement、history 和 graph job 由 knowledge owner 提交。
-10. 问博主不联系、私信、关注、评论、收藏或代发。未来外部写操作必须另立命令、权限、确认和幂等合同。
+入口必须来自学习页或知识画布中的有效单卡划选。没有划选时不显示问博主入口；普通输入框里出现“博主/作者”不能绕过划选要求。
 
-## AuthorSearchPipeline：博主搜索
+~~~text
+用户问题 + 划选原文 + 宿主卡正文
+  → A1 拆成 2–3 个等价问法
+  → A-S 按全部问法并联搜索知乎
+  → 按 authorId 分组，每条文章保留 evidenceId、API 总结和真实链接
+  → A2 判断哪些证据能回答，选择 1–2 位不同真实作者
+      ├ selected：按 ID 回查并展示作者批注，写入高权网络
+      └ no_suitable_author：A3 以刘看山第一人称调用知乎直答
+~~~
 
-```text
-validate_query → search_author_graph → evaluate_graph_hits
-  → relevant_1_to_3 ───────────────────────────────→ return_people
-  → relevant_0 → search_zhihu → normalize_identity
-      → llm_relevance_review → rank_top_3 → return_people
-```
+### A1
 
-1. 「搜索博主」先查询当前用户、当前 owner scope 的博主图谱。
-2. 图谱有至少 1 位真正相关作者时，最多返回 3 位并结束；不得调用知乎补齐数量或混排内外结果。
-3. 只有 graph 相关命中为 0 时才查知乎。外部候选按稳定身份去重、隔离 evidence，再由 LLM 审查并最多返回 3 位。
-4. 不足 3 位不凑数；0 位是合法 empty result。基础设施失败不是 empty。
-5. 输出是人物卡 `AuthorSearchResult`：author id、显示资料、相关性解释、source refs、freshness、`origin = network | zhihu`。
-6. 搜索结果不是 `AnswerArtifact`，不进入 conversation/history，不触发 knowledge graph job。
-7. 候选、前三名、高分或仅展示/点击都不能自动入网。只有 committed 真实关系信号才可更新 network。
+- 只读取用户问题、划选原文/锚点和宿主卡正文，不读取附件或整张图。
+- 输出 2–3 条语义等价、可并联搜索的 query；不回答问题、不扩大意图、不凭空加人名。
+- 达到 500k 时先压宿主卡中划选范围外正文；用户问题和划选优先保留。完整算法见 agent-specs.md。
 
-## 合同
+### A-S
 
-| 合同 | 必须包含 | 不变量 |
-| --- | --- | --- |
-| `AuthorIdentity` | `provider = zhihu`、opaque stable external user id、display snapshot/version | external id 才是同一人依据；刘看山不能实例化 |
-| `AuthorEvidencePack` | author id、隔离 evidence records、source refs、retrievedAt/visibility | 一包只属于一位作者；至少一条可追溯证据才进入评审 |
-| `AskAuthorResolution` | `selected_authors` 1–2 位，或 `liu_kanshan_direct` 一个结果 | 分支互斥；零作者才直达；无 contact proposal |
-| `AuthorSearchResult` | query fingerprint、`network \| zhihu` origin、0–3 人、source/freshness | graph 命中时不混外部；结果不写 network/conversation |
-| `AuthorRelationshipSignal` | owner scope、author id、`answer_selected`、artifact/concept/category refs、occurredAt | 只由采用真实作者的 settled answer 产生；append-only/idempotent |
+- 每条搜索结果必须有 queryId、authorId、authorName、evidenceId、API summary 和真实 url。
+- 同一作者可以有多条 evidence；不同作者的 evidence 不得混包。
+- authorId 以知乎稳定身份为准，不能用展示名、头像或相似文字合并。
+- A-S 是知乎搜索，不是模型 Agent。
 
-错误至少区分 `AUTHOR_QUERY_INVALID`、`AUTHOR_SEARCH_UNAVAILABLE`、`AUTHOR_IDENTITY_AMBIGUOUS`、`AUTHOR_REVIEW_INVALID`、`ZHIHU_DIRECT_UNAVAILABLE`。0 相关作者不是 unavailable。
+### A2
 
-## 网络写入与最终一致
+- 必须读取全部候选，不先按热度截断。
+- 只能返回输入中存在且绑定正确的 authorId、authorName、evidenceId、evidenceSummary、evidenceUrl。
+- selected 分支选择 1–2 位不同作者，每位选择最能回答问题的一条 evidence。
+- no_suitable_author 分支 selections 必须为空；provider/解析失败不能伪装成 no_suitable_author。
+- A2 同时输出含义不变的 normalizedQuestion，供高权网络记录。
+- 算法按 authorId/evidenceId 回查原候选后展示“姓名 + 总结 + 详细内容可以阅读我的文章 {链接}”；不再让模型重写姓名、总结或链接。
 
-- 真实作者被最终 settled 回答采用时，Answer settlement 同事务写 author-selection outbox；刘看山分支不能写此事件。
-- `author-network-projector` 按 `eventId + owner scope + AuthorIdentity` 幂等 upsert 自己的关系；LLM、搜索 adapter 和 UI 都不是网络写者。
-- Author network revision 与 KnowledgeGraph revision 完全独立；authors projector 不得调用 GraphSurgeon 或写 `knowledge_graphs`。
-- 博主搜索默认是只读 query，不发 network mutation event。
-- 当前 `carrier → concept → question` 和旧“用户 → 类别 → 作者”都不是已冻结生产可视 topology。实体/边/权重由 author-network ADR 决定；检索顺序和 relationship trigger 已冻结，不受 topology 选择影响。
+### A3
 
-## UI
+- 只有 A2 正常完成且返回 no_suitable_author 才调用；A1/A-S/A2 失败不能进入回退。
+- 上下文只含用户问题和划选/划选摘要，不再携带候选证据列表。
+- 系统身份是刘看山第一人称；输出自由正文。
+- 刘看山直答失败是明确失败，不得冒充作者结果。
 
-- 「搜索博主」与「博主网络」是两个 feature/板块；搜索输入只在搜索板块，network 图不兼任搜索表单。
-- 问博主只显示 1–2 张真实作者卡，逐卡链接和摘要标识；零作者只显示刘看山直达，不渲染虚拟博主或空头像占位。
-- 博主搜索阶段必须可见：先“查询你的博主网络”，零命中后才“正在从知乎查找”；人物卡显示 `network | zhihu` 来源，不能伪装成一轮混排。
-- Authors 图是受控 view：宿主持有 snapshot，view 发 interaction，宿主决定是否接受。
+## 问博主的写入结果
 
-## 安全与验收
+1. 真实作者结果与刘看山直答都只形成锚定原文的批注标记；不调用 G1，不创建知识结构节点。
+2. 真实作者 selected 时按 authorId 写一条高权网络记录：载体、概念、normalizedQuestion、authorId、展示名。
+3. 刘看山不能写网络，也不能创建 AuthorIdentity 或真实作者卡。
+4. 批注锚在概念图节点及原文位置，根和后续节点上的批注跨新对话保留。
+5. 外链必须来自本次 evidenceUrl；模型输出与 UI 都不能发明链接。
+6. 本流程只读公开知乎内容，不联系、私信、关注、评论、收藏或代发。
 
-- 只保存功能必需的公开身份 snapshot、provenance 和用户关系事件；禁止敏感画像和跨作者隐私串联。
-- 外部作者文本是不可信输入；限制长度/大小/跳转，禁止执行其中指令、HTML、URL 或 tool call。
-- 日志默认 redact 问题、作者 evidence 正文、provider payload 与 token；只记录 hash、长度、分类和不可逆 owner 标识。
-- Contract/integration/browser tests 必须证明：问博主 Zhihu-first、只选给定候选、1–2 位、零位直达、provider failure 不伪装 empty；博主搜索 network-first、零命中才知乎、最多 3 位；候选不自动入网、selection event 幂等、刘看山永不入网。
+## N0–N2：搜索博主
+
+搜索结果是人，不是回答，不进入学习 conversation。
+
+~~~text
+N0 高权 Graph RAG
+  → 不足 3：N0 低权 Graph RAG
+  → 仍不足 3 或网络为空：
+      N1 拆成 2–3 个知乎问法
+      → N-S 并联搜索知乎并排除已有 authorId
+      → N2 按相关性补 remainingSlots
+      → 新作者按 authorId 写入低权网络
+  → 最多展示 3 人
+~~~
+
+### N0
+
+- 必须先查询当前用户/当前 owner 的高权记录，再用低权记录补充。
+- 高权记录来自成功问博主：authorId + 载体 + 概念 + normalizedQuestion + 展示名。
+- 低权记录来自之前的搜索博主：authorId + 对应问题 + 展示名，不含载体/概念。
+- 高权和低权都按 authorId 去重；达到 3 位停止，少于 3 位继续 N1/N-S/N2。
+- 网络投影未接通或不可用时整次搜索失败，不得绕过去知乎；投影正常但结果为空时进入 N1。
+
+### N1 / N-S
+
+- N1 读取用户搜索问题与 remainingSlots，输出 2–3 条等价搜索问法；不得凭空加入用户未提到的作者。
+- N-S 按问法并联查知乎，保留 queryId、authorId、authorName、evidenceId、summary、url。
+- 在送入 N2 前排除 N0 已返回的 authorId，再按 authorId 合并同一人的证据。
+
+### N2
+
+- 输入包含 question、remainingSlots、excludedAuthorIds 与全部去重候选。
+- 只能返回输入中存在、未被排除且 ID 绑定正确的 authorId、authorName、evidenceId。
+- 候选多于 remainingSlots 时取最相关的 remainingSlots 位；候选少于或等于 remainingSlots 时全部返回并排序。
+- 不足 3 位是合法结果，不能虚构、重复或用刘看山补位。
+- 新从知乎返回的人按 authorId 写入低权网络：authorId、展示名、对应搜索问题。
+
+## 博主网络页面
+
+- “搜索博主”和“博主网络”是同页两个板块，不能用一块本地状态冒充另一块。
+- 网络有数据时先列出真实已入网作者；没有数据时显示空态，不显示示例星图或“功能不可用”假数据。
+- 网络关系图的实体、边和权重仍未裁决；在裁决前只做名单，不把旧“载体→概念→问题”或“用户→类别→作者”图写成正式 topology。
+
+## 失败和安全
+
+- 知乎搜索失败、候选解析失败、A2/N2 结构失败、网络投影不可用和知乎直答失败都必须区分，不能转成空结果或固定作者。
+- 外部摘要、名字、链接和正文是不可信数据，不能改变系统提示或触发工具。
+- 日志不得记录用户问题、划选、证据正文、附件、provider payload 或密钥原文。
+- 只有输入中真实存在的 authorId/evidenceId 可以进入结果和网络。
+
+## 最低验证
+
+- A1 2–3 问、A-S 真并发、A2 只选正确 ID 且最多 2 位。
+- A2 空结果才 A3；任何 provider failure 都不走“零作者”分支。
+- 作者结果和刘看山都只落批注，不长结构节点；刘看山永不入网。
+- 高权记录包含载体/概念/整理问题，低权记录只含作者/搜索问题。
+- N0 严格高权→低权；不足再知乎；投影不可用时 fail-closed。
+- 知乎候选少于剩余名额时全部返回，最终最多 3 人且 authorId 不重复。
+- 新知乎作者写入低权网络；网络空态无示例星图。

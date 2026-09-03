@@ -1,3 +1,4 @@
+/** prototype: ordinary-answer / classifyGrow / authorKeys prompts. New Agent prompts live in server/agent-runtime. */
 import { allowedOrigin, type ProviderConfig } from './config.ts'
 import type {
   AnswerModelProvider,

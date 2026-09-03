@@ -1,76 +1,70 @@
 ---
-description: "定义 TypeScript 代码风格、测试矩阵、真实数据门禁和完成标准。"
+description: "定义与两份重构文档一致的测试矩阵、证据边界和完成标准。"
 globs: "src/**,apps/**,packages/**,server/**,tests/**,catalog/**,qa/**,package.json,tsconfig*.json,vite.config.*,eslint.config.*,playwright.config.*"
 alwaysApply: false
 ---
 
-# TypeScript 风格、测试门禁与完成定义
+# 测试、质量与完成定义
 
-## TypeScript 基线
+测试的目标语义来自 [`as-implemented-logic.md`](../../as-implemented-logic.md) 第 2 节、第 4.1 节和 [`agent-specs.md`](../../agent-specs.md)。旧源码、旧 fixture 和已有测试只证明现场；若它们与目标冲突，应更新测试，不得用旧测试反向证明目标文档错误。
 
-- 目标运行时 Node.js 24 LTS、ESM、TypeScript `strict`、`noUncheckedIndexedAccess`、`exactOptionalPropertyTypes`、`noImplicitOverride`；Web/Server 使用最窄 lib/types。
-- 边界输入 `unknown → Zod parse`。生产代码禁止显式 `any`、double assertion、`@ts-ignore` 和用 non-null assertion 逃避合同。
-- 第三方缺失类型的窄 adapter 例外封装在一个文件，写原因/删除条件/issue，并有 runtime contract test。
-- 时间、UUID、随机、network、file、DB、env 经 port 注入；domain pure function 不直接调用 `Date.now()`、`crypto.randomUUID()`、`process.env` 或 global fetch。
-- State/result 使用 discriminated union；expected failure 返回 typed result/AppError，不比较 exception message string。
+## 基本质量边界
 
-## 命名与导出
+- 外部输入和模型结构按共享 runtime schema 校验；不能靠 TypeScript assertion 把无效数据当有效。
+- UI、服务端和测试共用相同字段、枚举及 Agent 输出结构，避免手写三套近似 type。
+- 测试 fixture 必须明确标为测试数据；生产 composition 不能 import 或回退到 fixture。
+- 不用源码关键词或固定延时作为唯一验证。行为、错误、部分成功和跨页恢复都要通过可执行测试或浏览器证据验证。
+- 文档变化只证明规则一致；不能据此声称 runtime、真实 provider、持久化或 production-ready 已完成。
 
-- Component/file `PascalCase.tsx`；hook `useXxx.ts`；其他 TS `kebab-case.ts`；后缀 `.schema.ts/.port.ts/.adapter.ts`。
-- Type/component `PascalCase`，function/variable `camelCase`，constant `UPPER_SNAKE_CASE`。
-- Wire schema 可 snake_case；adapter 边界一次映射，业务内部不混命名。
-- 默认 named export；仅框架 config 可 default export。`index.ts` 只作模块 public API，禁止层层 barrel/deep re-export。
-- Route/event/error/storage/surface magic string 由 owning contract 导出。
+## 文档与规则检查
 
-## 可维护性
+- 所有 `.mdc` 有完整 frontmatter、非空 globs、`alwaysApply: false` 且少于 500 行。
+- 根 `AGENTS.md` 路由表与 `.cursor/rules/` 文件一一对应；相对链接可解析；Markdown 围栏、表格、标题、trailing whitespace 与 merge marker 检查通过。
+- 检查每条产品不变量在根入口和 owning rule 中含义一致，尤其是 R2/R4 区别、500k/300k、首轮与根同一成功态、G1/G2 汇合、A1–A3、N0–N2。
+- `agent-specs.md` 中每个 Agent 都应具备上下文获取、压缩算法、系统提示词和输出结构；非 Agent 步骤不得被误计为 Agent。
 
-- ESLint `max-lines` 目标：手写 TS/TSX 400 有效行，skip blank/comments。Vendor/generated/SQL/大型声明 schema/path 六文件特例用显式 override。
-- 旧超限文件进入机读 debt allowlist（owner、issue、当前行数、退出条件/日期），不得增加净行数或新职责。
-- Function 保持一个抽象层；HTTP route、React page、composition root 不出现复杂 domain branch。
-- 注释解释原因/不变量，不复述代码。
-- Formatter 决定空格/分号/引号/import order；不能用人工风格争论代替 architecture check。
-- `check:architecture` 必须解析 import graph，阻断禁用依赖、cycle、跨 context deep import、browser→server/SDK。Regex 只能补充，不能是唯一门禁。
+## 行为测试矩阵
 
-## 当前测试证据边界
+| 范围 | 必须覆盖 |
+| --- | --- |
+| 路线 | R1 产 4–5 问；R-S 并行；R2 动态探索；R3/R3b 每轮 1–3 题且最多 3 轮；R4 稳定 ID、显式边、分叉/汇合及 renderer 拒绝；失败从 R1 重试；发布不建图；发布后 R5 |
+| 附件/预算 | 仅首页 pdf/md/txt；路线各 Agent 可见；普通 Chat 只跟随本 Chat；学习无附件；总预算 `<500k` 不压，`>=500k` 按 `<300k`/`>=300k` 分支；持续压到预算内且不改原文 |
+| 首次学习 | L0a 三路并行且方向分离；L0b 使用概念详细描述；任一路失败不成功；L0b 成功与唯一根同一终态；再次进入/新对话/刷新不重生成 |
+| 学习追问 | 必须有问题；显式引用/默认最近回复/选择旧问题的宿主映射；点击无效；G1 一跳邻域；G2 当前对话全文；四种并发终态中只有双成功写卡，G2 成功/G1 失败只回话 |
+| 问博主 | 先划选；A1 产 2–3 问；A-S 并行；A2 只从输入 ID 选 1–2 人；正常零人走 A3；provider 失败不走 A3；批注不进结构图；真实作者高权入网；刘看山不入网 |
+| 搜索博主 | N0 高权后低权；不足 3 才 N1/N-S/N2；网络不可用报错、网络为空可查知乎；总数最多 3；不足时全部返回；去重；知乎新作者低权入网；刘看山永不出现 |
+| UI/导航 | 首页无问博主快捷；芯片只填不发；快速/深度两档、默认与跨页范围正确；路线问题逐轮灰化；图文明确失败；学习/画布同步；会话→3D→路线列表；画布返回对话；所有 3D 节点可进入且走动不建内容 |
+| 身份/设置 | OAuth 失败不假成功；本地原型不冒充登录；删除假协议/隐私链接；删除密度、动效、默认深度；身份/来源无后端时不伪造 |
+| 真实 provider | 缺配置、鉴权、限流、超时、无效结构、空结果分别处理；生产无 mock fallback；浏览器不含 provider secret |
 
-现有 `tests/*.test.mjs`、catalog 和源码 regex 只证明部分可见旅程；不能证明真实 network、transaction、recovery、security 或 production architecture。Fixture alias（如 `P01`/`turn-seed-1`）必须先映射 UUID，不能进入生产 schema。禁止为单个 fixture 写关键词分支或定向 prompt。
+## 结构合同测试
 
-每轮架构审查/发布候选生成 `qa/architecture-status.md` 或 CI artifact，记录 source digest/commit、time、environment、commands、exit codes、test count/fail summary、browser evidence 与 maturity proposal。动态 pass 数不得写进规则。
+- 为 R1、R2、R3、R3b、R4、R5、L0a、L0b、G1、G2、A1、A2、A3、N1、N2 各自测试输入最小集、合法输出、额外字段、缺字段和错误引用 ID。
+- R4 验证 nodeId 唯一、edge 端点存在、路线能表达顺序/分叉/汇合，且 R2 的动态中文键对象不能通过 R4 validator。
+- G1 验证 host/siblings/predecessors/successors 分组和边端点在压缩后保持；G2 验证只含当前对话且顺序/role/messageId 保持。
+- A2/N2 验证 authorId、evidenceId、链接的绑定不会因去重或压缩串人；A2 不能选输入外作者。
+- 压缩测试必须证明数据库/原始对象不被覆盖，并证明没有「压缩后仍太长」错误终态。
+
+## 未裁决部分的测试边界
+
+普通 Chat、图文编排、首轮持久化/并发、附件生命周期、异步恢复、思考深度冻结点、博主网络拓扑和 3D 位置 schema 尚未裁决。可以测试当前 fail-closed 或原型行为，但测试名和断言必须写明它不是最终产品合同，不能借测试冻结方案。
 
 ## 按改动范围验证
 
-| 改动 | 最低证据 | 额外必测 |
-| --- | --- | --- |
-| AGENTS/Markdown/.mdc | local links、frontmatter、glob representative match、table/fence、术语/路径 | 改 Mermaid 时真实 parse；规则文件 <500 行 |
-| UI/style/catalog | `npm run check && npm test && npm run build` | state-machine validate；真实 browser/viewport/keyboard |
-| shared contract/envelope/evidence | UI + path + knowledge type/contract tests | golden fixture、old decode/upcast、unknown reject |
-| path server/client/renderer | path algorithm check/tests | NDJSON start/choice/revise/cancel/failure/sequence/restore；renderer digest |
-| knowledge/conversation/graph | knowledge algorithm check/tests | initial-before-root、single canonical、re-entry/new chat/repair reuse；PostgreSQL/RLS/CAS/lease/SSE/GraphSurgeon |
-| AskAuthor/AuthorSearch/network | authors contract/integration/browser | Zhihu-first 1–2/direct；network-first 0→Zhihu top3；no auto-network/Liu identity |
-| stream isolation | `test:stream` | owner/resource auth、cursor bind、replay→live、gap/duplicate/backpressure/disconnect |
-| security/privacy | `test:security` | OAuth/PKCE/cookie/CSRF/CORS、cross-owner、SSRF/XSS/upload bomb/redaction |
-| migration/projection | `test:migration` | N-1→N、repeat/resume backfill、RLS、digest/count、atomic switch/rollback |
-| provider/runtime | server-only `.env` config validation + real-provider live gate | 真实知乎与 DeepSeek；记录 provider/model/attempt 但永不记录 secret；测试替身不能替代 live gate |
-| package/build | clean checkout install/build | no sibling dependency/assets；SBOM；production zero Python |
-| browser/3D/visual | Playwright/equivalent | auth、path、concept stages、permanent initial、knowledge/authors/history、reconnect、WebGL fallback、a11y |
-| artifacts/product invariants | `check:artifacts` + `check:product-invariants` | vendor digest/license；no dist/cache/secret；assistant-mode allowlist；no progress/unlock/review/mistake |
-
-目标 workspace 建立后，CI 至少提供：`format:check`、`lint`、`check`、`check:architecture`、`check:contracts`、`check:ownership`、`check:artifacts`、`check:product-invariants`、`validate:catalog`、unit/property/contract/integration/stream/security/migration/browser/a11y/visual/performance tests 和 `build`。
-
-`check:product-invariants` 必须证明：path 不建 knowledge；canonical 首答不重生成/覆盖；graph/root 只在首答后；AskAuthor 不是 contact proposal 且 Zhihu-first；AuthorSearch network-first；数量上限正确；刘看山不进 network；3D 不保存学习进度。文档关键词检查不够，必须包含失败不写图、概念属于路线、残缺 path 文档拒绝、序号从 1 起等行为测试。
+- 文档/规则：运行规则结构、链接和一致性检查，以及现有 `check:architecture`、`check:product-invariants` 中相关门禁。
+- Agent/合同/后端：运行对应 unit、schema/contract、编排失败测试和真实 provider live gate；live gate 与 deterministic test 分开报告。
+- UI：运行 typecheck、unit、build，并用真实浏览器覆盖受影响状态、键盘、焦点、低/窄视口和返回链。
+- 3D/画布：除结构 validator 外，验证可进入性、视图恢复、批注显示/关闭和不会产生隐式领域写入。
 
 ## Definition of Done
 
-一个切片只有同时满足以下条件才完成：
+一个切片只有在以下条件同时满足时才可说完成：
 
-1. 有唯一 owner；合同变化同步 schema、AGENTS/匹配 rules、算法/ADR、client 与 fixtures。
-2. Web command → API → 真实 provider → committed fact → event/projector → selector → UI 纵向可运行，无 mock/fixture/localStorage 双写；缺配置和 provider failure 显式失败。
-3. Request/response/event/error/document 来自唯一 runtime schema，unknown version 安全失败。
-4. Failure/cancel/retry/disconnect/refresh/late event 有可重现结果；旧 document/settled artifact 不被覆盖。
-5. Concept 证明 canonical answer → graph/root 顺序与永久复用；authors 证明固定检索顺序和 provider failure 不冒充 empty。
-6. Command 携带正确 identity/concurrency/idempotency；security/redaction/provider boundary 有测试。
-7. 受影响 unit/property/contract/integration/browser/a11y/visual gates 全绿；无 `.only`，skip 有 issue/reason/expiry，核心发布 gate 不可 skip。
-8. Clean checkout 可复现 build，无 sibling dependency、private deep import、Python production path、手改 vendor 或 secret。
-9. README/catalog/product spec/state machines/QA 与真实 endpoint/state/command 一致；不得残留“路径时建图”“固定两位作者”“contact proposal”“新对话清首答”等旧语义。
+1. 行为与两份重构文档一致，没有用旧源码或旧测试替换目标。
+2. Agent 上下文、预算压缩、系统提示词、输出 schema 与下游 ID 校验是同一合同。
+3. 用户请求使用真实 provider；任何失败都明确，不回退 mock、fixture 或预写内容。
+4. 成功、空结果、provider 失败和部分成功均有可重复证据，且没有写入不该产生的路线、图、批注或作者关系。
+5. UI、后端和结构测试通过；文档只报告实际达到的成熟度。
+6. 尚未裁决的实现细节仍明确标记为未裁决，没有被代码、测试或规则偷偷冻结。
 
-整个产品只有所有生产模块至少 `integrated`，且 database/security/migration/performance/live gate 有当前证据时，才可标 `production-ready`。
+只有现场源码、当次命令和真实运行证据都满足相应切片，才能标为 implemented/integrated；文件存在或测试关键词命中不能证明 production-ready。

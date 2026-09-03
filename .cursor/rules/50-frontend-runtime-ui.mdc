@@ -1,74 +1,73 @@
 ---
-description: "约束 React 前端 runtime、状态、交互、无障碍和模块依赖风格。"
+description: "约束 ThreadPeak 前端页面、Composer、跨页状态与已裁决交互。"
 globs: "src/**/*.ts,src/**/*.tsx,src/**/*.css,src/chat/**,src/pages/Chat.tsx,src/chat/resolve-chat-launch.ts,src/pages/Settings.tsx,src/resolve-settings-identity.ts,src/components/Shell.tsx,src/resolve-account-identity.ts,src/components/Composer.tsx,src/resolve-composer-attachment.ts,src/pages/AuthLanding.tsx,src/resolve-auth-session.ts,apps/web/**,packages/runtime-store/**,packages/api-client/**,packages/design-system/**"
 alwaysApply: false
 ---
 
-# 前端 Runtime、React 与交互
+# 前端页面与交互
 
-前端只负责 command/query、协议投影、稳定 store 和受控 view。页面可展示领域状态，不能发明或拥有领域事实。
+目标交互以 [`as-implemented-logic.md`](../../as-implemented-logic.md) 第 2 节和第 4.1 节为准；第 1 节只是旧源码现场。Agent 的输入、压缩、提示词和输出结构以 [`agent-specs.md`](../../agent-specs.md) 为准。页面只能呈现服务端编排结果，不能在浏览器里补造模型结果、知乎结果、路线、知识卡或作者。
 
-## 数据流
+## 首页与 Composer
 
-```text
-API/NDJSON/SSE → api-client decoder → context projector
-  → RuntimeStore immutable snapshot → selector → feature UI
-UI action → typed command method → api-client
-```
+- 首页快捷模式只有「路线制定」与尚未接通的「图文」；首页不提供「问博主」快捷入口。
+- 快捷建议芯片只负责选中路线模式并把文字填进输入框，不自动发送。芯片最终文案仍未裁决，不得自行写死为产品规范。
+- 附件只能从首页添加，类型仅为 pdf、md、txt。路线请求的附件交给 R1、R2、R3、R3b、R4；首页普通 Chat 的附件只跟随该 Chat。
+- 学习会话和知识画布的输入框都没有附件能力；不能把首页原附件继续带入学习。路线只可把与概念有关的信息及 sourceId 写进 R4 的概念详细描述。
+- 图文编排尚未接通。保留入口时，发送后必须明确失败，不能用定时器、固定帧或预写 artifact 冒充成功。
+- 思考深度只有快速/深度两档且默认快速。深度已经对某个界面流程生效时，该流程里的全部 LLM 与知乎直答都用深度；首页状态不继承到学习会话。首页选择是否继承到随后打开的 Chat、以及运行中切换何时生效，仍未裁决。
 
-- 每个协议/context 只有一个共享 decoder/projector；页面和组件不得直接 `fetch`、`EventSource`、读取 `ReadableStream` 或用 `setState` 拼领域消息。
-- ThreadPeak 自有 `RuntimeStore` 拥有稳定 `getSnapshot/subscribe`、immutable snapshot、selector equality、inflight UI state 和 teardown。
-- assistant-ui 若使用，只能作为 ExternalStoreAdapter/UI shell；它的 SDK type 不能进入 contracts、store、server 或 domain。
-- 组件卸载时取消订阅；迟到 event 按 resource/request/sequence 拒绝。重复 event 不改变结果，gap 触发 replay/GET。
-- `localStorage/sessionStorage` 只允许主题、density、reduced-motion、未提交 composer draft 与无敏感缓存；route、path、conversation、history、graph、author network 事实必须来自服务端。
+## 路线 Chat
 
-## Feature 与页面边界
+- 路线制定全程留在 Chat Composer 中，按 R1 → R2 → R3/R3b → R4 执行。R3 初始题组算第 1 轮，最多 3 轮；上一轮变灰且不可再次作答。
+- 路线发布成功后，Composer 仍可继续普通聊天，走 R5。用户再次选择「路线制定」并发送时，从 R1 开始一条全新的路线流程，成功后新增一条我的路线。
+- 路线失败的重试从 R1 整段重来，不从中间阶段续跑。
+- 历史记录打开的是该次已提交对话全文，不重新调用 R1–R5，也不只打开一条消息。
+- Chat 没有发送上下文时最终采用 404 还是专用错误页尚未裁决；只能保留明确失败，不能偷偷填入预写问题或会话正文。
+- 路线 Chat 不因路线发布而创建知识脉络，也不展示学习进度、复习或解锁语义。
 
-| Feature | 只负责 | 禁止 |
-| --- | --- | --- |
-| `path-planning` | path command/stream projection/result card | 建 knowledge、保存 3D 进度 |
-| `path-3d` | validated document/wire handoff | 生成路径、首答或 graph |
-| `concept-learning` | entry resource、conversation tree、mode output | 直调知乎/LLM、写 graph/network |
-| `knowledge-map` | graph card/snapshot/revision | 从消息/layout 推导语义 |
-| `author-search` | query/stage/0–3 people | network mutation、conversation answer |
-| `author-network` | owner-scoped snapshot/controlled graph | 搜索输入、写 knowledge graph |
-| `history` | conversation summary/exact reopen | 缓存正文为真相、重跑模型/projector |
+## 学习会话与知识画布
 
-- `pages/` 只组合 feature、路由参数和 layout；不得持有 provider、协议解析、业务状态机、数据库/graph mutation 或跨 feature mutable state。
-- 「搜索博主」与「博主网络」可在一个页面并列，但保持两个 feature model/API。
-- `concept-learning` 可以渲染 AskAuthor result，但不能 import author-search page state。
+- 首次进入「我的路线」中的概念时，只能显示 L0a/L0b 的真实执行状态。L0b 首轮回复和确定性唯一根节点作为同一个成功结果出现；不得展示「首轮成功、根节点另行启动/失败」。
+- 再次进入、开新对话、刷新或从历史重开时复用同一首次回复与根节点，不重播首次生成。
+- 发送学习追问必须有用户问题。显式引用节点内容时宿主是被引用节点；未引用时宿主是最近一次成功的 LLM 回复卡。若用户选中的是自己先前的问题，先映射到该问题对应的回复卡。点击节点不改变宿主。
+- 学习追问同时启动 G1 与 G2。G2 成功即可显示对话回复；只有 G1、G2 都成功才新增知识卡。G2 失败时不写图；G1 失败但 G2 成功时保留回复但不新增卡片。
+- 学习页与知识画布是同一会话、同一对话全文、同一批注和同一深度思考状态。默认快速；在这一对界面开深度后，其中全部 LLM 与知乎直答都用深度；离开这一对界面后恢复快速。画布不是第二套聊天；返回会话时不重跑请求。
+- 「问博主」只能基于用户已划选的原文和用户问题发起。作者回答与刘看山回退都显示为批注标记；点击标记才显示节点右侧同等大小的批注卡，点击卡外关闭。批注不是结构节点。
+- 普通输入框文字是否出现「博主/作者」时一律禁止自动切换，仍在待裁决清单中；实现不得把关键词识别偷偷写成已确认产品语义。
+- 图文模式在学习页同样未接通并明确失败，不能改知识图。
 
-## UI 状态
+## 路线、3D、知识与返回关系
 
-- Composer 模式只接受 `'' | route | visual | authors`；浏览器草稿中的未知值必须在读取边界归一为空模式，不能直接进入组件状态。
-- 每个服务端能力使用 discriminated union 表达实际可达的 `idle/loading/streaming/ready/empty/recoverable-error/terminal-error/cancelled/reconnecting` 子集；禁止多个 boolean 组合不可能状态。
-- 首次概念页按真实顺序显示 initial answer generation → initial ready → graph bootstrapping → ready。再次进入/新对话不得重播首答生成；graph 失败不能遮蔽首答。
-- History reopen 恢复精确 committed snapshot，不触发模型、作者筛选或 graph rebuild。
-- `#settings` 身份与资料范围缺 provider 时显式失败；不得写死登录用户或已上传 PDF。密度、动效、思考深度是本地偏好，不改变领域合同，也不得把 `threadpeak-authenticated` fail-close 成整站锁死。
-- 侧栏账号缺 provider 时只标本地原型账号，不得写死姓名；主题和退出仍可用，不得锁死整站登录。
-- Composer 附件和资料范围缺 provider 时显式失败；不得用本地文件名或「已上传 PDF」冒充 committed source / evidence pack。思考深度仍是本地偏好。
-- 授权页知乎 OAuth 经同源 `/api/auth/zhihu/start`；缺配置显式失败，成功则跳转官方 `openapi.zhihu.com/authorize`。不得用延时动画冒充授权成功。进入本地原型仍可用，不得锁死整站登录。
-- `#chat` 没有本次发送上下文时显式失败；不得预写问题或用 localStorage 会话正文冒充已打开的会话。Home 发送仍可写入本地草稿 handoff。
-- 旧 document/revision 在新请求失败时继续显示；禁止先清 UI 再发请求。
+- 我的路线列表只展示已经通过 R4 结构校验并成功发布的路线；示例路线必须清楚标为示例。
+- 3D 中的边只是推荐前进关系，不是解锁条件；所有节点都可进入。「走到这里」只改变场景位置，不创建对话、首次回复或知识卡。
+- 学习会话返回 3D，3D 返回路线列表。进入画布后固定提供「返回对话」。未知 hash 进入独立 404；目标 404 的具体视觉仍未裁决。
+- 每条路线恢复上次 3D 位置是已确认目标；位置数据形态和持久化方式仍未裁决，前端不得据此发明领域 schema。
+- 知识列表进入概念画布后，展示的必须是该概念同一份知识图和同一份会话状态，不能从布局或消息文本重新推导结构。
 
-## React 约束
+## 博主页
 
-- `useEffect` 只同步外部系统、订阅和生命周期。纯派生值使用 selector/`useMemo`；用户动作调用 command method，不在 effect 串业务 pipeline。
-- Component props 只传 view data 与 command callbacks；不传 DB row、provider response、Fastify request、mutable store 或 SDK object。
-- 组件不得直接 mutate store/tree；所有 mutation 经 store API 和 server command。
-- 使用 named export；React 组件文件 `PascalCase.tsx`，hook `useXxx.ts`，业务 TS `kebab-case.ts`。
-- 普通手写 TS/TSX 目标不超过 400 有效行。超限旧文件进入机读 debt allowlist，不能增加净行数或新职责。
+- 「搜索博主」与「博主网络」可在同一页面，但两者状态不能混为一条假数据链。
+- 搜索结果最多 3 人，结果来源顺序固定为 N0 高权重 → 低权重 → 知乎补位。网络投影不可用必须报错；投影可用但高权和低权合计不足 3 人时才进入知乎补位。
+- 刘看山永远不能显示成博主搜索结果或博主网络节点。
+- 博主网络的最终可视实体和边拓扑尚未裁决；旧的「载体→概念→问题」或「用户→类别→作者」只能算原型，不能升级为产品事实。
 
-## 样式与可访问性
+## 账号、授权与设置
 
-- 全局 CSS 只放 reset、token、font、shell 和必要 portal；feature 样式局部化，禁止继续堆进单个 `styles.css`。
-- Design system 只含无业务 primitive、token、focus/motion/a11y 基线；不能拥有 route/fetch/store/领域状态。
-- 控件使用真实 `button/link/input`，支持 keyboard、visible focus、Escape/焦点返回、ARIA name、reduced motion；颜色不是唯一状态编码。
-- 主题、density、reduced-motion 是前端偏好，不改变领域合同。
-- 侧栏、画布和低高视口修复必须验证 `clientHeight/scrollHeight/scrollTop`、遮挡和焦点，不只看截图。
+- 授权页只可发起真实知乎 OAuth；缺配置或失败时明确报错，不能用延时动画冒充成功。仍可提供进入本地原型的入口，但不得伪装成已登录知乎。
+- 授权页删除虚假的「用户协议」「隐私政策」入口，除非以后真的存在对应页面和内容。
+- 账号菜单继续提供设置、夜间模式和退出登录。没有真实身份时只能明确标为本地原型，不能写死姓名。
+- 设置页只保留已确认的退出登录、夜间模式、清空历史、身份与资料来源范围。删除密度、减少动效和默认思考深度设置。
+- 身份、资料来源或附件提交没有真实后端时明确失败，不能把本地文件名、固定 PDF 或浏览器存储说成已提交事实。
 
-## 前端完成证据
+## 前端实现边界
 
-- 运行 typecheck、unit/contract tests 和 build；源代码 regex 不能代替运行时验证。
-- 受影响旅程使用真实浏览器覆盖基线 `1280×720` 与实际受影响窄/低视口、keyboard、focus、reduced motion、断线/重连。
-- 确认浏览器只访问同源 API/BFF，不知道数据库、provider 或开发端口。
+- 页面与组件通过同源 API 调用后端编排，不直接持有知乎或 LLM 密钥，也不直接调用 provider。
+- 当前源码里的 localStorage、sessionStorage、fixture、timer 和页面内阶段是现场，不是目标真相；不能把它们抄进新合同。
+- 服务端返回的结构化数据先按共享 runtime schema 校验；路径 R4 未通过 renderer 校验不得发布或进入 3D。
+- 控件使用真实 button、link、input，保持键盘、可见焦点、关闭后的焦点返回及必要 ARIA 信息；受影响页面需要验证实际视口和滚动，不只看静态截图。
+
+## 前端最低验证
+
+- 覆盖首页附件边界、路线三轮问答、R1 重试、R5 延续、首次回复复用、G1/G2 部分失败、引用宿主、问博主批注、作者三段补位、返回关系与图文失败。
+- 运行受影响的 typecheck、unit/contract test 和 build；可见交互用浏览器验证。文档或源码关键词命中不能代替运行时证据。

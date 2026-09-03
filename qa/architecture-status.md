@@ -1,14 +1,13 @@
-# Architecture status — GraphSurgeon bootstrap after canonical first answer
+# Architecture status — shared agent runtime (context, budget, compression, validation)
 
-- Time: 2026-09-01
-- Commits: `c77a47e` GraphSurgeon bootstrap; `c0b70a9` canonical first answer; `6a45de0` Zhihu OAuth; `ddd77b1` server/path
+- Time: 2026-09-02
+- Slice: `server/agent-runtime` only. Product HTTP still uses the prototype live-service / path CandidateSet chain.
 - Environment: darwin, Node 24+, Vite 8, TypeScript 6
 - Maturity proposal:
-  - `guard_status=verified` for Session/Chat/AskAuthor/AuthorSearch/Path document/stream cursor false-success closures
-  - path generate `module_maturity=implemented` (in-process PathStreamEvent; not `integrated`)
-  - identity OAuth `module_maturity=implemented` (authorization-code; not `integrated`)
-  - GraphSurgeon bootstrap `module_maturity=implemented` (memory store, canonical gate, unique graph/root, A1 treated as 0 drafts); not `integrated` (no PostgreSQL unique/CAS, no A1 incremental, no committed conversation GET)
-  - `module_maturity=prototype` for AnswerPipeline, author network projector
+  - shared agent runtime `module_maturity=implemented` for context assembly, 500k/300k compression, output schemas, and provider ports
+  - live DeepSeek R1 + Zhihu search + Zhihu direct `integrated` for this isolated runtime, not for the product pipelines
+  - path / first-answer / follow-up / ask-author / author-search remain `prototype` on the old chain
+  - persistence, cancel/timeout/refresh, and other 4.2 vacancies remain `unresolved`
 
 ## Commands
 
@@ -16,38 +15,30 @@
 | --- | --- |
 | `npm run check` | 0 |
 | `npm run check:architecture` | 0 |
-| `npm run check:contracts` | 0 (17 tests) |
-| `npm run check:product-invariants` | 0 (10 tests) |
-| `npm test` | 0 (181 tests) |
-| `npm run build` | 0 |
+| `npm run check:product-invariants` | 0 |
+| `npm run test:agent-runtime` | 0 (19 tests) |
+| `npm run test:agent-runtime:live` | 0 (6 tests, real Zhihu + DeepSeek) |
 
-## Live HTTP (`127.0.0.1:4312`)
+## Live gate (real providers, sequential)
 
-- Accidental `5033` / Vite `5032` remaps reverted to `4312` / `4301`
-- `GET /api/learning/graph?routeId=live-route&conceptId=live-concept` before canonical → 404 `missing`
-- `POST /api/learning/graph` before canonical → 409 `CANONICAL_MISSING`
-- `POST /api/learning/canonical-answer` first → 200 `reused=false`, `contentHash=56137d02…`, `evidenceCount=8`
-- `POST /api/learning/graph` first → 200 `reused=false`, `revision=1`, `draftCount=0`, one `root`, same hash
-- `POST /api/learning/graph` second → 200 `reused=true`, same `graphId` / hash / revision
-- `POST /api/learning/canonical-answer` second → 200 `reused=true`, same hash (graph bootstrap did not regenerate the first answer)
-
-## Browser
-
-- `#session-learning` without route/concept fail-closes (no linear-algebra default)
-- Mine concept entry reuses canonical first answer, then GraphSurgeon root; 知识脉络 shows structural root bound to the same hash
-- Example `#knowledge-detail` canvas and example `#path-3d` still open
-- `#path-3d` for a mine route without a validated document fail-closes and does not fall back to the demo path
+- Zhihu search `线性映射 入门` → public hits with stable evidenceId; 刘看山 is not an authorId
+- DeepSeek R1 (fast) → 4–5 queries covering `normal_learning` and `pitfall_or_dispute`
+- Zhihu direct L0a `concrete_explanation` → non-empty text
+- Over-budget attachment is compressed in a copy; original unchanged; compressed R1 still validates
+- DeepSeek R1 with thinking enabled still returns parseable JSON after raising max_tokens
 
 ## What this slice proves
 
-- Graph/root is created only after a settled canonical first answer
-- One graph, one root, bootstrap revision `+1`, concurrent reuse, zero A1 drafts still leave the root
-- Pages do not `growGraph` for mine routes; canvas reads `GET /api/learning/graph`
-- Product listen ports stay `4301` / `4312`
+- All Agent system prompts share the agent-specs 0.7 prefix
+- Total budget 500k; attachment branch 300k; no “still too long” error; originals are not overwritten
+- R2 exploration objects cannot pass the R4 validator
+- A2/N2 reject unknown IDs and 刘看山
+- User-triggered runtime calls use real Zhihu and DeepSeek; missing config / non-success HTTP stay explicit
 
 ## What this slice does not prove
 
-- Not PostgreSQL unique constraint / CAS / RLS
-- Not GraphProjectionPipeline A1/A2/A3 incremental
-- Not AnswerPipeline, committed conversation GET, or author-network projector
-- Memory store is lost on process restart
+- Not R1–R4 / R3b product orchestration, publish, or 3D handoff
+- Not L0a×3 ∥ L0b first-answer + unique root as one product success state
+- Not G1/G2 concurrency, A1–A3, or N0–N2
+- Not product HTTP replacement; old `server/live-service.ts` and `server/deepseek.adapter.ts` remain prototype
+- Not persistence tables, cancel/timeout/refresh, or attachment lifecycle

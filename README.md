@@ -1,52 +1,126 @@
 # ThreadPeak UX/UI
 
-`threadpeak-ux-ui` 当前是 React + Vite UX 原型，用于核对页面、交互、3D 宿主和迁移切片；它不是生产架构，也没有因为页面可运行或源码测试通过而自动接通后端。
+`threadpeak-ux-ui` 当前是 React + Vite 原型。它可以用来检查页面、交互、3D 宿主和重构切片，但源码中仍有大量旧管线；页面能打开、服务能启动或测试通过，都不能说明目标产品已经实现。
 
-产品与工程约束以 [`AGENTS.md`](AGENTS.md) 和匹配的 [`.cursor/rules/`](.cursor/rules/) 为准。跨进程 runtime Zod 的唯一物理定义是 [`packages/contracts`](packages/contracts/src/runtime-contracts.ts)。浏览器 transport 与 headless store 分别是 [`packages/api-client`](packages/api-client/src/index.ts) 与 [`packages/runtime-store`](packages/runtime-store/src/index.ts)；路径/知识领域文档仍位于 `../算法/知识脉络/` 与 `../算法/路径生成/`。参考项目、截图、旧 Demo 与本文件只能提供证据，不能覆盖当前用户裁决或领域合同。
+## 先按什么读
 
-## 已冻结的产品链路
+| 文件 | 用途 |
+| --- | --- |
+| [`as-implemented-logic.md`](as-implemented-logic.md) | 第 1 节是当前代码；第 2 节和第 4.1 节是已确认目标；第 3 节是差距账本；第 4.2 节是仍未裁决的问题 |
+| [`agent-specs.md`](agent-specs.md) | R1–N2 各 Agent 的上下文获取、压缩算法、系统提示词和输出结构 |
+| [`AGENTS.md`](AGENTS.md) 与 [`.cursor/rules/`](.cursor/rules/) | 把上述目标路由到具体代码范围并规定验证边界 |
+| [`REFERENCE_AUDIT.md`](REFERENCE_AUDIT.md) | 参考视觉、当前源码落点以及现状到目标的替换关系 |
+| 现场源码与当次命令输出 | 只证明当前实现状态，不得反向修改目标 |
 
-### 路线、概念学习与知识脉络
+当前用户裁决最高。旧算法文档、PRODUCT_SPEC、旧状态机、fixture、截图、README 历史版本和现有源码都只能作为参考或现场证据。
+
+## 已确认的重构目标
+
+### 路线制定
 
 ```text
-真实目标输入 → 路径生成与校验 → 发布路线 → 已校验 handoff
-  → 第一次进入概念 → 生成并 settle 唯一 canonical 初始回复
-  → 创建 KnowledgeGraph 与唯一根节点 → 页面 ready
+首页学习目标（可带 pdf / md / txt）
+  → R1 拆成 4–5 个知乎检索问题
+  → R-S 并联搜索
+  → R2 汇总可能的载体、概念和争议
+  → R3 / R3b 进行最多 3 轮小白偏好选择题
+  → R4 生成稳定 ID、节点数组和显式边的路线 JSON
+  → 3D 文档校验
+  → 发布一条新的“我的路线”
 ```
 
-- 路线生成、路线列表、3D 预加载都不能创建知识脉络。
-- 同一用户、路线实例和概念只有一个 canonical 初始回复。再次进入、新建对话、历史恢复、图谱修复或模型升级都只能复用，不能重写。
-- 后续已 settle 回答可以触发知识图增量投影；页面、3D、作者模块和前端组件都不能直接写知识图。
-- History 精确恢复已提交 conversation，不重新调用模型、重新筛选作者或重建知识图。
+- R2 的中文动态键对象只是探索结果，不是最终路线 JSON。
+- R4 的显式边负责表达推荐顺序、分叉和汇合，不是解锁条件；3D 中所有节点都能进入。
+- 校验失败不发布半成品。失败重试从 R1 整段开始；重新选择路线制定会新增一条路线。
+- 发布路线、打开路线列表和进入 3D 都不创建首次回复、知识图或根。
+- 路线发布后，同一 Chat 的普通发送走 R5；R5 也用于首页非路线普通 Chat。
+
+### 附件、预算与思考深度
+
+- 附件只从首页上传，只允许 pdf、md、txt。路线中的 R1、R2、R3、每次 R3b 和 R4 都读取本次路线附件；首页普通 Chat 的附件只跟随该 Chat，由 R5 按当前对话使用。
+- R4 只把与概念有关的附件信息和 sourceId 写进该概念的 detailedDescription；学习页和知识画布不再读取原附件，也没有附件按钮。
+- 每次主调用的总预算是 500k tokens。总量达到或超过 500k 才压缩：非附件部分小于 300k 时先压缩附件一次，仍超预算再压非附件；非附件部分达到或超过 300k 时只压非附件。
+- 压缩持续到整次调用低于 500k，不存在“压缩后仍太长”错误；压缩副本不能覆盖原文或破坏 ID、边、轮次及作者—证据关系。
+- 思考深度只有快速/深度两档，默认快速。深度对某个流程生效时，该流程中的全部 LLM 与知乎直答都使用深度。学习页与知识画布共享该状态，离开这一对界面后恢复快速；首页状态不带入学习页。
+
+### 概念首次学习
+
+```text
+第一次进入“我的路线”中的概念
+  → L0a 三路并联知乎直答：具体讲解 / 是否争议 / 踩坑点
+  → L0b 根据概念 detailedDescription 整理唯一 canonical 首次回复
+  → 用概念名与首次回复正文确定性创建唯一图和唯一根
+  → 作为同一个成功结果展示并开放知识脉络
+```
+
+- 根不调用 LLM，不存在“首次回复成功、随后建根失败”的独立产品分支。
+- canonical 首次回复和根永久固定。再次进入、新对话、历史重开、刷新、重启或图谱修复都只能复用，不能重新生成或覆盖。
+- 已有首次回复时只允许普通读取状态，不能再次显示“正在生成首次回复”。
+- 示例路线使用明确标记的预置首次回复和根，不走 L0a/L0b，也不能替代“我的路线”失败结果。
+
+### 学习追问与知识画布
+
+- 用户必须写问题。显式引用某张卡片时宿主是该卡；未引用时宿主是最近一次成功 LLM 回复卡；划选自己的旧问题时先映射到那条问题对应的回复卡。点击节点不选择宿主。
+- G1 读取宿主、并列节点、全部前置/后置节点、边和相关批注组成的结构化邻域；G2 只读取当前这一次对话全文。两路同时启动。
+- G1、G2 都成功才用 G1 关系和 G2 正文新增知识卡；G2 失败不写图；G1 失败、G2 成功时只保留对话回复。
+- 学习页与知识画布操作同一份最新对话并实时同步。画布无论从哪里进入都可“回到对话”；有对话回最新一条，没有则新建，但继续使用同一根。
 
 ### 问博主
 
 ```text
-知乎站内搜索多个真实用户及其回答/内容
-  → 稳定身份归一 → 逐作者 evidence pack
-  → LLM 只在候选中筛选 1–2 位
-  → 0 位可信作者时由刘看山调用知乎直达
+有效单卡划选 + 用户问题
+  → A1 拆成 2–3 个等价问题
+  → A-S 并联搜索知乎并保留 authorId / evidenceId / 真实链接
+  → A2 只从本次候选中选择 1–2 位真实作者
+      ├ 找到：展示作者批注，写入高权博主网络
+      └ 正常零位：A3 由刘看山第一人称调用知乎直答
 ```
 
-刘看山直达结果可以成为回答，但刘看山不创建作者身份，也不进入博主网络。
+真实作者结果和刘看山直答都只是锚定原文的批注，不创建前置、后置或并列节点。只有 A2 正常得到零位作者才进入 A3；provider 失败不能冒充“没找到”。刘看山不是博主，不创建 AuthorIdentity，也不进入博主网络。
 
-### 博主搜索与博主网络
+### 搜索博主
 
-博主搜索固定为 network-first：
+博主搜索固定为 network-first；它是找人，不是回答问题：
 
 ```text
-先查当前用户博主网络
-  → 有相关作者：最多返回 3 位并结束
-  → 0 位相关作者：再查知乎 → LLM 审查 → 最多返回 3 位
+N0 查当前用户高权网络
+  → 不足 3 人：继续查低权网络
+  → 仍不足 3 人：N1 拆问 → N-S 并联查知乎 → N2 补剩余名额
+  → 知乎新增作者写入低权网络
 ```
 
-搜索结果是人物卡，不是回答；不足 3 位不补齐。候选、排名、展示和点击都不会自动写入博主网络，只有已提交的真实作者关系事件可以更新网络。
+- 最终最多 3 人，统一按 authorId 去重。
+- 知乎有效候选少于剩余名额时全部返回，不重复、不虚构，也不用刘看山补位。
+- 网络投影未接通或不可用时整次失败；网络可用但高权和低权合计不足 3 人时才进入知乎补位。
+- 博主网络的最终实体和边拓扑尚未裁决；当前只能先做真实作者名单，不能把旧原型关系图写成产品事实。
+
+### 其他已确认界面行为
+
+- 首页没有问博主快捷入口；问博主只能从学习页或知识画布的有效划选进入。
+- 图文真实编排尚未接通，当前发送必须明确失败，不得用固定图或 timer 冒充成功。
+- 学习历史点哪条打开哪条；Chat 历史恢复整段对话。清空历史只清侧栏列表，不删除路线、知识图、canonical 首次回复或根。
+- 学习会话返回 3D，3D 一律返回路线列表。每条路线恢复上次位置，但具体位置字段和写入时点仍未裁决。
+- 授权登录与进入本地原型两条入口都保留；缺配置不能假装登录，授权页删除没有内容的用户协议和隐私政策。
+- 设置页保留退出登录、夜间模式、清空历史、身份和资料；删除紧凑密度、减少动效、默认思考深度。
+- 正常入口缺合法路线/概念时不进入学习页；用户直接访问未知地址时进入独立 404，具体视觉仍未裁决。
+
+## 当前原型怎么运行
+
+```bash
+npm run server
+npm run dev
+```
+
+- Web：`http://127.0.0.1:4301/`
+- 本机服务：`127.0.0.1:4312`
+- 当前服务已有回答、路线、首次回复、知识图、问博主、博主搜索和 OAuth 的部分 endpoint，但它们仍执行旧管线或内存实现，不等于 R1–N2 已接通。
+- `path-lab` 及 `/api/paths/generate` 仍存在于当前源码，只是待删除现场。已确认目标是彻底清理实验页，不进产品路由、不写“我的路线”、不继续扩展。
+
+当前源码的逐页面控件、实际调用顺序和 29 项重构差距见 [`as-implemented-logic.md`](as-implemented-logic.md)。
 
 ## 真实数据与环境配置
 
-重构后的用户请求运行时必须调用真实知乎与真实 LLM provider，不能使用 mock、fixture、固定作者或预写回答伪装成功。
-
-项目根 [`.env.example`](.env.example) 声明以下服务端变量，真实值只保存在未提交的 `.env`：
+项目根 [`.env.example`](.env.example) 只声明键名，真实值保存在不提交的 `.env`：
 
 ```text
 ZHIHU_ACCESS_SECRET
@@ -59,75 +133,31 @@ ZHIHU_OAUTH_APP_KEY
 ZHIHU_OAUTH_REDIRECT_URI
 ```
 
-- `.env` 只由服务端 composition root 读取；React、Vite bundle 和浏览器不得读取、记录或回传这些变量。
-- 禁止把密钥改成 `VITE_*`，也禁止在前端使用 `import.meta.env` 访问 provider 配置。
-- 必需配置缺失、为空、鉴权失败、超时、限流或响应无效时必须显式失败，不能切换到本地假数据。
-- mock/fake/stub 只允许用于隔离的 unit/contract 测试，不能进入生产依赖图或替代真实 provider live gate。
-- “示例路线”和“示例知识脉络”可以保留为明确标记的只读示例资产，但不能成为用户请求结果、证据或知识写入来源。
-- 永远不要在日志、截图、测试输出、README、错误响应或提交记录中展示 `.env` 的值。
+这些值只能由服务端读取。用户触发的回答、路线、首次学习、学习追问、问博主和博主搜索必须使用真实知乎与真实 LLM/直答 provider；缺配置或 provider 失败要明确失败，不能回退 mock、fixture、固定作者、预写回答或示例内容。测试 fake 只能留在隔离测试中。
 
-## 当前可见原型
+## 当前明确未完成
 
-运行：
+- R1–R5、L0a/L0b、G1/G2、A1–A3、N0–N2 尚未按 [`agent-specs.md`](agent-specs.md) 在现场源码中完整接通。
+- canonical 首次回复与根要求永久复用，但具体持久化表、唯一作用域、跨重启事务和并发首次进入方式尚未裁决。
+- 普通 Chat 的 R5 已有上下文、附件、提示词和输出约束，但失败重试、历史落盘等完整目标管线仍未补齐。
+- 真实图文生成仍未裁决，当前只能显式失败。
+- 附件大小/数量/解析失败/删除/sourceId 生命周期，以及取消、超时、重复提交、刷新恢复和迟到响应仍未裁决。
+- 思考深度是否从首页带入随后打开的 Chat、运行中切换的冻结点、芯片最终文案、OAuth 拒绝/过期等回调状态、独立 404 视觉、3D 位置数据和博主网络拓扑仍未裁决。
+- 现有 localStorage/sessionStorage、页面 timer、fixture、内存 store 和旧 endpoint 只能作为迁移现场，不能证明持久化、恢复、权限或 production-ready。
 
-```bash
-npm run server
-npm run dev
-```
+不要从旧规则恢复 PostgreSQL、CAS、outbox、SSE、worker/job 等为已确认方案；这些技术若要采用，必须先补合同并说明它们是技术选择。
 
-`npm run server` 在 `127.0.0.1:4312` 读取项目根 `.env` 并提供 `/api/answers`、`/api/ask-author`、`/api/authors/search`、`/api/learning/canonical-answer`、`/api/learning/graph` 与产品 `/api/paths/generate/stream`。缺配置时 readiness 失败，不会降级成 mock。Vite 把 `/api` 代理到该端口。打开 `http://127.0.0.1:4301/`。当前页面仍是迁移输入，不能因为服务端进程可启动就标 `integrated`：
-
-| 入口 | 当前原型职责 | 目标重构边界 |
-| --- | --- | --- |
-| 初始授权态 | 知乎授权走 `/api/auth/zhihu/start`；缺 OAuth 应用凭证显式失败，不把 Access Secret 当成用户登录。进入本地原型仍可用 | 服务端 OAuth/session，`app_key` 与 access_token 不进浏览器 |
-| `#home` | 路线/图文入口、Composer、示例推荐；侧栏历史重开无真实 conversation GET 时显式失败，列表只标本地草稿；侧栏账号无真实身份时只标本地原型，不再写死姓名；Composer 附件/资料范围无真实 provider 时显式失败，不再用本地文件或已上传 PDF 冒充来源 | command/query 进入同源 API，不在页面生成领域事实 |
-| `#chat` | 普通回答经 `/api/answers` 调知乎+DeepSeek，失败显式报错；图文无 VisualizationArtifact 时显式失败；缺发送上下文不再预写「性价比高的显卡」；路线模式走 `/api/paths/generate/stream`，`path.ready` 必须通过 renderer 校验 | 普通回答接 AnswerPipeline；路线接 PathStreamEvent/CAS，图文接真实 visual artifact；打开会话走 committed GET |
-| `#paths` | 我的路线/示例路线列表 | 读取 committed path projection |
-| `#path-3d` | WebGL renderer；用户路线缺校验文档则显式失败，不再回退演示路径 | 只消费已校验 document 与 server handoff，不保存学习进度 |
-| `#knowledge` | 我的/示例知识脉络列表 | 读取 owner-scoped committed projection |
-| `#knowledge-detail` | 只读知识画布；我的路线只读 `/api/learning/graph`，不得内存 `growGraph` 或 persist | 只渲染 revision，不从消息或布局发明节点和边 |
-| `#session-learning` | 未选择或概念不属于路线时显式失败；我的路线首次回复经 `/api/learning/canonical-answer` 永久复用，settle 后经 `/api/learning/graph` bootstrap 唯一 root；失败不 settle、不建图；普通回答经 `/api/answers`；问博主经 `/api/ask-author` | 严格执行 canonical 首答在前、知识图在后 |
-| `#authors` | 搜索经 `/api/authors/search`：网络投影未接通则失败，不会去知乎凑人；页面不再把未裁决拓扑写成产品事实 | 搜索与网络为两个 feature，执行不同检索顺序和写入规则 |
-| `#settings` | 前端偏好与确认界面；身份与资料范围无真实 provider 时显式失败，不再写死登录用户或已上传 PDF | 偏好不能改变领域合同；身份与来源走服务端 session / committed scope |
-
-## 独立路径算法实验台
-
-`path-lab.html` 是隔离的算法/renderer 验证入口，不属于主产品壳：
-
-```text
-http://127.0.0.1:4301/path-lab.html
-```
-
-产品 Chat 经 `@threadpeak/api-client` 调用 `POST /api/paths/generate/stream`；path-lab 仍使用 JSON `/api/paths/generate`。只把通过 renderer validator 的 document 交给 3D。`server/path` 是迁入本仓库的路径六文件，缺 `DATABASE_URL` 时用内存 session store，不能证明 PostgreSQL/CAS 崩溃恢复。目标生产 workspace 必须使用本项目服务端 adapter、真实 provider、持久化合同和可复现构建。
-
-## 当前验证
+## 当前验证命令
 
 ```bash
 npm run check
 npm run check:architecture
 npm run check:contracts
 npm run check:product-invariants
+npm run test:agent-runtime
+npm run test:agent-runtime:live
 npm test
 npm run build
 ```
 
-- `check`：当前 TypeScript 工程检查。
-- `check:architecture`：解析本仓库 import graph，阻断兄弟目录、循环依赖、browser→server、deep package import 和 Vite provider key。
-- `check:contracts`：共享 runtime/transport schema 的 golden fixture、api-client decoder，以及旧算法路径具名 runtime re-export。
-- `check:product-invariants`：规则元数据之外，还验证失败不写图、概念属于路线、旧作者 storage 拒绝、序号从 1 起和残缺 path 文档拒绝。
-- `test`：当前页面与源码合同；其中大量 regex/fixture 只能证明原型结构，不能证明真实网络、事务、权限或恢复。
-- `build`：使用本仓库 lockfile 与本地 vendor 资产构建；不再读取兄弟项目 `node_modules`。
-- `../threadpeak-state-machines/npm run validate`：状态机文档验证，不能替代运行时集成测试。
-
-重构切片只有同时通过同源 Web→API→真实 provider→持久化/event→UI 的纵向验证，以及真实知乎/DeepSeek live gate，才能标记为 `integrated`。规则文件或 README 写明目标不等于实现完成。
-
-## 当前明确未完成
-
-- `guard_status` 可以是 verified：若干假成功入口已 fail-closed，并有服务端知乎/DeepSeek composition。GraphSurgeon bootstrap 的 `module_maturity` 是 `implemented`（内存 store、canonical 门、唯一 graph/root），不是 `integrated`。AnswerPipeline、A1 incremental、作者网络投影仍是 `prototype`。
-- 主产品仍包含本地 catalog、页面状态和浏览器草稿存储。RuntimeStore 目前只投影原型列表，不是服务端 read model。
-- 知乎授权、AnswerPipeline、PathStreamEvent/CAS、PostgreSQL、worker、outbox、SSE/projector 和 owner 隔离尚未纵向接通。单个 Web commit 也不能原子证明 `../PRODUCT_SPEC.md`、`../threadpeak-state-machines/` 与 `../算法/` 已同步。
-- 首答永久性、并发 singleflight、graph bootstrap/incremental、作者网络事件和精确历史恢复尚无生产数据库证据。
-- 3D 当前只证明 renderer 交互；不能据此声称路线生成、概念进入或知识生命周期已完成。
-- 桌面基线为 1280×720；当前版本不声称完成移动端或生产安全验收。
-
-视觉参考、源码落点、当前债务和目标替换关系见 [`REFERENCE_AUDIT.md`](REFERENCE_AUDIT.md)，页面与旅程机读目录位于 `catalog/`。
+`test:agent-runtime` 是确定性合同/压缩测试。`test:agent-runtime:live` 需要根目录 `.env` 中的真实知乎与 DeepSeek 配置，且与确定性测试分开报告。这些命令只证明各自覆盖的当前代码和规则。文档一致、类型检查或 fixture 测试通过，不能证明完整产品链、永久持久化或 production-ready。

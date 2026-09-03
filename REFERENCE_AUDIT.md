@@ -1,85 +1,94 @@
-# 参考基线、当前实现与目标架构审计
+# ThreadPeak 参考、当前实现与重构目标审计
 
-本文件只记录参考证据、当前源码落点、已知债务和目标替换关系。它不是产品或架构权威；发生冲突时，以当前用户裁决、[`AGENTS.md`](AGENTS.md)、匹配的 [`.cursor/rules/`](.cursor/rules/) 和领域算法合同为准。
+本文件只做三件事：记录参考视觉、标出当前源码落点、说明它们要被什么目标替换。它不是第三份产品规范，也不把参考项目的模块名或旧源码结构升级成重构合同。
 
-任何“页面存在”“视觉相似”“源码测试通过”都不能证明真实 API、持久化、并发、权限或恢复已经完成。参考项目的模块名和实现方式也不能直接变成 ThreadPeak 的领域合同。
+## 权威与证据边界
+
+| 内容 | 本审计怎样使用 |
+| --- | --- |
+| 当前用户裁决 | 最高权威 |
+| [`as-implemented-logic.md`](as-implemented-logic.md) | 第 1 节作为当前现场，第 2 节和第 4.1 节作为目标，第 3 节作为差距账本，第 4.2 节作为未裁决清单 |
+| [`agent-specs.md`](agent-specs.md) | Agent 上下文、压缩、系统提示词和输出结构的唯一详细来源 |
+| [`AGENTS.md`](AGENTS.md) 与 [`.cursor/rules/`](.cursor/rules/) | 实现范围和验证路由 |
+| 现场源码、测试和本文件 | 当前证据；不能覆盖目标，也不能单独证明完成 |
+
+旧算法文档、PRODUCT_SPEC、状态机、参考仓库、截图和 fixture 可以帮助定位历史设计，但与上述目标冲突时不能反向改写目标。
 
 ## 审计标签
 
-| 标签 | 含义 | 可以证明 | 不能证明 |
-| --- | --- | --- | --- |
-| `visual-reference` | 颜色、尺寸、层级或交互参考 | 视觉方向 | 数据和领域语义 |
-| `prototype` | 当前 `src/` 中可运行的页面/fixture | 可见旅程草稿 | 生产后端或真实数据 |
-| `migration-evidence` | 可复用 runtime、算法或 adapter 证据 | 某个局部模式可行 | 已纵向接通 |
-| `target-contract` | AGENTS、规则与算法冻结的目标 | 重构必须满足的行为 | 当前已经实现 |
-| `integrated` | Web→API→真实 provider→持久化/event→UI 通过 | 一条真实纵向链 | 全产品 production-ready |
-
-## 当前原型与目标替换
-
-| 当前源码落点 | 当前事实 | 重构目标 |
+| 标签 | 可以说明什么 | 不能说明什么 |
 | --- | --- | --- |
-| `src/components/Shell.tsx`、`src/styles.css`、`src/resolve-account-identity.ts` | 知乎浅色桌面壳、持久主侧栏和 Hash 页面；侧栏账号无真实身份时只标本地原型，不再写死姓名 | Web shell 只组合 route、projection 和 feature UI；账号读取服务端 session |
-| `src/pages/AuthLanding.tsx`、`src/resolve-auth-session.ts`、`server/identity/` | 知乎授权走官方 Authorization Code Flow；缺 `ZHIHU_OAUTH_APP_ID`/`ZHIHU_OAUTH_APP_KEY`/`ZHIHU_OAUTH_REDIRECT_URI` 显式失败。进入本地原型仍可用 | 服务端 OAuth/session，密钥与 token 不进浏览器 |
-| `src/pages/Settings.tsx`、`src/resolve-settings-identity.ts` | 设置页不再把写死用户或已上传 PDF 资料范围当成已提交 identity/sources；缺 provider 显式失败。密度/动效仍是本地偏好 | 服务端 OAuth/session 身份与 committed source/attachment scope |
-| `src/components/Composer.tsx`、`src/resolve-composer-attachment.ts` | 路线、图文、问博主的输入外观与本地 UI state；附件和资料范围无真实 provider 时显式失败，不再用本地 file chip 或已上传 PDF 冒充来源 | 正向模式白名单；command 发往同源 API；来源/附件走 committed scope |
-| `src/pages/Chat.tsx`、`src/chat/`、`src/workspace/catalog.ts` | 普通回答经 `/api/answers`；缺配置或 provider 失败显式失败，不再渲染预写 Mock 或 `coachReply`；缺发送上下文不再预写「性价比高的显卡」；路线 generate 连接失败或超时显式失败 | 真实 Answer/Path provider、typed stream、持久 request/session、committed conversation GET |
-| `src/workspace/store.ts`、`src/history.ts`、`src/resolve-history-reopen.ts` | 侧栏可重开本地学习/问答草稿；缺失草稿显式失败，不冒充 committed GET | owner-scoped 服务端事实、outbox/projector 和精确 history reopen |
-| `src/pages/Session.tsx`、`src/session/`、`src/knowledge-canvas/`、`src/workspace/nav.ts` | 未选择或概念不属于路线时失败；我的路线首次回复经 `/api/learning/canonical-answer` 永久复用；settle 后经 `/api/learning/graph` 由 GraphSurgeon 创建唯一 root；失败不 settle、不建图 | canonical 初始回复 settle 后由 GraphSurgeon 创建并增量更新 |
-| `src/session/ask-authors.ts`、`resolve-ask-author.ts`、`request-ask-author.ts` | 问博主经 `/api/ask-author`；旧「马同学」storage 被拒绝；失败不持久化为成功批注 | 真实知乎搜索、稳定身份、逐作者 evidence、LLM 候选内筛选 |
-| `src/session/author-graph-rag.ts`、`resolve-author-search.ts`、`request-author-search.ts`、`resolve-author-network.ts` | 搜索经 `/api/authors/search`；网络投影未接通则失败且不去知乎凑人 | network-first AuthorSearch 与 committed relationship projector |
-| `src/path-3d/`、`src/components/Path3D.tsx`、`src/vendor/learning-path-3d/` | 可运行 WebGL renderer；用户路线不再回退演示 fixture | 只消费已校验 path document 和服务端 handoff，不拥有学习事实 |
-| `src/vendor/icons-v15.svg`、`vendor/charts/` | 图标与三类交互图已落入本仓库，不再读兄弟目录 | 仍是示例图文资产，不能冒充用户请求结果 |
-| `packages/contracts` | 共享 Uuid/Evidence/Envelope/PublicError/StreamCursor 的唯一 Zod 定义；旧算法路径只 re-export | 路径/知识领域 schema 仍在算法包，本切片未接通 Web 写链 |
-| `packages/api-client`、`packages/runtime-store`、`src/runtime/`、`server/`、`server/path/` | decoder 接受 aggregate/`seq`/`requestId`；产品 Chat 走 PathStreamEvent；server/path 是迁入的路径六文件 | 投影仍读原型 `workspace/store`；内存 session 不是 PostgreSQL/CAS；generateCandidates provider 失败必须显式失败 |
-| `src/path-lab/path-lab-session.ts` | 实验台 JSON generate 经 api-client，页面只读 selector | 仍是 JSON 实验 API，不是 PathStreamEvent NDJSON / CAS restore |
+| `visual-reference` | 颜色、尺寸、布局或交互参考 | 数据结构、调用顺序、持久化 |
+| `current-code` | 现场源码现在怎样运行 | 这种行为就是正确目标 |
+| `specified-target` | 两份重构文档已经写清的行为 | 现场已经实现 |
+| `unresolved` | 用户尚未裁决，实施时会猜 | 可以由 README、旧规则或测试自行补齐 |
+| `implemented` | 现场代码实现目标且有对应自动验证 | 已接通真实外部依赖和永久存储 |
+| `integrated` | 一条真实前后端/provider/数据链纵向跑通 | 全产品 production-ready |
+
+## 当前源码与目标替换
+
+| 当前源码落点 | 当前事实 | 已确认重构目标 |
+| --- | --- | --- |
+| `server/agent-runtime/` | 共用上下文组装、500k/300k 压缩、输出校验和真实 DeepSeek/知乎端口已存在；产品 HTTP 尚未改走该运行时 | 所有 Agent 共用同一套预算/压缩/校验后再进入各域编排；用户请求不得回退 fixture |
+| `src/pages/AuthLanding.tsx`、`src/resolve-auth-session.ts`、`server/identity/` | 知乎授权会请求官方地址；缺配置明确失败；进入本地原型只设置本机开关；用户协议/隐私政策只是无内容文字 | 保留授权与进入本地原型两条入口；不假登录；删除无内容的协议/隐私项 |
+| `src/components/Shell.tsx`、`src/history.ts`、`src/resolve-history-reopen.ts` | 侧栏历史主要是本地草稿；Chat 只带发送上下文重开；账号菜单没有设置入口 | 学习历史点哪条开哪条；Chat 历史原样恢复整段对话；清历史只清列表；账号菜单增加设置 |
+| `src/pages/Home.tsx`、`src/components/Composer.tsx` | 首页只有路线/图文快捷；附件与资料范围只报错；建议芯片只填字；思考深度不进请求 | 不增加首页问博主；芯片选中路线模式并填字、不发送；只在首页上传 pdf/md/txt；资料范围继续失败；只有快速/深度 |
+| `src/pages/Chat.tsx`、`src/chat/`、`server/path/` | 路线使用固定五角检索和一次 CandidateSet，答题后本地剪枝；路线模式隐藏 Composer；普通追问替换旧问答 | R1/R-S/R2/R3/R3b/R4；最多 3 轮；校验后发布；Composer 一直存在；发布后普通发送走 R5 |
+| `src/pages/Collections.tsx`、`src/path-3d/`、`src/components/Path3D.tsx` | 我的路线只显示校验文档；3D 返回按来源；位置只在本次打开保留 | 空态回首页并选中路线模式；全部 3D 返回路线列表；边不锁节点；每条路线恢复上次位置，具体字段仍未裁决 |
+| `src/pages/Session.tsx`、`server/knowledge/` | 首次回复走旧普通回答；成功后另请求 GraphSurgeon 建根；图失败仍可能保留首次回复；永久性只在进程内存 | L0a 三路并联直答 → L0b；canonical 首次回复与确定性唯一根作为同一成功结果，根不再调用 LLM，并永久复用 |
+| `src/session/`、`src/knowledge-canvas/` | 追问按检索→分类→回答串行；整图纯文本；前端本机长图；点节点会影响宿主；画布回对话入口不完整 | 显式引用/默认最近回复决定宿主；G1 邻域 JSON 与 G2 当前 conversation 全文并发；双成功才长图；画布与最新对话实时同步 |
+| `src/session/ask-authors.ts`、`resolve-ask-author.ts`、`server/http.ts` | 单次检索后挑作者；找到后会在本机另长并列节点；零作者直达没有目标中的完整 A1/A2/A3 合同 | 有效划选 + 问题 → A1 2–3 问 → A-S 并联 → A2 选 1–2 位；零位才 A3；只形成批注；真实作者高权入网 |
+| `src/pages/Authors.tsx`、`src/session/author-graph-rag.ts`、`resolve-author-search.ts` | 网络投影未接通会整次失败；旧设计是网络有命中就停、零命中才知乎；搜索结果不入网；网络 Tab 只显示失败 | N0 高权→低权；合计不足 3 人才 N1/N-S/N2 补位；候选不足全部返回；知乎新作者低权入网；网络有人列名单、没人显示空态 |
+| `src/pages/Settings.tsx`、`src/resolve-settings-identity.ts` | 身份和资料没有 provider 时明确失败；页面仍有密度、减少动效和默认思考深度 | 保留退出、夜间模式、清空历史、身份、资料；删除密度、减少动效、默认思考深度 |
+| `src/visuals/`、图文分支 | 图文发送只会失败，不产生用户 artifact | 在真实图文编排未裁决前继续明确失败，不得用 fixture 假成功 |
+| `path-lab.html`、`src/path-lab/`、`/api/paths/generate` | 独立实验页和 JSON 接口仍在源码与测试中 | 已确认清理，不进侧栏、不进产品路由、不写“我的路线”、不再扩展 |
+| `packages/contracts`、`packages/api-client`、`packages/runtime-store` | 已有部分 Zod、decoder 和 headless store，可用于迁移 | 它们是工程材料，不代表 R1–N2、持久化或恢复已经接通 |
+
+上表的“当前事实”来自当前审查基线，不是允许保留的产品行为。源码更新后应同步本表，不能把历史现状写成永久说明。
+
+## 已确认产品链路
+
+| 领域 | 固定顺序或不变量 |
+| --- | --- |
+| 路线 | R1 4–5 问 → R-S 并联 → R2 探索 JSON → R3/R3b 最多 3 轮 → R4 稳定 ID/显式边 → renderer 校验 → 发布；发布不建知识 |
+| 首次学习 | L0a 三路知乎直答并联 → L0b 整理 → canonical 首次回复与确定性图/根同一成功状态；再次进入和新对话永久复用 |
+| 学习追问 | 问题必填；引用决定宿主，否则最近成功 LLM 回复；G1/G2 同时开始；只有两路成功才新增卡 |
+| 问博主 | 划选后 A1 2–3 问 → A-S 并联 → A2 从输入 ID 选 1–2 位 → 正常零位才 A3 刘看山；结果只做批注 |
+| 博主搜索 | network-first：N0 高权→低权；不足 3 才查知乎；最终最多 3 位，候选不足全部返回；知乎作者低权入网 |
+| 刘看山 | 只作零作者时的直达回退，不是博主，不创建 AuthorIdentity、候选或网络节点 |
+| 3D | 所有节点可进入；边只推荐流转；走到这里不建会话或知识；学习会话返回 3D，3D 返回路线列表 |
+
+## Agent 与非 Agent 边界
+
+- Agent：R1、R2、R3、R3b、R4、R5、L0a、L0b、G1、G2、A1、A2、A3、N1、N2。
+- 非 Agent：R-S、A-S、N-S 知乎搜索，N0 Graph RAG，GraphSurgeon 根创建，3D 文档校验，题目展示、G1/G2 汇合和批注展示。
+- 每个 Agent 的完整上下文、500k/300k 压缩、系统提示词和输出结构只在 [`agent-specs.md`](agent-specs.md) 维护。本审计不复制第二套提示词或 schema。
+- R2 的中文动态键对象不能进入 renderer；只有 R4 最终路线 JSON 可以发布。
+
+## 附件、深度和上下文边界
+
+- 只有首页能上传 pdf/md/txt。路线各 LLM 都带本次附件；首页普通 Chat 的附件只跟随该 Chat；R4 把相关信息和 sourceId 写进概念 detailedDescription；学习阶段没有附件。
+- 每次主调用的总预算为 500k。达到或超过预算时按 Agent 专用规则压缩，直到低于 500k；不能返回“压缩后仍过长”。
+- 附件分支以非附件部分 300k 为界：`<300k` 先压附件一次，`>=300k` 压非附件。
+- G1 保持 host/siblings/predecessors/successors 和边结构，只压节点回复；G2 只压当前这一次对话，不混入同概念其他历史对话。
+- 思考深度只有快速/深度且默认快速。深度生效时，该流程全部 LLM 与知乎直答都使用深度；学习页与画布同步，离开后恢复快速，首页深度不带进学习页。
 
 ## 视觉参考映射
 
-### `zhihu_ux_ui/` → ThreadPeak
+视觉参考只定义外观方向，不能定义 Agent、数据写入或检索顺序。
 
-| 参考证据 | 当前源码落点 | ThreadPeak 适配边界 |
+| 参考 | 可借用 | 不得从中推导 |
 | --- | --- | --- |
-| 1280×720 桌面框、220px 左栏、低对比内容面 | `src/components/Shell.tsx`、`src/styles.css` | 品牌为问山；导航为知识脉络、路线规划、博主网络 |
-| 64px 收起侧栏、白色主内容面 | `Shell.tsx` + layout CSS | 产品页共享同一主侧栏；不恢复第二套集合侧栏 |
-| 712×116 输入区、思考/附件/发送语法 | `src/components/Composer.tsx` | 模式只改变当前命令和提示；不在组件拥有领域状态 |
-| `icons-v15.svg` 图标精灵 | `src/icons.tsx` + raw import + `IconSprite` | 精灵内联；本项目新增图标保持统一 24×24 keyline |
-| 知识卡片和浅色标签语法 | `src/pages/Collections.tsx` | 路线与知识脉络共享视觉语法，但保持不同领域对象 |
-| 遮罩、菜单、focus/disabled | Composer、确认框、知识边说明 | 必须继续满足 keyboard、焦点返回、ARIA 和 reduced motion |
+| `zhihu_ux_ui/` | 1280×720 桌面框、220px/64px 侧栏、知乎蓝、浅色内容面、Composer 视觉 | 身份、附件提交、模式状态和业务流程 |
+| 旧 3D runtime | WebGL 场景、载体/概念的视觉层级、受控卡片交互 | 节点解锁、学习进度、路线生成和知识写入 |
+| `thread-chatbot` | 点阵画布、Markdown 卡、曲线边、缩放和拖动语法 | 点击选宿主、从布局造边、浏览器存储作为知识真相 |
+| `icons-v15.svg` | 统一图标精灵和 24×24 keyline | 产品中不存在的新入口或动作 |
 
-### 旧 3D runtime → ThreadPeak
+仍可保留的视觉基线：桌面视口 1280×720、主侧栏展开 220px/收起 64px、首页输入区最大宽 712px且高度至少 116px、主蓝 `#1772f6`、低对比边界 `#e8eaed`/`#eceef1`。这些数值只用于当前桌面视觉验收，不证明移动端或生产可用性。
 
-| 旧资产/行为 | 当前适配 | 目标约束 |
-| --- | --- | --- |
-| `LearningPathExperience` / WebGL runtime | `Path3D.tsx` 与本地 vendor artifact | vendor 只负责渲染，不生成路径、回答或知识图 |
-| 绿色载体与旧概念层 | `src/pathDocument.ts` + vendor token | 载体绿、概念知乎蓝；颜色不改变语义 |
-| 旧持久解锁/完成状态 | 当前使用内存 renderer state | 生产仍不保存学习进度；所有已发布节点可访问 |
-| 旧卡片多操作 | 当前受控卡片与 CSS | renderer 只发已定义 interaction，handoff 由宿主校验 |
-| GLB 与 bundle | `src/vendor/learning-path-3d/` | 只能通过受控同步重建，验证来源版本、digest、许可证和 public API |
+## 真实 provider 与配置证据
 
-### `thread-chatbot` 视觉语法 → 只读知识画布
-
-| 参考语法 | 当前落点 | ThreadPeak 目标语义 |
-| --- | --- | --- |
-| 点阵、白色 Markdown 卡、左色条、曲线边 | `KnowledgeCanvas.tsx`、`styles.css` | 画布只读 committed snapshot/revision |
-| 曲线分支序号 | SVG edge button | 序号和布局不能改变 semantic edge |
-| 选中、缩放、复位、空白拖动 | 当前受控 view state | view 只发 interaction，不能创建、合并或删除领域节点 |
-
-## 产品链路一致性
-
-| 领域 | 冻结顺序/不变量 | 当前原型状态 |
-| --- | --- | --- |
-| 路线→概念 | 路线只生成 path；已校验 handoff 后才进入概念 | 尚未形成生产 handoff |
-| 概念首次进入 | 先生成并 settle 唯一 canonical 初始回复，再创建 graph/root | 我的路线经 `/api/learning/canonical-answer` 再 `/api/learning/graph` bootstrap；内存 store，不是 PostgreSQL unique/CAS |
-| 再次进入/新对话/history | 永久复用 canonical；精确恢复，不重跑模型/projector | 侧栏重开已 fail-closed；浏览器存储只能证明交互草稿 |
-| 后续回答→知识图 | 只有 settled answer 进入 GraphProjectionPipeline；GraphSurgeon 唯一写图 | bootstrap 已接通；incremental / A1 仍未实现，示例路线仍可本地 grow |
-| 问博主 | 知乎站内搜索多个真实用户与内容→逐作者 evidence→LLM 选 1–2→0 才直达 | 当前固定数据必须删除出用户请求链 |
-| 博主搜索 | 当前用户网络优先；有 1–3 位即停止；0 位才查知乎并由 LLM 选最多 3 位 | 用户搜索已 fail-closed；本地 GraphRAG 不得冒充成功 |
-| 博主网络 | 只有最终回答采用真实作者后产生 committed relationship event | 用户网络页已 fail-closed；sessionStorage/示例星图不得冒充成功 |
-| 刘看山 | 直达回答可以 settle，但不创建 AuthorIdentity 或网络节点 | 重构合同必须显式测试 |
-
-## 真实 provider 与数据边界
-
-服务端环境合同由 [`.env.example`](.env.example) 声明：
+项目根 [`.env.example`](.env.example) 应只包含下列空值键：
 
 ```text
 ZHIHU_ACCESS_SECRET
@@ -87,51 +96,36 @@ ZHIHU_API_BASE_URL
 DEEPSEEK_API_KEY
 DEEPSEEK_BASE_URL
 DEEPSEEK_MODEL_NAME
+ZHIHU_OAUTH_APP_ID
+ZHIHU_OAUTH_APP_KEY
+ZHIHU_OAUTH_REDIRECT_URI
 ```
 
-| 边界 | 必须满足 | 禁止 |
-| --- | --- | --- |
-| 配置读取 | composition root 启动时校验，生产使用等价 secret manager | domain/React 自行读 env |
-| 浏览器 | 只访问同源 API/BFF | `VITE_*` key、`import.meta.env` provider 配置、内部 base URL |
-| 用户请求 | 真实知乎与 DeepSeek adapter | mock、固定作者、预写回答、fixture fallback |
-| Provider 失败 | typed error、可观测 stage、必要时保留上一份 committed data | 伪装 empty、切成本地成功结果 |
-| 自动化测试 | fake 只在隔离 unit/contract composition | 用测试替身替代真实 live gate |
-| 示例资产 | 明确标记、只读、与用户数据分区 | 进入证据、作者筛选、知识写入或用户请求结果 |
-| 日志/错误 | 只记录安全 metadata、hash、长度、attempt | secret、token、原始 provider payload、用户正文 |
+- 配置只由服务端读取，不进入 React/Vite bundle、浏览器、日志或错误响应。
+- 用户请求使用真实知乎与真实 LLM/直答 provider；缺配置、鉴权、限流、超时或无效结构都明确失败。
+- mock、fake、fixture 和示例只能用于隔离测试或明确示例展示，不能替代用户请求。
+- 文档列出配置名、服务存在或 `/ready` 通过，不能证明目标 Agent 编排、永久存储或 live-provider gate 已完成。
 
-当前源码中的 catalog lesson/route、本地 GraphRAG 和浏览器事实源都是阻断 `integrated` 的迁移债务。它们可以暂时支撑视觉验收，但必须从用户请求的生产 composition 中删除。普通/图文/问博主/博主搜索/博主网络已从该 composition 去掉预写 Mock、固定作者、本地 GraphRAG 与 session 网络成功，改为显式失败，仍未接通 AnswerPipeline、VisualizationArtifact、AskAuthorResolution、AuthorSearchPipeline 或 author-network projector。
+## 尚未裁决，不能从参考补出来
 
-## 博主搜索与网络视觉锚点
+- R5 失败重试、历史落盘等普通 Chat 完整目标管线；真实图文编排。
+- 首次回复和根的持久化表、唯一作用域、跨重启事务与并发策略。
+- 附件大小、数量、解析失败、删除、重复文件与 sourceId 生命周期。
+- 各流程的请求身份、重复提交、取消、超时、部分失败、刷新恢复和迟到响应。
+- 首页深度是否带入随后打开的 Chat，以及运行中切换的冻结点。
+- OAuth 授权拒绝、state 失配和会话过期等回调状态。
+- 问博主零结果文字是否展示、Chat 空打开最终页面、关键词是否自动切换模式、首页图文入口的最终过渡体验。
+- 芯片最终文案、独立 404 视觉、3D 位置字段/写入时点和博主网络最终拓扑。
 
-| 可见合同 | 当前 UI 证据 | 目标数据语义 |
-| --- | --- | --- |
-| 搜索过程分阶段可见 | `#authors` 搜索表单与 fail-closed 提示；不再雷达扫出示例作者 | 先 network stage，零命中后才 Zhihu stage |
-| 一位作者只出现一次 | 人物卡不得由本地 GraphRAG 或固定作者凑出 | 以稳定知乎外部用户 ID 去重，不按显示名合并 |
-| 结果可解释 | 缺 provider 时 `role="alert"` | 显示来源、相关性、freshness 与真实内容链接 |
-| 搜索与网络并列 | `Authors.tsx` 的两个板块，网络缺 projector 时 `role="alert"` | 搜索只读；候选、排名和点击不自动入网 |
-
-当前白底、`#1772f6` 主蓝、`#edf4ff` 浅蓝状态面、`#e8eaed` 边界和 `#8590a6` 次级字继续作为视觉基线。其他参考只能提供“人是主体、关系可视”等设计启发，不能定义实体、边、权重或检索顺序。
-
-## 像素验收锚点
-
-| 项 | 目标值/视觉合同 |
-| --- | --- |
-| 视口 | 桌面基线 1280×720 |
-| 主侧栏 | 展开 220px，收起 64px，背景 `#f4f6f9` |
-| 主内容面 | 13px 外边距，13px 圆角，白底 |
-| 首页输入区 | 最大宽 712px，高度至少 116px，13px 圆角 |
-| 主操作 | 知乎蓝 `#1772f6` |
-| 低对比边界 | `#e8eaed` / `#eceef1` 系列 |
-| 3D | 载体绿、概念/道路知乎蓝；WebGL 失败有非 3D fallback |
-| 知识画布 | 米白点阵、只读卡片、空白拖拽、分支边说明；布局不改语义 |
-| 博主搜索/网络 | 白底、浅蓝状态、阶段明确；搜索输入不成为网络写入 |
+不得把 PostgreSQL、RLS、CAS、outbox、SSE、worker、job/lease、某个 SDK 或旧参考仓库的实现写成已经裁决的唯一方案。
 
 ## 当前未达到的完成条件
 
-- 主产品尚无同源 API/BFF、真实知乎/DeepSeek composition 和 live-provider gate。
-- 真实授权、作者身份归一、逐作者 evidence、知乎直达、provider failure 分类尚未集成。
-- PostgreSQL/RLS、canonical unique constraint、conversation tree、outbox、worker、SSE replay 和 projector 尚无生产证据。
-- path-lab 或 3D renderer 可运行不能证明回答、知识、作者和历史链路完成。
-- 当前源码 regex、fixture 与构建只能证明原型结构，不能标记 `integrated` 或 `production-ready`。
+- 当前路径仍是一次 CandidateSet 加本地剪枝，不是 R1–R4。
+- 当前首次学习仍把 canonical 首次回复和建根拆成两个请求/状态，不是同一个成功结果。
+- 当前追问仍是串行旧管线和本地长图，不是 G1/G2 并发。
+- 当前问博主与博主搜索未完成 A1–A3、N0–N2、高权/低权写入和批注边界。
+- 当前附件、思考深度、历史、设置、返回关系、独立 404 和 path-lab 清理仍有账本差距。
+- 当前内存 store、浏览器草稿、fixture、schema 或 renderer 测试都不能证明 canonical 永久性、真实 provider、跨重启恢复、权限隔离或 production-ready。
 
-每次更新本审计必须同时核对 `AGENTS.md`、匹配规则、README、实际源码和当次验证输出；不允许把目标架构写成当前完成态。
+更新本审计时必须同时核对两份重构文档、AGENTS、匹配规则、现场源码和当次验证结果。只完成文档同步时，只能报告文档一致，不能报告产品已经实现。

@@ -1,3 +1,4 @@
+/** prototype: old search→answer / classifyGrow / authorKeys pipeline. Replacement is server/agent-runtime plus domain orchestrators; do not let both chains write the same route, first-answer, graph, or author-network facts. */
 import type {
   AnswerModelProvider,
   AuthorCard,

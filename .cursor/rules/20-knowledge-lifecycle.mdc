@@ -1,121 +1,111 @@
 ---
-description: "约束概念首次回复、会话历史、知识脉络 bootstrap/incremental 与永久复用语义。"
+description: "约束 L0a/L0b 唯一首轮与根、G1/G2 学习追问、selection、conversation 和知识画布同步。"
 globs: "src/pages/Session.tsx,src/pages/KnowledgeCanvas.tsx,src/pages/Collections.tsx,src/learningSession.ts,src/history.ts,src/resolve-history-reopen.ts,src/workspace/nav.ts,src/workspace/store.ts,src/knowledge-canvas/**,src/session/**,src/components/Shell.tsx,src/components/AnnotatedText.tsx,src/components/SelectionToolbar.tsx,src/components/Composer.tsx,src/components/AskAuthorsPrompt.tsx,apps/web/**/concept-learning/**,apps/web/**/knowledge-map/**,apps/web/**/history/**,packages/contracts/knowledge/**,server/knowledge/**"
 alwaysApply: false
 ---
 
-# 概念学习、会话与知识脉络生命周期
+# 概念学习、对话与知识脉络
 
-知识合同细节以项目根相对路径 `../算法/知识脉络/知识脉络图设计算法.md` 为准。本规则冻结“首答在前、图谱在后”、conversation/history 与唯一图写者。
+目标行为以 [as-implemented-logic.md](../../as-implemented-logic.md) 第 2.1–2.5 节和第 4.1 节为准；L0a、L0b、G1、G2 的完整合同以 [agent-specs.md](../../agent-specs.md) 第二、三节为准。
 
-## 概念首次进入
+旧的“普通回答生成首轮”“首轮成功后另开可失败的建图阶段”“串行分类后回答”“整张图纯文本上下文”和 A1 KnowledgeDraft 管线都不是目标。A1 在当前 Agent 命名中只表示问博主的等价拆问。
 
-```text
-validate_handoff → resolve_concept_scope → resolve_canonical_initial_answer
-  → [acquire_bootstrap → create_first_conversation → generate_initial_answer
-     → settle_initial_answer → enqueue_graph_bootstrap]
-  → resolve_or_repair_graph → resolve_active_conversation → project_learning_page
-```
+## 进入概念
 
-方括号只在 canonical 初始回复不存在时执行。
+1. 正常入口必须先确认 routeId、conceptId 存在且概念属于该路线；缺少合法概念就不打开学习页。用户直接访问非法地址进入独立 404，不显示“无法进入这次学习”产品页。
+2. 示例路线使用预置且明确标记的首轮和根，不调用 L0a/L0b，也不能成为“我的路线”失败时的 fallback。
+3. 我的路线第一次进入概念时才执行：
 
-1. 只有 path handoff 验证通过的概念可以进入；路线、3D renderer 和预加载不得提前建图或首答。
-2. `acquire_bootstrap` 只创建 owner-scoped idempotency/lease，占位不是 `KnowledgeGraph`，不能含 graph/root/node。
-3. 首次进入先创建首个 conversation，再用 `AnswerPipeline` seed 生成普通概念讲解。seed 没有 `parentAssistantTurnId`，不能用 visual/ask_author 代替 canonical 首答。
-4. 只有初始 `AnswerArtifact` 完整 settle、hash 固定且 outbox 同事务提交后，才创建 `bootstrap` graph job。
-5. 首答存在而 graph/root 缺失时只修复 graph job；绝不重新生成首答。
-6. 并发首次进入只有一个 generation owner；等待者订阅同一 resource 或读取同一 canonical。失败 attempt 可以重试但不能成为 canonical。
-7. 页面可先显示首答已完成、图谱生成中；只有 committed graph snapshot / bootstrap completed 后，知识卡和画布才 ready。当前 `server/knowledge/canonical-answer.ts` 只 settle 并复用首次回复；`server/knowledge/graph-surgeon.ts` 在 canonical 已 settle 后创建唯一 graph/root，即使 A1 为 0 draft。仍不是 PostgreSQL unique/CAS 或 A1 incremental。
+~~~text
+读取路线中的 concept title + hasDispute + detailedDescription + attachmentSourceIds
+  → L0a 三路知乎直答并联
+      具体讲解
+      是否争议
+      踩坑点
+  → L0b 把三路整理成唯一首轮 content
+  → 用 concept title + content 确定性创建唯一图和唯一根
+  → 同一个成功状态展示首轮并开放“知识脉络”
+~~~
 
-## Canonical 首答与 graph/root
+4. 学习阶段不读取路线附件原件；只使用 detailedDescription 中已经消化的信息和 attachmentSourceIds。
+5. L0b 成功与根创建是一个产品成功结果。根不调用模型，不允许出现“首轮已成功、建根随后失败”或“首轮先显示、知识脉络仍在生成”的独立分支。
+6. L0a 任一路或 L0b 失败时，本次首次学习尚未成功；不得写半个首轮、空根、结构占位或示例根。
 
-```text
-(tenantId, principalId, planInstanceId, conceptId)
-  ├── at most one canonical settled initial AnswerArtifact
-  └── at most one KnowledgeGraph with exactly one root after bootstrap
-```
+## 唯一首轮与根
 
-- 数据库 owner-scoped unique constraint 才是最终保证；application 先查后写不能替代。
-- canonical artifact id、正文和 content hash 一旦 settled 不可覆盖。再次进入、新对话、归档、reopen、模型/prompt 升级、迁移和图谱修复都只能引用它。
-- 若未来允许纠错，只能新增显式版本并保留原 artifact；历史 conversation 继续固定到原版本。
-- 根节点必须记录 canonical artifact id/hash 与 scope；projector 重建仍从同一 artifact 恢复，不重新调用模型。
-- 普通页面操作和清浏览器缓存无权删除首答/root；只有 data-governance 明确删除/合规流程可以删除或匿名化。
+- 每个已触发的“我的路线 + 概念”只有一份首轮正文、一张图和一个根；根标题固定为概念名，根内容固定为 L0b content。
+- 首轮一旦成功，刷新、服务重启、再次进入、新对话、历史重开、画布重排或提示词/模型变化都不得重新生成、替换或覆盖。
+- 再次进入不重放 L0a/L0b，也不显示“正在生成首次回复”；读取完成后恢复该概念最近一条对话。
+- 新对话仍从同一个根开始，只清出新的对话分支，不重置图，不复制生成另一份首轮。
+- 清空侧栏历史只清历史列表，不删除路线、知识图、首轮或根。
+- “永久保存”的结果要求固定，但具体数据库、表、事务、并发锁与跨重启实现尚未裁决；不得把旧规则里的某一种 PostgreSQL/CAS/job 方案写成唯一产品合同。
 
-## AnswerPipeline
+## Selection 与宿主
 
-```text
-validate → load_branch → resolve_mode
-  → normal_or_visual → search_evidence ─┐
-  → ask_author → AskAuthorResolution ──┴→ compose → settle
-```
+1. 对话中助手回复和用户以前的问题都可以划选。
+2. 划选助手回复：宿主是该回复对应卡片。
+3. 划选用户问题：宿主是该问题对应的那张 LLM 回复卡。
+4. 一次划选跨两张卡片时不显示工具条。
+5. 失败的用户问题或失败回复不显示划选工具条，失败轮次不改变图。
+6. “添加到对话”只放入引用条，不自动发送。
+7. 必须写下新问题才能发送；只有引用、没有问题不能发。
+8. 有显式引用时宿主由引用决定；没有引用时默认引用最近一次成功 LLM 回复全文，宿主就是该回复卡。
+9. 点击、聚焦、拖动或查看画布节点都不能选择宿主，也不能影响下一张卡挂载位置。
+10. 持久 selection 需要能定位原文及所属消息/节点，但具体锚点 schema 仍由后续合同决定，不能只保存 DOM Range 或数组下标。
 
-- 终态只有 `completed | cancelled | failed`；只有 settled `completed` 创建 graph job。
-- seed 只允许由 concept entry 创建；所有非 seed 请求必须带 `parentAssistantTurnId`，服务端不得猜最近消息。
-- `answer.delta` 是 provisional；settlement 失败不能发 `answer.completed`。
-- 上下文只含当前 conversation 从 seed 到 parent 的祖先链、当前问题、可选 selection、路线/概念和本次 evidence；禁止注入其他 conversation 全文。
-- `normal | visual | ask_author` 是服务端 mode。ask_author 必须委托 authors 规则，但 final turn、artifact settlement、history 与 graph job 仍由 knowledge owner 提交。
-- canonical 首答产生 bootstrap job；所有后续 settled answer（包括 visual、真实作者回答或刘看山直达）产生 incremental job。
+## G1 / G2 并发追问
 
-## GraphProjectionPipeline
+用户在学习页或知识画布提交普通追问后，G1 与 G2 同时开始；不能先完成一条再决定是否发另一条，也不能增加第二次语义复核 Agent。
 
-```text
-load_settled_answer → verify_job_kind → a1_extract → evaluate_draft
-  → advance_draft → aggregate_plan → apply_mutation
-```
+### G1 结构路
 
-1. 只接受 settled artifact 且验证 content hash；job 显式区分 `bootstrap | incremental`。
-2. `bootstrap` 只接受 scope 的 canonical 首答。GraphSurgeon 一次事务创建 graph、唯一 root、初始 revision 和 outbox；即使 A1 为 0 draft，root 也必须存在。
-3. `incremental` 要求 graph/root 已存在，且不能再次消费 canonical 首答。相同 artifact/hash logical job 重投必须 no-op。
-4. A1 每答 0..5 个 `KnowledgeDraft`，每个有 exact Unicode code-point support span；bootstrap root 不伪造成 A1 draft。
-5. 每个 draft 独立判定，再聚合成一个 answer-level `MutationPlan`；GraphSurgeon 每 job 只调用一次。
-6. 一个 job 的 revision 只能 `+0` 或 `+1`；首次 bootstrap 视为一次 `+1`。
-7. **GraphSurgeon 是唯一知识图写者。** 页面、AnswerComposer、path、authors 和 Agent 都不能写图。
-8. 图 job 失败不撤回 settled answer；bootstrap 只重试同一首答，incremental 只重试同一后续回答。
-9. Satellite 不能成为 topology source；同一 parent 最多一个 active trunk child，语义不同的 satellite 不能因布局合并。
+- 上下文是保持结构的 JSON：宿主卡全文、全部并列节点、所有前置/后置节点、这些节点间的边与逻辑、相关正文上的问博主批注、当前问题和引用。
+- 批注明确区分 author_comment 与 liu_kanshan_direct，并保持 authorId/evidenceId 绑定。
+- 总调用达到 500k 时只压各节点里的 LLM 回复正文；nodeId、分组、边、标题、批注身份和 JSON 结构不动。
+- 输出严格为 relation、title、edgeExplanation；relation 只能是 predecessor、successor、parallel。
+- 判断按用户理解的方向：补看懂宿主前的基础为 predecessor；例子/另一种解释/同层对照为 parallel；下一步为 successor。
+- G1 不输出正文、节点 ID、根或另一个宿主。
 
-## Conversation 与 history
+### G2 对话路
 
-- `KnowledgeGraph` 跨 conversation 持久存在；conversation 绑定 knowledge scope，而不是拥有 graph 生命周期。
-- 首次 conversation 可以在 graph 创建前存在，以承载 canonical seed；禁止为了外键提前造空 graph。
-- “新对话”使用 CAS 归档当前 → 创建同 scope 新 active conversation → seed 引用同一 canonical artifact。
-- 新对话不复制旧消息进上下文、不重置 graph、不重生成首答，也不因创建 conversation 就制造假知识分支。只有后续回答 settle 后 GraphSurgeon 才决定 `+0/+1`。
-- 每个 scope 最多一个 active conversation。再次进入恢复 active；历史入口 reopen 精确 conversation/branch。所有命令带明确 `conversationId`。
-- 对话是树：每个 conversation 的 seed `parentAssistantTurnId = null` 并引用 canonical artifact；reply 必须有 parent、question、mode 和可选 selection。
-- History 是 conversation read model。打开历史不得重新调用模型、重做作者筛选或重建 graph；缺失投影只 replay/repair 对应 projector。
+- 上下文只读取该概念当前这一次 conversationId 的全文、对应批注、当前问题和引用；不得读同概念其他历史对话。
+- 不单独搜索知乎。追问直接走知乎直答，不使用“你是刘看山”的普通 Chat 人格，也不自称真实博主。
+- 总调用达到 500k 时从较早完整问答开始压缩，保持时间顺序、role、messageId、批注身份、当前问题和引用。
+- 输出是可流式正文，不输出图关系 JSON。
 
-## Selection
+### 汇合
 
-`selection` 是领域 Selector，不是 DOM Range：
+| G1 | G2 | 对话结果 | 图结果 |
+| --- | --- | --- | --- |
+| 成功 | 成功 | 展示 G2 | 用 G1 结构 + G2 正文提交一张新卡 |
+| 失败 | 成功 | 仍展示 G2 | 不长图 |
+| 成功 | 失败 | 显示直答失败 | 丢弃 G1，不长图 |
+| 失败 | 失败 | 显示失败 | 不长图 |
 
-1. `selection.assistantTurnId` 必须等于 `parentAssistantTurnId`。
-2. 服务端从 turn 解析 artifact，客户端不提交 artifact id。
-3. 整答 SHA-256、quote SHA-256、Unicode code-point slice 必须同时匹配。
-4. 前端工具条只产生 Selector；`window.getSelection()` 不是持久领域对象。
-5. 路径选择题只叫 `ChoiceQuestion/ChoiceAnswer`，不得与 Selection 混用。
+聊天可以在 G1 未完成时流式展示 G2，但只有两路都成功才提交新卡。
 
-## 必需合同与错误
+## 问博主批注与知识图
 
-| 合同 | 关键约束 |
-| --- | --- |
-| `ConceptLearningScopeKey` | actor + validated handoff 解析 tenant/principal/plan/concept |
-| `ConceptEntryResource` | 能表达 resolving → generating initial → initial ready → graph bootstrapping → ready，以及 settle 前 terminal/cancelled、settle 后 recoverable error |
-| `CanonicalInitialAnswerRef` | scope 唯一、不可覆盖；新 conversation 只引用 |
-| `GraphProjectionJob` | 稳定 logical key、artifact id/hash、`bootstrap \| incremental`、lease/fencing |
+- 问博主只通过划选工具条进入；完整 A1–A3 规则由 30-authors.mdc 负责。
+- 真实作者结果或刘看山直答都锚定为原文批注，只同步批注标记，不调用 G1、不创建并列/前置/后置节点。
+- 根与后续卡上的批注跨新对话保留；批注属于概念图原文位置，不按 conversation 清空。
+- 点击批注标记才在节点右侧显示同等大小卡片；点击卡片外关闭。展示卡不是结构节点。
 
-错误至少区分 `CONCEPT_NOT_ACCESSIBLE`、`INITIAL_ANSWER_FAILED`、`CANONICAL_INITIAL_ANSWER_CONFLICT`、`GRAPH_BOOTSTRAP_FAILED`。graph bootstrap 失败必须继续返回 canonical ref 和可重试状态。
+## 学习页与画布同步
 
-## 事务与同步
+- 学习页和知识画布操作同一概念的同一份最新对话。画布发送、流式输出、引用、划选和问博主实时写回这份记录。
+- 从任何入口进入画布，右上角都有“回到对话”：有用户对话就回最新一条；没有时新建一条，但继续使用原首轮和根。
+- 画布顶栏返回只回该知识的概念列表；学习会话左上角返回 3D。
+- 放大、缩小、重置、拖动画布、拖卡片和重新排列只改视图，不改宿主和知识语义。
+- 边上的数字只打开逻辑说明；布局不得创建、删除或重连语义边。
+- 学习页和画布没有附件入口；未接通的图文模式显式失败且不写图。
 
-- canonical settlement 同事务提交 settled artifact、canonical pointer、bootstrap job 和 outbox；后续 settlement 同事务提交 artifact、incremental job 和 outbox。
-- `answer.completed` 只表示回答提交，不表示 graph 完成。bootstrap completed 必须在 graph + root + revision 提交后发布。
-- graph logical key 至少区分 `(scope, canonicalArtifactId, bootstrap)` 与 `(graphId, artifactId, incremental)`。
-- 首答已 settle 后取消 bootstrap，只留下可恢复 graph pending/failed，不能撤销首答。
-- conversation/history、knowledge card/canvas 通过 committed event/projector 最终同步，禁止前端跨 store 双写。
+## 最低验证
 
-## 当前原型迁移与验收
-
-- `src/pages/Session.tsx + growGraph` 改为 concept entry / `POST /turns` / graph SSE；删除页面写图。无 route/concept 时 fail-closed，不得回退线性代数 fixture，也不得用 `defaultConceptId`、`draftFirstLesson` 或 `growGraph` 为用户路线发明首答/节点。进入时不得用 1800ms「正在准备」冒充生成。我的路线经 `/api/learning/canonical-answer` settle 后走 `/api/learning/graph` bootstrap。KnowledgeCanvas 不得在首次回复之前为 mine 发明根节点；canonical settle + GraphSurgeon bootstrap 之后，可用 GET canonical 投影唯一根，再对后续提问/问博主做增量更新。不得把结构占位当成首次回复。`migrateKnowledge` 不得改写 mine 的 lesson/图。
-- `src/session/useAnnotations.ts` 只产生 Selector；零可信作者展示刘看山直达且不 persist 为博主批注；贡献由 GraphSurgeon 落库。
-- `src/history.ts` 侧栏重开已 fail-closed，本地列表只是草稿缓存；改为 owner-scoped ConversationUseCases + GET。
-- 浏览器必须证明阶段顺序“生成首答 → 首答可读 → graph bootstrapping → ready”，以及并发首次进入、刷新、新对话、历史恢复和 graph 失败都复用同一首答。
-- 数据库/集成测试覆盖 unique/CAS、lease/fencing、bootstrap/incremental idempotency、revision、RLS、SSE cursor replay/gap 和 GraphSurgeon 不变量。
+- L0a 三路确实并联，L0b 读取三路与 detailedDescription；学习阶段不带附件原件。
+- 首轮成功与唯一根同一终态；不存在独立 graph bootstrap 失败 UI；重复进入/刷新/重启/新对话均复用首轮。
+- selection 覆盖用户问题、助手回复、跨卡拒绝、失败轮拒绝、空问题拒绝和默认最近回复。
+- 点击节点、拖动和布局不改变宿主。
+- G1/G2 真并发、上下文边界正确、各自 500k 压缩、四种汇合结果正确。
+- 问博主只产生持久批注标记，不产生结构节点；批注跨对话保留。
+- 画布和最新对话实时同步，所有入口都有“回到对话”。

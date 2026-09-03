@@ -1,57 +1,69 @@
 ---
-description: "约束图文内容、知识画布、3D renderer 及可视化合同边界。"
+description: "约束未接通图文模式、最终路线 3D 展示、知识画布交互与可视结果边界。"
 globs: "src/visuals/**,src/chat/**,src/pages/Chat.tsx,src/knowledge-canvas/**,src/pages/KnowledgeCanvas.tsx,src/pages/Session.tsx,src/components/BasisVisual.tsx,src/components/Path3D.tsx,src/path-3d/**,src/vendor/learning-path-3d/**,src/pathDocument.ts,apps/web/**/path-3d/**,apps/web/**/knowledge-map/**,packages/surface-catalog/**,packages/path-3d-host/**,packages/contracts/visualization/**,server/visualization/**"
 alwaysApply: false
 ---
 
-# 图文、知识画布与 3D Renderer
+# 图文、3D 与知识画布
 
-Visualization、KnowledgeGraph 和 LearningPath 是三种不同对象：visual 是回答 attachment/document，knowledge 是 aggregate 的 read projection，3D 是路径 document renderer。禁止因都“画图”而混用 schema 或所有权。
+可见目标以 [as-implemented-logic.md](../../as-implemented-logic.md) 第 2.3、2.5、2.7、2.8 和 4.1 节为准。路线结构与 G1/G2 合同分别由 10-path-generation.mdc、20-knowledge-lifecycle.mdc 和 [agent-specs.md](../../agent-specs.md) 负责。
 
-## VisualizationArtifact / Surface Catalog
+图文、路线 3D、知识画布是三件事，不能因为都可视化就共用数据或失败 fallback。
 
-- Visual mode 仍走同一 `AnswerPipeline(visual)`；settled answer 可附一个已校验 `VisualizationArtifact/Spec`，不是第二条聊天链。
-- Surface/Frame 只能从固定 Catalog 选择；props 运行时 parse，command 必须在 allowlist。
-- 模型不得返回或执行任意 HTML、JavaScript、function、inline handler、动态组件名、import URL 或 iframe origin。
-- Renderer 只消费已校验 declarative document，不能新增业务节点、改 answer/graph 语义或直接写 store。
-- UIMessage/AI SDK/tool-loop 类型不得成为 visualization contract。
-- 渲染失败保留回答和上一份有效 document，并提供 loading/error/fallback；不能清空内容后只报错。
+## 图文模式
 
-## 图文交互
+- 当前真实图文编排尚未裁决，也没有图文 Agent。
+- 首页或学习页保留图文入口时，发送必须显式失败；不得用 timer、固定图、旧 BasisVisual、fixture frames、普通回答或知识图截图冒充成功。
+- 图文失败不能写知识节点、批注、路线或作者网络。
+- 未裁决前不得新增任意 HTML/JavaScript、动态组件、工具循环或图文 schema 并称为正式合同。
 
-- 可视化回答在图内交互，不为每个图再添加无合同的滑杆、输入框、播放/重置工具条；renderer 自带的必要 reset 例外。
-- 交互 state 是 view state，不自动变成 KnowledgeDraft/graph edge。只有 settled answer 语义进入 GraphProjectionPipeline。
-- 可视化必须支持 keyboard、visible focus、ARIA label、reduced motion 和静态 fallback；颜色不是唯一编码。
-- Markdown、公式和可视化内容使用 allowlist sanitizer，并限制 link/image/iframe 协议与 origin。
+## 3D 路线
 
-## 3D 路径宿主
-
-- `packages/path-3d-host`/当前 `Path3D.tsx` 只接收 `validateLearningPathDocument` 通过的 LearningPath 1.0 document。
-- 3D XState/scene 只管理 renderer 生命周期、镜头、角色与受控交互；不得管理生成、选择题、发布、conversation、knowledge mutation 或学习进度。
-- Wire id 必须映射回 domain UUID。宿主收到点击后先验证 mapping，再通过服务端 path→knowledge handoff；renderer 不能直接拼 hash/sessionStorage 充当生产导航事实。
-- 所有节点从首次加载可交互；禁止恢复 unlock/completed/review/mistake/progress 领域状态。
-- WebGL 失败必须提供可访问的非 3D fallback，不能阻断已发布路径和概念入口。
+1. 3D 只消费 R4 最终路线经过 3D 文档校验后的结果；R2 探索 JSON 不能直接渲染。
+2. 校验失败的“我的路线”不发布、不进入列表、不进 3D；不得拿示例路线或残缺文档顶替。
+3. carrierId/conceptId 与边引用必须来自同一份已校验路线；renderer 不补节点、不改边、不决定学习语义。
+4. 显式边只表示推荐流转和分叉/汇合，不是解锁条件。所有节点从第一次打开起都可进入。
+5. “走到这”只移动角色或播放动画，不创建 conversation、不生成首轮、不建知识图。
+6. “进入学习”必须带上本路线中合法的 conceptId；缺少或不属于路线时不跳转。
+7. 从学习会话返回 3D；3D 的返回统一到路线列表，不按来源回 Chat 或首页。
+8. 每条路线再次进入时恢复自己的“上次位置”，但具体保存角色、镜头还是当前节点尚未裁决；renderer 或页面不得私自固定其中一种为产品合同。
+9. 3D 交互位置不是学习进度，不锁节点，也不能推导“完成/复习/错题”状态。
 
 ## 知识画布
 
-- Knowledge canvas 只消费 owner-scoped committed graph snapshot/revision；不能从 conversation message、布局或 DOM 重新推导节点/边。
-- 画布是受控 view：宿主持有 snapshot，view 只发 selection/pan/zoom/expand 等 interaction。
-- Semantic edge 与 layout edge 分离；布局算法不能合并不同 satellite、改 parent 或创建 topology。
-- Graph 失败/重连保留上一 revision；gap 触发 replay/资源重取，不能跳过事件继续画。
+- 画布展示的是该概念唯一图和根，以及 G1/G2 两路都成功后提交的新卡；布局和点击都不能生成或改变语义。
+- 根标题永远是概念名，根正文永远是固定首轮。没有合法首轮/根时不能发明占位根。
+- 画布与该概念最新对话使用同一份消息记录。画布发问、流式输出、划选和问博主要实时写回，回到对话无需再生成。
+- 从学习页或知识侧栏进入画布，右上角都显示“回到对话”：有对话回最新一条；没有则新建对话并继续使用同一根。
+- 画布顶栏返回清掉所选概念，回该知识的概念列表。
+- 放大、缩小、重置、拖动画布、拖卡片、重新排列只改视图；不能改宿主、节点关系或正文。
+- 点击节点只查看节点，不选择下次提问宿主。显式引用才选对应卡；无引用时由最近一次成功 LLM 回复卡作宿主。
+- 边上的数字打开逻辑说明，不创建或修改边。
 
-## Vendor 约束
+## 批注展示
 
-`src/vendor/learning-path-3d/` 是生成/同步 artifact：
+- 问博主的真实作者结果与刘看山直答都只是锚定原文的批注，不是知识节点。
+- 节点正文上只显示批注标记；点击标记后在节点右侧打开同等大小的展示卡，点击卡外关闭。
+- 作者批注卡使用本次 evidence 的真实姓名、总结、链接；刘看山卡明确标注“刘看山直达/不是博主身份”。
+- 根与后续卡批注跨新对话保留；切换 conversation 不能清掉图上标记。
 
-1. 禁止直接修改 bundle、source map、GLB 或 vendor CSS。
-2. 修改上游 3D runtime 后通过同步脚本重建，并记录源 commit/version、digest 和许可证。
-3. Contract test 验证 public mount API、document version、wire-id event 和 asset digest。
-4. 构建产物/source map 不得包含 secret、内部 provider URL 或用户数据。
+## 视图与语义
+
+- 相机、缩放、拖拽位置、展开状态和批注卡开合都是视图状态，不是路线/知识/作者事实。
+- 布局可以重新计算坐标，但不能合并语义不同的节点、改变 predecessor/successor/parallel 或选择宿主。
+- 颜色不能成为唯一状态编码；关键按钮需有键盘、可见焦点和可读名称。
+
+## Vendor
+
+src/vendor/learning-path-3d 是同步产物，不直接手改 bundle、source map 或 GLB。若必须更新，从明确上游版本经同步流程生成，并验证公开入口、资源完整性和许可证；生成物不能包含密钥、provider URL 或用户数据。
 
 ## 最低验证
 
-- Catalog schema、唯一 ID、引用闭合和实际 renderer evidence。
-- Visual artifact invalid/unknown version、sanitization、fallback、keyboard/a11y 和 reduced-motion。
-- 3D validated document、wire mapping、点击/关闭/拖动、WebGL fallback、1280×720 与受影响低视口。
-- Knowledge canvas revision/replay/gap、只读语义、layout 不改 topology。
-- 如修改 vendor 来源，只通过受控同步脚本更新构建产物，并重新验证来源版本、digest、许可证和 public API。
+- 图文模式显式失败且不写任何图；无固定图/fixture fallback。
+- R4 文档校验、分叉/汇合、所有节点可进入、非法 concept 不跳转。
+- “走到这”无学习副作用；学习页→3D→路线列表返回正确。
+- 重新进入路线能恢复同一路线位置，但测试不提前假定未裁决的位置字段。
+- 画布与最新对话实时同步，任何入口都有“回到对话”。
+- 点击/拖动/重排不改宿主或语义；只有引用决定宿主。
+- 批注卡不是结构节点，跨新对话仍存在。
+- 键盘、焦点和低视口操作使用同一份真实数据。

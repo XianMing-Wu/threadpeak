@@ -1,92 +1,72 @@
 # ThreadPeak Agent 入口
 
-本文件是 `threadpeak-ux-ui/` 的**始终加载入口**。它只保留权威关系、不可违反的产品语义和渐进式规则路由；详细架构已经拆入 [`.cursor/rules/`](.cursor/rules/)，由 Cursor 根据正在查看或修改的文件自动附加。
+本文件是本目录的始终加载入口。它只保存权威顺序、不可违反的产品语义和 Cursor 规则路由；完整现状、目标差异和每个 Agent 的长提示词不在这里复制。
 
-不要为了省事一次性读取全部规则。先确定任务涉及的文件，再读取所有匹配规则；一个文件匹配多条规则时必须合并执行，不能任选其一。
+先根据任务涉及的文件读取所有匹配的 .cursor/rules/*.mdc。一个文件匹配多条规则时合并执行，不能任选一条。
 
-## 1. 权威与适用范围
+## 1. 权威顺序
 
-当前用户明确要求拥有最高权威。本文件与 `.cursor/rules/*.mdc` 共同约束本目录及其未来的 `apps/`、`packages/`、`server/`。
+当前用户在本次对话中的明确裁决始终最高。其余材料按下表解释：
 
-| 维度 | 权威来源 |
+| 内容 | 唯一用途 |
 | --- | --- |
-| 当前用户已裁决产品语义 | 本文件第 2 节；旧文档、fixture、截图和源码不得反向覆盖 |
-| 领域字段、状态机、不变量、HTTP、持久化语义 | [`../算法/知识脉络/知识脉络图设计算法.md`](../算法/知识脉络/知识脉络图设计算法.md)、[`../算法/路径生成/最小学习路径算法部分.md`](../算法/路径生成/最小学习路径算法部分.md) 与唯一 runtime Zod [`packages/contracts`](packages/contracts/src/runtime-contracts.ts)；旧 `../算法/shared/runtime-contracts.ts` 只允许 re-export |
-| 模块所有权、依赖方向、代码风格、迁移和发布门禁 | 本文件 + 匹配的 `.cursor/rules/*.mdc` |
-| 可见功能、术语、页面和交互事实 | `../PRODUCT_SPEC.md`、`../threadpeak-state-machines/` 与参考图 |
-| 当前实现/测试状态 | 现场源码和当次命令输出；历史数字不能证明现在完成 |
+| [as-implemented-logic.md](./as-implemented-logic.md) | 第 1 节记录现场代码；第 2 节和第 4.1 节记录已裁决重构目标；第 3 节记录现状与目标差异；第 4.2 节记录仍未裁决的空位 |
+| [agent-specs.md](./agent-specs.md) | R1–N2 的上下文获取、压缩算法、系统提示词和输出结构 |
+| AGENTS.md + 匹配的 .cursor/rules/*.mdc | 把上述目标路由到代码范围，并约束实现与验证 |
+| 现场源码和本次命令输出 | 只证明当前实现和当前测试状态，不能反向改写目标 |
 
-领域含义、跨包 API、数据所有权、状态机边或事务边界发生变化时，先同步权威合同并记录 ADR，再写生产代码。若当前用户裁决与旧算法/产品文档冲突，以用户裁决为准，但必须先同步相关权威文档，不能在冲突仍存在时新增生产写链。
+若 as-implemented-logic.md 的旧段落仍写“提示词待补”，而 agent-specs.md 已给出该 Agent 的四项合同，以 agent-specs.md 为准；这只解决 Agent 合同，不代表第 4.2 节的持久化、异步或 UI 空位也已解决。
+
+旧算法文档、PRODUCT_SPEC、状态机、fixture、截图、README、历史测试和现有源码都只能作为参考或现状证据。它们与上述两份文档冲突时，不得覆盖用户已裁决目标。
 
 ## 2. 已裁决产品不变量
 
-以下内容不是待讨论方案：
+1. **路线不创建知识脉络。** 路线制定固定为 R1 拆问 → 最多 5 路并联知乎搜索 → R2 探索 → R3/R3b 最多 3 轮小白选择题 → R4 路线 JSON → 3D 文档校验后发布。R2 的中文动态键对象只是探索结果；R4 才是稳定 ID、节点数组和显式边的最终路线。发布、进入路线列表和进入 3D 都不创建首轮、知识图或根。
+2. **附件和压缩口径固定。** 附件只从首页上传，格式仅 pdf/md/txt。路线流程的 R1、R2、R3、R3b、R4 每次都带这次请求的附件；首页普通 Chat 的附件只属于该 Chat；学习页和知识画布没有附件入口。每次模型调用总预算为 500k tokens。非附件部分小于 300k 时先压缩附件一次；非附件部分大于等于 300k 时压缩非附件。压缩持续到低于预算，不存在“压缩后仍太长”错误分支。
+3. **首次回复与唯一根是同一个成功结果。** 我的路线第一次进入概念时，L0a 三路知乎直答并联执行“具体讲解 / 是否争议 / 踩坑点”，随后 L0b 按概念详细描述整理成唯一首轮。L0b 成功时，算法用概念名和首轮正文确定性创建唯一图与唯一根；根不再调用模型，也不存在“首轮成功但建根失败”的产品分支。
+4. **首次回复永久保留。** 再次进入、新对话、历史重开、刷新或重启只能复用同一首轮和根，不得重新生成或替换。再次进入直接恢复该概念最近一条对话，不重播“正在生成首次回复”。
+5. **学习追问固定双路并发。** 必须有用户问题。显式引用某卡内容时宿主是该卡；没有引用时宿主是最近一次成功 LLM 回复卡；划选自己的问题时宿主是该问题对应的回复卡。点击节点不选择宿主。G1 读取宿主邻域 JSON，G2 只读取当前这一次对话全文，两路同时开始；G2 可流式展示。两路都成功才用 G1 结构和 G2 正文落新卡；G2 失败不长图，G1 失败但 G2 成功则只显示对话。
+6. **问博主固定 Zhihu-first。** 必须先划选，再由 A1 拆成 2–3 个等价问题并联搜索知乎；A2 只能用本次候选的 authorId/evidenceId 选择 1–2 位真实作者。零位时立即由 A3 以刘看山第一人称调用知乎直答。真实作者结果和刘看山直答都是原文批注，不创建结构节点；真实作者按 authorId 写入高权博主网络。
+7. **博主搜索固定 network-first。** 依次查询当前用户博主网络的高权结果、低权结果；仍不足 3 位才由 N1 拆问、并联查知乎、N2 补剩余名额。最终最多 3 位，按 authorId 去重；知乎候选少于剩余名额时全部返回，不重复、不虚构。知乎新增作者写入低权网络。网络投影未接通时整次失败；投影已接通但为空时可以继续查知乎。
+8. **刘看山不是博主。** 刘看山直答不得创建 AuthorIdentity、候选、真实作者卡或博主网络节点。
+9. **重构运行时只使用真实数据。** 用户触发的回答、路线、首次学习、追问、问博主和博主搜索必须由服务端调用真实知乎与真实 LLM/直答 provider。缺配置或 provider 失败必须显式失败，不得退回 fixture、固定作者、预写回答、示例路线或伪造成功。明确标记的示例内容只能作为示例展示。
+10. **可见交互不由旧源码反推。** 路线题最多 3 轮；3D 边只表示推荐流转，不锁节点；学习会话返回 3D，3D 返回路线列表；画布始终可“回到对话”；思考深度只有快速/深度两档且默认快速，学习页与画布共享，离开这一对界面后恢复快速，首页的深度不带入学习页；问博主没有首页快捷入口。某个界面流程开了深度时，该流程中的全部 LLM 与知乎直答都使用深度。
 
-1. **路线不创建知识脉络。** 用户通过已校验 handoff 第一次进入概念时，先生成并 settle 该概念唯一的 canonical 初始回复；随后才可依据它创建 `KnowledgeGraph` 与唯一根节点。
-2. **首次回复永久保留。** 再次进入、新开对话、归档、reopen、刷新、模型升级或图谱修复都只能引用同一 canonical 初始回复，不得重新生成、替换或覆盖。只有明确的数据删除/合规流程可以删除或匿名化，并保留必要审计 tombstone。
-3. **问博主固定 Zhihu-first。** 知乎站内搜索多个真实用户及回答/内容 → 稳定身份归一与逐作者 evidence pack → LLM 只在给定候选中选 1–2 位；零可信作者时由刘看山调用知乎直达。禁止联系 proposal、私信、代发、虚构作者或凑数。
-4. **博主搜索固定 network-first。** 先查当前用户博主图谱；有相关作者就最多返回 3 位并停止。只有零相关命中才查知乎、去重并由 LLM 审查后最多返回 3 位。搜索结果是人，不是回答。
-5. **刘看山不是博主。** 刘看山及其知乎直达回退永远不得创建 `AuthorIdentity`、候选、关系或博主网络节点。
-6. **重构运行时只使用真实数据。** 用户触发的回答、路线、知识生成、问博主和博主搜索必须经服务端调用 `.env` 配置的真实知乎与 LLM provider；缺少配置或 provider 失败必须返回明确错误，禁止降级为 mock、fixture、固定作者、预写回答或伪造成功。确定性 fake 只允许存在于隔离测试，明确标记的“示例”内容只能作为示例，不能冒充用户请求结果。
+## 3. 不得擅自补齐的空位
 
-仍未裁决的只有：路径澄清题可见数量、冷域离页继续方式、博主网络的可视实体/边拓扑。它们在 ADR 与相关合同同改前只能保留 prototype，不得新增生产 schema 或写链。
+as-implemented-logic.md 第 4.2 节与 agent-specs.md 第 7 节列出的空位仍未裁决，包括持久化表与事务、请求去重/取消/超时/刷新恢复、附件大小与生命周期、真实图文编排、3D“上次位置”的具体数据、部分 404/OAuth 可见状态和芯片文案。
 
-## 3. Cursor 渐进式规则路由
+实现者可以指出这些空位、做不改变产品含义的内部封装或保持显式失败，但不能把个人方案写成已裁决产品规则、生产 schema 或完成事实。
 
-Cursor 会自动读取根 `AGENTS.md`，并按 `.mdc` frontmatter 的 `globs` 自动附加匹配规则。下列重叠是有意设计：例如编辑 `Session.tsx` 时应同时加载知识生命周期、作者、可视化、前端和迁移/测试规则。
+## 4. Cursor 渐进式规则路由
 
 | 规则 | 自动匹配的关注点 |
 | --- | --- |
-| `.cursor/rules/00-architecture-core.mdc` | 任意 `src/apps/packages/server` 代码与工程配置：协议、投影、模块所有权、依赖方向 |
-| `.cursor/rules/10-path-generation.mdc` | 路径规划、path-lab、路线列表、3D handoff、path contracts/server |
-| `.cursor/rules/20-knowledge-lifecycle.mdc` | 概念进入、openLearning 导航、canonical 首答、conversation/history 重开门、selection、知识图与 GraphSurgeon |
-| `.cursor/rules/30-authors.mdc` | 问博主、Chat/Session 问博主门、Authors 搜索/网络门、作者身份/evidence/network |
-| `.cursor/rules/40-visualization-3d.mdc` | 图文 artifact、Chat/Session 图文门、Surface Catalog、知识画布、3D renderer/vendor |
-| `.cursor/rules/50-frontend-runtime-ui.mdc` | React/TSX/CSS、RuntimeStore、页面、Chat 普通回答门、Chat 打开会话门、侧栏历史重开门、Settings identity/sources 门、Shell 账号身份门、Composer 附件/资料范围门、授权页 OAuth 门、可访问性和浏览器状态 |
-| `.cursor/rules/60-backend-platform.mdc` | API/worker/server/contracts、provider、事务、事件、幂等、安全和可观测性；当前 `server/` live Zhihu/DeepSeek composition |
-| `.cursor/rules/70-prototype-migration.mdc` | 当前 `src/` 原型、localStorage/fixture 清理和纵向迁移 |
-| `.cursor/rules/80-testing-quality.mdc` | 源码、测试、配置和 catalog：TypeScript 风格、门禁、验证矩阵与 DoD |
-| `.cursor/rules/90-docs-rules.mdc` | Markdown、AGENTS、`.cursor/rules`、架构证据和规则维护 |
+| .cursor/rules/00-architecture-core.mdc | 全部产品代码与工程配置的权威边界、模块职责、Agent 编排边界 |
+| .cursor/rules/10-path-generation.mdc | R1–R5、路线问题轮次、附件、最终路线 JSON、3D handoff |
+| .cursor/rules/20-knowledge-lifecycle.mdc | L0a/L0b、canonical 首轮与根、G1/G2、selection、conversation、画布同步 |
+| .cursor/rules/30-authors.mdc | A1–A3、N0–N2、作者/证据 ID、批注和高低权博主网络 |
+| .cursor/rules/40-visualization-3d.mdc | 未接通图文模式、3D renderer、知识画布可视交互 |
+| .cursor/rules/50-frontend-runtime-ui.mdc | 页面、Composer、导航、历史、思考深度、附件、设置和 404 |
+| .cursor/rules/60-backend-platform.mdc | 真实 provider、上下文构造、压缩、输出校验、错误与服务端安全 |
+| .cursor/rules/70-prototype-migration.mdc | 从当前错误/原型管线迁往两份目标文档 |
+| .cursor/rules/80-testing-quality.mdc | 文档、合同、Agent 顺序、失败分支和浏览器验收 |
+| .cursor/rules/90-docs-rules.mdc | 两份源文档、AGENTS 和 Cursor Rules 的同步与格式 |
 
-若任务尚未引用具体文件（例如纯架构规划），先根据上表主动读取相关 `.mdc`，然后再给方案。不得只读本入口就开始重构。
-
-## 4. 当前仓库事实
-
-- 当前目录仍是 React/Vite UX 原型，主页面存在 fixture、页面内状态和浏览器存储；它不是生产架构。
-- 运行时已不再借用兄弟项目 `node_modules` / `public` / `src`。图标、交互图引擎、3D 角色 GLB 与 3D 宿主合同摘录已落入本仓库 `vendor/`、`src/vendor/` 与 `public/assets/`。
-- 服务端 `server/` 已从项目根 `.env` 读取知乎开放平台检索与 DeepSeek；缺配置时 `/ready` 失败。这只证明 live composition 骨架，不是 AnswerPipeline / PathStreamEvent / 作者网络 projector，不能标 `integrated`。
-- 共享 runtime Zod 的唯一物理定义已在 `packages/contracts`。`../算法/shared/runtime-contracts.ts` 只保留兼容 re-export，删除条件见该文件与 `packages/contracts/COMPATIBILITY.md`。
-- `@threadpeak/api-client` 与 `@threadpeak/runtime-store` 已提供 decoder / headless store。Home 与路线/知识列表开始走 selector；投影仍来自原型 `workspace/store`，不是服务端 committed GET。
-- path-lab 的 JSON 实验请求仍走 `/api/paths/generate`；产品 Chat 路线制定已改走 `/api/paths/generate/stream`。`server/path` 是迁入本仓库的路径六文件，缺 `DATABASE_URL` 时用内存 session store。仍不是 PostgreSQL/CAS 崩溃恢复证据。
-- 产品 Chat 路线模式消费 PathStreamEvent；`path.ready` 必须通过 renderer validator 才发布。provider 失败显式失败，不再用页面 timer 或 `draftMineBlueprint`。仍不是 durable CAS snapshot。
-- 产品 Chat / Session 普通回答经同源 `/api/answers` 调用服务端知乎检索 + DeepSeek；缺配置或 provider 失败显式失败，不再用 `coachReply` 线性代数公式或 authors/visual sentinel 写知识图。仍不是 AnswerPipeline / committed artifact。
-- 产品 `#chat` 不再在缺少发送上下文时预写「性价比高的显卡」或用 localStorage 正文冒充已打开会话；缺 launch 显式失败。Home 发送仍可写本地草稿 handoff。仍不是 owner-scoped conversation GET。
-- 产品 Chat / Session 图文模式不再用页面 timer 和 fixture frames 冒充成功；没有真实 VisualizationArtifact 时显式失败。仍不是 Surface Catalog / committed visual attachment。
-- 产品 `#path-3d` 对用户路线只渲染已校验 document；缺文档或示例 fixture 冒充用户路线时显式失败，不再回退 `threadPeakPathDocument`。`#paths` 我的路线列表不展示未通过 renderer 校验的半成品。示例路线仍用明确标记的示例文档。仍不是 CAS snapshot / wire-id handoff。
-- 产品 `#session-learning` 在未选择 route/concept 时 fail-closed，不再默认 `linear-algebra` / `linear-map` 或发明首段讲解。进入时不再用 1800ms「正在准备」冒充生成。`openLearning` 不再用 `defaultConceptId` 补第一个概念。已选中的**我的路线**经 `/api/learning/canonical-answer` 生成并永久复用首次回复；settle 之后才由 GraphSurgeon 经 `/api/learning/graph` 创建唯一 graph/root，即使 A1 为 0 draft。没有 canonical 时不建图，也不重新生成首次回复。`#knowledge-detail` 对我的路线先读取 GraphSurgeon snapshot 与 GET canonical，把首次回复投影为唯一根节点后再进入可缩放画布；后续提问/问博主可增量更新这份图，不得在首次回复之前发明根节点，也不得把结构占位当成首次回复。workspace 读取也不会用 `draftFirstLesson` 改写 mine 的 lesson/图。已选中的示例路线仍可读标记 catalog lesson，不是 canonical 首答。仍不是 AnswerPipeline / PostgreSQL unique constraint / A1 incremental。
-- 产品 Session / 划选问博主经 `/api/ask-author` 走 Zhihu-first；1–2 位真实作者才写入博主批注。零可信作者展示刘看山直达，不创建作者卡、不 persist 为 `zhihu-live`。旧 storage 里的「马同学」不会再被渲染，失败批注不写入 sessionStorage。仍不是 committed AskAuthorResolution / 作者入网。
-- 产品 `#authors` 博主搜索经 `/api/authors/search` 先查网络投影；投影未接通时显式失败，不会因此去知乎凑人。页面不再把未裁决的「载体→概念→问题」写成产品事实。仍不是 committed `AuthorSearchResult`。
-- 产品 `#authors` 博主网络不再用 sessionStorage 或示例星图冒充已提交网络；没有真实 relationship projector 时显式失败，页面也不再 hydrate 入网。仍不是 owner-scoped network projection。
-- 产品侧栏历史重开本地草稿：学习草稿精确回到同一 route/concept/conversation，问答草稿带回发送上下文。列表仍标为本地草稿，不能冒充 owner-scoped committed GET。缺失草稿显式失败。仍不是服务端 conversation GET。
-- 产品 `#settings` 不再把写死用户或已上传 PDF 资料范围当成已提交 identity/sources；缺 provider 显式失败。密度、动效、思考深度仍是本地偏好。不得把原型登录态锁死整站。仍不是服务端 OAuth/session 或 committed source scope。
-- 产品侧栏账号不再把写死姓名当成已提交身份；缺 provider 时只标本地原型账号，主题和退出仍可用。不得锁死整站登录。仍不是服务端 OAuth/session。
-- 产品 Composer 不再把本地文件名或「已上传 PDF」资料范围当成已提交来源；缺 provider 显式失败。思考深度仍是本地偏好。仍不是 committed source/attachment scope。
-- 产品授权页经 `/api/auth/zhihu/start` 走官方 Authorization Code Flow；缺 `ZHIHU_OAUTH_APP_ID` / `APP_KEY` / `REDIRECT_URI` 显式失败，不把 Access Secret 或延时动画当成用户登录。进入本地原型仍可用。官方文档未给出用户信息字段时不编造姓名。仍不是 PostgreSQL session / PKCE（平台未文档化 PKCE）。
-- 路径/知识算法实现与领域文档仍位于 `../算法/`，是实现/合同证据，不代表本 Web 已纵向接通。
-- `prototype`、`contracted`、`implemented`、`integrated`、`production-ready` 必须按当前证据逐级判断；目录存在、类型检查、fixture 或历史测试数不能越级证明完成。
+纯规划任务也必须先读取相关规则。修改跨域流程时，同时读取所有参与域的规则。
 
 ## 5. 每次任务的最小流程
 
-1. 检查现场源码、当前文档和用户已有改动；不要从历史材料猜现状。
-2. 根据目标文件加载所有匹配 `.mdc`；跨域修改必须同时满足各域规则和交接合同。
-3. 先确定唯一 owner、事实源、状态机、事务/幂等边界，再实现 UI 或 adapter。
-4. 使用匹配规则规定的验证矩阵；文档规则不能替代运行时、事务、浏览器或安全证据。
-5. 只报告实际达到的成熟度。规则写入文件不等于代码已经实现。
+1. 先读用户点名的文件和现有改动；不得因为源码很多就假定源码正确。
+2. 先区分 as-implemented-logic.md 中的“代码实际”“用户裁决”“问题账本”和“未裁决空位”。
+3. 涉及任一模型/直答步骤时，读取 agent-specs.md 对应 Agent 的完整四项合同，不凭摘要重写提示词或 schema。
+4. 只实现已裁决语义；遇到会改变产品行为的空位就停止扩张并明确指出。
+5. 按匹配规则验证。规则或文档写完只证明文档一致，不证明源码已实现。
 
-## 6. 维护本规则体系
+## 6. 维护规则体系
 
-- Project Rule 必须使用 `.cursor/rules/*.mdc`；普通 `.md` 不会被 Cursor Project Rules 系统识别。
-- 每条 `.mdc` 必须有合法 frontmatter，文件匹配规则使用 `alwaysApply: false` + 非空 `globs`；规则保持单一关注点并少于 500 行。
-- 新增目录、模块或关键文件时，同一变更更新本路由表和相应 glob，避免出现没有领域规则覆盖的代码。
-- 修改状态机/所有权时同步更新相关 `.mdc`、算法合同/ADR、检查清单与测试；禁止只改一个副本。
-- 修改后至少验证 frontmatter、glob 代表性匹配、本地链接、规则行数、Markdown 围栏/表格和第 2 节不变量完整性。
+- 根 AGENTS.md 不放长提示词和完整上下文 JSON；这些只在 agent-specs.md。
+- .mdc 只复述本领域必须阻断的少量语义，并链接唯一来源，不复制整段可漂移提示词。
+- 每条 .mdc 必须有合法 frontmatter、alwaysApply: false、非空 globs，保持单一关注点且少于 500 行。
+- 新增、删除或改名规则时同步本路由表；修改产品语义时同步两份源文档后再改规则。
+- 修改后检查 frontmatter、代表性 glob、本地链接、表格、代码围栏、trailing whitespace、merge marker 和关键不变量；动态测试结果不得写成永久事实。

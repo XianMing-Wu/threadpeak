@@ -1,68 +1,99 @@
 ---
-description: "约束学习路线生成、澄清、canonical path contract、3D handoff 与重构边界。"
+description: "约束 R1–R5 路线制定、澄清题轮次、附件、最终路线 JSON、发布与 3D handoff。"
 globs: "src/path-lab/**,src/path-planning/**,src/path-3d/**,src/pathDocument.ts,src/pages/Chat.tsx,src/pages/Home.tsx,src/pages/Collections.tsx,src/workspace/**,src/components/Path3D.tsx,apps/web/**/path-planning/**,apps/web/**/path-3d/**,packages/contracts/path/**,packages/path-3d-host/**,server/path/**"
 alwaysApply: false
 ---
 
-# 路径生成与知识 handoff
+# 路线制定 R1–R5
 
-路径合同细节以项目根相对路径 `../算法/路径生成/最小学习路径算法部分.md` 为准。本规则冻结它在 ThreadPeak 中的所有权、调用预算和与知识主链的边界。
+目标流程以 [as-implemented-logic.md](../../as-implemented-logic.md) 第 2.6、2.7、2.8、4.1 节为准；每个 Agent 的输入、压缩、系统提示词和输出以 [agent-specs.md](../../agent-specs.md) 第 0 节和第一节为准。旧的一次 CandidateSet、固定五角检索和纯 TypeScript 剪枝不是目标。
 
-## 唯一流程
+## 固定流程
 
-```text
-validate → planSearch → searchRecentYear → [searchExpandedWindow]
-  → generateCandidates → [fallbackGeneration]
-  → prune → projectRenderer
-```
+~~~text
+用户目标
+  → R1 拆成 4–5 条、最多 5 条知乎问法
+  → R-S 按问法并联搜索知乎
+  → R2 汇总全部可能载体、概念和争议
+  → R3 生成第 1 轮 1–3 道小白选择题
+  → [R3b 处理题中追问，最多到第 3 轮]
+  → 当前 active 题组答完
+  → R4 生成最终路线 JSON，不再搜索
+  → 3D 文档校验
+  → 发布一条新的“我的路线”
+~~~
 
-1. 正常最多 1 次 LLM 主调用；结构/质量门禁失败最多 1 次完整 fallback。禁止第三次修复、独立 judge 或循环到通过。
-2. `answer`、`reviseAnswer`、`choice.reminder` 的 provider 调用数必须为 0。
-3. 选择题数量按当前路径合同只能是 0 或 2–3；一次展示一题，最多三题必须产出路径。
-4. 剪枝、下一题和回改前题都是纯 TypeScript。
-5. `server/path` 公开文件固定为 `contracts.ts`、`config.ts`、`providers.ts`、`service.ts`、`renderer.ts`、`http.ts`；不得新增 Agent/solver/reviewer 目录。
-6. 路径管线绝不写 `graph_nodes`、`GraphContribution`、conversation 或 author network。
+1. 生成失败后的“重试”从同一目标的 R1 整段重跑，不从中间 Agent 拼接旧结果。
+2. 再次点击路线制定会重新跑完整流程并发布另一条路线，不覆盖上一条。
+3. 路线发布后 Composer 仍在；普通发送走 R5。只有再次明确选择路线制定模式才回到 R1。
+4. 路线的任何阶段都不能创建概念首轮、conversation、KnowledgeGraph 或根节点。
+5. R-S 是搜索步骤，不是模型 Agent；R4 后不再检索。
 
-## 路径事实与传输
+## R1 / R-S / R2
 
-- 事实源是 CAS 提交的 `PathGenerationSession` 与同事务 `PublishedPathSnapshot`。
-- `PathStreamEvent` NDJSON 只传输已定义 stage/result；页面不得自造“分析中/第几题”状态。
-- store `create/compareAndSwap` 成功即提交；提交后断连不回滚，客户端用已知 `sessionId` GET 恢复。
-- 候选集及 0 题时 final/document 整体通过前，不持久化半成品 session。
-- 每条流的 `seq` 从 1 连续并绑定一个 `requestId`；`requestId` 不是跨请求幂等 key。
-- `FinalLearningPath → LearningPathDocument 1.0` 必须通过 renderer validator 后才发 `path.ready`。
+- R1 必须同时覆盖正常学法与坑/争议两类角度；结果 4–5 条且最多 5 条。
+- R-S 对 R1 全部 query 并联检索，结果按 queryId 保留 authorId、evidenceId、API 总结和真实链接。
+- R2 必须读取所有检索分组与附件，不得只读排名第一的结果。
+- R2 输出是中文动态键的探索对象：顶层键是载体名，第二层键是概念名，每个概念只含“争议”布尔值。
+- R2 探索对象不是最终路线，不得提前出现 routeId、节点数组、边或学习顺序。
 
-## 与知识主链的唯一交点
+## R3 / R3b 题组
 
-```text
-服务端 ActorContext：tenantId + principalId
-点击概念：planInstanceId + conceptId + 可选 pathRevision
-知识作用域：(tenantId, principalId, planInstanceId, conceptId)
-```
+1. R3 只问用户偏好，不考知识；输出 1–3 道大白话题，每题至少两个选项。
+2. 初始题组 round=1、status=active。每套题都有 round=1..3 与 active/superseded。
+3. 用户没答完时可以追问。R3b 判断：
+   - 与当前题无关：解释应先答完，返回 continue_current，不换题；
+   - 相关且当前轮小于 3：解释后返回 replace_questions，产生下一轮 1–3 道新题；
+   - 当前已是第 3 轮：可以解释，但不再换题。
+4. 换题后旧题保留在对话中、变灰且不可再点；旧题和已选 optionId 继续进入 R4。
+5. 不同轮选择冲突时较新轮优先。只有当前 active 题组全部答完才调用 R4。
+6. 问题、选项和题组输出必须通过 agent-specs.md 的联合结构验证，不能用自由文本猜测分支。
 
-- `pathRevision` 只用于读取路径 snapshot，不进入知识图身份。
-- 3D wire id（例如 `c-<uuid>`）必须先映射成 domain UUID，再由 `resolvePathKnowledgeHandoff` 验证 owner、plan、concept 和 revision。
-- 未知/跨 owner/revision 不匹配统一表现为不可访问，不泄露具体原因。
-- `path.ready` 只同步路线结果卡、路线列表和 3D document。路线生成、打开路线列表、进入 3D 或预加载都不能创建首答、knowledge graph 或 root。
-- 只有用户通过有效 handoff 进入概念，才触发 `ConceptLearningEntryPipeline`；知识规则随后接管。
+## R4 最终路线
 
-## 当前原型迁移
+R4 输出固定字段的版本 1.0 路线对象，至少包含：
 
-| 当前文件 | 目标 |
-| --- | --- |
-| `src/workspace/store.ts` / `catalog.ts` 关键词拼路线 | 删除用户请求生产路径；只读示例与隔离测试 fixture 必须分离且明确标记 |
-| `src/pages/Chat.tsx` / `src/path-planning/` 产品已走 `/api/paths/generate/stream`；连接失败/超时已 fail-closed | PathStreamEvent decoder → path projector → RuntimeStore selector；删除 path-lab JSON re-export |
-| `src/path-lab/contracts.ts` | 迁移到唯一 `packages/contracts/path` 后删除兼容层 |
-| `src/path-3d/` / `src/components/Path3D.tsx` 本地 document 宿主 | validated document + wire UUID mapping + server handoff；删除 hash/session 导航事实 |
+- routeId、title；
+- carriers：稳定 id、title、description；
+- concepts：稳定 id、carrierId、title、hasDispute、detailedDescription、attachmentSourceIds；
+- carrierEdges 与 conceptEdges：稳定 id、from/to 和 reason；
+- entryConceptIds 与 terminalConceptIds。
 
-## 未裁决边界
+所有引用必须闭合、全部 ID 在单份路线内唯一、图无环且所有概念从入口可达。数组顺序只用于稳定展示；显式多出边表示分叉，多入边表示汇合。
 
-- 可见产品材料写澄清题 1–2，而路径 vNext 写 0 或 2–3：实现只按 vNext；产品规格/状态机同步前不能声称集成完成。
-- 产品希望冷域离页继续，而路径合同是 request-stream + CAS session、无 durable job：不得暗改成 job。若要后台继续，先修改路径算法、预算、取消与恢复合同。
+每个概念必须有 detailedDescription，说明首次讲解偏向和要解决的问题。附件相关信息只消化进对应概念的 detailedDescription，并保留真实 attachmentSourceIds；开始学习后不再携带附件原件。
+
+每个载体通常包含 2–3 个概念，确有必要时可以只有 1 个；不能再用旧实现强制每个载体只有一个概念。
+
+## 附件与 500k 预算
+
+- 附件只来自首页同一次发送，格式仅 pdf/md/txt。
+- R1、R2、R3、每次 R3b、R4 都携带这次路线请求的附件。
+- 整次调用总量小于 500k 不压缩；达到或超过 500k 才压缩。
+- 非附件部分小于 300k：先做一次有目标额度的附件压缩；仍超预算再压非附件，不重复压附件。
+- 非附件部分大于等于 300k：压非附件，不动附件。
+- 继续收紧允许压缩的正文直到整次调用小于 500k；不返回“上下文过长”产品错误。
+- sourceId、query/evidence/author ID、题目轮次、状态、选项和路线引用关系不能被摘要改写。
+
+## 发布、列表与 3D
+
+- 只有最终路线通过 3D 文档校验后才发布并出现在“我的路线”；半成品不显示。
+- 路线列表空态回首页并自动选中路线制定，只填模式，不代写、不代发。
+- 3D 中所有节点从一开始都可进入。边是推荐流转，不是解锁条件。
+- “走到这”只播放/移动，不创建会话、不建知识；“进入学习”必须携带本路线内合法 conceptId。
+- 学习会话返回 3D；3D 返回统一去路线列表。
+- 每条路线要恢复“上次 3D 位置”，但保存角色、镜头还是当前节点仍未裁决，不得自行冻结字段。
+- 示例路线必须始终标明示例；用户路线校验失败时不得拿示例替代。
+
+## path-lab
+
+path-lab 已裁决从产品清理。不得出现在侧栏、产品路由、用户写链或“我的路线”；迁移期间只允许为了删除旧引用而修改相关文件，不能继续扩展功能。
 
 ## 最低验证
 
-- 运行路径算法包的 `check:server` 与 tests，以及当前 UI 的 typecheck/contract tests。
-- 使用真实 in-process NDJSON 覆盖 start/choice/revise/cancel/failure/sequence/terminal/GET restore。
-- 验证 renderer digest、wire-id handoff、未知 concept/revision/owner 拒绝。
-- 浏览器覆盖输入 → 澄清 → `path.ready` → 3D → 点击概念，并证明整个路径阶段没有 knowledge 写入。
+- R1 数量/角度、R-S 并发、R2 动态探索对象、R3/R3b 三轮上限、R4 固定路线结构。
+- 附件五个阶段都携带、300k 两分支、500k 总预算与无超长错误分支。
+- 旧题保留/变灰/不可点，R4 读取全部已选答案且新轮优先。
+- 路线校验失败不发布；发布与 3D 不产生任何知识写入。
+- 分叉/汇合可渲染、所有节点可进入、返回路线列表、非法 concept 不跳学习页。
+- 路线发布后 R5 可继续，重新制定新增路线；path-lab 不再可达。
