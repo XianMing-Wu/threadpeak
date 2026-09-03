@@ -43,9 +43,9 @@ test('routes do not create knowledge and failed session turns do not write graph
   assert.doesNotMatch(http, /5033/)
   assert.match(pkg, /vite --host 127\.0\.0\.1 --port 4301/)
   assert.doesNotMatch(pkg, /port 5032/)
-  assert.match(session, /requestOrdinaryAnswerStream/)
-  assert.match(session, /requestAskAuthor/)
-  assert.match(session, /appendLearningTurnToGraph/)
+  assert.match(session, /requestFollowUp/)
+  assert.match(session, /appendFollowUpTurn/)
+  assert.doesNotMatch(session, /requestOrdinaryAnswerStream/)
   assert.match(session, /failed:true/)
   assert.doesNotMatch(session, /coachReply/)
   assert.doesNotMatch(catalog, /export function coachReply/)
@@ -65,8 +65,8 @@ test('concept membership is required and canvas does not write another conversat
   assert.equal(crossed.kind, 'unavailable')
   assert.match(store, /\^g\\d\+\$/)
   assert.match(canvas, /activeConversation\.conceptId === conceptId/)
-  assert.match(canvas, /不能把这次请求写进知识脉络/)
-  assert.match(canvas, /requestOrdinaryAnswerStream/)
+  assert.match(canvas, /requestFollowUp/)
+  assert.match(canvas, /appendFollowUpTurn/)
 })
 
 test('stale 马同学 annotations are not live replies and failures are not persisted as success', () => {

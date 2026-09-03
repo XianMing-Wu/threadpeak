@@ -11,6 +11,7 @@ import { NotFoundPage } from './pages/NotFound'
 import { IconSprite } from './icons'
 import { ensurePrototypeRuntimeListeners } from './runtime/prototype-runtime'
 import { requestAuthLogout, requestAuthSession } from './runtime/request-auth-session'
+import { resetLearningThinking } from './session/learning-thinking'
 
 const routes = new Set<RouteName>(['home','chat','paths','path-3d','knowledge','knowledge-detail','session-learning','authors','settings'])
 function readRoute():RouteName {
@@ -25,6 +26,9 @@ export function App(){
   const[authenticated,setAuthenticated]=useState(()=>localStorage.getItem(AUTH_KEY)!=='false')
   const[theme,setTheme]=useState<'light'|'dark'>(()=>localStorage.getItem(THEME_KEY)==='dark'?'dark':'light')
   useEffect(()=>{const onHash=()=>setRoute(readRoute());addEventListener('hashchange',onHash);ensurePrototypeRuntimeListeners();return()=>removeEventListener('hashchange',onHash)},[])
+  useEffect(()=>{
+    if (route !== 'session-learning' && route !== 'knowledge-detail') resetLearningThinking()
+  },[route])
   useEffect(()=>{document.documentElement.dataset.theme=theme;localStorage.setItem(THEME_KEY,theme)},[theme])
   useEffect(()=>{
     void requestAuthSession().then((session) => {

@@ -16,6 +16,7 @@ import { invokeStructuredAgent, invokeTextAgent } from './agent-runtime/invoke.t
 import { createLlmSummarizer } from './agent-runtime/summarizer.ts'
 import { createPathOrchestrator } from './path-generation/orchestrator.ts'
 import { createFirstLearningOrchestrator } from './first-learning/orchestrator.ts'
+import { createFollowUpOrchestrator } from './follow-up/orchestrator.ts'
 
 function loadDotEnv(filePath: string): Record<string, string | undefined> {
   const env: Record<string, string | undefined> = { ...process.env }
@@ -101,6 +102,12 @@ const firstLearning = agentRuntime
       : {}),
   })
   : undefined
+const followUp = agentRuntime
+  ? createFollowUpOrchestrator({
+    invokeStructured: (agentId, context, options) => invokeStructuredAgent(agentRuntime, agentId, context, options),
+    invokeText: (agentId, context, options) => invokeTextAgent(agentRuntime, agentId, context, options),
+  })
+  : undefined
 
 const server = await createCompositionApp({
   config,
@@ -111,6 +118,7 @@ const server = await createCompositionApp({
   ...(service ? { service } : {}),
   ...(pathOrchestrator ? { pathOrchestrator } : {}),
   ...(firstLearning ? { firstLearning } : {}),
+  ...(followUp ? { followUp } : {}),
   ...(config.ok && config.config.pathGenerateUpstream
     ? { pathGenerateUpstream: config.config.pathGenerateUpstream }
     : {}),

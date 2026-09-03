@@ -20,14 +20,19 @@ export function QuickModes({ selected, onSelect }: { selected: AssistantMode; on
   return <div className="quick-modes" aria-label="快捷模式">{modes.map(([id, glyph, label]) => <button key={id} className={selected === id ? 'is-selected' : ''} onClick={() => onSelect(selected === id ? '' : id)}><Icon name={glyph} size={18}/><span>{label}</span></button>)}</div>
 }
 
-export function Composer({ value, onChange, mode, onMode, onSend, compact = false, quote, onClearQuote, showScope = true, showReference = true, showAttachment = true, onPickFiles, placeholder: customPlaceholder }: {
-  value: string; onChange: (value:string) => void; mode: AssistantMode; onMode: (mode: AssistantMode) => void; onSend: () => void; compact?: boolean; quote?: string; onClearQuote?: () => void; showScope?: boolean; showReference?: boolean; showAttachment?: boolean; onPickFiles?: (files: FileList) => void; placeholder?: string
+export function Composer({ value, onChange, mode, onMode, onSend, compact = false, quote, onClearQuote, showScope = true, showReference = true, showAttachment = true, onPickFiles, placeholder: customPlaceholder, requireQuestion = false, thinkingDepth, onThinkingDepth }: {
+  value: string; onChange: (value:string) => void; mode: AssistantMode; onMode: (mode: AssistantMode) => void; onSend: () => void; compact?: boolean; quote?: string; onClearQuote?: () => void; showScope?: boolean; showReference?: boolean; showAttachment?: boolean; onPickFiles?: (files: FileList) => void; placeholder?: string; requireQuestion?: boolean; thinkingDepth?: 'fast' | 'deep'; onThinkingDepth?: (value: 'fast' | 'deep') => void
 }) {
   const [menu, setMenu] = useState<'thinking' | ''>('')
   const [thinking,setThinking]=useState('快速回答')
   const [attachmentNotice,setAttachmentNotice]=useState<ComposerAttachmentResolution|null>(null)
   const [sourcesNotice,setSourcesNotice]=useState<ComposerSourcesResolution|null>(null)
-  const enabled = Boolean(value.trim() || quote)
+  const thinkingLabel = thinkingDepth === 'deep' ? '深度思考' : thinkingDepth === 'fast' ? '快速回答' : thinking
+  const setThinkingLabel = (label: string) => {
+    if (onThinkingDepth) onThinkingDepth(label === '深度思考' ? 'deep' : 'fast')
+    else setThinking(label)
+  }
+  const enabled = requireQuestion ? Boolean(value.trim()) : Boolean(value.trim() || quote)
   const placeholder = mode ? modePlaceholder[mode] : customPlaceholder ?? (compact ? '围绕当前概念继续提问，或引用上方内容…' : '你可以制定学习路线、使用图文模式理解内容，也可以查找与问题相关的知乎博主～')
   const notice = attachmentNotice ?? sourcesNotice
 
@@ -52,8 +57,8 @@ export function Composer({ value, onChange, mode, onMode, onSend, compact = fals
     <div className="composer-footer">
       <span>
         <div className="composer-thinking" onMouseEnter={() => setMenu('thinking')} onMouseLeave={() => setMenu('')} onFocus={() => setMenu('thinking')} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setMenu('') }}>
-          <button className="composer-pill" aria-haspopup="menu" aria-expanded={menu === 'thinking'} onClick={(event) => event.preventDefault()}><Icon name="prod-home-thinking-smart" size={16}/>{thinking}<Icon className={menu === 'thinking' ? 'thinking-chevron is-expanded' : 'thinking-chevron is-collapsed'} name="prod-home-chevron-down" size={11}/></button>
-          {menu === 'thinking' && <div className={`composer-menu thinking-menu${compact ? ' is-drop-up' : ''}`} role="menu">{[['快速回答','跳过推理直达结果'],['深度思考','深入推理给出答案']].map(([x,y]) => <button key={x} aria-checked={thinking===x} role="menuitemradio" onClick={() => setThinking(x)}><span><b>{x}</b><small>{y}</small></span>{thinking===x && <Icon name="check" size={15}/>}</button>)}</div>}
+          <button className="composer-pill" aria-haspopup="menu" aria-expanded={menu === 'thinking'} onClick={(event) => event.preventDefault()}><Icon name="prod-home-thinking-smart" size={16}/>{thinkingLabel}<Icon className={menu === 'thinking' ? 'thinking-chevron is-expanded' : 'thinking-chevron is-collapsed'} name="prod-home-chevron-down" size={11}/></button>
+          {menu === 'thinking' && <div className={`composer-menu thinking-menu${compact ? ' is-drop-up' : ''}`} role="menu">{[['快速回答','跳过推理直达结果'],['深度思考','深入推理给出答案']].map(([x,y]) => <button key={x} aria-checked={thinkingLabel===x} role="menuitemradio" onClick={() => setThinkingLabel(x)}><span><b>{x}</b><small>{y}</small></span>{thinkingLabel===x && <Icon name="check" size={15}/>}</button>)}</div>}
         </div>
         {showScope && <button type="button" className="composer-pill scope" onClick={() => { setAttachmentNotice(null); setSourcesNotice(resolveComposerSources()) }} aria-label="资料范围"><Icon name="prod-home-scope-zhihu-primary" size={16}/><Icon name="book" size={15}/>资料范围</button>}
       </span>

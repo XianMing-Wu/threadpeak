@@ -171,10 +171,13 @@ export function readSelectionAnchor(
   if (!text || !root || !selection?.anchorNode || !root.contains(selection.anchorNode)) return null
   const box = selection.getRangeAt(0).getBoundingClientRect()
   if (box.width === 0 && box.height === 0) return null
+  const startHost = findNodeId?.(selection.anchorNode)
+  const endHost = selection.focusNode ? findNodeId?.(selection.focusNode) : startHost
+  if (startHost && endHost && startHost !== endHost) return null
   return {
     text,
     rect: { left: box.left, top: box.top, width: box.width, height: box.height },
-    nodeId: findNodeId?.(selection.anchorNode),
+    nodeId: startHost || endHost,
   }
 }
 

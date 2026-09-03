@@ -8,6 +8,7 @@ export const LIVE_AUTHOR_SEARCH_URL = '/api/authors/search'
 export const LIVE_CANONICAL_ANSWER_URL = '/api/learning/canonical-answer'
 export const LIVE_GRAPH_URL = '/api/learning/graph'
 export const LIVE_FIRST_ENTRY_URL = '/api/learning/first-entry'
+export const LIVE_FOLLOW_UP_URL = '/api/learning/follow-up'
 
 export function createBrowserFetchPort(): FetchPort {
   return async (url, init) => {

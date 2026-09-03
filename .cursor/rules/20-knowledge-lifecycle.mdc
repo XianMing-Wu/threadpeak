@@ -1,6 +1,6 @@
 ---
 description: "约束 L0a/L0b 唯一首轮与根、G1/G2 学习追问、selection、conversation 和知识画布同步。"
-globs: "src/pages/Session.tsx,src/pages/NotFound.tsx,src/pages/KnowledgeCanvas.tsx,src/pages/Collections.tsx,src/learningSession.ts,src/history.ts,src/resolve-history-reopen.ts,src/workspace/nav.ts,src/workspace/store.ts,src/knowledge-canvas/**,src/session/**,src/components/Shell.tsx,src/components/AnnotatedText.tsx,src/components/SelectionToolbar.tsx,src/components/Composer.tsx,src/components/AskAuthorsPrompt.tsx,apps/web/**/concept-learning/**,apps/web/**/knowledge-map/**,apps/web/**/history/**,packages/contracts/knowledge/**,server/knowledge/**,server/first-learning/**"
+globs: "src/pages/Session.tsx,src/pages/NotFound.tsx,src/pages/KnowledgeCanvas.tsx,src/pages/Collections.tsx,src/learningSession.ts,src/history.ts,src/resolve-history-reopen.ts,src/workspace/nav.ts,src/workspace/store.ts,src/knowledge-canvas/**,src/session/**,src/components/Shell.tsx,src/components/AnnotatedText.tsx,src/components/SelectionToolbar.tsx,src/components/Composer.tsx,src/components/AskAuthorsPrompt.tsx,apps/web/**/concept-learning/**,apps/web/**/knowledge-map/**,apps/web/**/history/**,packages/contracts/knowledge/**,server/knowledge/**,server/first-learning/**,server/follow-up/**"
 alwaysApply: false
 ---
 

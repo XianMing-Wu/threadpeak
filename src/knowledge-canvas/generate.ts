@@ -423,6 +423,77 @@ export function growGraph(
   return { nodes: [...nodes, created], edges: nextEdges, created }
 }
 
+export function growKindFromRelation(relation: 'predecessor' | 'successor' | 'parallel'): GrowKind {
+  return relation === 'predecessor' ? 'pred' : relation === 'successor' ? 'succ' : 'par'
+}
+
+export function growFollowUpCard(input: {
+  nodes: readonly CanvasNode[]
+  edges: readonly CanvasEdge[]
+  hostId: string
+  relation: 'predecessor' | 'successor' | 'parallel'
+  title: string
+  body: string
+  question: string
+  quote?: string
+  edgeExplanation: string
+  conversationId?: string
+}): { nodes: CanvasNode[]; edges: CanvasEdge[]; created: CanvasNode } | null {
+  const host = input.nodes.find((node) => node.id === input.hostId)
+  if (!host) return null
+  const kind = growKindFromRelation(input.relation)
+  const paragraphs = input.body.split(/\n{2,}/).map((part) => part.trim()).filter(Boolean)
+  const created: CanvasNode = {
+    id: nextId('g', new Set(input.nodes.map((node) => node.id))),
+    accent: kind === 'par' ? '#6b7280' : host.accent,
+    title: input.title,
+    role: kind === 'par' ? 'parallel' : 'flow',
+    hostId: kind === 'par' ? host.id : undefined,
+    grow: kind,
+    conversationId: input.conversationId,
+    turns: [{
+      title: input.title,
+      question: input.quote ? `引用「${input.quote}」 ${input.question}` : input.question,
+      replyKind: 'full',
+      paragraphs: paragraphs.length > 0 ? paragraphs : [input.body.trim()],
+    }],
+  }
+  const edgeId = nextId('eg', new Set(input.edges.map((edge) => edge.id)))
+  let nextEdges = input.edges.slice()
+  if (kind === 'pred') {
+    nextEdges = nextEdges.map((edge) => (
+      edge.kind === 'flow' && edge.to === host.id ? { ...edge, to: created.id } : edge
+    ))
+    nextEdges.push({
+      id: edgeId,
+      from: created.id,
+      to: host.id,
+      kind: 'flow',
+      grow: 'pred',
+      reason: input.edgeExplanation,
+    })
+  } else if (kind === 'succ') {
+    nextEdges.push({
+      id: edgeId,
+      from: host.id,
+      to: created.id,
+      kind: 'flow',
+      grow: 'succ',
+      reason: input.edgeExplanation,
+    })
+  } else {
+    nextEdges.push({
+      id: edgeId,
+      from: host.id,
+      to: created.id,
+      kind: 'parallel',
+      grow: 'par',
+      reason: input.edgeExplanation,
+    })
+  }
+  return { nodes: [...input.nodes, created], edges: nextEdges, created }
+}
+
 /** One host keeps exactly one dashed parallel card; extra pals stack their Q&A into it. */
 export function collapseParallelHosts(
   nodes: readonly CanvasNode[],

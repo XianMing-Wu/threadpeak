@@ -13,7 +13,7 @@ import {
   graphFromLesson,
   routeRecordFromBlueprint,
 } from './catalog'
-import { collapseParallelHosts, conversationHostAfterGrow, findMergeTarget, growGraph, inferGrowKind, mergeConversationBranch, parseGrowCommand, parseQuotedUserTurn, parseTurnHost, plainQuoteText, readGrowCommand, replyCardTitle, resolveQuotedHost } from '../knowledge-canvas/generate'
+import { collapseParallelHosts, conversationHostAfterGrow, findMergeTarget, growFollowUpCard, growGraph, growKindFromRelation, inferGrowKind, mergeConversationBranch, parseGrowCommand, parseQuotedUserTurn, parseTurnHost, plainQuoteText, readGrowCommand, replyCardTitle, resolveQuotedHost } from '../knowledge-canvas/generate'
 import { resolveGraphMutation, resolveKnowledgeMigration } from '../session/resolve-learning-entry'
 import { lessonFromCanonical } from '../session/request-canonical-answer.ts'
 import { projectBootstrappedGraph } from '../knowledge-canvas/project-bootstrapped-graph.ts'
@@ -603,7 +603,9 @@ export function syncConversationGraph(
       const turnIndex = parseTurnHost(user.quoteFromId)
       return turnIndex == null ? undefined : createdAtTurn.get(turnIndex)
     })()
-    const attachId = resolveQuotedHost([...foreignNodes, ...branchNodes], hostId, quote, user.quoteFromId, turnHostId)
+    const attachId = user.growSource === 'model' && user.quoteFromId && [...foreignNodes, ...branchNodes].some((node) => node.id === user.quoteFromId)
+      ? user.quoteFromId
+      : resolveQuotedHost([...foreignNodes, ...branchNodes], hostId, quote, user.quoteFromId, turnHostId)
     const poolNodes = [...foreignNodes.filter((node) => !branchNodes.some((item) => item.id === node.id)), ...branchNodes]
     const poolEdges = [...foreignEdges.filter((edge) => !branchEdges.some((item) => item.id === edge.id)), ...branchEdges]
     const mergeNodeId = user.mergeNodeId ?? findMergeTarget(poolNodes, poolEdges, attachId, kind, asked, quote)?.id
@@ -614,12 +616,25 @@ export function syncConversationGraph(
         branchEdges = [...branchEdges, ...foreignEdges.filter((edge) => edge.from === borrowed.id || edge.to === borrowed.id)]
       }
     }
-    const grown = growGraph(branchNodes, branchEdges, attachId, kind, asked, quote, {
-      title: user.growTitle || replyCardTitle(assistant.text, asked || quote || root.title),
-      question: quote ? `引用「${quote}」${asked ? ` ${asked}` : ''}` : asked,
-      replyKind: 'full',
-      paragraphs: replyParagraphs(assistant.text),
-    }, conversationId, mergeNodeId, user.growReason)
+    const grown = user.growSource === 'model' && user.grow && user.growTitle && user.growReason
+      ? growFollowUpCard({
+        nodes: branchNodes,
+        edges: branchEdges,
+        hostId: attachId,
+        relation: user.grow === 'pred' ? 'predecessor' : user.grow === 'succ' ? 'successor' : 'parallel',
+        title: user.growTitle,
+        body: assistant.text,
+        question: asked,
+        quote,
+        edgeExplanation: user.growReason,
+        conversationId,
+      })
+      : growGraph(branchNodes, branchEdges, attachId, kind, asked, quote, {
+        title: user.growTitle || replyCardTitle(assistant.text, asked || quote || root.title),
+        question: quote ? `引用「${quote}」${asked ? ` ${asked}` : ''}` : asked,
+        replyKind: 'full',
+        paragraphs: replyParagraphs(assistant.text),
+      }, conversationId, mergeNodeId, user.growReason)
     if (!grown) continue
     branchNodes = grown.nodes
     branchEdges = grown.edges
@@ -648,6 +663,50 @@ export function syncConversationGraph(
   })
   if (conversation) recordLearningHistory({ ...conversation, turns: replay })
   return merged.idMap.get(lastCreatedId) || lastCreatedId || undefined
+}
+
+export function appendFollowUpTurn(
+  routeId: string,
+  conceptId: string,
+  conversationId: string,
+  input: {
+    question: string
+    quote?: string
+    quoteFromId?: string
+    reply: string
+    grow?: {
+      relation: 'predecessor' | 'successor' | 'parallel'
+      title: string
+      edgeExplanation: string
+    } | null
+  },
+) {
+  const quote = plainQuoteText(input.quote ?? '')
+  const growKind = input.grow ? growKindFromRelation(input.grow.relation) : undefined
+  const extras: Pick<LearningTurn, 'quote' | 'grow' | 'growSource' | 'quoteFromId' | 'growTitle' | 'growReason'> = {
+    quote,
+    ...(growKind ? { grow: growKind, growSource: 'model' as const } : {}),
+    ...(input.quoteFromId ? { quoteFromId: input.quoteFromId } : {}),
+    ...(input.grow ? { growTitle: input.grow.title, growReason: input.grow.edgeExplanation } : {}),
+  }
+  const conversation = getConversation(conversationId)
+  const userText = quote ? `引用「${quote}」\n${input.question}` : input.question
+  const turns = mergeSuccessfulLearningTurn(conversation?.turns ?? [], { userText, reply: input.reply, extras })
+  if (!input.grow) {
+    saveConversation(conversationId, { turns })
+    if (conversation) recordLearningHistory({ ...conversation, turns })
+    return undefined
+  }
+  return appendLearningTurnToGraph(routeId, conceptId, conversationId, {
+    question: input.question,
+    quote,
+    quoteFromId: input.quoteFromId,
+    reply: input.reply,
+    grow: growKind,
+    growSource: 'model',
+    growTitle: input.grow.title,
+    growReason: input.grow.edgeExplanation,
+  })
 }
 
 export function appendLearningTurnToGraph(

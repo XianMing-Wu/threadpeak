@@ -17,10 +17,8 @@ import {
 } from '../knowledge-canvas/content'
 import { conceptTitle } from '../workspace/catalog'
 import { closeConceptKnowledge, readActiveConversationId, readActiveKnowledgeId, readCanvasReturn, readKnowledgeConceptId } from '../workspace/nav'
-import { appendLearningTurnToGraph, blueprintOf, ensureLearningConversation, getConceptGraph, getConversation, getKnowledge, saveConversationDraft, useWorkspaceTick } from '../workspace/store'
-import { resolveGraphMutation } from '../session/resolve-learning-entry'
-import { conversationGraphView, growGraph, growKindLabel, parseGrowCommand, resolveGrowHost, resolveQuotedHost } from '../knowledge-canvas/generate'
-import { allowedMergeIds, growCandidateList, heuristicGrowDecision, packGraphContext, parseGrowDecision } from '../knowledge-canvas/grow-decision'
+import { appendFollowUpTurn, blueprintOf, ensureLearningConversation, getConceptGraph, getConversation, getKnowledge, getLesson, saveConversationDraft, useWorkspaceTick } from '../workspace/store'
+import { conversationGraphView, growKindLabel } from '../knowledge-canvas/generate'
 import { AgentStatus } from '../components/AgentStatus'
 import {
   CARD_W,
@@ -41,7 +39,10 @@ import {
 } from '../learningSession'
 import { annotationScopeId, readSelectionAnchor, type SelectionAnchor } from '../session/ask-authors'
 import { useAnnotations } from '../session/useAnnotations'
-import { requestOrdinaryAnswerStream, type AnswerStatusStage } from '../chat/request-ordinary-answer'
+import { requestFollowUp } from '../session/request-follow-up'
+import { buildFollowUpMessages, buildFollowUpNeighborhood, followUpQuoteForG2 } from '../session/build-follow-up-context'
+import { readLearningThinking, subscribeLearningThinking, writeLearningThinking } from '../session/learning-thinking'
+import { resolveFollowUpHost } from '../session/resolve-follow-up-host'
 import { MarkdownMath } from '../lib/MarkdownMath'
 
 const NODE_PANEL_W = CARD_W
@@ -78,10 +79,6 @@ type NodeDrag = {
   moved: boolean
 }
 type DragState = PanDrag | NodeDrag | null
-
-function detectMode(text: string): AssistantMode {
-  return /图|可视化|思维导图|时间线/.test(text) ? 'visual' : /博主|作者|谁.*说/.test(text) ? 'authors' : ''
-}
 
 function graphSignature(nodes: readonly CanvasNode[], edges: readonly CanvasEdge[]) {
   return JSON.stringify({
@@ -122,30 +119,14 @@ export function KnowledgeCanvasPage() {
     && activeConversation.conceptId === conceptId
     ? activeConversation.id
     : ''
-  const annotations = useAnnotations(annotationScopeId(knowledge?.routeId || knowledgeId || 'knowledge', conceptId || 'canvas'), (item) => {
-    if (item.status !== 'ready' || !item.reply?.text || !knowledge?.routeId || !conceptId) return
-    const conversationId = sessionConversationId || ensureLearningConversation(knowledge.routeId, conceptId).id
-    appendLearningTurnToGraph(knowledge.routeId, conceptId, conversationId, {
-      question: item.question,
-      quote: item.quote,
-      quoteFromId: item.nodeId,
-      reply: item.reply.text,
-      grow: 'par',
-      growSource: 'heuristic',
-    })
-    const nextGraph = getConceptGraph(knowledge.id, conceptId)
-    if (nextGraph) {
-      setNodes(nextGraph.nodes.slice())
-      setEdges(nextGraph.edges.slice())
-      setPins(new Map())
-    }
-  })
+  const annotations = useAnnotations(annotationScopeId(knowledge?.routeId || knowledgeId || 'knowledge', conceptId || 'canvas'))
   const [mode, setMode] = useState<AssistantMode>(seed.mode)
   const [value, setValue] = useState(seed.value)
   const [turns, setTurns] = useState(seed.turns)
   const [awaiting, setAwaiting] = useState(false)
   const [streamText, setStreamText] = useState('')
-  const [status, setStatus] = useState<AnswerStatusStage>('search')
+  const [thinkingDepth, setThinkingDepth] = useState(readLearningThinking)
+  useEffect(() => subscribeLearningThinking(() => setThinkingDepth(readLearningThinking())), [])
   const dragRef = useRef<DragState>(null)
   const ignoreClickRef = useRef(false)
   const nodeRefs = useRef(new Map<string, HTMLElement>())
@@ -428,7 +409,7 @@ export function KnowledgeCanvasPage() {
     if (authorQuestion) return
     setSelection(readSelectionAnchor(selectRootRef.current, (node) => {
       const el = node instanceof Element ? node : node.parentElement
-      return el?.closest('.thread-node')?.getAttribute('data-id') || selected
+      return el?.closest('.thread-node')?.getAttribute('data-id') || undefined
     }))
   }
   const addToChat = () => {
@@ -456,137 +437,67 @@ export function KnowledgeCanvasPage() {
   }
 
   const send = () => {
-    const command = parseGrowCommand(value)
-    if (command) {
-      if (resolveGraphMutation({
-        routeId: knowledge?.routeId ?? '',
-        owner: knowledge?.owner ?? 'mine',
-        hasRoot: Boolean(nodes.some((node) => node.id === 'root')),
-      }).kind === 'reject') return
-      const hostId = resolveGrowHost(nodes, selected, quote, quoteFromId)
-      const grown = growGraph(nodes, edges, hostId, command.kind, command.question, quote, undefined, sessionConversationId || undefined)
-      if (grown) {
-        setNodes(grown.nodes)
-        setEdges(grown.edges)
-        setSizes((prev) => {
-          const next = new Map(prev)
-          next.set(grown.created.id, { width: CARD_W, height: estimateNodeHeight(grown.created) })
-          return next
-        })
-        setPins(new Map())
-        setSelected(grown.created.id)
-        setReason(null)
-        setValue('')
-        clearQuote()
-        setMode('')
-        return
-      }
-    }
-    const chosen = mode || detectMode(value)
-    if (!value.trim() && !quote) return
+    if (!knowledge?.routeId || !conceptId) return
     const asked = value
-    const cited = quote
+    const lesson = getLesson(knowledge.routeId, conceptId)
+    const lessonText = lesson?.paragraphs.join('\n\n') || nodes.find((node) => node.id === 'root')?.turns.flatMap((turn) => turn.paragraphs).join('\n\n') || ''
+    const resolved = resolveFollowUpHost({
+      question: asked,
+      quote,
+      quoteFromId,
+      turns,
+      root: { nodeId: 'root', content: lessonText },
+    })
+    if (!resolved.ok) return
+    const neighborhood = buildFollowUpNeighborhood({
+      nodes,
+      edges,
+      hostNodeId: resolved.hostNodeId,
+      annotations: annotations.annotations,
+    })
+    if (!neighborhood) return
+    const conversationId = sessionConversationId || ensureLearningConversation(knowledge.routeId, conceptId).id
+    const messages = buildFollowUpMessages({ lessonText, turns, annotations: annotations.annotations })
+    const g2Quote = followUpQuoteForG2(resolved, messages)
+    const cited = resolved.quote.text || ''
     const userText = cited ? `引用「${cited}」\n${asked}` : asked
-    const hostId = resolveQuotedHost(nodes, selected, cited, quoteFromId)
-    const host = nodes.find((node) => node.id === hostId)
-    const candidates = growCandidateList(nodes, edges, hostId)
-    const packed = packGraphContext(nodes, edges, hostId, cited)
-    const explicit = parseGrowCommand(asked)
-    let growDecision = explicit
-      ? { ...heuristicGrowDecision(explicit.question || asked, cited, host?.title ?? title), kind: explicit.kind, source: 'command' as const }
-      : heuristicGrowDecision(asked, cited, host?.title ?? title)
-    setTurns((old) => [...old, {
-      role: 'user',
-      text: userText,
-      mode: chosen,
-    }])
+    setTurns((old) => [...old, { role: 'user', text: userText, quote: cited, quoteFromId: resolved.hostNodeId }])
     setValue('')
     clearQuote()
     setMode('')
-    if (chosen === 'authors' || chosen === 'visual') {
-      setTurns((old) => [...old, {
-        role: 'assistant',
-        text: chosen === 'authors'
-          ? '问博主不能把这次请求写进知识脉络；请用划选问博主查看公开作者。'
-          : '图文模式还没有真实 VisualizationArtifact，不能把这次请求写进知识脉络。',
-        mode: chosen,
-        failed: true,
-      }])
-      return
-    }
     setAwaiting(true)
-    setStatus('search')
     setStreamText('')
-    void requestOrdinaryAnswerStream({
-      question: asked || cited,
-      topic: title,
-      ...(cited ? { quote: cited } : {}),
-      graphContext: packed.text,
-      ...(host?.title ? { hostTitle: host.title } : {}),
-      ...(candidates.length ? { candidates } : {}),
-      onStatus: (stage) => { setAwaiting(true); setStatus(stage) },
-      onGrow: (grow) => {
-        if (explicit) return
-        growDecision = parseGrowDecision(grow, allowedMergeIds(candidates), {
-          question: asked,
-          quote: cited,
-          hostTitle: host?.title ?? title,
-          palId: candidates.find((item) => item.kind === 'par')?.id,
-        })
-      },
-      onDelta: (text) => {
-        setAwaiting(false)
-        setStreamText(text)
-      },
+    void requestFollowUp({
+      routeId: knowledge.routeId,
+      conceptId,
+      conversationId,
+      question: asked,
+      hostNodeId: resolved.hostNodeId,
+      quote: { nodeId: resolved.quote.nodeId, text: resolved.quote.text, messageId: g2Quote.messageId },
+      neighborhood,
+      messages,
+      thinkingDepth,
+      onDelta: (text) => { setAwaiting(false); setStreamText(text) },
     }).then((result) => {
       setAwaiting(false)
       setStreamText('')
       if (result.kind !== 'completed') {
-        setTurns((old) => [...old, {
-          role: 'assistant',
-          text: result.message,
-          mode: chosen,
-          failed: true,
-        }])
+        setTurns((old) => [...old, { role: 'assistant', text: result.message, failed: true }])
         return
       }
-      const decided = explicit ? growDecision : result.grow
-        ? parseGrowDecision(result.grow, allowedMergeIds(candidates), {
-          question: asked,
-          quote: cited,
-          hostTitle: host?.title ?? title,
-          palId: candidates.find((item) => item.kind === 'par')?.id,
-        })
-        : growDecision
-      setTurns((old) => [...old, {
-        role: 'assistant',
-        text: result.text,
-        mode: chosen,
-      }])
-      if (resolveGraphMutation({
-        routeId: knowledge?.routeId ?? '',
-        owner: knowledge?.owner ?? 'mine',
-        hasRoot: Boolean(nodes.some((node) => node.id === 'root')),
-      }).kind === 'reject') return
-      if (!knowledge?.routeId || !conceptId) return
-      const conversationId = sessionConversationId || ensureLearningConversation(knowledge.routeId, conceptId).id
-      const createdId = appendLearningTurnToGraph(knowledge.routeId, conceptId, conversationId, {
+      const createdId = appendFollowUpTurn(knowledge.routeId, conceptId, conversationId, {
         question: asked,
         quote: cited,
-        quoteFromId,
+        quoteFromId: resolved.hostNodeId,
         reply: result.text,
-        grow: decided.kind,
-        growSource: decided.source,
-        growTitle: decided.title,
-        growReason: decided.reason,
-        ...(decided.mergeNodeId ? { mergeNodeId: decided.mergeNodeId } : {}),
+        grow: result.grow,
       })
+      setTurns((old) => [...old, { role: 'assistant', text: result.text, nodeId: createdId }])
       const nextGraph = getConceptGraph(knowledge.id, conceptId)
       if (nextGraph) {
         setNodes(nextGraph.nodes)
         setEdges(nextGraph.edges)
         setPins(new Map())
-        setSelected(createdId || hostId)
       }
     })
   }
@@ -753,7 +664,7 @@ export function KnowledgeCanvasPage() {
       </section>
       <footer className="canvas-composer">
         {(awaiting || streamText) && <div className="canvas-status" role="status" aria-live="polite">
-          {awaiting && !streamText && <AgentStatus items={[{ label: status === 'classify' ? '正在判断这个问题在知识脉络中的位置' : status === 'compose' ? '正在生成回答' : '正在检索公开证据并生成回答', detail: status === 'classify' ? '模型会同时给出前置、后置或并列，以及卡片标题和逻辑说明。' : '先检索知乎公开内容，再由模型写出这次回复。' }]}/>}
+          {awaiting && !streamText && <AgentStatus items={[{ label: '正在回答这次追问', detail: '对话直答和脉络结构同时开始；直答成功后才会展示回复，两路都成功才长出新卡。' }]}/>}
           {streamText && <div className="canvas-stream"><MarkdownMath source={streamText}/></div>}
         </div>}
         <Composer
@@ -769,6 +680,9 @@ export function KnowledgeCanvasPage() {
           showReference={false}
           showAttachment={false}
           placeholder={`围绕“${title}”继续提问，或选择上方模式深入理解…`}
+          requireQuestion
+          thinkingDepth={thinkingDepth}
+          onThinkingDepth={(next) => { writeLearningThinking(next); setThinkingDepth(next) }}
         />
       </footer>
       {selection && !authorQuestion && <SelectionToolbar selection={selection} onAddToChat={addToChat} onAskAuthors={openAskAuthors}/>}
