@@ -1,4 +1,4 @@
-/** prototype: ordinary-answer first lesson. Product first entry is server/first-learning L0a/L0b. */
+/** In-process canonical first-answer store used by first-learning L0a/L0b. */
 import { createHash } from 'node:crypto'
 
 export type CanonicalAnswer = {

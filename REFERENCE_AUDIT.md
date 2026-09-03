@@ -41,7 +41,7 @@
 | `src/pages/Authors.tsx`、`src/session/author-graph-rag.ts`、`resolve-author-search.ts` | 网络投影未接通会整次失败；旧设计是网络有命中就停、零命中才知乎；搜索结果不入网；网络 Tab 只显示失败 | N0 高权→低权；合计不足 3 人才 N1/N-S/N2 补位；候选不足全部返回；知乎新作者低权入网；网络有人列名单、没人显示空态 |
 | `src/pages/Settings.tsx`、`src/resolve-settings-identity.ts` | 身份和资料没有 provider 时明确失败；页面仍有密度、减少动效和默认思考深度 | 保留退出、夜间模式、清空历史、身份、资料；删除密度、减少动效、默认思考深度 |
 | `src/visuals/`、图文分支 | 图文发送只会失败，不产生用户 artifact | 在真实图文编排未裁决前继续明确失败，不得用 fixture 假成功 |
-| `path-lab.html`、`src/path-lab/`、`/api/paths/generate` | 独立实验页和 JSON 接口仍在源码与测试中 | 已确认清理，不进侧栏、不进产品路由、不写“我的路线”、不再扩展 |
+| `path-lab.html`、`src/path-lab/`、`/api/paths/generate` | 已从源码删除 | 产品路线制定只走 Chat `/api/path-runs` |
 | `packages/contracts`、`packages/api-client`、`packages/runtime-store` | 已有部分 Zod、decoder 和 headless store，可用于迁移 | 它们是工程材料，不代表 R1–N2、持久化或恢复已经接通 |
 
 上表的“当前事实”来自当前审查基线，不是允许保留的产品行为。源码更新后应同步本表，不能把历史现状写成永久说明。

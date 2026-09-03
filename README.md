@@ -116,8 +116,8 @@ npm run dev
 
 - Web：`http://127.0.0.1:4301/`
 - 本机服务：`127.0.0.1:4312`
-- 当前服务已有回答、路线、首次回复、知识图、问博主、博主搜索和 OAuth 的部分 endpoint，但它们仍执行旧管线或内存实现，不等于 R1–N2 已接通。
-- `path-lab` 及 `/api/paths/generate` 仍存在于当前源码，只是待删除现场。已确认目标是彻底清理实验页，不进产品路由、不写“我的路线”、不继续扩展。
+- 当前服务的用户请求走 R1–R5、L0a/L0b、G1/G2、A1–A3、N0–N2；存储仍是进程内存，重启即忘。
+- `path-lab` 与 `/api/paths/generate` 已从源码删除。产品路线制定只走 Chat 的 `/api/path-runs`。
 
 当前源码的逐页面控件、实际调用顺序和 29 项重构差距见 [`as-implemented-logic.md`](as-implemented-logic.md)。
 

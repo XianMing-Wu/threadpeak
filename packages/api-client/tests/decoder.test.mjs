@@ -129,13 +129,13 @@ test('public errors reject unknown keys and injected fetch never invents success
 
   const posted = client.createApiClient({
     fetch: async (url, init) => {
-      assert.equal(url, '/api/paths/generate')
+      assert.equal(url, '/api/path-runs')
       assert.equal(init?.method, 'POST')
       return { ok: true, status: 200, text: async () => '{"keep":true}' }
     },
   })
   const json = await posted.requestJson({
-    url: '/api/paths/generate',
+    url: '/api/path-runs',
     method: 'POST',
     body: '{"raw_goal":"x"}',
     traceId: 'trace-2',
@@ -152,7 +152,7 @@ test('public errors reject unknown keys and injected fetch never invents success
   })
   const signal = AbortSignal.abort()
   const cancelled = await aborted.requestJson({
-    url: '/api/paths/generate',
+    url: '/api/path-runs',
     method: 'POST',
     signal,
     traceId: 'trace-3',

@@ -17,7 +17,7 @@ const askAuthors = await readFile(new URL('../src/session/ask-authors.ts', impor
 const annotationPanel = await readFile(new URL('../src/components/AnnotationPanel.tsx', import.meta.url), 'utf8')
 const mineGraph = await readFile(new URL('../src/knowledge-canvas/mine-graph-canvas.tsx', import.meta.url), 'utf8')
 const bootstrapped = await readFile(new URL('../src/knowledge-canvas/project-bootstrapped-graph.ts', import.meta.url), 'utf8')
-const liveService = await readFile(new URL('../server/live-service.ts', import.meta.url), 'utf8')
+const authorsOrchestrator = await readFile(new URL('../server/authors/orchestrator.ts', import.meta.url), 'utf8')
 const canonical = await readFile(new URL('../server/knowledge/canonical-answer.ts', import.meta.url), 'utf8')
 const surgeon = await readFile(new URL('../server/knowledge/graph-surgeon.ts', import.meta.url), 'utf8')
 const http = await readFile(new URL('../server/http.ts', import.meta.url), 'utf8')
@@ -109,7 +109,7 @@ test('mine canvas projects the settled first answer onto the unique GraphSurgeon
 })
 
 test('Liu Kanshan cannot become an author identity and author search fails closed without a network', () => {
-  assert.match(liveService, /isLiuKanshanName/)
+  assert.match(authorsOrchestrator, /isLiuKanshanName/)
   assert.match(authors, /还没有冻结，不能当成产品事实/)
   assert.match(authors, /还没有入网博主/)
   assert.match(authors, /requestAuthorNetwork/)

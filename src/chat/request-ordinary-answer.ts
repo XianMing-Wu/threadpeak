@@ -16,11 +16,13 @@ function bodyOf(input: {
   currentMessage: string
   conversation?: OrdinaryChatContext['conversation']
   attachments?: readonly OrdinaryChatAttachmentInput[]
+  thinkingDepth?: 'fast' | 'deep'
 }) {
   return JSON.stringify({
     currentMessage: input.currentMessage,
     conversation: input.conversation ?? [],
     attachments: input.attachments ?? [],
+    thinkingDepth: input.thinkingDepth === 'deep' ? 'deep' : 'fast',
   })
 }
 
@@ -28,6 +30,7 @@ export async function requestOrdinaryAnswer(input: {
   currentMessage: string
   conversation?: OrdinaryChatContext['conversation']
   attachments?: readonly OrdinaryChatAttachmentInput[]
+  thinkingDepth?: 'fast' | 'deep'
   fetch?: FetchPort
 }): Promise<OrdinaryAnswerResult> {
   const fallback = resolveOrdinaryAnswer()
@@ -108,6 +111,7 @@ export async function requestOrdinaryAnswerStream(input: {
   currentMessage: string
   conversation?: OrdinaryChatContext['conversation']
   attachments?: readonly OrdinaryChatAttachmentInput[]
+  thinkingDepth?: 'fast' | 'deep'
   fetch?: FetchPort
   onDelta?: (text: string) => void
 }): Promise<OrdinaryAnswerResult> {

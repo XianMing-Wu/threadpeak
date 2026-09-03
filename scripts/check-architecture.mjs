@@ -151,7 +151,6 @@ export async function checkArchitecture() {
     'vite.config.ts',
     'tsconfig.json',
     'index.html',
-    'path-lab.html',
   ].map((relative) => path.join(repoRoot, relative))
 
   const sourceRoots = ['src', 'tests', 'scripts', 'packages', 'server'].map((relative) => path.join(repoRoot, relative))

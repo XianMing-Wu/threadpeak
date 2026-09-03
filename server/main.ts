@@ -1,11 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { resolveProviderConfig } from './config.ts'
-import { createDeepSeekAnswerAdapter, createDeepSeekReviewAdapter } from './deepseek.adapter.ts'
 import { createCompositionApp, listenLiveServer } from './http.ts'
-import { createLiveService } from './live-service.ts'
-import { createUnavailableAuthorNetwork, type HttpPort } from './ports.ts'
-import { createZhihuDirectAdapter, createZhihuSearchAdapter } from './zhihu.adapter.ts'
+import { type HttpPort } from './ports.ts'
 import { resolveOauthConfig } from './identity/oauth-config.ts'
 import { createOauthService } from './identity/oauth.ts'
 import { createCanonicalAnswerStore } from './knowledge/canonical-answer.ts'
@@ -64,15 +61,6 @@ const clock = {
 
 const env = loadDotEnv(resolve(process.cwd(), '.env'))
 const config = resolveProviderConfig(env)
-const service = config.ok
-  ? createLiveService({
-    search: createZhihuSearchAdapter({ config: config.config, http, clock }),
-    answer: createDeepSeekAnswerAdapter({ config: config.config, http }),
-    review: createDeepSeekReviewAdapter({ config: config.config, http }),
-    direct: createZhihuDirectAdapter({ config: config.config, http, clock }),
-    network: createUnavailableAuthorNetwork(),
-  })
-  : undefined
 
 const oauth = createOauthService({
   oauth: resolveOauthConfig(env),
@@ -131,15 +119,11 @@ const server = await createCompositionApp({
   oauth,
   canonical,
   graph,
-  ...(service ? { service } : {}),
   ...(pathOrchestrator ? { pathOrchestrator } : {}),
   ...(firstLearning ? { firstLearning } : {}),
   ...(followUp ? { followUp } : {}),
   ...(authors ? { authors } : {}),
   ...(ordinaryChat ? { ordinaryChat } : {}),
-  ...(config.ok && config.config.pathGenerateUpstream
-    ? { pathGenerateUpstream: config.config.pathGenerateUpstream }
-    : {}),
 })
 
 const bound = await listenLiveServer(server)

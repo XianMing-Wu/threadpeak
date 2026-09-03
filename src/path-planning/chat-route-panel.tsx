@@ -43,6 +43,7 @@ export function ChatRoutePanel(props: {
   conversationId: string
   query: string
   existingRouteId?: string
+  thinkingDepth?: 'fast' | 'deep'
   onRouteReady: (routeId: string) => void
   onSender?: (handler: (text: string, mode: AssistantMode) => void) => void
 }) {
@@ -106,7 +107,7 @@ export function ChatRoutePanel(props: {
     if (launched.current === key) return
     launched.current = key
     const attachments = pathLaunchAttachments.get(props.conversationId)
-    void run(() => startPathRun({ goal: props.query, ...(attachments ? { attachments } : {}) }))
+    void run(() => startPathRun({ goal: props.query, thinkingDepth: props.thinkingDepth, ...(attachments ? { attachments } : {}) }))
   }, [existing, props.conversationId, props.query])
 
   useEffect(() => {
@@ -114,7 +115,7 @@ export function ChatRoutePanel(props: {
       if (!view) return
       if (mode === 'route' && view.status === 'published') {
         setReplies([])
-        void run(() => startPathRun({ goal: text }))
+        void run(() => startPathRun({ goal: text, thinkingDepth: props.thinkingDepth }))
         return
       }
       if (view.status === 'awaiting_answers') {

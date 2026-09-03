@@ -14,7 +14,6 @@ export type ProviderConfig = {
   deepseekApiKey: string
   deepseekBaseUrl: string
   deepseekModelName: string
-  pathGenerateUpstream?: string
 }
 
 export type ConfigResolution =
@@ -57,7 +56,6 @@ export function resolveProviderConfig(env: Record<string, string | undefined>): 
     return { ok: false, code: 'CONFIG_INVALID', missing: ['DEEPSEEK_MODEL_NAME'] }
   }
 
-  const pathGenerateUpstream = env.PATH_GENERATE_UPSTREAM?.trim().replace(/\/+$/, '')
   return {
     ok: true,
     config: {
@@ -66,7 +64,6 @@ export function resolveProviderConfig(env: Record<string, string | undefined>): 
       deepseekApiKey,
       deepseekModelName,
       deepseekBaseUrl,
-      ...(pathGenerateUpstream && isHttpUrl(pathGenerateUpstream) ? { pathGenerateUpstream } : {}),
     },
   }
 }

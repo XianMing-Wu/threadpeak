@@ -58,11 +58,13 @@ function OrdinaryAnswerLive({
   query,
   turns,
   attachments,
+  thinkingDepth,
   onSettled,
 }: {
   query: string
   turns: LearningTurn[]
   attachments: PathAttachment[]
+  thinkingDepth: 'fast' | 'deep'
   onSettled?: (text: string) => void
 }) {
   const [text, setText] = useState<string | null>(null)
@@ -82,6 +84,7 @@ function OrdinaryAnswerLive({
       currentMessage: context.currentMessage,
       conversation: context.conversation,
       attachments: context.attachments,
+      thinkingDepth,
       onDelta: (next) => {
         if (cancelled) return
         setText(next)
@@ -137,6 +140,7 @@ export function ChatPage() {
   const [routeId,setRouteId]=useState(initial?.routeId??'')
   const [value,setValue]=useState('')
   const [composerMode,setComposerMode]=useState<AssistantMode>('')
+  const [thinkingDepth,setThinkingDepth]=useState<'fast' | 'deep'>('fast')
   const [turns,setTurns]=useState<LearningTurn[]>(initial?.turns ?? [])
   const [pendingQuestion,setPendingQuestion]=useState(initial?.generate && initial.experience === 'answer' && !(initial.turns.length) ? initial.query : '')
   const routeSender=useRef<(text:string,mode:AssistantMode)=>void>(()=>undefined)
@@ -224,19 +228,19 @@ export function ChatPage() {
       <section className="query-chat-body"><div className="query-chat-flow">
         {experience==='visual'?<><div className="query-user-bubble">{query}</div><VisualAnswerUnavailable/></>:experience==='route'?<>
           {conversation?.kind==='route-followup'&&<article className="chat-answer"><h2>继续同一条路线</h2><p>{linkedRouteIntro(getRoute(routeId)?.title??query,followupOrdinal)}</p></article>}
-          {conversation?.kind!=='route-followup'&&<ChatRoutePanel conversationId={conversationId} query={query} existingRouteId={routeId||undefined} onRouteReady={setRouteId} onSender={(handler)=>{routeSender.current=handler}}/>}
+          {conversation?.kind!=='route-followup'&&<ChatRoutePanel conversationId={conversationId} query={query} existingRouteId={routeId||undefined} thinkingDepth={thinkingDepth} onRouteReady={setRouteId} onSender={(handler)=>{routeSender.current=handler}}/>}
         </>:<>
           {(turns.length ? turns : pendingQuestion ? [{ role: 'user' as const, text: pendingQuestion }] : [{ role: 'user' as const, text: query }]).map((turn, index) => (
             turn.role === 'user'
               ? <div className="query-user-bubble" key={`u-${index}`}>{turn.text}</div>
               : <article className="chat-answer" key={`a-${index}`}><MarkdownMath source={turn.text}/></article>
           ))}
-          {pendingQuestion ? <OrdinaryAnswerLive query={pendingQuestion} turns={turns} attachments={pathLaunchAttachments.get(conversationId) ?? []} onSettled={settleAnswer}/> : null}
+          {pendingQuestion ? <OrdinaryAnswerLive query={pendingQuestion} turns={turns} attachments={pathLaunchAttachments.get(conversationId) ?? []} thinkingDepth={thinkingDepth} onSettled={settleAnswer}/> : null}
         </>}
       </div></section>
       <div className="query-chat-composer">
         {experience==='route'&&<QuickModes selected={composerMode} onSelect={setComposerMode}/>}
-        <Composer compact value={value} onChange={setValue} mode={experience==='route'?composerMode:''} onMode={setComposerMode} onSend={followUp} showScope={false} showReference={false} showAttachment={false}/>
+        <Composer compact value={value} onChange={setValue} mode={experience==='route'?composerMode:''} onMode={setComposerMode} onSend={followUp} showScope={false} showReference={false} showAttachment={false} thinkingDepth={thinkingDepth} onThinkingDepth={setThinkingDepth}/>
       </div>
     </main>
   </ProductWorkspace>

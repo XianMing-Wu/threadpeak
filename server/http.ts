@@ -1,11 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import Fastify, { type FastifyInstance, type FastifyRequest, type FastifyReply } from 'fastify'
-import type { ConfigResolution, ProviderConfig } from './config.ts'
-import type { LiveService } from './live-service.ts'
+import type { ConfigResolution } from './config.ts'
 import type { HttpPort } from './ports.ts'
-import { loadPathRuntimeConfig } from './path/config.ts'
-import { buildPathApp } from './path/http.ts'
-import { InMemoryPathSessionStore } from './path/service.ts'
 import { registerPathRunRoutes } from './path-generation/http.ts'
 import type { PathOrchestrator } from './path-generation/orchestrator.ts'
 import { registerFirstLearningRoutes } from './first-learning/http.ts'
@@ -28,8 +24,6 @@ type Json = Record<string, unknown>
 
 export type LiveHttpPorts = {
   config: ConfigResolution
-  service?: LiveService
-  pathGenerateUpstream?: string
   http: HttpPort
   oauth?: OauthService
   canonical?: CanonicalAnswerStore
@@ -56,17 +50,6 @@ function sendJson(reply: FastifyReply, status: number, body: Json) {
   return reply.code(status).type('application/json; charset=utf-8').send(body)
 }
 
-function pathConfigFrom(config: ProviderConfig) {
-  return loadPathRuntimeConfig({
-    DEEPSEEK_BASE_URL: config.deepseekBaseUrl,
-    DEEPSEEK_API_KEY: config.deepseekApiKey,
-    DEEPSEEK_MODEL_NAME: config.deepseekModelName,
-    ZHIHU_API_BASE_URL: config.zhihuApiBaseUrl,
-    ZHIHU_ACCESS_SECRET: config.zhihuAccessSecret,
-    THREADPEAK_ALLOW_LIVE_CALLS: '1',
-  })
-}
-
 export function registerLiveRoutes(app: FastifyInstance, ports: LiveHttpPorts) {
   app.get('/health', async () => ({ ok: true }))
 
@@ -84,34 +67,6 @@ export function registerLiveRoutes(app: FastifyInstance, ports: LiveHttpPorts) {
   }
   app.get('/ready', ready)
   app.get('/api/ready', ready)
-
-  app.post('/api/paths/generate', async (request, reply) => {
-    const traceId = traceIdOf(request)
-    if (!ports.config.ok || !ports.service) {
-      return sendJson(reply, 503, {
-        kind: 'failed',
-        code: 'CONFIG_INVALID',
-        message: 'Required Zhihu or DeepSeek configuration is missing.',
-        traceId,
-      })
-    }
-    if (!ports.pathGenerateUpstream) {
-      return sendJson(reply, 503, {
-        code: 'providers_unavailable',
-        message: 'JSON 路径实验接口未启用。产品路线制定请使用 /api/paths/generate/stream。',
-        traceId,
-      })
-    }
-    const forwarded = await ports.http(new URL('/api/paths/generate', `${ports.pathGenerateUpstream}/`).toString(), {
-      method: 'POST',
-      headers: { 'content-type': request.headers['content-type'] || 'application/json' },
-      body: JSON.stringify(request.body ?? {}),
-    })
-    const text = await forwarded.text()
-    reply.code(forwarded.status).type('application/json; charset=utf-8')
-    return reply.send(text)
-  })
-
 
   app.get('/api/learning/canonical-answer', async (request, reply) => {
     const traceId = traceIdOf(request)
@@ -219,21 +174,11 @@ export function registerLiveRoutes(app: FastifyInstance, ports: LiveHttpPorts) {
 }
 
 export async function createCompositionApp(ports: LiveHttpPorts): Promise<FastifyInstance> {
-  const app = ports.config.ok
-    ? await buildPathApp({
-      config: pathConfigFrom(ports.config.config),
-      store: new InMemoryPathSessionStore(),
-    })
-    : Fastify({ logger: false })
-  if (!ports.config.ok) {
-    app.post('/api/paths/generate/stream', async (request, reply) => {
-      return sendJson(reply, 503, {
-        code: 'CONFIG_INVALID',
-        message: 'Required Zhihu or DeepSeek configuration is missing.',
-        traceId: traceIdOf(request),
-      })
-    })
-  }
+  const app = Fastify({
+    logger: false,
+    requestTimeout: 180_000,
+    connectionTimeout: 180_000,
+  })
   registerLiveRoutes(app, ports)
   registerPathRunRoutes(app, {
     ready: ports.config.ok,
