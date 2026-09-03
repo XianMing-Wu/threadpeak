@@ -1,7 +1,7 @@
 import type { FetchPort } from '@threadpeak/api-client'
 import { createLiveApiClient, liveMessageOf, LIVE_ASK_AUTHOR_URL, LIVE_READY_URL } from '../runtime/live-client.ts'
 import { resolveAskAuthor, type AskAuthorResolution } from './resolve-ask-author.ts'
-import { formatAuthorAnnotation } from './ask-authors.ts'
+import { stripAuthorArticleLink } from './ask-authors.ts'
 
 export type LiveAuthorCard = {
   name: string
@@ -48,9 +48,7 @@ function asAuthor(value: unknown): LiveAuthorCard | undefined {
   const displayText = (typeof item.displayText === 'string' ? item.displayText : typeof item.reason === 'string' ? item.reason : '').trim()
   if (!name || name === '刘看山' || name === '马同学' || name === '李永乐老师') return undefined
   if (!isZhihuUrl(url)) return undefined
-  const text = displayText.includes('详细内容可以阅读我的文章')
-    ? displayText
-    : formatAuthorAnnotation(summary || displayText, url)
+  const text = stripAuthorArticleLink(summary || displayText, url)
   return {
     name,
     bio: '知乎作者',

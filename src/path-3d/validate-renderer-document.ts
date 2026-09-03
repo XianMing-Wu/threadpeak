@@ -1,4 +1,5 @@
 import type { LearningPathDocument } from 'liu-kanshan-learning-path-3d'
+import { hasSplitSiblingEdge, hasUnbalancedSplitJoin } from './host-subject-flow.ts'
 
 type JsonRecord = Record<string, unknown>
 
@@ -105,6 +106,7 @@ export function validateRendererDocument(value: unknown): RendererValidation {
     && isIdentifier(card.id)
     && isBoundedText(card.title, 1, 160)
     && isBoundedText(card.summary, 1, 500)
+    && (card.body === undefined || isBoundedText(card.body, 1, 4000))
     && (card.tags === undefined || (Array.isArray(card.tags) && card.tags.length <= 12 && card.tags.every((tag) => isBoundedText(tag, 1, 40)))))) {
     issues.push('data.cards.fields')
   }
@@ -142,7 +144,120 @@ export function validateRendererDocument(value: unknown): RendererValidation {
   if (!isRecord(value.presentation.layout) || value.presentation.layout.direction !== 'top-to-bottom') {
     issues.push('presentation.layout')
   }
+  if (issues.length === 0) issues.push(...hostRuntimeGraphIssues(value))
   return issues.length > 0 ? { ok: false, issues } : { ok: true, document: raw as LearningPathDocument }
+}
+
+function hostRuntimeGraphIssues(value: JsonRecord): string[] {
+  const structure = value.structure as JsonRecord
+  const subjects = structure.subjects as readonly JsonRecord[]
+  const concepts = structure.concepts as readonly JsonRecord[]
+  const flow = (Array.isArray(structure.flow) ? structure.flow : []) as readonly JsonRecord[]
+  const flowGroups = (Array.isArray(structure.flowGroups) ? structure.flowGroups : []) as readonly JsonRecord[]
+  const entryId = String(structure.entrySubjectId ?? '')
+  const goalIds = new Set((structure.goalSubjectIds as readonly string[]) ?? [])
+  const subjectIds = new Set(subjects.map((item) => String(item.id)))
+  const outgoing = new Map<string, JsonRecord[]>()
+  const incoming = new Map<string, JsonRecord[]>()
+  const directed = new Set<string>()
+  const issues: string[] = []
+
+  for (const id of subjectIds) {
+    outgoing.set(id, [])
+    incoming.set(id, [])
+  }
+  for (const edge of flow) {
+    const from = String(edge.fromSubjectId)
+    const to = String(edge.toSubjectId)
+    const key = `${from}\0${to}`
+    if (directed.has(key)) issues.push('structure.flow.duplicate')
+    directed.add(key)
+    outgoing.get(from)?.push(edge)
+    incoming.get(to)?.push(edge)
+  }
+
+  for (const concept of concepts) {
+    const owner = String(concept.subjectId)
+    if (goalIds.has(owner)) issues.push('structure.goals.own-concepts')
+  }
+
+  if ((incoming.get(entryId)?.length ?? 0) > 0) issues.push('structure.entry.has-prerequisites')
+
+  const groups = new Map(flowGroups.map((group) => [String(group.id), group]))
+  for (const [id, edges] of outgoing) {
+    if (edges.length > 1) {
+      const groupId = edges.map((edge) => isRecord(edge.semantics) ? edge.semantics.splitGroupId : undefined)
+      if (!groupId[0] || groupId.some((item) => item !== groupId[0])) issues.push('structure.flow.split-group')
+      else {
+        const group = groups.get(String(groupId[0]))
+        if (!group || group.type !== 'split' || group.anchorSubjectId !== id) issues.push('structure.flow.split-group')
+      }
+    } else if (edges.length === 1 && isRecord(edges[0]?.semantics) && edges[0].semantics.splitGroupId) {
+      issues.push('structure.flow.split-group')
+    }
+  }
+  for (const [id, edges] of incoming) {
+    if (edges.length > 1) {
+      const groupId = edges.map((edge) => isRecord(edge.semantics) ? edge.semantics.joinGroupId : undefined)
+      if (!groupId[0] || groupId.some((item) => item !== groupId[0])) issues.push('structure.flow.join-group')
+      else {
+        const group = groups.get(String(groupId[0]))
+        if (!group || group.type !== 'join' || group.anchorSubjectId !== id) issues.push('structure.flow.join-group')
+      }
+    } else if (edges.length === 1 && isRecord(edges[0]?.semantics) && edges[0].semantics.joinGroupId) {
+      issues.push('structure.flow.join-group')
+    }
+  }
+
+  const seen = walk(entryId, outgoing, (edge) => String(edge.toSubjectId))
+  for (const id of subjectIds) {
+    if (!seen.has(id)) issues.push('structure.flow.unreachable')
+  }
+  for (const id of goalIds) {
+    if ((outgoing.get(id)?.length ?? 0) > 0) issues.push('structure.goals.not-terminal')
+  }
+  for (const id of subjectIds) {
+    if ((outgoing.get(id)?.length ?? 0) === 0 && !goalIds.has(id)) issues.push('structure.goals.missing-terminal')
+  }
+  const reverse = walkGoals(goalIds, incoming)
+  for (const id of subjectIds) {
+    if (!reverse.has(id)) issues.push('structure.flow.no-goal-path')
+  }
+  const drafts = flow.map((edge) => ({
+    from: String(edge.fromSubjectId),
+    to: String(edge.toSubjectId),
+  }))
+  if (hasSplitSiblingEdge(drafts)) issues.push('structure.flow.split-sibling-edge')
+  if (hasUnbalancedSplitJoin(drafts, [...goalIds])) issues.push('structure.flow.split-unbalanced-join')
+  return [...new Set(issues)]
+}
+
+function walk(
+  start: string,
+  edges: Map<string, readonly JsonRecord[]>,
+  next: (edge: JsonRecord) => string,
+): Set<string> {
+  const seen = new Set<string>()
+  const queue = [start]
+  while (queue.length > 0) {
+    const current = queue.pop()
+    if (!current || seen.has(current)) continue
+    seen.add(current)
+    for (const edge of edges.get(current) ?? []) queue.push(next(edge))
+  }
+  return seen
+}
+
+function walkGoals(goalIds: Set<string>, incoming: Map<string, readonly JsonRecord[]>): Set<string> {
+  const seen = new Set<string>()
+  const queue = [...goalIds]
+  while (queue.length > 0) {
+    const current = queue.pop()
+    if (!current || seen.has(current)) continue
+    seen.add(current)
+    for (const edge of incoming.get(current) ?? []) queue.push(String(edge.fromSubjectId))
+  }
+  return seen
 }
 
 export function isLearningPathRendererDocument(value: unknown): value is LearningPathDocument {

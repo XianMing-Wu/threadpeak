@@ -70,8 +70,7 @@ export function zhihuDirectUrl(baseUrl: string): string {
 
 function authorKeyOf(name: string, profileUrl: string): string | null {
   if (isLiuKanshanName(name)) return null
-  if (profileUrl) return profileUrl
-  return null
+  return profileUrl || null
 }
 
 export function parseZhihuSearchPayload(payload: unknown): ZhihuSearchResult {

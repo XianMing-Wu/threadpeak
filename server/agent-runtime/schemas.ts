@@ -26,12 +26,11 @@ export const R1OutputSchema = z
             text: NonEmptyText,
             angle: QueryAngleSchema,
           })
-          .strict(),
+,
       )
       .min(4)
       .max(5),
   })
-  .strict()
   .superRefine((value, ctx) => {
     const ids = value.queries.map((item) => item.id)
     const texts = value.queries.map((item) => item.text)
@@ -56,7 +55,7 @@ const ROUTE_SHAPE_KEYS = new Set([
 ])
 
 export const R2OutputSchema = z
-  .record(z.string().trim().min(1), z.record(z.string().trim().min(1), z.object({ 争议: z.boolean() }).strict()))
+  .record(z.string().trim().min(1), z.record(z.string().trim().min(1), z.object({ 争议: z.boolean() })))
   .superRefine((value, ctx) => {
     const carriers = Object.keys(value)
     if (carriers.length === 0) {
@@ -87,11 +86,11 @@ const QuestionArraySchema = z
                 label: NonEmptyText,
                 routeEffect: NonEmptyText,
               })
-              .strict(),
+,
           )
           .min(2),
       })
-      .strict(),
+,
   )
   .min(1)
   .max(3)
@@ -113,7 +112,6 @@ export const R3OutputSchema = z
     status: z.literal('active'),
     questions: QuestionArraySchema,
   })
-  .strict()
   .superRefine((value, ctx) => refineQuestionIds(value.questions, ctx, 'R3'))
 
 export const R3bContinueSchema = z
@@ -122,7 +120,6 @@ export const R3bContinueSchema = z
     message: NonEmptyText,
     activeRound: z.number().int().min(1).max(3),
   })
-  .strict()
 
 export const R3bReplaceSchema = z
   .object({
@@ -132,7 +129,6 @@ export const R3bReplaceSchema = z
     status: z.literal('active'),
     questions: QuestionArraySchema,
   })
-  .strict()
 
 export const R3bOutputSchema = z
   .discriminatedUnion('kind', [R3bContinueSchema, R3bReplaceSchema])
@@ -146,7 +142,6 @@ const CarrierSchema = z
     title: NonEmptyText,
     description: NonEmptyText,
   })
-  .strict()
 
 const ConceptSchema = z
   .object({
@@ -157,7 +152,6 @@ const ConceptSchema = z
     detailedDescription: NonEmptyText,
     attachmentSourceIds: z.array(IdSchema),
   })
-  .strict()
 
 const CarrierEdgeSchema = z
   .object({
@@ -166,7 +160,6 @@ const CarrierEdgeSchema = z
     toCarrierId: IdSchema,
     reason: NonEmptyText,
   })
-  .strict()
 
 const ConceptEdgeSchema = z
   .object({
@@ -175,7 +168,6 @@ const ConceptEdgeSchema = z
     toConceptId: IdSchema,
     reason: NonEmptyText,
   })
-  .strict()
 
 export const R4OutputSchema = z
   .object({
@@ -189,26 +181,22 @@ export const R4OutputSchema = z
     entryConceptIds: z.array(IdSchema).min(1),
     terminalConceptIds: z.array(IdSchema).min(1),
   })
-  .strict()
 
-export const L0bOutputSchema = z.object({ content: NonEmptyText }).strict()
-
+export const L0bOutputSchema = z.object({ content: NonEmptyText })
 export const G1OutputSchema = z
   .object({
     relation: z.enum(['predecessor', 'successor', 'parallel']),
     title: NonEmptyText,
     edgeExplanation: NonEmptyText,
   })
-  .strict()
 
 const SimpleQueryArray = z
-  .array(z.object({ id: IdSchema, text: NonEmptyText }).strict())
+  .array(z.object({ id: IdSchema, text: NonEmptyText }))
   .min(2)
   .max(3)
 
 export const A1OutputSchema = z
   .object({ queries: SimpleQueryArray })
-  .strict()
   .superRefine((value, ctx) => {
     if (!unique(value.queries.map((item) => item.id))) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'A1 query ids must be unique' })
@@ -220,7 +208,6 @@ export const A1OutputSchema = z
 
 export const N1OutputSchema = z
   .object({ queries: SimpleQueryArray })
-  .strict()
   .superRefine((value, ctx) => {
     if (!unique(value.queries.map((item) => item.id))) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'N1 query ids must be unique' })
@@ -238,7 +225,6 @@ const A2SelectionSchema = z
     evidenceSummary: NonEmptyText,
     evidenceUrl: NonEmptyText,
   })
-  .strict()
 
 export const A2OutputSchema = z
   .object({
@@ -246,7 +232,6 @@ export const A2OutputSchema = z
     normalizedQuestion: NonEmptyText,
     selections: z.array(A2SelectionSchema),
   })
-  .strict()
   .superRefine((value, ctx) => {
     if (value.status === 'no_suitable_author') {
       if (value.selections.length !== 0) {
@@ -271,10 +256,9 @@ export const N2OutputSchema = z
           authorName: NonEmptyText,
           evidenceId: IdSchema,
         })
-        .strict(),
+,
     ),
   })
-  .strict()
   .superRefine((value, ctx) => {
     if (!unique(value.selections.map((item) => item.authorId))) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'N2 authorId values must be unique' })
@@ -309,19 +293,87 @@ function fail(message: string): ParseAgentOutputResult {
   return { ok: false, message }
 }
 
-function parseJsonObject(text: string): ParseAgentOutputResult {
+function normalizeJsonSyntax(text: string): string {
+  return text
+    .replace(/^\uFEFF/, '')
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/,\s*([}\]])/g, '$1')
+}
+
+function jsonCandidates(text: string): string[] {
   const trimmed = text.trim()
-  const candidates = [trimmed]
-  const fence = trimmed.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/)
-  if (fence?.[1]) candidates.push(fence[1].trim())
-  for (const candidate of candidates) {
+  const found: string[] = []
+  const add = (value: string | undefined) => {
+    const next = value?.trim()
+    if (next && !found.includes(next)) found.push(next)
+  }
+  add(trimmed)
+  add(normalizeJsonSyntax(trimmed))
+  for (const match of trimmed.matchAll(/```(?:json)?\s*([\s\S]*?)```/gi)) {
+    add(match[1])
+    add(normalizeJsonSyntax(match[1] ?? ''))
+  }
+  const start = trimmed.indexOf('{')
+  const end = trimmed.lastIndexOf('}')
+  if (start >= 0 && end > start) {
+    add(trimmed.slice(start, end + 1))
+    add(normalizeJsonSyntax(trimmed.slice(start, end + 1)))
+  }
+  return found
+}
+
+function parseJsonObject(text: string): ParseAgentOutputResult {
+  for (const candidate of jsonCandidates(text)) {
     try {
       return { ok: true, value: JSON.parse(candidate) as unknown }
     } catch {
-      // try next
+      // try next extract
     }
   }
   return fail('模型没有返回可解析的 JSON 对象。')
+}
+
+function asBooleanFlag(value: unknown): boolean | undefined {
+  if (typeof value === 'boolean') return value
+  if (value === 'true' || value === 'false') return value === 'true'
+  return undefined
+}
+
+function normalizeR4Route(raw: unknown): unknown {
+  const root = asRecord(raw)
+  if (!root) return raw
+  const next: Record<string, unknown> = { ...root }
+  if (next.version === 1 || next.version === '1') next.version = '1.0'
+  if (Array.isArray(next.concepts)) {
+    next.concepts = next.concepts.map((item) => {
+      const record = asRecord(item)
+      if (!record) return item
+      const flag = asBooleanFlag(record.hasDispute ?? record['争议'])
+      return flag === undefined ? item : { ...record, hasDispute: flag }
+    })
+  }
+  return next
+}
+
+function normalizeR2Exploration(raw: unknown): unknown {
+  const root = asRecord(raw)
+  if (!root) return raw
+  const next: Record<string, unknown> = {}
+  for (const [carrier, concepts] of Object.entries(root)) {
+    const conceptRoot = asRecord(concepts)
+    if (!conceptRoot) return raw
+    const mapped: Record<string, unknown> = {}
+    for (const [concept, body] of Object.entries(conceptRoot)) {
+      const record = asRecord(body)
+      if (!record) return raw
+      const flag = asBooleanFlag(record['争议'] ?? record['是否争议'] ?? record.hasDispute)
+      if (flag === undefined) return raw
+      mapped[concept] = { 争议: flag }
+    }
+    next[carrier] = mapped
+  }
+  return next
 }
 
 function hasCycle(nodes: readonly string[], edges: readonly { from: string; to: string }[]): boolean {
@@ -496,9 +548,18 @@ export function parseAgentOutput(
     N1: N1OutputSchema,
     N2: N2OutputSchema,
   }
-  const parsed = schemaByAgent[agentId].safeParse(raw)
+  const value = agentId === 'R2'
+    ? normalizeR2Exploration(raw)
+    : agentId === 'R4'
+      ? normalizeR4Route(raw)
+      : raw
+  const parsed = schemaByAgent[agentId].safeParse(value)
   if (!parsed.success) {
-    return fail('模型输出不符合该 Agent 的指定结构。')
+    const detail = parsed.error.issues
+      .slice(0, 6)
+      .map((issue) => `${issue.path.join('.') || 'root'}: ${issue.message}`)
+      .join('; ')
+    return fail(detail ? `模型输出不符合该 Agent 的指定结构。${detail}` : '模型输出不符合该 Agent 的指定结构。')
   }
   if (agentId === 'R3b') {
     const value = parsed.data as R3bOutput

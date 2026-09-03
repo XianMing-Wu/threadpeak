@@ -4,6 +4,7 @@ import { createLiveApiClient, liveMessageOf, LIVE_CANONICAL_ANSWER_URL, LIVE_REA
 
 export type CanonicalAnswerResult =
   | { kind: 'completed'; text: string; contentHash: string; evidenceCount: number; reused: boolean }
+  | { kind: 'missing' }
   | { kind: 'unavailable'; title: string; message: string }
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
@@ -98,6 +99,9 @@ export async function requestCanonicalSnapshot(input: {
       evidenceCount: typeof body.evidenceCount === 'number' ? body.evidenceCount : 0,
       reused: true,
     }
+  }
+  if (!got.ok && (got.status === 404 || body?.kind === 'missing')) {
+    return { kind: 'missing' }
   }
   return {
     ...missing,

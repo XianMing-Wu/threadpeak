@@ -30,7 +30,7 @@ export type PathRunView = {
   knowledgeCreated: false
 }
 
-const TIMEOUT_MS = 180_000
+const TIMEOUT_MS = 360_000
 
 async function post(url: string, body: unknown): Promise<PathRunView> {
   const response = await fetch(url, {

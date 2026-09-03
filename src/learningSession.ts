@@ -1,6 +1,6 @@
 import type { AssistantMode } from './assistant-mode'
 import type { RouteName } from './components/Shell'
-import { getConversation, latestLearningConversation, replayConceptGraph, saveConversationDraft, startLearningConversation } from './workspace/store'
+import { getConversation, getRoute, hasSettledMineConcept, latestLearningConversation, replayConceptGraph, saveConversationDraft, startLearningConversation } from './workspace/store'
 import {
   openKnowledge,
   openKnowledgeFromSession,
@@ -43,6 +43,7 @@ export function openKnowledgeCanvas(returnTo: RouteName = 'knowledge') {
   if (returnTo === 'session-learning') {
     const conversation = getConversation(readActiveConversationId())
     if (conversation?.routeId && conversation.conceptId) {
+      if (getRoute(conversation.routeId)?.owner === 'mine' && !hasSettledMineConcept(conversation.routeId, conversation.conceptId)) return
       replayConceptGraph(conversation.routeId, conversation.conceptId)
     }
     openKnowledgeFromSession()

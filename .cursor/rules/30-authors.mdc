@@ -17,7 +17,7 @@ alwaysApply: false
 ~~~text
 用户问题 + 划选原文 + 宿主卡正文
   → A1 拆成 2–3 个等价问法
-  → A-S 按全部问法并联搜索知乎
+  → A-S 最多 2 路并发搜索知乎（多问法空格拼串）
   → 按 authorId 分组，每条文章保留 evidenceId、API 总结和真实链接
   → A2 判断哪些证据能回答，选择 1–2 位不同真实作者
       ├ selected：按 ID 回查并展示作者批注，写入高权网络
@@ -27,14 +27,14 @@ alwaysApply: false
 ### A1
 
 - 只读取用户问题、划选原文/锚点和宿主卡正文，不读取附件或整张图。
-- 输出 2–3 条语义等价、可并联搜索的 query；不回答问题、不扩大意图、不凭空加人名。
+- 输出 2–3 条语义等价、可用于知乎搜索的 query；不回答问题、不扩大意图、不凭空加人名。
 - 达到 500k 时先压宿主卡中划选范围外正文；用户问题和划选优先保留。完整算法见 agent-specs.md。
 
 ### A-S
 
-- 每条搜索结果必须有 queryId、authorId、authorName、evidenceId、API summary 和真实 url。
+- 每条搜索结果必须有 queryId、authorId、authorName、evidenceId、API summary 和真实 url。url 是检索返回的文章链接，不要求作者主页。
 - 同一作者可以有多条 evidence；不同作者的 evidence 不得混包。
-- authorId 以知乎稳定身份为准，不能用展示名、头像或相似文字合并。
+- authorId 以知乎稳定身份为准；没有官方稳定身份时按该条 evidence 绑定。不能用展示名、头像或相似文字合并。
 - A-S 是知乎搜索，不是模型 Agent。
 
 ### A2
@@ -59,7 +59,7 @@ alwaysApply: false
 2. 真实作者 selected 时按 authorId 写一条高权网络记录：载体、概念、normalizedQuestion、authorId、展示名。
 3. 刘看山不能写网络，也不能创建 AuthorIdentity 或真实作者卡。
 4. 批注锚在概念图节点及原文位置，根和后续节点上的批注跨新对话保留。
-5. 外链必须来自本次 evidenceUrl；模型输出与 UI 都不能发明链接。
+5. 外链必须来自本次 evidenceUrl（文章链接，不是作者主页）；模型输出与 UI 都不能发明链接。
 6. 本流程只读公开知乎内容，不联系、私信、关注、评论、收藏或代发。
 
 ## N0–N2：搜索博主
@@ -71,7 +71,7 @@ N0 高权 Graph RAG
   → 不足 3：N0 低权 Graph RAG
   → 仍不足 3 或网络为空：
       N1 拆成 2–3 个知乎问法
-      → N-S 并联搜索知乎并排除已有 authorId
+      → N-S 最多 2 路并发搜索知乎（多问法空格拼串）并排除已有 authorId
       → N2 按相关性补 remainingSlots
       → 新作者按 authorId 写入低权网络
   → 最多展示 3 人
@@ -88,7 +88,7 @@ N0 高权 Graph RAG
 ### N1 / N-S
 
 - N1 读取用户搜索问题与 remainingSlots，输出 2–3 条等价搜索问法；不得凭空加入用户未提到的作者。
-- N-S 按问法并联查知乎，保留 queryId、authorId、authorName、evidenceId、summary、url。
+- N-S 最多 2 路并发查知乎，多出的问法空格拼串；保留 queryId、authorId、authorName、evidenceId、summary、url。url 是文章链接，不要求作者主页。
 - 在送入 N2 前排除 N0 已返回的 authorId，再按 authorId 合并同一人的证据。
 
 ### N2
@@ -102,8 +102,8 @@ N0 高权 Graph RAG
 ## 博主网络页面
 
 - “搜索博主”和“博主网络”是同页两个板块，不能用一块本地状态冒充另一块。
-- 网络有数据时先列出真实已入网作者；没有数据时显示空态，不显示示例星图或“功能不可用”假数据。
-- 网络关系图的实体、边和权重仍未裁决；在裁决前只做名单，不把旧“载体→概念→问题”或“用户→类别→作者”图写成正式 topology。
+- 网络有数据时把已入网真实记录画成图谱：高权是载体→概念→问题→博主，低权是问题→博主。
+- 没有数据时显示空态，不显示示例星图或“功能不可用”假数据，也不能用 sessionStorage 假网络冒充已入网。
 
 ## 失败和安全
 
@@ -114,7 +114,7 @@ N0 高权 Graph RAG
 
 ## 最低验证
 
-- A1 2–3 问、A-S 真并发、A2 只选正确 ID 且最多 2 位。
+- A1 2–3 问、A-S 最多 2 路并发且多问法空格拼串、A2 只选正确 ID 且最多 2 位。
 - A2 空结果才 A3；任何 provider failure 都不走“零作者”分支。
 - 作者结果和刘看山都只落批注，不长结构节点；刘看山永不入网。
 - 高权记录包含载体/概念/整理问题，低权记录只含作者/搜索问题。

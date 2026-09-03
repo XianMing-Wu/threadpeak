@@ -71,11 +71,12 @@ export function AnnotationPanel({
                   <small>{item.bio || ''}</small>
                 </div>
               </div>
-              <p className="annotation-card__reply">{item.text || ''}</p>
+              <div className="annotation-card__reply">
+                <MarkdownMath source={item.text || ''}/>
+              </div>
               <div className="annotation-card__source">
-                <strong>{item.title}</strong>
                 {source ? (
-                  <a href={source} target="_blank" rel="noopener noreferrer">{source}</a>
+                  <a href={source} target="_blank" rel="noopener noreferrer">详细内容可以阅读我的文章</a>
                 ) : (
                   <span>链接不可用</span>
                 )}

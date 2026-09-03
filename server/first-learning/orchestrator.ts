@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { AgentFailureCode, L0aAngle, StructuredAgentId, StructuredInvokeResult, TextInvokeResult, ThinkingDepth } from '../agent-runtime/types.ts'
 import type { L0bOutput } from '../agent-runtime/schemas.ts'
+import { ZHIHU_CONCURRENCY, mapWithConcurrency } from '../agent-runtime/concurrency.ts'
 import { L0A_ANGLES } from '../agent-runtime/types.ts'
 import type { CanonicalAnswer } from '../knowledge/canonical-answer.ts'
 import type { KnowledgeGraphSnapshot } from '../knowledge/graph-surgeon.ts'
@@ -178,7 +179,7 @@ export function createFirstLearningOrchestrator(ports: {
         },
       }
       const invokeL0a = (angle: L0aAngle) => ports.invokeText('L0a', { ...base, angle }, { thinkingDepth, angle })
-      const firstWave = await Promise.all(L0A_ANGLES.map((angle) => invokeL0a(angle)))
+      const firstWave = await mapWithConcurrency(L0A_ANGLES, ZHIHU_CONCURRENCY, (angle) => invokeL0a(angle))
       const answers = [...firstWave]
       for (let index = 0; index < answers.length; index += 1) {
         if (answers[index]?.kind !== 'failed') continue

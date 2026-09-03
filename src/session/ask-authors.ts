@@ -66,9 +66,19 @@ export function writeAnnotationStore(store: AnnotationStore) {
 
 const BLOCKED_AUTHOR_NAMES = new Set(['马同学', '李永乐老师', '刘看山'])
 
+export function stripAuthorArticleLink(text: string, url: string) {
+  const trimmed = text.trim()
+  if (!trimmed) return ''
+  const escaped = url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return trimmed
+    .replace(new RegExp(`(?:\\n{1,2})?详细内容可以阅读我的文章\\s*${escaped}\\s*$`), '')
+    .replace(new RegExp(`(?:\\n{1,2})?${escaped}\\s*$`), '')
+    .replace(/(?:\n{1,2})?详细内容可以阅读我的文章\s*$/, '')
+    .trim()
+}
+
 export function formatAuthorAnnotation(summary: string, url: string) {
-  const body = summary.trim()
-  return body ? `${body}\n\n详细内容可以阅读我的文章 ${url}` : `详细内容可以阅读我的文章 ${url}`
+  return stripAuthorArticleLink(summary, url)
 }
 
 export function liuKanshanDirectReply(text: string): BloggerReply {

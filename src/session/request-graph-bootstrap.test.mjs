@@ -19,8 +19,7 @@ test('canvas snapshot is read-only and fail-closes when the graph is missing', a
       text: async () => JSON.stringify({ kind: 'missing' }),
     }),
   })
-  assert.equal(missing.kind, 'unavailable')
-  assert.match(missing.message, /不能用页面 growGraph 发明节点/)
+  assert.equal(missing.kind, 'missing')
   const present = await requestGraphSnapshot({
     routeId: 'generated-path',
     conceptId: 'kernel-image',

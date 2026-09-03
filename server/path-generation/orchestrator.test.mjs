@@ -96,7 +96,7 @@ function orchestrator(overrides = {}) {
     },
     async search(query) {
       started.push(query)
-      if (started.length === r1.queries.length) release()
+      if (started.length === 2) release()
       await gate
       return evidence(query.slice(-2))
     },
@@ -105,42 +105,65 @@ function orchestrator(overrides = {}) {
   return { api, calls, started }
 }
 
-test('R1/R-S/R2/R3 run in order, searches are parallel, and attachments are visible to every agent', async () => {
+test('R1/R-S/R2/R3 run in order, searches are two packed parallels, and attachments are visible to every agent', async () => {
   const attachment = { sourceId: 'att-1', fileName: 'note.txt', mimeType: 'text/plain', content: '讲义' }
   const { api, calls, started } = orchestrator()
   const view = await api.start({ goal: '线性映射入门', attachments: [attachment] })
   assert.equal(view.status, 'awaiting_answers')
   assert.equal(view.knowledgeCreated, false)
   assert.equal(view.questionSets[0].round, 1)
-  assert.equal(started.length, 4)
+  assert.equal(started.length, 2)
+  assert.ok(started.some((query) => query.includes('线性映射怎么学') && query.includes('线性映射入门路径')))
+  assert.ok(started.some((query) => query.includes('线性映射常见坑') && query.includes('线性映射误导学法')))
   const agentOrder = calls.map((item) => item.agentId)
   assert.deepEqual(agentOrder.slice(0, 3), ['R1', 'R2', 'R3'])
   for (const agentId of ['R1', 'R2', 'R3']) {
     const call = calls.find((item) => item.agentId === agentId)
     assert.equal(call.context.attachments[0].sourceId, 'att-1')
   }
-  assert.equal(calls.find((item) => item.agentId === 'R2').context.searchGroups.length, 4)
+  assert.equal(calls.find((item) => item.agentId === 'R3').context.goal, '线性映射入门')
+  assert.equal(calls.find((item) => item.agentId === 'R2').context.searchGroups.length, 2)
 })
 
-test('commit is blocked until the active set is complete, then R4 publishes without knowledge', async () => {
+test('commit is blocked until the active set is complete; last select auto-publishes without knowledge', async () => {
   const r4WithAtt = {
     ...r4,
     concepts: [{ ...r4.concepts[0], attachmentSourceIds: ['att-1'] }],
   }
-  const { api, calls } = orchestrator({ fixtures: { R1: r1, R2: r2, R3: r3, R4: r4WithAtt } })
+  const r3Two = {
+    round: 1,
+    status: 'active',
+    questions: [
+      r3.questions[0],
+      {
+        id: 'qq2',
+        prompt: '更想先看日常还是长期？',
+        options: [
+          { id: 'p1', label: '日常', routeEffect: '偏日常收支' },
+          { id: 'p2', label: '长期', routeEffect: '偏长期规划' },
+        ],
+      },
+    ],
+  }
+  const { api, calls } = orchestrator({ fixtures: { R1: r1, R2: r2, R3: r3Two, R4: r4WithAtt } })
   const started = await api.start({ goal: '线性映射入门', attachments: [{ sourceId: 'att-1', fileName: 'note.txt', content: '讲义' }] })
   const early = await api.commit(started.runId)
   assert.equal(early.status, 'awaiting_answers')
   assert.match(early.error.message, /全部答完/)
-  await api.select({ runId: started.runId, questionId: 'qq1', optionId: 'o1' })
-  const published = await api.commit(started.runId)
+  const first = await api.select({ runId: started.runId, questionId: 'qq1', optionId: 'o1' })
+  assert.equal(first.status, 'awaiting_answers')
+  assert.equal(calls.some((item) => item.agentId === 'R4'), false)
+  const published = await api.select({ runId: started.runId, questionId: 'qq2', optionId: 'p1' })
   assert.equal(published.status, 'published')
   assert.equal(published.knowledgeCreated, false)
   assert.ok(published.document)
   assert.equal(published.document.protocol, 'learning-path')
   const r4Call = calls.find((item) => item.agentId === 'R4')
+  assert.equal(r4Call.context.goal, '线性映射入门')
   assert.equal(r4Call.context.attachments[0].sourceId, 'att-1')
   assert.equal(r4Call.context.questionSets[0].selectedOptions[0].optionId, 'o1')
+  const again = await api.commit(started.runId)
+  assert.equal(again.status, 'published')
 })
 
 test('R3b can replace questions until round 3, old sets stay superseded, retry restarts at R1', async () => {
@@ -172,6 +195,7 @@ test('R3b can replace questions until round 3, old sets stay superseded, retry r
   assert.equal(replaced.questionSets[1].round, 2)
   const r3b = calls.find((item) => item.agentId === 'R3b')
   assert.equal(r3b.context.activeRound, 1)
+  assert.equal(r3b.context.goal, '线性映射入门')
 
   const retried = await api.retry(started.runId)
   assert.equal(retried.status, 'awaiting_answers')
@@ -204,8 +228,8 @@ test('R5 is only available after publish', async () => {
   const started = await api.start({ goal: '线性映射入门' })
   const tooEarly = await api.reply({ runId: started.runId, message: '还没发布' })
   assert.match(tooEarly.error.message, /发布后/)
-  await api.select({ runId: started.runId, questionId: 'qq1', optionId: 'o1' })
-  await api.commit(started.runId)
+  const published = await api.select({ runId: started.runId, questionId: 'qq1', optionId: 'o1' })
+  assert.equal(published.status, 'published')
   const replied = await api.reply({ runId: started.runId, message: '矩阵和映射什么关系？' })
   assert.equal(replied.reply, '发布后的普通回复')
 })

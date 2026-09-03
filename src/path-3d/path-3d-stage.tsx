@@ -1,9 +1,9 @@
-import { useMemo } from 'react'
-import { getRoute, useWorkspaceTick } from '../workspace/store'
+import { useEffect, useMemo, useState } from 'react'
+import { getRoute, persistRepairedMineDocument, useWorkspaceTick } from '../workspace/store'
 import type { NodeSemanticBadgeIcon } from 'liu-kanshan-learning-path-3d'
 import { defaultResourceNavigation, LearningPath3DView } from '../components/Path3D'
 import { Icon } from '../icons'
-import { openLearning, readActiveRouteId } from '../workspace/nav'
+import { NAV_EVENT, openLearning, readActiveRouteId } from '../workspace/nav'
 
 import { resolvePath3DView } from './resolved-path-document.ts'
 
@@ -29,8 +29,13 @@ type ContextualCardAction = Readonly<{
   nodeId?: string
 }>
 
-function conceptIdFromAction(detail: ContextualCardAction) {
-  if (detail.nodeId && !detail.nodeId.startsWith('carrier-') && detail.nodeId !== 'route-start' && detail.nodeId !== 'goal-understanding') return detail.nodeId
+function conceptIdFromAction(detail: ContextualCardAction, document?: { structure: { entrySubjectId: string; goalSubjectIds: readonly string[] } }) {
+  const blocked = new Set([
+    'route-start',
+    'goal-understanding',
+    ...(document ? [document.structure.entrySubjectId, ...document.structure.goalSubjectIds] : []),
+  ])
+  if (detail.nodeId && !detail.nodeId.startsWith('carrier-') && !blocked.has(detail.nodeId)) return detail.nodeId
   const action = detail.actionId ?? ''
   if (action.startsWith('action-')) return action.slice('action-'.length)
   if (action.startsWith('learn:')) return action.slice('learn:'.length)
@@ -39,12 +44,27 @@ function conceptIdFromAction(detail: ContextualCardAction) {
 
 export function Path3DStage() {
   const tick = useWorkspaceTick()
-  const routeId = readActiveRouteId()
+  const [routeId, setRouteId] = useState(readActiveRouteId)
+  useEffect(() => {
+    const sync = () => setRouteId(readActiveRouteId())
+    addEventListener(NAV_EVENT, sync)
+    addEventListener('storage', sync)
+    return () => {
+      removeEventListener(NAV_EVENT, sync)
+      removeEventListener('storage', sync)
+    }
+  }, [])
   const view = useMemo(() => {
     const route = routeId ? getRoute(routeId) : undefined
     return resolvePath3DView({ routeId, route })
   }, [routeId, tick])
   const goBack = () => { location.hash = 'paths' }
+
+  useEffect(() => {
+    if (view.kind !== 'ready' || view.source !== 'mine') return
+    const current = getRoute(view.routeId)
+    if (current && current.document !== view.document) persistRepairedMineDocument(view.routeId, view.document)
+  }, [view])
 
   if (view.kind === 'unavailable') {
     return <section className="path3d-stage" aria-label="3D 学习路线">
@@ -64,7 +84,7 @@ export function Path3DStage() {
   }
 
   const enterLearning = (detail: ContextualCardAction, event: Event) => {
-    const conceptId = conceptIdFromAction(detail)
+    const conceptId = conceptIdFromAction(detail, view.document)
     if (conceptId) sessionStorage.setItem('threadpeak-active-concept', conceptId)
     const shouldLearn = detail.actionId?.startsWith('learn:') || detail.actionId?.startsWith('action-')
     if (!shouldLearn || !conceptId) return

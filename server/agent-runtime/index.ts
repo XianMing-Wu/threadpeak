@@ -1,3 +1,5 @@
+export { ZHIHU_CONCURRENCY, mapWithConcurrency } from './concurrency.ts'
+export { joinSearchTexts, packZhihuSearchQueries } from './pack-search.ts'
 export {
   AGENT_CHANNELS,
   ATTACHMENT_BRANCH_THRESHOLD,
@@ -15,6 +17,14 @@ export {
 export { createAgentLlmProvider } from './llm-provider.ts'
 export { createAgentZhihuProvider, stableEvidenceId } from './zhihu-provider.ts'
 export { invokeStructuredAgent, invokeTextAgent } from './invoke.ts'
+export {
+  PATH_STRUCTURE_FAILURE_MESSAGE,
+  PUBLIC_STRUCTURE_FAILURE_MESSAGE,
+  STRUCTURE_REPAIR_USER_PREFIX,
+  STRUCTURE_SELF_REPAIR_LIMIT,
+  publicSafeFailureMessage,
+  structureRepairUserMessage,
+} from './repair.ts'
 export { assembleMessages, prepareAgentCall } from './prepare.ts'
 export { AGENT_PROMPTS, L0A_PROMPTS, systemPromptFor } from './prompts.ts'
 export {
@@ -30,6 +40,7 @@ export {
   R3bOutputSchema,
   R4OutputSchema,
   isR2ExplorationObject,
+  parseAgentJson,
   parseAgentOutput,
 } from './schemas.ts'
 export { createLlmSummarizer } from './summarizer.ts'

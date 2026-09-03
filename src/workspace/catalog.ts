@@ -1,5 +1,6 @@
 import { canvasEdges, canvasNodes, type CanvasEdge, type CanvasNode } from '../knowledge-canvas/content'
 import { buildPathDocument } from '../pathDocument'
+import { readableLayerTitle } from '../session/layer-title.ts'
 import type {
   FirstLesson,
   KnowledgeGraph,
@@ -280,7 +281,7 @@ export function conceptTitle(blueprint: RouteBlueprint, conceptId: string) {
 export function conceptCarrier(blueprint: RouteBlueprint, conceptId: string) {
   for (const carrier of blueprint.carriers) {
     if (carrier.concepts.some(([id]) => id === conceptId)) {
-      return { id: carrier.id, title: carrier.title }
+      return { id: carrier.id, title: readableLayerTitle(carrier.title) }
     }
   }
   return { id: '', title: '' }

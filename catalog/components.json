@@ -19,7 +19,7 @@
     { "id": "author-answer", "owner": "session-learning", "states": ["annotation"] },
     { "id": "advisor-radar", "owner": "authors", "states": ["query-open", "results"] },
     { "id": "advisor-detail", "owner": "authors", "states": ["closed", "open"] },
-    { "id": "author-network-graph", "owner": "authors", "states": ["list", "empty"] },
+    { "id": "author-network-graph", "owner": "authors", "states": ["graph", "empty"] },
     { "id": "graph-rag-search", "owner": "authors", "states": ["idle", "n0", "zhihu-fill", "ready", "empty", "unavailable"] },
     { "id": "settings-switch", "owner": "settings", "states": ["off", "on"] },
     { "id": "clear-history-dialog", "owner": "settings", "states": ["closed", "open", "cancel", "confirm"] }

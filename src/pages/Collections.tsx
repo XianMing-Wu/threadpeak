@@ -3,15 +3,25 @@ import { ProductWorkspace } from '../components/Shell'
 import { Icon } from '../icons'
 import { Path3DStage } from '../path-3d/path-3d-stage'
 import { KnowledgeCanvasPage } from './KnowledgeCanvas'
-import { NAV_EVENT, openConceptKnowledge, openKnowledge, openRoute, readActiveKnowledgeId, readActiveRouteId, readKnowledgeConceptId, readKnowledgeListReturn } from '../workspace/nav'
+import { closeConceptKnowledge, NAV_EVENT, openConceptKnowledge, openKnowledge, openRoute, readActiveKnowledgeId, readActiveRouteId, readKnowledgeConceptId, readKnowledgeListReturn } from '../workspace/nav'
 import { useLibrarySelector } from '../runtime/use-library-selector'
 import { selectKnowledgeCards, selectRouteCards } from '../runtime/library-read-model'
-import { getKnowledge, getRoute, listConceptCards, useWorkspaceTick } from '../workspace/store'
+import { getConceptGraph, getKnowledge, getKnowledgeByRoute, getRoute, hasSettledMineConceptGraph, listConceptCards, useWorkspaceTick } from '../workspace/store'
+import { reconcileMineKnowledge } from '../workspace/reconcile-mine-knowledge'
 import { MineGraphCanvasPage } from '../knowledge-canvas/mine-graph-canvas'
 
 export function KnowledgePage() {
   const [section, setSection] = useState<'mine' | 'example'>('mine')
+  const [mineReady, setMineReady] = useState(false)
   const items = useLibrarySelector(selectKnowledgeCards(section))
+  useEffect(() => {
+    let cancelled = false
+    void reconcileMineKnowledge().finally(() => {
+      if (!cancelled) setMineReady(true)
+    })
+    return () => { cancelled = true }
+  }, [])
+  const shown = section === 'mine' && !mineReady ? [] : items
   return <ProductWorkspace active="knowledge" page="knowledge">
     <main className="knowledge-square">
       <header className="square-hero"><h1>知识脉络</h1><p>先按与路线一致的名称收纳，再进入每个最终概念自己的知识脉络</p></header>
@@ -20,9 +30,11 @@ export function KnowledgePage() {
         <button className={section === 'example' ? 'is-active' : ''} onClick={() => setSection('example')}>示例知识脉络</button>
       </div>
       <section className="knowledge-grid">
-        {items.length === 0
+        {section === 'mine' && !mineReady
+          ? <div className="square-empty" role="status" aria-live="polite"><strong>正在核对已提交的知识脉络</strong><p>只显示已经有首次回复和唯一根的概念，没有图的记录不会出现在这里。</p></div>
+          : shown.length === 0
           ? <div className="square-empty"><strong>还没有自己的知识脉络</strong><p>新建路线后，第一次点击进入学习并生成首段讲解时，才会同步出现在这里</p><button type="button" onClick={() => { location.hash = 'paths' }}>去看我的路线</button></div>
-          : items.map((item) => <button className="knowledge-card" key={item.id} onClick={() => { openKnowledge(item.id); location.hash='knowledge-detail' }}>
+          : shown.map((item) => <button className="knowledge-card" key={item.id} onClick={() => { openKnowledge(item.id) }}>
             <span className="knowledge-cover"><Icon name={item.icon} size={26}/></span>
             <span><strong>{item.title}</strong><p>{item.description}</p><small>{item.type} · {item.sources} 个来源</small></span>
           </button>)}
@@ -74,7 +86,7 @@ export function KnowledgeConceptsPage() {
       <section className="knowledge-grid">
         {cards.length === 0
           ? <div className="square-empty"><strong>还没有概念脉络</strong><p>回到路线里第一次进入学习后，对应概念才会出现在这里</p><button type="button" onClick={() => { location.hash = 'paths' }}>去看我的路线</button></div>
-          : cards.map((item) => <button className="knowledge-card" key={item.id} onClick={() => { openConceptKnowledge(knowledgeId, item.id); location.hash='knowledge-detail' }}>
+          : cards.map((item) => <button className="knowledge-card" key={item.id} onClick={() => { openConceptKnowledge(knowledgeId, item.id) }}>
             <span className="knowledge-cover"><Icon name={item.icon} size={26}/></span>
             <span><strong>{item.title}</strong><p>{item.description}</p><small>最终概念 · {item.type} · {item.sources} 个来源</small></span>
           </button>)}
@@ -94,13 +106,32 @@ export function KnowledgeDetailPage() {
       removeEventListener('storage', sync)
     }
   }, [])
+  useEffect(() => {
+    if (!conceptId) return
+    const knowledgeId = readActiveKnowledgeId()
+    const knowledge = knowledgeId ? getKnowledge(knowledgeId) : undefined
+    const route = getRoute(readActiveRouteId())
+    const owner = route?.owner || knowledge?.owner
+    if (owner === 'example') return
+    if (owner === 'mine' && knowledgeId && hasSettledMineConceptGraph(getConceptGraph(knowledgeId, conceptId))) return
+    closeConceptKnowledge()
+    const remaining = knowledge ?? getKnowledgeByRoute(readActiveRouteId())
+    if (owner !== 'mine' || !remaining || listConceptCards(remaining.id).length === 0) location.hash = 'knowledge'
+  }, [conceptId])
   if (!conceptId) return <KnowledgeConceptsPage/>
   const routeId = readActiveRouteId()
   const knowledge = getKnowledge(readActiveKnowledgeId())
   const route = getRoute(routeId)
-  const owner = route?.owner || (knowledge?.routeId === routeId ? knowledge.owner : undefined)
+  const owner = route?.owner || knowledge?.owner
   if (owner === 'mine') {
+    const knowledgeId = readActiveKnowledgeId()
+    if (!knowledgeId || !hasSettledMineConceptGraph(getConceptGraph(knowledgeId, conceptId))) {
+      return <KnowledgeConceptsPage/>
+    }
     return <MineGraphCanvasPage key={`${routeId}:${conceptId}`} routeId={routeId} conceptId={conceptId}/>
   }
-  return <KnowledgeCanvasPage key={`${readActiveKnowledgeId()}:${conceptId}`}/>
+  if (owner === 'example') {
+    return <KnowledgeCanvasPage key={`${readActiveKnowledgeId()}:${conceptId}`}/>
+  }
+  return <KnowledgeConceptsPage/>
 }

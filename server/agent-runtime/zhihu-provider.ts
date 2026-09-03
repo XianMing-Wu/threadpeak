@@ -38,6 +38,12 @@ export function stableEvidenceId(url: string): string {
   return createHash('sha256').update(url).digest('hex').slice(0, 32)
 }
 
+/** Official people URL when present; otherwise one id per article evidence. Never a display name. */
+export function resolveSearchAuthorId(officialId: string | null | undefined, evidenceId: string): string {
+  const official = officialId?.trim() ?? ''
+  return official || `author-ev-${evidenceId}`
+}
+
 function assertAllowed(url: string, origin: string) {
   if (new URL(url).origin !== origin) throw new Error('ssrf')
 }
@@ -64,8 +70,10 @@ function mapHits(payload: ReturnType<typeof parseZhihuSearchPayload>): ZhihuSear
   if (payload.kind !== 'hits') return payload
   const items: ZhihuSearchHit[] = payload.items.map((item) => ({
     evidenceId: stableEvidenceId(item.url),
-    authorId: item.authorKey && item.authorName && !isLiuKanshanName(item.authorName) ? item.authorKey : null,
     authorName: item.authorName && !isLiuKanshanName(item.authorName) ? item.authorName : null,
+    authorId: item.authorName && !isLiuKanshanName(item.authorName)
+      ? resolveSearchAuthorId(item.authorKey, stableEvidenceId(item.url))
+      : null,
     title: item.title,
     summary: item.excerpt,
     url: item.url,

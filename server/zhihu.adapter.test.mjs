@@ -41,6 +41,25 @@ test('official ContentText items parse and Liu Kanshan is not an author key', ()
   assert.equal(parsed.items[1].authorKey, null)
 })
 
+test('official items without AuthorHomepage still keep the article Url', () => {
+  const parsed = parseZhihuSearchPayload({
+    Code: 0,
+    Data: {
+      Items: [{
+        Title: '积分梯度是什么',
+        Url: 'https://zhuanlan.zhihu.com/p/1',
+        ContentText: '梯度是积分核的对偶。',
+        AuthorName: '真实作者',
+      }],
+    },
+  })
+  assert.equal(parsed.kind, 'hits')
+  assert.equal(parsed.items[0].url, 'https://zhuanlan.zhihu.com/p/1')
+  assert.equal(parsed.items[0].authorName, '真实作者')
+  assert.equal(parsed.items[0].authorKey, null)
+  assert.equal(parsed.items[0].authorUrl, null)
+})
+
 test('non-zero Zhihu Code is a failed search, not empty evidence', () => {
   const parsed = parseZhihuSearchPayload({ Code: 20001, Message: 'auth', Data: { Items: [] } })
   assert.equal(parsed.kind, 'failed')

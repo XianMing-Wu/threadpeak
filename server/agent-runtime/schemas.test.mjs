@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  parseAgentJson,
   parseAgentOutput,
   isR2ExplorationObject,
 } from './schemas.ts'
@@ -44,9 +45,9 @@ const r4Valid = {
   terminalConceptIds: ['n3'],
 }
 
-test('R1 accepts 4–5 unique queries covering both angles and rejects extras', () => {
+test('R1 accepts 4–5 unique queries covering both angles and extracts extra keys', () => {
   assert.equal(parseAgentOutput('R1', r1Valid).ok, true)
-  assert.equal(parseAgentOutput('R1', { ...r1Valid, extra: true }).ok, false)
+  assert.equal(parseAgentOutput('R1', { ...r1Valid, extra: true }).ok, true)
   assert.equal(parseAgentOutput('R1', { queries: r1Valid.queries.slice(0, 3) }).ok, false)
   assert.equal(parseAgentOutput('R1', {
     queries: [...r1Valid.queries, { id: 'q5', text: '五', angle: 'normal_learning' }, { id: 'q6', text: '六', angle: 'pitfall_or_dispute' }],
@@ -59,7 +60,8 @@ test('R1 accepts 4–5 unique queries covering both angles and rejects extras', 
 test('R2 exploration object is not a valid R4 route', () => {
   assert.equal(isR2ExplorationObject(r2Valid), true)
   assert.equal(parseAgentOutput('R2', r2Valid).ok, true)
-  assert.equal(parseAgentOutput('R2', { 线性代数: { 线性映射: { 争议: true, extra: 1 } } }).ok, false)
+  assert.equal(parseAgentOutput('R2', { 线性代数: { 线性映射: { 争议: true, extra: 1 } } }).ok, true)
+  assert.equal(parseAgentOutput('R2', { 线性代数: { 线性映射: { hasDispute: true } } }).ok, true)
   assert.equal(parseAgentOutput('R4', r2Valid).ok, false)
   assert.equal(parseAgentOutput('R4', r4Valid, { attachmentSourceIds: ['att-1'] }).ok, true)
 })
@@ -89,6 +91,21 @@ test('R4 rejects cycles, dangling edges, invented attachment ids and missing rea
       { id: 'island', carrierId: 'c1', title: '孤岛', hasDispute: false, detailedDescription: '不可达', attachmentSourceIds: [] },
     ],
   }, { attachmentSourceIds: ['att-1'] }).ok, false)
+})
+
+test('R4 extracts version 1 and string hasDispute without inventing nodes', () => {
+  const coerced = parseAgentOutput('R4', {
+    ...r4Valid,
+    version: 1,
+    concepts: r4Valid.concepts.map((item) => (
+      item.id === 'n2'
+        ? { ...item, hasDispute: 'true', 争议: 'true' }
+        : { ...item, hasDispute: 'false' }
+    )),
+  }, { attachmentSourceIds: ['att-1'] })
+  assert.equal(coerced.ok, true)
+  assert.equal(coerced.value.version, '1.0')
+  assert.equal(coerced.value.concepts.find((item) => item.id === 'n2').hasDispute, true)
 })
 
 test('R3/R3b enforce question counts, unique ids and the 3-round replace rule', () => {
@@ -221,5 +238,15 @@ test('text agents reject empty bodies and L0b only allows content', () => {
   assert.equal(parseAgentOutput('L0a', '具体讲解正文', {}, 'concrete_explanation').ok, true)
   assert.equal(parseAgentOutput('G2', '   ').ok, false)
   assert.equal(parseAgentOutput('L0b', { content: '首轮正文' }).ok, true)
-  assert.equal(parseAgentOutput('L0b', { content: '首轮正文', title: '另起根标题' }).ok, false)
+  assert.equal(parseAgentOutput('L0b', { content: '首轮正文', title: '另起根标题' }).ok, true)
+})
+
+test('JSON extract recovers fences, surrounding prose and trailing commas', () => {
+  const json = JSON.stringify(r1Valid)
+  const wrapped = `说明如下：\n\`\`\`json\n${json.slice(0, -1)},}\n\`\`\`\n以上。`
+  const parsed = parseAgentJson(wrapped)
+  assert.equal(parsed.ok, true)
+  assert.equal(parseAgentOutput('R1', parsed.value).ok, true)
+  const smart = parseAgentJson(`{“queries”:${JSON.stringify(r1Valid.queries)}}`)
+  assert.equal(smart.ok, true)
 })

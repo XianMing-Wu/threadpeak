@@ -29,7 +29,7 @@ export type ThinkingDepth = (typeof THINKING_DEPTHS)[number]
 export type AgentChannel = 'llm' | 'zhihu_direct'
 
 export type ChatMessage = {
-  role: 'system' | 'user'
+  role: 'system' | 'user' | 'assistant'
   content: string
 }
 

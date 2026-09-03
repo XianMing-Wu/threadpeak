@@ -1,4 +1,5 @@
 import type { LearningPathDocument } from 'liu-kanshan-learning-path-3d'
+import { repairHostDocument } from './repair-host-document.ts'
 import { isLearningPathRendererDocument } from './validate-renderer-document.ts'
 
 const EXAMPLE_FIXTURE_DOCUMENT_IDS = new Set([
@@ -30,7 +31,7 @@ export type Path3DResolution =
     }
 
 export function isLearningPathDocument(value: unknown): value is LearningPathDocument {
-  return isLearningPathRendererDocument(value)
+  return isLearningPathRendererDocument(repairHostDocument(value))
 }
 
 export function isExampleFixtureDocumentId(id: string): boolean {
@@ -57,7 +58,8 @@ export function resolvePath3DView(input: {
   }
 
   const { route } = input
-  if (!isLearningPathDocument(route.document)) {
+  const document = repairHostDocument(route.document)
+  if (!isLearningPathDocument(document)) {
     return {
       kind: 'unavailable',
       reason: route.owner === 'mine' ? 'invalid-mine-document' : 'invalid-example-document',
@@ -68,7 +70,7 @@ export function resolvePath3DView(input: {
     }
   }
 
-  if (route.owner === 'mine' && isExampleFixtureDocumentId(route.document.id)) {
+  if (route.owner === 'mine' && isExampleFixtureDocumentId(document.id)) {
     return {
       kind: 'unavailable',
       reason: 'invalid-mine-document',
@@ -82,6 +84,6 @@ export function resolvePath3DView(input: {
     source: route.owner,
     routeId: route.id,
     title: route.title,
-    document: route.document,
+    document,
   }
 }

@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { AuthorNetworkGraph } from '../components/AuthorNetworkGraph'
 import { ProductWorkspace } from '../components/Shell'
 import { Icon } from '../icons'
+import { projectAuthorNetworkGraph } from '../session/project-author-network'
+import { readWorkspace } from '../workspace/store'
 import { requestAuthorNetwork, type AuthorNetworkLiveResult } from '../session/request-author-network'
 import { resolveAuthorNetwork } from '../session/resolve-author-network'
 import { requestAuthorSearch, type AuthorSearchLiveResult } from '../session/request-author-search'
@@ -41,7 +44,7 @@ export function AuthorsPage() {
     <main className="consultation-page">
       <header className="consultation-header">
         <h1>博主网络</h1>
-        <p>{section === 'network' ? '已入网的真实作者会列在这里。关系图画法还没有冻结，不能当成产品事实。' : '先查你的博主网络；没有相关作者时再检索知乎，最多 3 位，不凑数。'}</p>
+        <p>{section === 'network' ? '载体层下是概念层，概念层下是问题层；博主挂在对应层上。只显示已入网的真实作者。' : '先查你的博主网络；没有相关作者时再检索知乎，最多 3 位，不凑数。'}</p>
       </header>
       <div className="square-tabs author-tabs">
         <button type="button" className={section === 'search' ? 'is-active' : ''} onClick={() => setSection('search')}>搜索博主</button>
@@ -123,6 +126,10 @@ function AuthorSearchPane() {
 
 function AuthorNetworkPane() {
   const [live, setLive] = useState<AuthorNetworkLiveResult | null>(null)
+  const graph = useMemo(
+    () => live?.kind === 'list' ? projectAuthorNetworkGraph(live.authors, readWorkspace().routes) : { nodes: [], edges: [] },
+    [live],
+  )
 
   useEffect(() => {
     void requestAuthorNetwork().then(setLive)
@@ -133,23 +140,12 @@ function AuthorNetworkPane() {
       {!live ? <section className="radar-search-status" aria-live="polite">
         <small>博主网络</small>
         <h2>正在读取已入网作者</h2>
-        <p>只列出服务端已经写入的真实作者，不展示示例星图。</p>
+        <p>只投影服务端已经写入的真实作者，不展示示例星图。</p>
       </section> : live.kind === 'unavailable' ? <AuthorNetworkUnavailable message={live.message}/> : live.authors.length === 0 ? <section className="radar-search-status" role="status">
         <small>博主网络</small>
         <h2>还没有入网博主</h2>
-        <p>问博主选中的真实作者会写入高权；搜索补位的新作者会写入低权。关系图画法尚未冻结，这里只显示名单。</p>
-      </section> : <section className="radar-search-status" role="status">
-        <small>博主网络</small>
-        <h2>已入网 {live.authors.length} 位博主</h2>
-        <div className="radar-found-list">
-          {live.authors.map((author, index) => (
-            <span key={author.authorId}>
-              <i>{index + 1}</i>
-              <span>{author.name} · {author.weight === 'high' ? '高权' : '低权'}{author.question ? ` · ${author.question}` : ''}</span>
-            </span>
-          ))}
-        </div>
-      </section>}
+        <p>问博主选中的真实作者会写入高权；搜索补位的新作者会写入低权。有人之后会画载体、概念、问题和博主的图谱。</p>
+      </section> : <AuthorNetworkGraph nodes={graph.nodes} edges={graph.edges}/>}
     </div>
   </section>
 }

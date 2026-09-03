@@ -35,6 +35,10 @@ import type {
   RouteRecord,
   WorkspaceSnapshot,
 } from './types'
+import { hasSettledMineConceptGraph } from './settled-mine-graph.ts'
+import { readableLayerTitle, titleFromPathLayer } from '../session/layer-title.ts'
+
+export { hasSettledMineConceptGraph } from './settled-mine-graph.ts'
 
 export const WORKSPACE_KEY = 'threadpeak-workspace-v1'
 export const WORKSPACE_EVENT = 'threadpeak:workspace-change'
@@ -173,7 +177,10 @@ function toRouteCard(route: RouteRecord): RouteCard {
     duration: route.duration,
     tags: route.tags,
     icon: route.icon,
-    carriers: route.document.structure.subjects.filter((item) => item.id !== 'route-start' && item.id !== 'goal-understanding').length,
+    carriers: route.document.structure.subjects.filter((item) => (
+      item.id !== route.document.structure.entrySubjectId
+      && !route.document.structure.goalSubjectIds.includes(item.id)
+    )).length,
     concepts: route.document.structure.concepts.length,
     knowledgeId: route.knowledgeId,
   }
@@ -189,6 +196,19 @@ export function conceptGraphsOf(item: KnowledgeRecord): Record<string, Knowledge
     graphs[node.id.slice(2)] = { nodes: [{ ...node, id: 'root' }], edges: [] }
   }
   return graphs
+}
+
+export function settledMineConceptIdsOf(item: KnowledgeRecord): string[] {
+  if (item.owner === 'example') return Object.keys(conceptGraphsOf(item))
+  return Object.entries(conceptGraphsOf(item))
+    .filter(([, graph]) => hasSettledMineConceptGraph(graph))
+    .map(([id]) => id)
+}
+
+export function hasSettledMineConcept(routeId: string, conceptId: string): boolean {
+  const knowledge = getKnowledgeByRoute(routeId)
+  if (!knowledge || knowledge.owner === 'example') return false
+  return hasSettledMineConceptGraph(getConceptGraph(knowledge.id, conceptId))
 }
 
 function toKnowledgeCard(item: KnowledgeRecord): KnowledgeCard {
@@ -211,11 +231,24 @@ export function listRoutes(owner: 'mine' | 'example'): RouteCard[] {
 
 export function listKnowledge(owner: 'mine' | 'example'): KnowledgeCard[] {
   if (owner === 'example') return exampleKnowledge().map(toKnowledgeCard)
-  return readWorkspace().knowledge.map(toKnowledgeCard)
+  return readWorkspace().knowledge
+    .filter((item) => item.owner !== 'example' && settledMineConceptIdsOf(item).length > 0)
+    .map(toKnowledgeCard)
 }
 
 export function getRoute(id: string): RouteRecord | undefined {
-  return readWorkspace().routes.find((item) => item.id === id) ?? exampleRoutes().find((item) => item.id === id)
+  const key = id.trim()
+  if (!key) return undefined
+  const match = (item: RouteRecord) => item.id === key || item.document.id === key
+  return readWorkspace().routes.find(match) ?? exampleRoutes().find(match)
+}
+
+export function persistRepairedMineDocument(routeId: string, document: RouteRecord['document']) {
+  mutate((snapshot) => {
+    snapshot.routes = snapshot.routes.map((route) => (
+      route.id === routeId && route.owner === 'mine' ? { ...route, document } : route
+    ))
+  })
 }
 
 export function getKnowledge(id: string): KnowledgeRecord | undefined {
@@ -232,6 +265,9 @@ export function getConceptGraph(knowledgeId: string, conceptId: string): Knowled
   const knowledge = getKnowledge(knowledgeId)
   if (!knowledge) return undefined
   const stored = conceptGraphsOf(knowledge)[conceptId]
+  if (knowledge.owner !== 'example') {
+    return hasSettledMineConceptGraph(stored) ? stored : undefined
+  }
   if (stored) return stored
   const lesson = getLesson(knowledge.routeId, conceptId)
   if (!lesson) return undefined
@@ -242,10 +278,12 @@ export function listConceptCards(knowledgeId: string): ConceptCard[] {
   const knowledge = getKnowledge(knowledgeId)
   if (!knowledge) return []
   const blueprint = blueprintOf(knowledge.routeId)
-  const graphs = conceptGraphsOf(knowledge)
   const learned = knowledge.owner === 'example'
     ? blueprintConcepts(blueprint)
-    : blueprintConcepts(blueprint).filter((item) => Boolean(graphs[item.id]))
+    : settledMineConceptIdsOf(knowledge).map((id) => (
+      blueprintConcepts(blueprint).find((item) => item.id === id)
+      ?? { id, title: conceptTitle(blueprint, id), summary: '', carrierId: '', carrierTitle: '' }
+    ))
   return learned.map((item) => ({
     id: item.id,
     knowledgeId: knowledge.id,
@@ -340,7 +378,7 @@ export function createMineRouteFromChat(query: string, choices: string[], conver
   const existing = getConversation(conversationId)
   if (existing?.routeId) {
     const route = getRoute(existing.routeId)
-    if (route) return route
+    if (route && route.document.id === document.id) return route
   }
   const route = mineRouteFromValidatedDocument(query, conversationId, document, Date.now())
   mutate((snapshot) => {
@@ -447,8 +485,15 @@ function draftFromRoute(route?: RouteRecord): RouteBlueprint {
         subject.concepts = [...subject.concepts, entry]
         return carriers
       }
-      const subjectCard = route?.document.data.cards.find((item) => item.id === `card-${concept.subjectId}`)
-      carriers.push({ id: concept.subjectId, title: subjectCard?.title ?? concept.subjectId, summary: subjectCard?.summary ?? '', concepts: [entry] })
+      const subjectMeta = route?.document.structure.subjects.find((item) => item.id === concept.subjectId)
+      const subjectCard = route?.document.data.cards.find((item) => item.id === subjectMeta?.cardRef)
+        ?? route?.document.data.cards.find((item) => item.id === `card-${concept.subjectId}`)
+      carriers.push({
+        id: concept.subjectId,
+        title: titleFromPathLayer(route?.document, concept.subjectId) || readableLayerTitle(subjectCard?.title) || '',
+        summary: subjectCard?.summary ?? '',
+        concepts: [entry],
+      })
       return carriers
     }, []),
   }
@@ -544,6 +589,29 @@ export function ensureMineKnowledgeFromCanonical(input: {
     snapshot.routes = snapshot.routes.map((item) => item.id === input.routeId ? { ...item, knowledgeId } : item)
   })
   return { knowledgeId }
+}
+
+export function dropMineConceptGraph(routeId: string, conceptId: string) {
+  mutate((snapshot) => {
+    const knowledge = snapshot.knowledge.find((item) => item.routeId === routeId && item.owner !== 'example')
+    if (!knowledge) return
+    const graphs = { ...conceptGraphsOf(knowledge) }
+    delete graphs[conceptId]
+    delete snapshot.lessons[lessonKey(routeId, conceptId)]
+    const remaining = Object.entries(graphs).filter(([, graph]) => hasSettledMineConceptGraph(graph))
+    if (remaining.length === 0) {
+      snapshot.knowledge = snapshot.knowledge.filter((item) => item.id !== knowledge.id)
+      snapshot.routes = snapshot.routes.map((item) => item.id === routeId ? { ...item, knowledgeId: null } : item)
+      return
+    }
+    const nextGraphs = Object.fromEntries(remaining)
+    snapshot.knowledge = snapshot.knowledge.map((item) => item.id === knowledge.id ? {
+      ...item,
+      graphs: nextGraphs,
+      graph: nextGraphs[item.seedConceptId] ?? remaining[0][1],
+      updatedAt: Date.now(),
+    } : item)
+  })
 }
 
 function replyParagraphs(reply: string) {

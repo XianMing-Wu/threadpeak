@@ -108,6 +108,8 @@ test('POST /api/ask-author returns looked-up author cards and writes high-weight
   assert.equal(body.kind, 'authors')
   assert.equal(body.authors[0].displayName, '真实作者')
   assert.equal(body.authors[0].evidenceUrl, 'https://www.zhihu.com/question/1')
+  assert.equal(body.authors[0].sourceUrl, 'https://www.zhihu.com/question/1')
+  assert.equal(body.authors[0].profileUrl, undefined)
   assert.match(body.authors[0].displayText, /详细内容可以阅读我的文章/)
   const network = await app.inject({ method: 'GET', url: '/api/authors/network' })
   const listed = JSON.parse(network.body)

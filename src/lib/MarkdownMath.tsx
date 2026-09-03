@@ -1,43 +1,9 @@
-import { useMemo, type ReactNode } from 'react'
-import ReactMarkdown from 'react-markdown'
+import { Children, isValidElement, useMemo, type ReactNode } from 'react'
+import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
 import katex from 'katex'
-
-type Segment = { type: 'text'; text: string } | { type: 'math'; text: string; display: boolean }
-
-function splitFences(source: string): Array<{ code: boolean; text: string }> {
-  const parts: Array<{ code: boolean; text: string }> = []
-  const blocks = source.split(/(```[\s\S]*?```)/g)
-  for (const block of blocks) {
-    if (!block) continue
-    parts.push({ code: block.startsWith('```'), text: block })
-  }
-  return parts.length ? parts : [{ code: false, text: source }]
-}
-
-function splitMath(source: string): Segment[] {
-  const segments: Segment[] = []
-  for (const block of splitFences(source)) {
-    if (block.code) {
-      segments.push({ type: 'text', text: block.text })
-      continue
-    }
-    const re = /\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|\$([^$\n]+?)\$|\\\((.+?)\\\)/g
-    let last = 0
-    let match: RegExpExecArray | null
-    while ((match = re.exec(block.text))) {
-      if (match.index > last) segments.push({ type: 'text', text: block.text.slice(last, match.index) })
-      segments.push({
-        type: 'math',
-        text: (match[1] ?? match[2] ?? match[3] ?? match[4] ?? '').trim(),
-        display: match[1] != null || match[2] != null,
-      })
-      last = match.index + match[0].length
-    }
-    if (last < block.text.length) segments.push({ type: 'text', text: block.text.slice(last) })
-  }
-  return segments
-}
+import { prepareMarkdown } from './markdown-source.ts'
 
 function KatexView({ tex, display }: { tex: string; display: boolean }) {
   const html = useMemo(() => {
@@ -51,15 +17,36 @@ function KatexView({ tex, display }: { tex: string; display: boolean }) {
   return <span className={display ? 'tp-math is-display' : 'tp-math is-inline'} dangerouslySetInnerHTML={{ __html: html }} />
 }
 
+function texOf(children: ReactNode) {
+  return Children.toArray(children).map((child) => typeof child === 'string' || typeof child === 'number' ? String(child) : '').join('').replace(/\n$/, '')
+}
+
+function mathComponents(): Components {
+  return {
+    code({ className, children, ...props }: { className?: string; children?: ReactNode }) {
+      const tex = texOf(children)
+      if (className?.includes('math-display')) return <KatexView tex={tex} display />
+      if (className?.includes('math-inline')) return <KatexView tex={tex} display={false} />
+      return <code className={className} {...props}>{children}</code>
+    },
+    pre({ children }: { children?: ReactNode }) {
+      const child = Children.toArray(children)[0]
+      if (isValidElement<{ className?: string }>(child) && child.props.className?.includes('math')) {
+        return <>{children}</>
+      }
+      return <pre>{children}</pre>
+    },
+  }
+}
+
 export function MarkdownMath({ source, className }: { source: string; className?: string }) {
-  const segments = useMemo(() => splitMath(source), [source])
+  const prepared = useMemo(() => prepareMarkdown(source), [source])
+  const components = useMemo(() => mathComponents(), [])
   return (
     <div className={`md-body ${className ?? ''}`.trim()}>
-      {segments.map((segment, index) => (
-        segment.type === 'math'
-          ? <KatexView key={`m${index}`} tex={segment.text} display={segment.display} />
-          : <ReactMarkdown key={`t${index}`} remarkPlugins={[remarkGfm]}>{segment.text}</ReactMarkdown>
-      ))}
+      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} components={components}>
+        {prepared.markdown}
+      </ReactMarkdown>
     </div>
   )
 }

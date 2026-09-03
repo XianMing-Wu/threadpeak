@@ -55,8 +55,7 @@ test('canonical snapshot is a read-only GET and does not invent a first lesson',
       text: async () => JSON.stringify({ kind: 'missing' }),
     }),
   })
-  assert.equal(missing.kind, 'unavailable')
-  assert.match(missing.message, /不能用草稿发明一课/)
+  assert.equal(missing.kind, 'missing')
 
   const present = await requestCanonicalSnapshot({
     routeId: 'generated-path',

@@ -1,6 +1,6 @@
 import type { RouteName } from '../components/Shell'
 import { resolveOpenLearningTarget } from '../session/resolve-learning-entry'
-import { getKnowledge, getRoute } from './store'
+import { getConceptGraph, getKnowledge, getRoute, hasSettledMineConcept, hasSettledMineConceptGraph, settledMineConceptIdsOf } from './store'
 
 export const ACTIVE_ROUTE_KEY = 'threadpeak-active-route'
 export const ACTIVE_CONCEPT_KEY = 'threadpeak-active-concept'
@@ -71,29 +71,36 @@ export function readSessionReturn(): RouteName {
 }
 
 export function openRoute(routeId: string, returnTo: RouteName = 'paths') {
-  writeKey(ACTIVE_ROUTE_KEY, routeId)
+  const route = getRoute(routeId)
+  const id = route?.id ?? routeId.trim()
+  writeKey(ACTIVE_ROUTE_KEY, id)
   writeKey(PATH_RETURN_KEY, returnTo)
-  const knowledge = getRoute(routeId)?.knowledgeId
-  if (knowledge) writeKey(ACTIVE_KNOWLEDGE_KEY, knowledge)
+  if (route?.knowledgeId) writeKey(ACTIVE_KNOWLEDGE_KEY, route.knowledgeId)
   location.hash = 'path-3d'
 }
 
-export function openKnowledge(knowledgeId: string, returnTo: RouteName = 'knowledge') {
+export function openKnowledge(knowledgeId: string, returnTo: RouteName = 'knowledge'): boolean {
   const knowledge = getKnowledge(knowledgeId)
+  if (!knowledge) return false
+  if (knowledge.owner !== 'example' && settledMineConceptIdsOf(knowledge).length === 0) return false
   writeKey(ACTIVE_KNOWLEDGE_KEY, knowledgeId)
   writeKey(KNOWLEDGE_CONCEPT_KEY, '')
   writeKey(KNOWLEDGE_RETURN_KEY, returnTo === 'home' ? 'home' : 'knowledge')
-  if (knowledge?.routeId) writeKey(ACTIVE_ROUTE_KEY, knowledge.routeId)
+  if (knowledge.routeId) writeKey(ACTIVE_ROUTE_KEY, knowledge.routeId)
   location.hash = 'knowledge-detail'
+  return true
 }
 
-export function openConceptKnowledge(knowledgeId: string, conceptId: string, returnTo: RouteName = 'knowledge-detail') {
+export function openConceptKnowledge(knowledgeId: string, conceptId: string, returnTo: RouteName = 'knowledge-detail'): boolean {
   const knowledge = getKnowledge(knowledgeId)
+  if (!knowledge) return false
+  if (knowledge.owner !== 'example' && !hasSettledMineConceptGraph(getConceptGraph(knowledgeId, conceptId))) return false
   writeKey(ACTIVE_KNOWLEDGE_KEY, knowledgeId)
   writeKey(KNOWLEDGE_CONCEPT_KEY, conceptId)
   writeKey(CANVAS_RETURN_KEY, returnTo === 'session-learning' ? 'session-learning' : 'knowledge-detail')
-  if (knowledge?.routeId) writeKey(ACTIVE_ROUTE_KEY, knowledge.routeId)
+  if (knowledge.routeId) writeKey(ACTIVE_ROUTE_KEY, knowledge.routeId)
   location.hash = 'knowledge-detail'
+  return true
 }
 
 export function closeConceptKnowledge() {
@@ -110,14 +117,16 @@ export function openLearning(routeId: string, conceptId?: string, returnTo: Rout
   location.hash = 'session-learning'
 }
 
-export function openKnowledgeFromSession() {
+export function openKnowledgeFromSession(): boolean {
   const routeId = readActiveRouteId()
   const conceptId = readActiveConceptId()
-  if (!routeId || !conceptId) return
+  if (!routeId || !conceptId) return false
   const route = getRoute(routeId)
+  if (route?.owner === 'mine' && !hasSettledMineConcept(routeId, conceptId)) return false
   writeKey(ACTIVE_ROUTE_KEY, routeId)
   writeKey(KNOWLEDGE_CONCEPT_KEY, conceptId)
   writeKey(CANVAS_RETURN_KEY, 'session-learning')
   writeKey(ACTIVE_KNOWLEDGE_KEY, route?.knowledgeId ?? '')
   location.hash = 'knowledge-detail'
+  return true
 }

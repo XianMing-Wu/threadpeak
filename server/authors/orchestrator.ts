@@ -15,6 +15,9 @@ import type {
   ThinkingDepth,
   ZhihuSearchResult,
 } from '../agent-runtime/types.ts'
+import { ZHIHU_CONCURRENCY, mapWithConcurrency } from '../agent-runtime/concurrency.ts'
+import { packZhihuSearchQueries } from '../agent-runtime/pack-search.ts'
+import { resolveSearchAuthorId } from '../agent-runtime/zhihu-provider.ts'
 import type { AuthorNetworkProjector, NetworkMember } from './network.ts'
 
 export type AskAuthorCard = {
@@ -104,15 +107,14 @@ export function groupAuthorCandidates(
   const grouped = new Map<string, { authorId: string; authorName: string; evidence: { evidenceId: string; summary: string; url: string }[] }>()
   for (const group of groups) {
     for (const item of group.results) {
-      const authorId = item.authorId?.trim() ?? ''
       const authorName = item.authorName?.trim() ?? ''
-      if (!authorId || !authorName) continue
-      if (isLiuKanshanName(authorId) || isLiuKanshanName(authorName)) continue
-      if (excluded.has(authorId)) continue
       const evidenceId = item.evidenceId.trim()
       const url = item.url.trim()
       const summary = item.summary.trim()
-      if (!evidenceId || !url) continue
+      if (!authorName || !evidenceId || !url) continue
+      const authorId = resolveSearchAuthorId(item.authorId, evidenceId)
+      if (isLiuKanshanName(authorId) || isLiuKanshanName(authorName)) continue
+      if (excluded.has(authorId)) continue
       const current = grouped.get(authorId)
       const evidence = { evidenceId, summary: summary || item.title.trim() || url, url }
       if (current) {
@@ -148,23 +150,24 @@ async function searchQueries(
   search: AuthorsSearch,
   queries: readonly { id: string; text: string }[],
 ): Promise<{ kind: 'groups'; groups: SearchGroup[] } | { kind: 'failed'; message: string }> {
-  const searches = await Promise.all(queries.map(async (query) => {
-    let result = await search(query.text, SEARCH_COUNT)
+  const packs = packZhihuSearchQueries(queries, ZHIHU_CONCURRENCY)
+  const searches = await mapWithConcurrency(packs, ZHIHU_CONCURRENCY, async (pack) => {
+    let result = await search(pack.query, SEARCH_COUNT)
     if (result.kind === 'failed') {
       await sleep(400)
-      result = await search(query.text, SEARCH_COUNT)
+      result = await search(pack.query, SEARCH_COUNT)
     }
-    return { query, result }
-  }))
+    return { pack, result }
+  })
   const hits = searches.filter((item) => item.result.kind === 'hits')
   if (hits.length === 0 && searches.some((item) => item.result.kind === 'failed')) {
     return { kind: 'failed', message: '知乎检索不可用。' }
   }
   return {
     kind: 'groups',
-    groups: searches.map(({ query, result }) => ({
-      queryId: query.id,
-      query: query.text,
+    groups: searches.map(({ pack, result }) => ({
+      queryId: pack.queryId,
+      query: pack.query,
       results: result.kind === 'hits'
         ? result.items.map((item) => ({
           evidenceId: item.evidenceId,

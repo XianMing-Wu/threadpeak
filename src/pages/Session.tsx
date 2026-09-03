@@ -36,6 +36,7 @@ import {
   getKnowledgeByRoute,
   getLesson,
   getRoute,
+  hasSettledMineConcept,
   saveConversationDraft,
   startLearningConversation,
 } from '../workspace/store'
@@ -185,7 +186,7 @@ function CanonicalSessionGate({ routeId, conceptId }: { routeId: string; concept
           <div className="conversation" role="status" aria-live="polite">
             <article>
               <h2>{generating ? '正在生成这次概念的首次回复' : '正在读取这次概念的首次回复'}</h2>
-              <p>第一次进入会并联三路知乎直答并整理成唯一首轮，同时确定性创建唯一根。再次进入只读取已 settle 的首次回复，不再生成。</p>
+              <p>第一次进入会完成三路知乎直答并整理成唯一首轮，同时确定性创建唯一根。再次进入只读取已 settle 的首次回复，不再生成。</p>
             </article>
           </div>
         </section>
@@ -386,7 +387,7 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
     })
     setAuthorQuestion(null)
   }
-  const knowledgeReady = graphReady || Boolean(getKnowledgeByRoute(routeId))
+  const knowledgeReady = graphReady || hasSettledMineConcept(routeId, conceptId) || getRoute(routeId)?.owner === 'example'
   const placeholder = lesson.placeholder || `围绕“${title}”继续提问，或选择上方模式深入理解…`
 
   return <ProductWorkspace active="paths" page="session-learning">

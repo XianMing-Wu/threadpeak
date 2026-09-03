@@ -315,7 +315,7 @@
 .thread-node .node-turn-title{margin:12px 0 7px;color:#3f4945;font-family:Georgia,"Noto Serif SC",serif;font-size:14px;line-height:1.35;font-weight:650}.thread-node .node-turn:first-of-type .node-turn-title{margin-top:2px}.thread-node .node-question{margin:0 0 7px;padding:6px 8px;border-radius:6px;background:#eef3ef;color:#3f4945;font-size:12px;line-height:1.45;font-weight:650;user-select:text;display:block;-webkit-line-clamp:unset;overflow:visible;white-space:normal}
 .thread-node .node-reply{user-select:text}
 .thread-node .annotated-markdown{padding-right:22px}
-.thread-node .md-body{display:grid;gap:6px;font-size:12px;line-height:1.55}
+.thread-node .md-body{display:block;font-size:12px;line-height:1.55}
 .thread-node .md-body p{margin:0 0 6px;color:#4e524f;font-size:12px;line-height:1.55;display:block;-webkit-line-clamp:unset;overflow:visible;white-space:normal}
 .thread-node .katex{font-size:1.05em}
 .canvas-status{padding:8px 16px 0;max-height:180px;overflow:auto}
@@ -397,9 +397,10 @@
 .annotation-card__author b{display:block;color:#191b1f;font-size:15px;line-height:21px}
 .annotation-card__author small{display:block;color:#646464;font-size:13px;line-height:18px}
 .annotation-card__reply{margin:0 0 14px;color:#121212;font-size:15px;line-height:25.5px}
+.annotation-card__reply .md-body{font-size:15px;line-height:25.5px;color:inherit}
 .annotation-card__source{display:flex;flex-direction:column;gap:4px}
 .annotation-card__source strong{color:#191b1f;font-size:13px;font-weight:600;line-height:20px}
-.annotation-card__source a{color:#175199;font-size:13px;line-height:20px;word-break:break-all;text-decoration:none}
+.annotation-card__source a{color:#175199;font-size:13px;line-height:20px;overflow-wrap:anywhere;word-break:break-word;text-decoration:none}
 .annotation-card__source a:hover{text-decoration:underline}
 .annotation-panel-reopen{position:absolute;right:12px;top:72px;z-index:40;height:32px;padding:0 12px;border:1px solid #1772f6;border-radius:3px;color:#1772f6;background:#fff;font-size:13px}
 .annotation-panel-reopen:hover{background:rgba(5,109,232,.06)}
@@ -443,16 +444,24 @@
 :root[data-theme="dark"] .annotation-card__reply,:root[data-theme="dark"] .annotation-panel__question,:root[data-theme="dark"] .annotation-card__author b{color:#edf0f3}
 :root[data-theme="dark"] .annotation-card__source a{color:#7eb0ff}
 
-.md-body{display:grid;gap:10px;color:#3e444d;font-size:13px;line-height:1.75}
-.md-body>p,.md-body>ul,.md-body>ol,.md-body>pre,.md-body>blockquote{margin:0}
-.md-body h1,.md-body h2,.md-body h3{margin:0;color:#1f2329;font-size:16px;line-height:1.4}
+.md-body{display:block;color:#3e444d;font-size:13px;line-height:1.75}
+.md-body>p,.md-body>ul,.md-body>ol,.md-body>pre,.md-body>blockquote{margin:0 0 0.7em}
+.md-body> :last-child{margin-bottom:0}
+.md-body h1,.md-body h2,.md-body h3{margin:0.9em 0 0.4em;color:#1f2329;font-size:16px;line-height:1.4}
+.md-body h1:first-child,.md-body h2:first-child,.md-body h3:first-child{margin-top:0}
 .md-body code{padding:1px 5px;border-radius:4px;background:#f3f5f7;font-size:12px}
 .md-body pre{padding:10px 12px;border-radius:8px;background:#15181c;color:#f4f6f8;overflow:auto}
 .md-body pre code{padding:0;background:transparent;color:inherit}
-.md-body ul,.md-body ol{padding-left:1.2em}
-.tp-math{display:inline-block;max-width:100%;overflow-x:auto;vertical-align:middle}
-.tp-math.is-display{display:block;margin:8px 0;text-align:center}
-.tp-math-fallback{color:#8a2f2f}
+.md-body ul,.md-body ol{padding-left:1.35em}
+.md-body li{margin:0.2em 0}
+.md-body li>p{margin:0.2em 0}
+.md-body a{color:#175199;overflow-wrap:anywhere;word-break:break-word}
+.tp-math{display:inline;max-width:100%;vertical-align:middle}
+.tp-math.is-inline{display:inline}
+.tp-math.is-display{display:block;margin:0.45em 0;text-align:left;overflow-x:auto;overflow-y:hidden}
+.tp-math .katex{font-size:1.05em}
+.tp-math .katex-display{margin:0.35em 0}
+.tp-math-fallback{color:#8a2f2f;white-space:pre-wrap}
 .visual-stage-shell{min-height:0;align-items:stretch}
 .query-chat-body:has(.visual-answer){padding-left:24px;padding-right:24px}
 .query-chat-flow:has(.visual-answer){width:min(1280px,100%)}

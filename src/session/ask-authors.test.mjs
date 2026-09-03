@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { annotationScopeId, annotationsInScope, applyAskAuthorResult, findQuoteSpan, isLiuKanshanDirect, isPersistedAnnotation, liuKanshanDirectReply, nextOrdinal } from './ask-authors.ts'
+import { annotationScopeId, annotationsInScope, applyAskAuthorResult, findQuoteSpan, isLiuKanshanDirect, isPersistedAnnotation, liuKanshanDirectReply, nextOrdinal, stripAuthorArticleLink } from './ask-authors.ts'
+
+test('author article sentence is stripped from the body so the footer can own the link', () => {
+  const url = 'https://www.zhihu.com/question/1'
+  assert.equal(stripAuthorArticleLink(`必须保持加法。\n\n详细内容可以阅读我的文章 ${url}`, url), '必须保持加法。')
+  assert.equal(stripAuthorArticleLink('必须保持加法。', url), '必须保持加法。')
+})
 
 test('old fixture author replies are not treated as live annotations', () => {
   assert.equal(isPersistedAnnotation({

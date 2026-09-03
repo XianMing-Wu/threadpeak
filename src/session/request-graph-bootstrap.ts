@@ -21,6 +21,7 @@ export type GraphSnapshot = {
 
 export type GraphBootstrapResult =
   | { kind: 'completed'; graph: GraphSnapshot }
+  | { kind: 'missing' }
   | { kind: 'unavailable'; title: string; message: string }
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
@@ -72,20 +73,11 @@ function snapshotFrom(body: Record<string, unknown>, reused: boolean): GraphSnap
   }
 }
 
-function missingGraph(): Extract<GraphBootstrapResult, { kind: 'unavailable' }> {
-  return {
-    kind: 'unavailable',
-    title: '还没有这次概念的知识脉络',
-    message: '这条用户路线还没有 GraphSurgeon 提交的 graph/root。不能用页面 growGraph 发明节点，也不能在首次回复之前创建知识脉络。',
-  }
-}
-
 export async function requestGraphSnapshot(input: {
   routeId: string
   conceptId: string
   fetch?: FetchPort
 }): Promise<GraphBootstrapResult> {
-  const missing = missingGraph()
   const client = createLiveApiClient(input.fetch)
   const query = new URLSearchParams({
     routeId: input.routeId,
@@ -101,8 +93,12 @@ export async function requestGraphSnapshot(input: {
     const graph = snapshotFrom(body, true)
     if (graph) return { kind: 'completed', graph }
   }
+  if (!got.ok && (got.status === 404 || body?.kind === 'missing')) {
+    return { kind: 'missing' }
+  }
   return {
-    ...missing,
-    message: liveMessageOf(got.value, missing.message),
+    kind: 'unavailable',
+    title: '无法读取这次知识脉络',
+    message: liveMessageOf(got.value, '知识脉络暂时读不到，不能用页面发明节点。'),
   }
 }

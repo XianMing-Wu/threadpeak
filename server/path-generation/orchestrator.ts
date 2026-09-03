@@ -15,6 +15,13 @@ import type {
   R3Output,
   R4Output,
 } from '../agent-runtime/schemas.ts'
+import {
+  PATH_STRUCTURE_FAILURE_MESSAGE,
+  publicSafeFailureMessage,
+} from '../agent-runtime/repair.ts'
+import { ZHIHU_CONCURRENCY, mapWithConcurrency } from '../agent-runtime/concurrency.ts'
+import { packZhihuSearchQueries } from '../agent-runtime/pack-search.ts'
+import { PATH_SEARCH_COUNT } from './pack-search.ts'
 import { projectRouteToDocument } from './project-document.ts'
 import type { LearningPathDocument } from '../../src/vendor/learning-path-3d/index.js'
 
@@ -94,8 +101,6 @@ export type PathInvokeText = (
 
 export type PathSearch = (query: string, count: number) => Promise<ZhihuSearchResult>
 
-const SEARCH_COUNT = 5
-
 function viewOf(run: PathRun, extra?: { reply?: string }): PathRunView {
   return {
     runId: run.runId,
@@ -115,7 +120,13 @@ function viewOf(run: PathRun, extra?: { reply?: string }): PathRunView {
 function failRun(run: PathRun, code: string, message: string): PathRunView {
   run.status = 'failed'
   run.stage = 'failed'
-  run.error = { code, message }
+  const pathStructureFailure = code === 'OUTPUT_INVALID' || code === 'RENDERER_INVALID'
+  run.error = {
+    code,
+    message: pathStructureFailure
+      ? PATH_STRUCTURE_FAILURE_MESSAGE
+      : publicSafeFailureMessage(message, PATH_STRUCTURE_FAILURE_MESSAGE),
+  }
   return viewOf(run)
 }
 
@@ -225,17 +236,12 @@ export function createPathOrchestrator(ports: {
       thinkingDepth: run.thinkingDepth,
       parseInput: { attachmentSourceIds: attachmentIds(run.attachments) },
     }
-    let generated = await ports.invokeStructured<R4Output>('R4', r4Input, r4Options)
-    if (generated.kind === 'failed') {
-      generated = await ports.invokeStructured<R4Output>('R4', r4Input, r4Options)
-    }
+    const generated = await ports.invokeStructured<R4Output>('R4', {
+      goal: run.goal,
+      ...r4Input,
+    }, r4Options)
     if (generated.kind === 'failed') return failRun(run, generated.code, generated.message)
-    let projected = projectRouteToDocument(generated.value)
-    if (!projected.ok) {
-      generated = await ports.invokeStructured<R4Output>('R4', r4Input, r4Options)
-      if (generated.kind === 'failed') return failRun(run, generated.code, generated.message)
-      projected = projectRouteToDocument(generated.value)
-    }
+    const projected = projectRouteToDocument(generated.value)
     if (!projected.ok) return failRun(run, 'RENDERER_INVALID', projected.message)
     run.route = generated.value
     run.document = projected.value.document
@@ -257,6 +263,7 @@ export function createPathOrchestrator(ports: {
     if (allUndisputed(run.exploration)) return generateRoute(run)
     run.stage = '正在生成选择题'
     const questions = await ports.invokeStructured<R3Output>('R3', {
+      goal: run.goal,
       exploration: run.exploration,
       attachments: run.attachments,
     }, { thinkingDepth: run.thinkingDepth, parseInput: { attachmentSourceIds: attachmentIds(run.attachments) } })
@@ -294,23 +301,19 @@ export function createPathOrchestrator(ports: {
     if (split.kind === 'failed') return failRun(run, split.code, split.message)
     run.queries = split.value.queries
 
-    run.stage = '正在并联检索知乎'
-    const searchOnce = (query: string) => ports.search(query, SEARCH_COUNT)
-    const searches = await Promise.all(split.value.queries.map(async (query) => {
-      let result = await searchOnce(query.text)
-      if (result.kind === 'failed') {
-        await new Promise((resolve) => setTimeout(resolve, 400))
-        result = await searchOnce(query.text)
-      }
-      return { query, result }
+    run.stage = '正在检索知乎'
+    const packs = packZhihuSearchQueries(split.value.queries, ZHIHU_CONCURRENCY)
+    const searches = await mapWithConcurrency(packs, ZHIHU_CONCURRENCY, async (pack) => ({
+      pack,
+      result: await ports.search(pack.query, PATH_SEARCH_COUNT),
     }))
     const hits = searches.filter((item) => item.result.kind === 'hits')
     if (hits.length === 0 && searches.some((item) => item.result.kind === 'failed')) {
       return failRun(run, 'PROVIDER_UNAVAILABLE', '知乎检索不可用，不能继续制定这条路线。')
     }
-    run.searchGroups = searches.map(({ query, result }) => ({
-      queryId: query.id,
-      query: query.text,
+    run.searchGroups = searches.map(({ pack, result }) => ({
+      queryId: pack.queryId,
+      query: pack.query,
       results: result.kind === 'hits'
         ? result.items.map((item) => ({
           evidenceId: item.evidenceId,
@@ -413,12 +416,14 @@ export function createPathOrchestrator(ports: {
       if (!question) return reject('题目不属于当前题组。')
       if (!question.options.some((item) => item.id === input.optionId)) return reject('选项无效。')
       current.selectedOptionIds = { ...current.selectedOptionIds, [input.questionId]: input.optionId }
+      if (setComplete(current)) return generateRoute(run)
       return viewOf(run)
     },
 
     async commit(runId: string): Promise<PathRunView> {
       const run = store.get(runId)
       if (!run) return this.retry(runId)
+      if (run.status === 'published' || run.status === 'failed') return viewOf(run)
       if (run.status !== 'awaiting_answers') {
         return { ...viewOf(run), error: { code: 'PROVIDER_INVALID', message: '当前不是作答阶段。' } }
       }
@@ -440,6 +445,7 @@ export function createPathOrchestrator(ports: {
       if (!current) return reject('没有进行中的题组。')
       run.stage = '正在处理追问'
       const result = await ports.invokeStructured<R3bOutput>('R3b', {
+        goal: run.goal,
         followUp: message,
         activeRound: current.round,
         questionSets: run.questionSets,

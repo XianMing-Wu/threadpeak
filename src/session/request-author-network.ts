@@ -1,12 +1,15 @@
 import type { FetchPort } from '@threadpeak/api-client'
 import { createLiveApiClient, liveMessageOf, LIVE_AUTHOR_NETWORK_URL, LIVE_READY_URL } from '../runtime/live-client.ts'
 import { resolveAuthorNetwork, type AuthorNetworkResolution } from './resolve-author-network.ts'
+import { resolveNetworkCarrierTitle, resolveNetworkLayerTitle } from './resolve-layer-title.ts'
 
 export type AuthorNetworkMember = {
   authorId: string
   name: string
   weight: 'high' | 'low'
+  carrierId?: string
   carrierTitle?: string
+  conceptId?: string
   conceptTitle?: string
   question: string
 }
@@ -28,12 +31,24 @@ function asMember(value: unknown): AuthorNetworkMember | undefined {
   const weight = record.weight === 'high' || record.weight === 'low' ? record.weight : undefined
   const question = (typeof record.question === 'string' ? record.question : typeof record.normalizedQuestion === 'string' ? record.normalizedQuestion : '').trim()
   if (!name || name === '刘看山' || !weight) return undefined
+  const carrierId = (typeof record.carrierId === 'string' ? record.carrierId : '').trim()
+  const conceptId = (typeof record.conceptId === 'string' ? record.conceptId : '').trim()
+  const carrierTitle = resolveNetworkCarrierTitle({
+    carrierTitle: typeof record.carrierTitle === 'string' ? record.carrierTitle : '',
+    carrierId,
+    conceptId,
+    conceptTitle: typeof record.conceptTitle === 'string' ? record.conceptTitle : '',
+  })
+  const conceptTitle = resolveNetworkLayerTitle(typeof record.conceptTitle === 'string' ? record.conceptTitle : '')
+    || resolveNetworkLayerTitle(conceptId)
   return {
     authorId: authorId || name,
     name,
     weight,
-    ...(typeof record.carrierTitle === 'string' && record.carrierTitle.trim() ? { carrierTitle: record.carrierTitle.trim() } : {}),
-    ...(typeof record.conceptTitle === 'string' && record.conceptTitle.trim() ? { conceptTitle: record.conceptTitle.trim() } : {}),
+    ...(carrierId ? { carrierId } : {}),
+    ...(carrierTitle ? { carrierTitle } : {}),
+    ...(conceptId ? { conceptId } : {}),
+    ...(conceptTitle ? { conceptTitle } : {}),
     question,
   }
 }

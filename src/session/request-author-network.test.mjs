@@ -38,3 +38,23 @@ test('author network lists enrolled authors and drops Liu Kanshan', async () => 
   assert.equal(result.authors.length, 1)
   assert.equal(result.authors[0].weight, 'high')
 })
+
+test('author network omits internal carrier ids when no route card can replace them', async () => {
+  const result = await requestAuthorNetwork({
+    fetch: async (url) => {
+      if (url === '/api/ready') return jsonResponse(200, { ready: true })
+      return jsonResponse(200, {
+        kind: 'list',
+        authors: [{
+          authorId: 'a',
+          authorName: '作者甲',
+          weight: 'high',
+          carrierTitle: 's-carrier-uuid-1',
+          question: '状态是什么？',
+        }],
+      })
+    },
+  })
+  assert.equal(result.kind, 'list')
+  assert.equal(result.authors[0].carrierTitle, undefined)
+})

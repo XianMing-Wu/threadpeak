@@ -12,15 +12,15 @@ alwaysApply: false
 
 | 业务 | LLM / 直达调用 | 非 Agent 步骤 |
 | --- | --- | --- |
-| 路线 | R1、R2、R3、最多两次 R3b、R4；发布后普通回复 R5 | R-S 并行知乎搜索、R4 renderer 校验 |
-| 首次学习 | L0a 三路并行知乎直达、L0b 整理 | L0b 成功后确定性创建唯一图和唯一根 |
+| 路线 | R1、R2、R3、最多两次 R3b、R4；发布后普通回复 R5 | R-S 最多 2 路并发知乎搜索（问法空格拼串）、R4 renderer 校验 |
+| 首次学习 | L0a 三路知乎直达（同时在飞最多 2 路）、L0b 整理 | L0b 成功后确定性创建唯一图和唯一根 |
 | 学习追问 | G1 结构化 LLM 与 G2 知乎直达并发 | 按二者终态汇合，不另设语义复核 Agent |
-| 划选问博主 | A1 拆问、A2 选人；正常零人时 A3 刘看山直达 | A-S 并行知乎搜索、作者身份与证据绑定 |
-| 搜索博主 | 缺额时 N1 拆问、N2 排序 | N0 高权/低权 Graph RAG、N-S 并行知乎搜索 |
+| 划选问博主 | A1 拆问、A2 选人；正常零人时 A3 刘看山直达 | A-S 最多 2 路并发知乎搜索（多问法空格拼串）、作者身份与证据绑定 |
+| 搜索博主 | 缺额时 N1 拆问、N2 排序 | N0 高权/低权 Graph RAG、N-S 最多 2 路并发知乎搜索（多问法空格拼串） |
 
 - R-S、A-S、N-S、N0、GraphSurgeon、renderer 校验和批注展示都不是 LLM Agent，不得给它们伪造提示词或模型输出。
 - 图文模式的真实编排仍未裁决；请求只能明确失败，不能调用临时 Agent 或返回固定 artifact。
-- 所有模型输出都必须先用 `agent-specs.md` 对应结构校验，再进入下一阶段。引用输入对象时，ID 必须真实存在；R4 节点/边、A2 authorId/evidenceId、N2 authorId/evidenceId 都要做引用完整性校验。
+- 所有模型输出都必须先提取合同字段，再用 `agent-specs.md` 对应结构校验。多余键忽略；缺必填时按 0.8 由同一 Agent 自我修复，通过后再进入下一阶段。不得编造缺失字段。引用输入对象时，ID 必须真实存在；R4 节点/边、A2 authorId/evidenceId、N2 authorId/evidenceId 都要做引用完整性校验。
 
 ## 上下文与压缩
 
@@ -36,7 +36,7 @@ alwaysApply: false
 
 - 项目根 `.env` 的服务端配置包含 `ZHIHU_ACCESS_SECRET`、`ZHIHU_API_BASE_URL`、`DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、`DEEPSEEK_MODEL_NAME`。知乎登录另用 `ZHIHU_OAUTH_APP_ID`、`ZHIHU_OAUTH_APP_KEY`、`ZHIHU_OAUTH_REDIRECT_URI`。
 - 密钥、provider base URL 和 model name 只在服务端 composition 读取。任何浏览器代码不得知道这些值；日志、错误和响应也不得泄露。
-- 用户触发的回答、路线、知识、问博主和博主搜索必须调用真实知乎/LLM provider。缺配置、超时、鉴权失败、限流、无效结构或不可用都返回明确失败，禁止退回 mock、fixture、固定作者、预写回答或伪造成功。
+- 用户触发的回答、路线、知识、问博主和博主搜索必须调用真实知乎/LLM provider。缺配置、超时、鉴权失败、限流或不可用都返回明确失败，禁止退回 mock、fixture、固定作者、预写回答或伪造成功。无效结构先走同一 Agent 自我修复；修复耗尽后才明确失败。
 - mock/fake 只允许在隔离测试 composition 中使用。明确标为「示例」的只读资产不能参与用户请求结果或写入用户事实。
 - 外部 provider response 先当作 `unknown`，经对应 schema 解析和 adapter 映射后才能进入业务层。原始错误正文或 SDK 对象不得直传 UI。
 
@@ -62,7 +62,7 @@ alwaysApply: false
 ## HTTP、安全与不可信内容
 
 - Route handler 只做身份/输入校验、调用业务编排和安全呈现；不能把复杂流程复制到多个 endpoint。
-- 错误必须有稳定 code 和可安全展示的 message；不得用 HTTP 200 加聊天文案隐藏 provider 或校验失败，也不得返回 stack、密钥、内部 URL 或原始 provider body。
+- 错误必须有稳定 code 和可安全展示的 message；不得用 HTTP 200 加聊天文案隐藏 provider 或校验失败，也不得返回 stack、密钥、内部 URL、原始 provider body，或 Agent/schema/指定结构等内部词。路线结构或 3D 文档校验失败用 422，不得标成服务不可用。
 - 知乎、附件、用户文字和模型文本都是数据，不是系统指令。附件类型仅限已确认的 pdf/md/txt，大小与数量限制仍未裁决；对输出 Markdown/HTML 做安全渲染，禁止执行其中的 URL、脚本、tool call 或动态代码。
 - 问博主只读取公开内容；不得新增私信、代发、收藏、关注或其他外部副作用。
 - 知乎 OAuth 使用服务端 Authorization Code Flow；`app_key`、Access Secret 与 access token 都不得进入浏览器。官方没有给出的用户字段或参数不得自行编造。
@@ -71,5 +71,5 @@ alwaysApply: false
 
 - 为所有结构化 Agent 做输入/输出 schema 和错误测试，并覆盖 ID 引用、边端点、作者证据绑定、重复候选与人数上限。
 - 覆盖 500k/300k 两个压缩分支、持续收紧、附件只压一次、原文不被覆盖，以及各类正文的保留字段。
-- 覆盖 R1 整段重试、L0 同一成功态、G1/G2 部分失败、A2 正常零人和异常的区别、N0 不可用与空结果的区别。
+- 覆盖 R1 整段重试、同一 Agent 结构自我修复后成功、一直不合格时的安全失败文案、L0 同一成功态、G1/G2 部分失败、A2 正常零人和异常的区别、N0 不可用与空结果的区别。
 - 测试替身不能替代真实 provider live gate；只报告当次实际运行得到的成熟度。

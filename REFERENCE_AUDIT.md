@@ -33,11 +33,11 @@
 | `src/pages/AuthLanding.tsx`、`src/resolve-auth-session.ts`、`server/identity/` | 知乎授权会请求官方地址；缺配置明确失败；进入本地原型只设置本机开关；用户协议/隐私政策已删除 | 保留授权与进入本地原型两条入口；不假登录；删除无内容的协议/隐私项 |
 | `src/components/Shell.tsx`、`src/history.ts`、`src/resolve-history-reopen.ts` | 侧栏历史是本地草稿；学习记录点哪条开哪条；Chat 重开整段对话；账号菜单有设置 | 学习历史点哪条开哪条；Chat 历史原样恢复整段对话；清历史只清列表；账号菜单增加设置 |
 | `src/pages/Home.tsx`、`src/components/Composer.tsx` | 首页只有路线/图文快捷；附件仅 pdf/md/txt；芯片选中路线并填字；资料范围继续失败 | 不增加首页问博主；芯片选中路线模式并填字、不发送；只在首页上传 pdf/md/txt；资料范围继续失败；只有快速/深度 |
-| `src/pages/Chat.tsx`、`src/path-planning/`、`server/path-generation/` | 产品路线制定只走 R1–R4 `/api/path-runs`；旧 CandidateSet `/api/paths/generate` 已删除 | R1/R-S/R2/R3/R3b/R4；最多 3 轮；校验后发布且不建知识；Composer 一直存在；发布后普通发送走 R5 |
+| `src/pages/Chat.tsx`、`src/path-planning/`、`server/path-generation/` | 产品路线制定只走 R1–R4 `/api/path-runs`；当前题组选完自动进 R4；旧 CandidateSet `/api/paths/generate` 已删除 | R1/R-S/R2/R3/R3b/R4；最多 3 轮；答完自动发布且不建知识；Composer 一直存在；发布后普通发送走 R5 |
 | `src/pages/Collections.tsx`、`src/path-3d/`、`src/components/Path3D.tsx` | 我的路线只显示校验文档；3D 返回路线列表；再次进入交回 renderer 不透明 progress | 空态回首页并选中路线模式；全部 3D 返回路线列表；边不锁节点；每条路线恢复上次位置，具体字段仍未裁决 |
-| `src/pages/Session.tsx`、`server/first-learning/`、`server/knowledge/` | 我的路线第一次进概念走 L0a/L0b；首轮与确定性唯一根同一 settle；跨重启仍只在进程内存 | L0a 三路并联直答 → L0b；canonical 首次回复与确定性唯一根作为同一成功结果，根不再调用 LLM，并永久复用 |
+| `src/pages/Session.tsx`、`server/first-learning/`、`server/knowledge/` | 我的路线第一次进概念走 L0a/L0b；首轮与确定性唯一根同一 settle；跨重启仍只在进程内存 | L0a 三路直答（同时在飞最多 2 路）→ L0b；canonical 首次回复与确定性唯一根作为同一成功结果，根不再调用 LLM，并永久复用 |
 | `src/session/`、`src/knowledge-canvas/`、`server/follow-up/` | 追问走 G1/G2 并发；点击节点不选宿主；画布与最新对话同一份记录 | 显式引用/默认最近回复决定宿主；G1 邻域 JSON 与 G2 当前 conversation 全文并发；双成功才长图；画布与最新对话实时同步 |
-| `src/session/ask-authors.ts`、`server/authors/` | 划选后 A1→A-S→A2；零位才 A3；结果只做批注；真实作者高权入网 | 有效划选 + 问题 → A1 2–3 问 → A-S 并联 → A2 选 1–2 位；零位才 A3；只形成批注；真实作者高权入网 |
+| `src/session/ask-authors.ts`、`server/authors/` | 划选后 A1→A-S→A2；零位才 A3；结果只做批注；真实作者高权入网 | 有效划选 + 问题 → A1 2–3 问 → A-S 最多 2 路并发（多问法空格拼串）→ A2 选 1–2 位；零位才 A3；只形成批注；真实作者高权入网 |
 | `src/pages/Authors.tsx`、`src/session/resolve-author-search.ts` | N0 高权→低权，不足再查知乎；投影不可用 503；网络 Tab 有人列名单、没人空态 | N0 高权→低权；合计不足 3 人才 N1/N-S/N2 补位；候选不足全部返回；知乎新作者低权入网；网络有人列名单、没人显示空态 |
 | `src/pages/Settings.tsx`、`src/resolve-settings-identity.ts` | 身份和资料没有 provider 时明确失败；已删除密度、减少动效和默认思考深度 | 保留退出、夜间模式、清空历史、身份、资料；删除密度、减少动效、默认思考深度 |
 | `src/visuals/`、图文分支 | 图文发送只会失败，不产生用户 artifact；隔离的图表资产不能冒充成功 | 在真实图文编排未裁决前继续明确失败，不得用 fixture 假成功 |
@@ -50,10 +50,10 @@
 
 | 领域 | 固定顺序或不变量 |
 | --- | --- |
-| 路线 | R1 4–5 问 → R-S 并联 → R2 探索 JSON → R3/R3b 最多 3 轮 → R4 稳定 ID/显式边 → renderer 校验 → 发布；发布不建知识 |
-| 首次学习 | L0a 三路知乎直答并联 → L0b 整理 → canonical 首次回复与确定性图/根同一成功状态；再次进入和新对话永久复用 |
+| 路线 | R1 4–5 问 → R-S 最多 2 路并发（问法空格拼串）→ R2 探索 JSON → R3/R3b 最多 3 轮 → R4 稳定 ID/显式边 → renderer 校验 → 发布；发布不建知识 |
+| 首次学习 | L0a 三路知乎直答（同时在飞最多 2 路）→ L0b 整理 → canonical 首次回复与确定性图/根同一成功状态；再次进入和新对话永久复用 |
 | 学习追问 | 问题必填；引用决定宿主，否则最近成功 LLM 回复；G1/G2 同时开始；只有两路成功才新增卡 |
-| 问博主 | 划选后 A1 2–3 问 → A-S 并联 → A2 从输入 ID 选 1–2 位 → 正常零位才 A3 刘看山；结果只做批注 |
+| 问博主 | 划选后 A1 2–3 问 → A-S 最多 2 路并发（多问法空格拼串）→ A2 从输入 ID 选 1–2 位 → 正常零位才 A3 刘看山；结果只做批注 |
 | 博主搜索 | network-first：N0 高权→低权；不足 3 才查知乎；最终最多 3 位，候选不足全部返回；知乎作者低权入网 |
 | 刘看山 | 只作零作者时的直达回退，不是博主，不创建 AuthorIdentity、候选或网络节点 |
 | 3D | 所有节点可进入；边只推荐流转；走到这里不建会话或知识；学习会话返回 3D，3D 返回路线列表 |
@@ -102,7 +102,7 @@ ZHIHU_OAUTH_REDIRECT_URI
 ```
 
 - 配置只由服务端读取，不进入 React/Vite bundle、浏览器、日志或错误响应。
-- 用户请求使用真实知乎与真实 LLM/直答 provider；缺配置、鉴权、限流、超时或无效结构都明确失败。
+- 用户请求使用真实知乎与真实 LLM/直答 provider；缺配置、鉴权、限流或超时都明确失败。无效结构先由同一 Agent 自我修复，耗尽后才明确失败，且不得把校验原文展示给用户。
 - mock、fake、fixture 和示例只能用于隔离测试或明确示例展示，不能替代用户请求。
 - 文档列出配置名、服务存在或 `/ready` 通过，不能证明目标 Agent 编排、永久存储或 live-provider gate 已完成。
 

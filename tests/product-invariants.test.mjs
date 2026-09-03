@@ -92,6 +92,10 @@ test('stale 马同学 annotations are not live replies and failures are not pers
   assert.match(askAuthors, /annotationScopeId/)
   assert.match(annotationPanel, /刘看山直达/)
   assert.match(annotationPanel, /不是博主身份/)
+  assert.match(annotationPanel, /MarkdownMath source=\{item\.text/)
+  assert.match(annotationPanel, />详细内容可以阅读我的文章</)
+  assert.doesNotMatch(annotationPanel, /<p className="annotation-card__reply">\{item\.text/)
+  assert.doesNotMatch(annotationPanel, /<strong>\{item\.title\}/)
   assert.doesNotMatch(annotationPanel, /annotation-card__avatar[\s\S]{0,80}刘看山/)
 })
 
@@ -100,8 +104,12 @@ test('mine canvas projects the settled first answer onto the unique GraphSurgeon
   assert.match(mineGraph, /requestCanonicalSnapshot/)
   assert.match(mineGraph, /ensureMineKnowledgeFromCanonical/)
   assert.match(mineGraph, /KnowledgeCanvasPage/)
+  assert.match(mineGraph, /dropMineConceptGraph/)
+  assert.match(mineGraph, /closeConceptKnowledge/)
   assert.doesNotMatch(mineGraph, /requestCanonicalAnswer/)
   assert.doesNotMatch(mineGraph, /growGraph/)
+  assert.doesNotMatch(mineGraph, /无法打开这次知识脉络/)
+  assert.doesNotMatch(mineGraph, /GraphSurgeon/)
   assert.match(bootstrapped, /lessonFromCanonical/)
   assert.match(bootstrapped, /canonicalContentHash/)
   assert.doesNotMatch(bootstrapped, /结构锚点/)
@@ -110,10 +118,12 @@ test('mine canvas projects the settled first answer onto the unique GraphSurgeon
 
 test('Liu Kanshan cannot become an author identity and author search fails closed without a network', () => {
   assert.match(authorsOrchestrator, /isLiuKanshanName/)
-  assert.match(authors, /还没有冻结，不能当成产品事实/)
+  assert.match(authors, /载体层下是概念层，概念层下是问题层/)
   assert.match(authors, /还没有入网博主/)
   assert.match(authors, /requestAuthorNetwork/)
-  assert.doesNotMatch(authors, /AuthorNetworkGraph/)
+  assert.match(authors, /AuthorNetworkGraph/)
+  assert.match(store, /titleFromPathLayer/)
+  assert.doesNotMatch(authors, /seedAuthorNetwork|hydrateNetworkFromAnnotations/)
 })
 
 test('stream cursors start at sequence 1 and incomplete path documents fail', () => {

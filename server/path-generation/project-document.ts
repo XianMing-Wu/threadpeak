@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import type { LearningPathDocument } from '../../src/vendor/learning-path-3d/index.js'
+import { addUniqueDraft, stabilizeHostSubjectDrafts } from '../../src/path-3d/host-subject-flow.ts'
 import { validateRendererDocument } from '../../src/path-3d/validate-renderer-document.ts'
 import type { R4Output } from '../agent-runtime/schemas.ts'
 
@@ -69,31 +70,77 @@ export function projectRouteToDocument(route: R4Output): { ok: true; value: Proj
     conceptResource.set(concept.id, toWireId(concept.id, used, 'r-'))
   }
 
-  const flow: Array<LearningPathDocument['structure']['flow'][number]> = []
+  const goalId = toWireId(sha(`goal:${route.routeId}`).slice(0, 12), used, 'pg-')
+  const goalCardId = toWireId(sha(`goal-card:${route.routeId}`).slice(0, 12), used, 'pgc-')
+
   const entryCarrierIds = new Set(
     route.concepts.filter((item) => route.entryConceptIds.includes(item.id)).map((item) => item.carrierId),
   )
   if (entryCarrierIds.size === 0) entryCarrierIds.add(route.carriers[0]!.id)
 
+  const intended: Array<{ from: string; to: string }> = []
   for (const carrierId of entryCarrierIds) {
     const to = subjectByCarrier.get(carrierId)
-    if (!to) continue
-    const id = toWireId(`${startId}-${to}`, used, 'f-')
-    flow.push({ id, fromSubjectId: startId, toSubjectId: to })
+    if (to) addUniqueDraft(intended, startId, to)
   }
-
   for (const edge of route.carrierEdges) {
     const from = subjectByCarrier.get(edge.fromCarrierId)
     const to = subjectByCarrier.get(edge.toCarrierId)
-    if (!from || !to || from === to) continue
-    const id = toWireId(edge.id, used, 'f-')
-    flow.push({ id, fromSubjectId: from, toSubjectId: to })
+    if (from && to) addUniqueDraft(intended, from, to)
   }
 
   const out = outgoingCount(route)
   const terminals = route.carriers.filter((carrier) => (out.get(carrier.id) ?? 0) === 0)
   const goalCarriers = terminals.length > 0 ? terminals : [route.carriers.at(-1)!]
-  const goalSubjectIds = goalCarriers.map((carrier) => subjectByCarrier.get(carrier.id)!).filter(Boolean)
+  for (const carrier of goalCarriers) {
+    const from = subjectByCarrier.get(carrier.id)
+    if (from) addUniqueDraft(intended, from, goalId)
+  }
+
+  const carrierSubjects = [...subjectByCarrier.values()]
+  const allSubjects = [startId, ...carrierSubjects, goalId]
+  const drafts = stabilizeHostSubjectDrafts(intended, startId, goalId, allSubjects)
+
+  const outgoingBy = new Map<string, typeof drafts>()
+  const incomingBy = new Map<string, typeof drafts>()
+  for (const id of allSubjects) {
+    outgoingBy.set(id, [])
+    incomingBy.set(id, [])
+  }
+  for (const edge of drafts) {
+    outgoingBy.get(edge.from)?.push(edge)
+    incomingBy.get(edge.to)?.push(edge)
+  }
+
+  const flowGroups: Array<LearningPathDocument['structure']['flowGroups'][number]> = []
+  const splitOf = new Map<string, string>()
+  const joinOf = new Map<string, string>()
+  for (const [id, edges] of outgoingBy) {
+    if (edges.length < 2) continue
+    const groupId = toWireId(`split-${id}`, used, 'fg-')
+    flowGroups.push({ id: groupId, type: 'split', anchorSubjectId: id, policy: 'parallel' })
+    for (const edge of edges) splitOf.set(`${edge.from}->${edge.to}`, groupId)
+  }
+  for (const [id, edges] of incomingBy) {
+    if (edges.length < 2) continue
+    const groupId = toWireId(`join-${id}`, used, 'fg-')
+    flowGroups.push({ id: groupId, type: 'join', anchorSubjectId: id, policy: 'all-required' })
+    for (const edge of edges) joinOf.set(`${edge.from}->${edge.to}`, groupId)
+  }
+
+  const flow: Array<LearningPathDocument['structure']['flow'][number]> = drafts.map((edge) => {
+    const key = `${edge.from}->${edge.to}`
+    const splitGroupId = splitOf.get(key)
+    const joinGroupId = joinOf.get(key)
+    return {
+      id: toWireId(`${edge.from}-${edge.to}`, used, 'f-'),
+      fromSubjectId: edge.from,
+      toSubjectId: edge.to,
+      ...(splitGroupId || joinGroupId
+        ? { semantics: { ...(splitGroupId ? { splitGroupId } : {}), ...(joinGroupId ? { joinGroupId } : {}) } }
+        : {}),
+    }
+  })
 
   const subjects: LearningPathDocument['structure']['subjects'] = [
     { id: startId, cardRef: startCardId, orderHint: 1 },
@@ -102,6 +149,7 @@ export function projectRouteToDocument(route: R4Output): { ok: true; value: Proj
       cardRef: subjectCardByCarrier.get(carrier.id)!,
       orderHint: index + 2,
     })),
+    { id: goalId, cardRef: goalCardId, orderHint: route.carriers.length + 2 },
   ]
 
   const concepts: LearningPathDocument['structure']['concepts'] = route.concepts.map((concept, index) => ({
@@ -120,12 +168,13 @@ export function projectRouteToDocument(route: R4Output): { ok: true; value: Proj
       title: clip(carrier.title, 160, '载体'),
       summary: clip(carrier.description, 500, '学习载体'),
     })),
+    { id: goalCardId, eyebrow: '学习目标', title: clip(route.title, 160, '学习目标'), summary: '沿着推荐载体前进，任意概念都可以进入。' },
     ...route.concepts.map((concept) => ({
       id: conceptCard.get(concept.id)!,
       eyebrow: concept.hasDispute ? '有争议' : '概念',
       title: clip(concept.title, 160, '概念'),
       summary: clip(concept.detailedDescription, 500, '进入学习'),
-      body: concept.detailedDescription,
+      body: clip(concept.detailedDescription, 4000, '进入学习'),
     })),
   ]
 
@@ -153,11 +202,11 @@ export function projectRouteToDocument(route: R4Output): { ok: true; value: Proj
     },
     structure: {
       entrySubjectId: startId,
-      goalSubjectIds,
+      goalSubjectIds: [goalId],
       subjects,
       concepts,
       flow,
-      flowGroups: [],
+      flowGroups,
     },
     data: { cards, resources, actions },
     presentation: { layout: { direction: 'top-to-bottom' } },

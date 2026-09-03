@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createAuthorsOrchestrator } from './orchestrator.ts'
+import { createAuthorsOrchestrator, groupAuthorCandidates } from './orchestrator.ts'
 import { createInMemoryAuthorNetworkProjector, createUnavailableAuthorNetworkProjector } from './network.ts'
 
 const host = { nodeId: 'root', content: '线性映射同时保持加法和数乘。' }
@@ -66,7 +66,7 @@ function orchestrator(overrides = {}) {
       if (overrides.fail?.[agentId]) {
         return { kind: 'failed', code: overrides.fail[agentId].code ?? 'OUTPUT_INVALID', message: overrides.fail[agentId].message ?? `${agentId} 失败`, agentId }
       }
-      if (agentId === 'A1') return { kind: 'completed', agentId, value: a1Value(), compressed: false }
+      if (agentId === 'A1') return { kind: 'completed', agentId, value: overrides.a1 ?? a1Value(), compressed: false }
       if (agentId === 'A2') {
         if (overrides.a2 === 'none') {
           return {
@@ -128,7 +128,7 @@ function orchestrator(overrides = {}) {
   return { api, calls, searches, network }
 }
 
-test('A1 splits 2–3 queries and A-S searches them in parallel', async () => {
+test('A1 splits 2–3 queries and A-S searches at most two packed queries', async () => {
   const { api, calls, searches } = orchestrator()
   const result = await api.ask(askBase)
   assert.equal(result.kind, 'authors')
@@ -140,6 +140,23 @@ test('A1 splits 2–3 queries and A-S searches them in parallel', async () => {
   assert.equal(result.authors.length, 1)
   assert.equal(result.authors[0].authorName, '作者甲')
   assert.match(result.authors[0].displayText, /详细内容可以阅读我的文章 https:\/\/www\.zhihu\.com\/question\/1/)
+})
+
+test('A-S packs a third query into two space-joined searches', async () => {
+  const { api, searches } = orchestrator({
+    a1: {
+      queries: [
+        { id: 'ask-query-1', text: '线性映射为什么要保持加法' },
+        { id: 'ask-query-2', text: '线性映射可加性是什么意思' },
+        { id: 'ask-query-3', text: '线性映射同时保持加法与数乘' },
+      ],
+    },
+  })
+  const result = await api.ask(askBase)
+  assert.equal(result.kind, 'authors')
+  assert.equal(searches.length, 2)
+  assert.ok(searches.some((query) => query.includes('线性映射为什么要保持加法') && query.includes('线性映射可加性是什么意思')))
+  assert.ok(searches.some((query) => query.includes('线性映射同时保持加法与数乘')))
 })
 
 test('A2 selected looks up original evidence and writes high-weight records', async () => {
@@ -277,6 +294,43 @@ test('empty Zhihu after empty network is a legal empty result', async () => {
   const result = await api.search({ query: '线性映射加法' })
   assert.equal(result.kind, 'empty')
   assert.equal(calls.some((item) => item.agentId === 'N2'), false)
+})
+
+test('A-S keeps article Url without a homepage and does not merge same display names', async () => {
+  const articleA = {
+    evidenceId: 'ev-article-a',
+    authorId: null,
+    authorName: '同名作者',
+    title: '积分梯度',
+    summary: '梯度是积分核的对偶。',
+    url: 'https://zhuanlan.zhihu.com/p/1',
+  }
+  const articleB = {
+    evidenceId: 'ev-article-b',
+    authorId: null,
+    authorName: '同名作者',
+    title: '另一篇',
+    summary: '另一条文章总结。',
+    url: 'https://zhuanlan.zhihu.com/p/2',
+  }
+  const grouped = groupAuthorCandidates([{
+    queryId: 'ask-query-1',
+    query: '积分梯度是什么',
+    results: [articleA, articleB],
+  }])
+  assert.equal(grouped.length, 2)
+  assert.equal(grouped[0].authorId, 'author-ev-ev-article-a')
+  assert.equal(grouped[1].authorId, 'author-ev-ev-article-b')
+  assert.equal(grouped[0].evidence[0].url, articleA.url)
+
+  const { api, calls } = orchestrator({ searchItems: [articleA] })
+  const result = await api.ask(askBase)
+  assert.equal(result.kind, 'authors')
+  assert.equal(result.authors[0].evidenceUrl, articleA.url)
+  assert.match(result.authors[0].displayText, /详细内容可以阅读我的文章 https:\/\/zhuanlan\.zhihu\.com\/p\/1/)
+  const a2 = calls.find((item) => item.agentId === 'A2')
+  assert.equal(a2.options.parseInput.candidates[0].authorId, 'author-ev-ev-article-a')
+  assert.equal(a2.options.parseInput.candidates[0].evidence[0].url, articleA.url)
 })
 
 test('Liu Kanshan is never stored as an enrolled author', async () => {

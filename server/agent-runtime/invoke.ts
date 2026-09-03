@@ -1,11 +1,18 @@
-import { AGENT_CHANNELS, DEFAULT_MAX_OUTPUT_TOKENS, JSON_AGENT_IDS } from './constants.ts'
+import { AGENT_CHANNELS, DEFAULT_LIMITS, DEFAULT_MAX_OUTPUT_TOKENS, JSON_AGENT_IDS } from './constants.ts'
 import { createStubSummarizer } from './compress.ts'
 import { prepareAgentCall } from './prepare.ts'
+import {
+  PUBLIC_STRUCTURE_FAILURE_MESSAGE,
+  STRUCTURE_SELF_REPAIR_LIMIT,
+  appendStructureRepairTurn,
+} from './repair.ts'
 import { parseAgentJson, parseAgentOutput, type ParseAgentOutputInput } from './schemas.ts'
 import type {
   AgentFailure,
   AgentId,
+  ChatMessage,
   L0aAngle,
+  LlmCompleteResult,
   LlmProvider,
   RuntimeLimits,
   StructuredAgentId,
@@ -14,6 +21,7 @@ import type {
   TextAgentId,
   TextInvokeResult,
   ThinkingDepth,
+  ZhihuDirectResult,
   ZhihuProvider,
 } from './types.ts'
 
@@ -50,38 +58,78 @@ async function runPrepared(ports: InvokePorts, input: {
   })
 }
 
+async function completeChannel(input: {
+  ports: InvokePorts
+  agentId: AgentId
+  messages: readonly ChatMessage[]
+  thinkingDepth: ThinkingDepth
+  signal?: AbortSignal
+}): Promise<LlmCompleteResult | ZhihuDirectResult> {
+  const channel = AGENT_CHANNELS[input.agentId]
+  if (channel === 'zhihu_direct') {
+    return input.ports.zhihu.direct({
+      messages: input.messages,
+      thinkingDepth: input.thinkingDepth,
+      signal: input.signal,
+    })
+  }
+  return input.ports.llm.complete({
+    messages: input.messages,
+    json: JSON_AGENT_IDS.has(input.agentId),
+    thinkingDepth: input.thinkingDepth,
+    maxTokens: DEFAULT_MAX_OUTPUT_TOKENS[input.agentId],
+    signal: input.signal,
+  })
+}
+
 export async function invokeStructuredAgent<T>(
   ports: InvokePorts,
   agentId: StructuredAgentId,
   context: unknown,
   options: InvokeOptions = {},
 ): Promise<StructuredInvokeResult<T>> {
-  const thinkingDepth = options.thinkingDepth ?? 'fast'
-  const prepared = await runPrepared(ports, { agentId, context, options })
-  const channel = AGENT_CHANNELS[agentId]
-  if (channel !== 'llm') {
+  if (AGENT_CHANNELS[agentId] !== 'llm') {
     return fail(agentId, 'PROVIDER_INVALID', '该 Agent 不是结构化 LLM 调用。')
   }
-  const completed = await ports.llm.complete({
-    messages: prepared.messages,
-    json: JSON_AGENT_IDS.has(agentId),
-    thinkingDepth,
-    maxTokens: DEFAULT_MAX_OUTPUT_TOKENS[agentId],
-    signal: options.signal,
-  })
-  if (completed.kind === 'failed') {
-    return fail(agentId, 'PROVIDER_UNAVAILABLE', completed.message)
+  const thinkingDepth = options.thinkingDepth ?? 'fast'
+  const prepared = await runPrepared(ports, { agentId, context, options })
+  const budget = options.limits?.totalTokens ?? DEFAULT_LIMITS.totalTokens
+  let lastText = ''
+  let lastReason = ''
+
+  for (let attempt = 0; attempt <= STRUCTURE_SELF_REPAIR_LIMIT; attempt++) {
+    const messages = attempt === 0
+      ? prepared.messages
+      : appendStructureRepairTurn(prepared.messages, lastText, lastReason, agentId, budget)
+    const completed = await completeChannel({
+      ports,
+      agentId,
+      messages,
+      thinkingDepth,
+      signal: options.signal,
+    })
+    if (completed.kind === 'failed') {
+      return fail(agentId, 'PROVIDER_UNAVAILABLE', completed.message)
+    }
+    lastText = completed.text
+    const parsedJson = parseAgentJson(completed.text)
+    if (!parsedJson.ok) {
+      lastReason = parsedJson.message
+      continue
+    }
+    const parsed = parseAgentOutput(agentId, parsedJson.value, options.parseInput)
+    if (!parsed.ok) {
+      lastReason = parsed.message
+      continue
+    }
+    return {
+      kind: 'completed',
+      agentId,
+      value: parsed.value as T,
+      compressed: prepared.compressed,
+    }
   }
-  const parsedJson = parseAgentJson(completed.text)
-  if (!parsedJson.ok) return fail(agentId, 'OUTPUT_INVALID', parsedJson.message)
-  const parsed = parseAgentOutput(agentId, parsedJson.value, options.parseInput)
-  if (!parsed.ok) return fail(agentId, 'OUTPUT_INVALID', parsed.message)
-  return {
-    kind: 'completed',
-    agentId,
-    value: parsed.value as T,
-    compressed: prepared.compressed,
-  }
+  return fail(agentId, 'OUTPUT_INVALID', PUBLIC_STRUCTURE_FAILURE_MESSAGE)
 }
 
 export async function invokeTextAgent(
@@ -92,29 +140,36 @@ export async function invokeTextAgent(
 ): Promise<TextInvokeResult> {
   const thinkingDepth = options.thinkingDepth ?? 'fast'
   const prepared = await runPrepared(ports, { agentId, context, options })
-  const channel = AGENT_CHANNELS[agentId]
-  const completed = channel === 'zhihu_direct'
-    ? await ports.zhihu.direct({
-      messages: prepared.messages,
+  const budget = options.limits?.totalTokens ?? DEFAULT_LIMITS.totalTokens
+  let lastText = ''
+  let lastReason = ''
+
+  for (let attempt = 0; attempt <= STRUCTURE_SELF_REPAIR_LIMIT; attempt++) {
+    const messages = attempt === 0
+      ? prepared.messages
+      : appendStructureRepairTurn(prepared.messages, lastText, lastReason, agentId, budget)
+    const completed = await completeChannel({
+      ports,
+      agentId,
+      messages,
       thinkingDepth,
       signal: options.signal,
     })
-    : await ports.llm.complete({
-      messages: prepared.messages,
-      json: false,
-      thinkingDepth,
-      maxTokens: DEFAULT_MAX_OUTPUT_TOKENS[agentId],
-      signal: options.signal,
-    })
-  if (completed.kind === 'failed') {
-    return fail(agentId, 'PROVIDER_UNAVAILABLE', completed.message)
+    if (completed.kind === 'failed') {
+      return fail(agentId, 'PROVIDER_UNAVAILABLE', completed.message)
+    }
+    lastText = completed.text
+    const parsed = parseAgentOutput(agentId, completed.text, options.parseInput, options.angle)
+    if (!parsed.ok) {
+      lastReason = parsed.message
+      continue
+    }
+    return {
+      kind: 'completed',
+      agentId,
+      text: String(parsed.value),
+      compressed: prepared.compressed,
+    }
   }
-  const parsed = parseAgentOutput(agentId, completed.text, options.parseInput, options.angle)
-  if (!parsed.ok) return fail(agentId, 'OUTPUT_INVALID', parsed.message)
-  return {
-    kind: 'completed',
-    agentId,
-    text: String(parsed.value),
-    compressed: prepared.compressed,
-  }
+  return fail(agentId, 'OUTPUT_INVALID', PUBLIC_STRUCTURE_FAILURE_MESSAGE)
 }

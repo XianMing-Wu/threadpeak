@@ -41,6 +41,7 @@ function statusOf(view: { status: string; error?: { code: string } }): number {
   if (view.status === 'failed' || view.error) {
     const code = view.error?.code
     if (code === 'PROVIDER_INVALID') return 400
+    if (code === 'OUTPUT_INVALID' || code === 'RENDERER_INVALID') return 422
     if (code === 'CONFIG_INVALID') return 503
     if (view.status === 'failed') return 503
     return 400

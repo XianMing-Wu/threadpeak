@@ -71,9 +71,9 @@ function safeRuntimeMessage(_value: unknown, fallback: string): string {
 
 /**
  * Generic adapter for renderer-v1 learning-path documents.
- * Remount only when the document id, instance prefix, or badge map changes.
+ * Remount when the document id, host graph, instance prefix, or badge map changes.
  * Parent re-renders (sidebar collapse, new callback identities, rebuilt catalog
- * objects with the same id) must not dispose an in-flight WebGL runtime.
+ * objects with the same id and flow) must not dispose an in-flight WebGL runtime.
  */
 export function LearningPath3DView({
   document,
@@ -92,6 +92,11 @@ export function LearningPath3DView({
   onResourceNavigateRef.current = onResourceNavigate
   const [error, setError] = useState('')
   const documentId = document.id
+  const hostGraphKey = [
+    document.structure.entrySubjectId,
+    document.structure.goalSubjectIds.join(','),
+    document.structure.flow.map((edge) => `${edge.fromSubjectId}>${edge.toSubjectId}`).join(','),
+  ].join('|')
 
   useEffect(() => {
     const mount = mountRef.current
@@ -138,9 +143,10 @@ export function LearningPath3DView({
         onProgressChange: () => {
           if (!disposed && moduleRef.current) mount.dataset.snapshot = JSON.stringify(moduleRef.current.getSnapshot())
         },
-        onError: ({ phase, message }) => {
+        onError: ({ phase, message, error: cause }) => {
           if (disposed) return
           if (phase === 'runtime') return
+          if (import.meta.env.DEV) console.warn('[path-3d]', phase, message, cause)
           setError(safeRuntimeMessage(message, '3D 路线运行失败'))
         },
       })
@@ -163,7 +169,7 @@ export function LearningPath3DView({
       moduleRef.current = null
       delete mount.dataset.snapshot
     }
-  }, [documentId, instanceIdPrefix, nodeBadgeIconById])
+  }, [documentId, hostGraphKey, instanceIdPrefix, nodeBadgeIconById])
 
   return <div className={`learning-path-3d-view ${className}`.trim()} aria-label={ariaLabel}>
     <div ref={mountRef} className="path3d-mount learning-path-3d-mount" />

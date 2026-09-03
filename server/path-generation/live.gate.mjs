@@ -60,9 +60,11 @@ async function completeIfQuestions(view) {
   const active = current.questionSets.find((item) => item.status === 'active')
   if (!active) return current
   for (const question of active.questions) {
+    if (current.status !== 'awaiting_answers') return current
     const option = question.options[0]
     current = await api.select({ runId: current.runId, questionId: question.id, optionId: option.id })
   }
+  if (current.status === 'published' || current.status === 'failed') return current
   return api.commit(current.runId)
 }
 

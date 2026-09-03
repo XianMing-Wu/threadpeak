@@ -14,14 +14,16 @@ const concept = {
 function orchestrator(overrides = {}) {
   const calls = []
   const started = []
-  let release
-  const gate = new Promise((resolve) => { release = resolve })
+  let inFlight = 0
+  let maxInFlight = 0
   const api = createFirstLearningOrchestrator({
     async invokeText(_agentId, context, options) {
       calls.push({ agentId: 'L0a', angle: options.angle, context })
       started.push(options.angle)
-      if (started.length === 3) release()
-      await gate
+      inFlight += 1
+      maxInFlight = Math.max(maxInFlight, inFlight)
+      await new Promise((resolve) => setTimeout(resolve, 15))
+      inFlight -= 1
       if (overrides.failAngle === options.angle) {
         return { kind: 'failed', code: 'PROVIDER_UNAVAILABLE', message: `${options.angle} 失败`, agentId: 'L0a' }
       }
@@ -36,14 +38,15 @@ function orchestrator(overrides = {}) {
     },
     ...overrides.ports,
   })
-  return { api, calls, started }
+  return { api, calls, started, getMaxInFlight: () => maxInFlight }
 }
 
-test('L0a three angles start together and L0b reads all three plus detailedDescription', { timeout: 5_000 }, async () => {
-  const { api, calls, started } = orchestrator()
+test('L0a runs all three angles with at most two Zhihu calls in flight', { timeout: 5_000 }, async () => {
+  const { api, calls, started, getMaxInFlight } = orchestrator()
   const result = await api.enter(concept)
   assert.equal(result.kind, 'completed')
   assert.equal(result.reused, false)
+  assert.equal(getMaxInFlight(), 2)
   assert.deepEqual(new Set(started), new Set(['concrete_explanation', 'dispute', 'pitfalls']))
   const l0b = calls.find((item) => item.agentId === 'L0b')
   assert.equal(l0b.context.title, '线性映射')
