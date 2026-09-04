@@ -7,7 +7,7 @@ test('auth start does not invent a Zhihu authorize URL when the server is unavai
     throw new Error('offline')
   })
   assert.equal(result.kind, 'unavailable')
-  assert.match(result.message, /不能把本地开关或延时动画当成知乎账号授权成功/)
+  assert.match(result.message, /请稍后再试/)
 })
 
 test('auth start accepts the official openapi.zhihu.com authorize URL', async () => {

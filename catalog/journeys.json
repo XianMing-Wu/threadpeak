@@ -4,7 +4,6 @@
     { "id": "authorize", "name": "从知乎授权入口进入首页", "flow": ["auth", "home"] },
     { "id": "default-answer", "name": "发送普通问题并继续追问", "flow": ["home", "chat", "answer-streaming", "answer-complete", "follow-up"] },
     { "id": "route-generation", "name": "经 R1–R4 澄清目标并发布路线", "flow": ["home", "chat", "route-questions", "route-ready", "path-3d"] },
-    { "id": "visual-answer", "name": "图文快捷发送后明确失败", "flow": ["home", "chat", "visual-failed"] },
     { "id": "concept-learning", "name": "从路线进入概念学习", "flow": ["path-3d", "concept-selected", "session-learning"] },
     { "id": "knowledge-tree", "name": "从知识脉络查看总结树", "flow": ["knowledge", "mine-or-example", "knowledge-detail", "edge-reason-open"] },
     { "id": "author-answer", "name": "划选后问博主并展示批注", "flow": ["session-learning", "quote-ready", "ask-authors"] },

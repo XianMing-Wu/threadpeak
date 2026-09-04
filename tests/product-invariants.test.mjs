@@ -50,7 +50,7 @@ test('routes do not create knowledge and failed session turns do not write graph
   assert.doesNotMatch(session, /coachReply/)
   assert.doesNotMatch(catalog, /export function coachReply/)
   assert.match(store, /isFailureSentinel/)
-  assert.match(store, /user\.mode === 'visual' \|\| assistant\.mode === 'visual'/)
+  assert.doesNotMatch(store, /user\.mode === 'visual' \|\| assistant\.mode === 'visual'/)
   assert.doesNotMatch(store, /这次把问题交给相关作者/)
   assert.doesNotMatch(store, /这次用图把刚才引用的关系摊开/)
 })
@@ -118,8 +118,8 @@ test('mine canvas projects the settled first answer onto the unique GraphSurgeon
 
 test('Liu Kanshan cannot become an author identity and author search fails closed without a network', () => {
   assert.match(authorsOrchestrator, /isLiuKanshanName/)
-  assert.match(authors, /载体层下是概念层，概念层下是问题层/)
-  assert.match(authors, /还没有入网博主/)
+  assert.match(authors, /看看已经和你建立联系的博主/)
+  assert.match(authors, /还没有关注的博主/)
   assert.match(authors, /requestAuthorNetwork/)
   assert.match(authors, /AuthorNetworkGraph/)
   assert.match(store, /titleFromPathLayer/)

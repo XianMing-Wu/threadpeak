@@ -71,7 +71,7 @@ export function registerLiveRoutes(app: FastifyInstance, ports: LiveHttpPorts) {
   app.get('/api/learning/canonical-answer', async (request, reply) => {
     const traceId = traceIdOf(request)
     if (!ports.canonical) {
-      return sendJson(reply, 503, { kind: 'failed', code: 'CONFIG_INVALID', message: '首次回复存储尚未接通。', traceId })
+      return sendJson(reply, 503, { kind: 'failed', code: 'CONFIG_INVALID', message: '现在读不到第一段讲解。请稍后再试。', traceId })
     }
     const query = request.query as Record<string, unknown>
     const routeId = typeof query.routeId === 'string' ? query.routeId : ''
@@ -119,7 +119,7 @@ export function registerLiveRoutes(app: FastifyInstance, ports: LiveHttpPorts) {
   app.get('/api/learning/graph', async (request, reply) => {
     const traceId = traceIdOf(request)
     if (!ports.graph) {
-      return sendJson(reply, 503, { kind: 'failed', code: 'CONFIG_INVALID', message: '知识脉络存储尚未接通。', traceId })
+      return sendJson(reply, 503, { kind: 'failed', code: 'CONFIG_INVALID', message: '现在读不到知识脉络。请稍后再试。', traceId })
     }
     const query = request.query as Record<string, unknown>
     const routeId = typeof query.routeId === 'string' ? query.routeId : ''
@@ -135,7 +135,7 @@ export function registerLiveRoutes(app: FastifyInstance, ports: LiveHttpPorts) {
       return sendJson(reply, 503, {
         kind: 'failed',
         code: 'CONFIG_INVALID',
-        message: '知识脉络存储尚未接通。',
+        message: '现在读不到知识脉络。请稍后再试。',
         traceId,
       })
     }

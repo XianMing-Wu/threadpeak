@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { createRoot, type Root } from 'react-dom/client'
+import { EmptyStatus } from './EmptyStatus'
+import { StatusOrbChip } from './StatusOrb'
 import {
   mountLearningPath,
   type LearningPathDocument,
@@ -103,6 +106,7 @@ export function LearningPath3DView({
     if (!mount) return
 
     let disposed = false
+    let loadingOrb: Root | undefined
     serial += 1
     const instanceSerial = serial
     const navigator: LearningResourceNavigatorPort = {
@@ -158,12 +162,21 @@ export function LearningPath3DView({
 
       moduleRef.current = instance
       mount.dataset.snapshot = JSON.stringify(instance.getSnapshot())
+      const mark = mount.querySelector('.loading-mark')
+      if (mark instanceof HTMLElement) {
+        const host = globalThis.document.createElement('span')
+        host.className = 'tp-status-orb-slot'
+        mark.replaceWith(host)
+        loadingOrb = createRoot(host)
+        loadingOrb.render(<StatusOrbChip label="正在召唤刘看山…" />)
+      }
     })().catch((cause: unknown) => {
       if (!disposed) setError(safeRuntimeMessage(cause, '3D 路线初始化失败'))
     })
 
     return () => {
       disposed = true
+      loadingOrb?.unmount()
       mount.removeEventListener('learning-path:contextual-card-action', handleContextualAction, true)
       moduleRef.current?.dispose()
       moduleRef.current = null
@@ -173,10 +186,8 @@ export function LearningPath3DView({
 
   return <div className={`learning-path-3d-view ${className}`.trim()} aria-label={ariaLabel}>
     <div ref={mountRef} className="path3d-mount learning-path-3d-mount" />
-    {error && <div className="path3d-error learning-path-3d-error" role="alert">
-      <span className="learning-path-3d-error-mark" aria-hidden="true">×</span>
-      <strong>3D 路线暂时无法打开</strong>
-      <span>{error}</span>
+    {error && <div className="path3d-error learning-path-3d-error ux-status-region" role="alert">
+      <EmptyStatus kind="error" title="3D 路线暂时无法打开" body={error} />
     </div>}
   </div>
 }

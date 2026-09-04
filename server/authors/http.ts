@@ -131,7 +131,7 @@ export function registerAuthorRoutes(app: FastifyInstance, ports: {
       return sendJson(reply, 503, {
         kind: 'failed',
         code: 'NETWORK_UNAVAILABLE',
-        message: '博主网络还没有接通真实的关系投影。',
+        message: '现在连不上博主搜索。请稍后再试。',
         traceId,
       })
     }

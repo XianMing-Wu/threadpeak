@@ -286,7 +286,7 @@ export function createAuthorsOrchestrator(ports: {
       return {
         kind: 'failed',
         code: 'NETWORK_UNAVAILABLE',
-        message: '博主网络还没有接通真实的关系投影。',
+        message: '现在连不上博主搜索。请稍后再试。',
       }
     }
     const thinkingDepth = input.thinkingDepth === 'deep' ? 'deep' : 'fast'
@@ -361,7 +361,7 @@ export function createAuthorsOrchestrator(ports: {
       return {
         kind: 'failed',
         code: 'NETWORK_UNAVAILABLE',
-        message: '博主网络还没有接通真实的关系投影。',
+        message: '现在连不上博主搜索。请稍后再试。',
       }
     }
     return { kind: 'list', authors: ports.network.list() }

@@ -5,7 +5,7 @@ import { resolveHistoryReopen } from './resolve-history-reopen.ts'
 test('history reopen does not invent a committed conversation when the draft is gone', () => {
   const missing = resolveHistoryReopen()
   assert.equal(missing.kind, 'unavailable')
-  assert.match(missing.message, /不能编造一次已提交会话/)
+  assert.match(missing.message, /没有可以重新打开的对话/)
 
   const learningGone = resolveHistoryReopen({
     id: 'learn-1',
@@ -14,7 +14,7 @@ test('history reopen does not invent a committed conversation when the draft is 
     experience: 'learning',
   })
   assert.equal(learningGone.kind, 'unavailable')
-  assert.match(learningGone.message, /学习草稿已经不在/)
+  assert.match(learningGone.message, /学习记录已经不在了/)
 })
 
 test('a learning history entry with route and concept reopens the local draft scope', () => {

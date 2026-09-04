@@ -1,39 +1,24 @@
 import { useState } from 'react'
-import type { AssistantMode } from '../assistant-mode'
-import { Icon, ModeDismissIcon } from '../icons'
+import { Icon } from '../icons'
 import {
   resolveComposerAttachment,
-  resolveComposerSources,
   type ComposerAttachmentResolution,
-  type ComposerSourcesResolution,
 } from '../resolve-composer-attachment'
 
-const modeLabel: Record<Exclude<AssistantMode,''>, string> = { route:'路线制定', visual:'图文模式' }
-const modePlaceholder: Record<Exclude<AssistantMode,''>, string> = {
-  route:'说说你的学习目标、当前基础或期望的节奏…',
-  visual:'输入你想用图形、时间线或可交互可视化理解的内容…',
-}
-
-export function QuickModes({ selected, onSelect }: { selected: AssistantMode; onSelect: (mode: AssistantMode) => void }) {
-  const modes = [['route','route','路线制定'],['visual','image','图文模式']] as const
-  return <div className="quick-modes" aria-label="快捷模式">{modes.map(([id, glyph, label]) => <button key={id} className={selected === id ? 'is-selected' : ''} onClick={() => onSelect(selected === id ? '' : id)}><Icon name={glyph} size={18}/><span>{label}</span></button>)}</div>
-}
-
-export function Composer({ value, onChange, mode, onMode, onSend, compact = false, quote, onClearQuote, showScope = true, showReference = true, showAttachment = true, onPickFiles, placeholder: customPlaceholder, requireQuestion = false, thinkingDepth, onThinkingDepth }: {
-  value: string; onChange: (value:string) => void; mode: AssistantMode; onMode: (mode: AssistantMode) => void; onSend: () => void; compact?: boolean; quote?: string; onClearQuote?: () => void; showScope?: boolean; showReference?: boolean; showAttachment?: boolean; onPickFiles?: (files: FileList) => void; placeholder?: string; requireQuestion?: boolean; thinkingDepth?: 'fast' | 'deep'; onThinkingDepth?: (value: 'fast' | 'deep') => void
+export function Composer({ value, onChange, onSend, compact = false, quote, onClearQuote, showAttachment = true, onPickFiles, placeholder: customPlaceholder, requireQuestion = false, thinkingDepth, onThinkingDepth }: {
+  value: string; onChange: (value:string) => void; onSend: () => void; compact?: boolean; quote?: string; onClearQuote?: () => void; showAttachment?: boolean; onPickFiles?: (files: FileList) => void; placeholder?: string; requireQuestion?: boolean; thinkingDepth?: 'fast' | 'deep'; onThinkingDepth?: (value: 'fast' | 'deep') => void
 }) {
   const [menu, setMenu] = useState<'thinking' | ''>('')
   const [thinking,setThinking]=useState('快速回答')
   const [attachmentNotice,setAttachmentNotice]=useState<ComposerAttachmentResolution|null>(null)
-  const [sourcesNotice,setSourcesNotice]=useState<ComposerSourcesResolution|null>(null)
   const thinkingLabel = thinkingDepth === 'deep' ? '深度思考' : thinkingDepth === 'fast' ? '快速回答' : thinking
   const setThinkingLabel = (label: string) => {
     if (onThinkingDepth) onThinkingDepth(label === '深度思考' ? 'deep' : 'fast')
     else setThinking(label)
   }
   const enabled = requireQuestion ? Boolean(value.trim()) : Boolean(value.trim() || quote)
-  const placeholder = mode ? modePlaceholder[mode] : customPlaceholder ?? (compact ? '围绕当前概念继续提问，或引用上方内容…' : '你可以制定学习路线、使用图文模式理解内容，也可以查找与问题相关的知乎博主～')
-  const notice = attachmentNotice ?? sourcesNotice
+  const placeholder = customPlaceholder ?? (compact ? '围绕当前概念继续提问，或引用上方内容…' : '说说你的学习目标、当前基础或期望的节奏…')
+  const notice = attachmentNotice
 
   return <div className={`composer input-motion-frame ${compact ? 'composer--compact' : ''}`}>
     {(quote || notice) && <div className="composer-chips">
@@ -49,8 +34,7 @@ export function Composer({ value, onChange, mode, onMode, onSend, compact = fals
       </div>}
       {notice && <p className="composer-unavailable" role="alert"><b>{notice.title}</b> {notice.message}</p>}
     </div>}
-    <div className={`composer-input ${mode ? 'has-mode' : ''}`}>
-      {mode && <span className="composer-mode-prefix"><span>{modeLabel[mode]}</span><button className="composer-mode-remove" aria-label={`移除${modeLabel[mode]}`} onClick={() => onMode('')}><ModeDismissIcon/></button></span>}
+    <div className="composer-input">
       <textarea value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} rows={compact ? 2 : 3} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && enabled) { event.preventDefault(); onSend() } }}/>
     </div>
     <div className="composer-footer">
@@ -59,16 +43,14 @@ export function Composer({ value, onChange, mode, onMode, onSend, compact = fals
           <button className="composer-pill" aria-haspopup="menu" aria-expanded={menu === 'thinking'} onClick={(event) => event.preventDefault()}><Icon name="prod-home-thinking-smart" size={16}/>{thinkingLabel}<Icon className={menu === 'thinking' ? 'thinking-chevron is-expanded' : 'thinking-chevron is-collapsed'} name="prod-home-chevron-down" size={11}/></button>
           {menu === 'thinking' && <div className={`composer-menu thinking-menu${compact ? ' is-drop-up' : ''}`} role="menu">{[['快速回答','跳过推理直达结果'],['深度思考','深入推理给出答案']].map(([x,y]) => <button key={x} aria-checked={thinkingLabel===x} role="menuitemradio" onClick={() => setThinkingLabel(x)}><span><b>{x}</b><small>{y}</small></span>{thinkingLabel===x && <Icon name="check" size={15}/>}</button>)}</div>}
         </div>
-        {showScope && <button type="button" className="composer-pill scope" onClick={() => { setAttachmentNotice(null); setSourcesNotice(resolveComposerSources()) }} aria-label="资料范围"><Icon name="prod-home-scope-zhihu-primary" size={16}/><Icon name="book" size={15}/>资料范围</button>}
       </span>
       <span>
-        {showReference && <button className="composer-icon" aria-label="快捷引用" onClick={() => onChange(value + '@')}><Icon name="prod-home-at-reference" size={20}/></button>}
         {showAttachment && (onPickFiles
           ? <label className="composer-icon" aria-label="添加附件">
             <input type="file" accept=".pdf,.md,.txt,application/pdf,text/markdown,text/plain" multiple hidden onChange={(event) => { const files = event.target.files; if (files?.length) onPickFiles(files); event.target.value = '' }}/>
             <Icon name="prod-home-attachment" size={21}/>
           </label>
-          : <button type="button" className="composer-icon" aria-label="添加附件" onClick={() => { setSourcesNotice(null); setAttachmentNotice(resolveComposerAttachment()) }}><Icon name="prod-home-attachment" size={21}/></button>)}
+          : <button type="button" className="composer-icon" aria-label="添加附件" onClick={() => setAttachmentNotice(resolveComposerAttachment())}><Icon name="prod-home-attachment" size={21}/></button>)}
         <button className="composer-send" disabled={!enabled} aria-label="发送" onClick={onSend}><Icon name="prod-home-send-disabled" size={18}/></button>
       </span>
     </div>

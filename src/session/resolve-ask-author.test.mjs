@@ -6,5 +6,5 @@ test('ask-author requests do not invent fixed-author success', () => {
   const resolution = resolveAskAuthor()
   assert.equal(resolution.kind, 'unavailable')
   assert.equal(resolution.reason, 'missing-ask-author-provider')
-  assert.match(resolution.message, /不能用固定作者或预写回答冒充成功/)
+  assert.match(resolution.message, /请稍后再试/)
 })

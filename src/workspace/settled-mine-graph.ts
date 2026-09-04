@@ -1,7 +1,7 @@
 export function hasSettledMineConceptGraph(graph?: {
-  nodes: Array<{
+  nodes: ReadonlyArray<{
     id: string
-    turns: Array<{ paragraphs: readonly string[] }>
+    turns: ReadonlyArray<{ paragraphs: readonly string[] }>
   }>
 }): boolean {
   const root = graph?.nodes.find((node) => node.id === 'root')

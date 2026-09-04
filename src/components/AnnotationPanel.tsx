@@ -1,5 +1,7 @@
 import type { CSSProperties } from 'react'
 import { Icon } from '../icons'
+import { EmptyStatus } from './EmptyStatus'
+import { StatusOrbChip } from './StatusOrb'
 import { MarkdownMath } from '../lib/MarkdownMath'
 import { isLiuKanshanDirect, isZhihuUrl, type AskAuthorsAnnotation } from '../session/ask-authors'
 import { resolveAskAuthor } from '../session/resolve-ask-author'
@@ -43,15 +45,16 @@ export function AnnotationPanel({
         <p className="annotation-panel__question">{annotation.question}</p>
         {annotation.status === 'unavailable' ? (
           <div className="annotation-panel__pending" role="alert">
-            <strong>无法完成本次问博主</strong>
-            <span>{annotation.error || resolveAskAuthor().message}</span>
+            <EmptyStatus
+              kind="error"
+              density="inline"
+              title="无法完成本次问博主"
+              body={annotation.error || resolveAskAuthor().message}
+            />
           </div>
         ) : annotation.status === 'answering' || !reply ? (
           <div className="annotation-panel__pending" aria-live="polite">
-            <strong>正在解答</strong>
-            <span className="annotation-waiting" aria-label="正在生成批注">
-              <i className="annotation-waiting__dot"/><i className="annotation-waiting__dot"/><i className="annotation-waiting__dot"/>
-            </span>
+            <StatusOrbChip label="正在解答"/>
           </div>
         ) : direct ? (
           <article className="annotation-card annotation-card--direct">

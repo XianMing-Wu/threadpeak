@@ -64,7 +64,7 @@ export function findHostByQuote(nodes: readonly CanvasNode[], quote: string): st
 export function replyCardTitle(reply: string, fallback: string) {
   const stripped = reply
     .replace(/^针对「[^」]+」，你刚刚问的是「[\s\S]*?」。/, '')
-    .replace(/^(authors|visual|coach)$/,'')
+    .replace(/^(authors|coach)$/,'')
     .trim()
   return defaultNodeTitle(stripped || reply, fallback)
 }

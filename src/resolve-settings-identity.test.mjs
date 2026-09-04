@@ -6,12 +6,12 @@ test('settings identity does not invent a signed-in profile', () => {
   const resolution = resolveSettingsIdentity()
   assert.equal(resolution.kind, 'unavailable')
   assert.equal(resolution.reason, 'missing-identity-provider')
-  assert.match(resolution.message, /不能用写死的姓名冒充当前登录用户/)
+  assert.match(resolution.message, /请稍后再试/)
 })
 
 test('settings sources do not invent an uploaded-PDF scope', () => {
   const resolution = resolveSettingsSources()
   assert.equal(resolution.kind, 'unavailable')
   assert.equal(resolution.reason, 'missing-sources-provider')
-  assert.match(resolution.message, /不能把已上传 PDF/)
+  assert.match(resolution.message, /请重新选择/)
 })

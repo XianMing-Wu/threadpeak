@@ -4,13 +4,13 @@
 
 | 文件 | 验收点 |
 | --- | --- |
-| [`01-home.png`](current/01-home.png) | 220px 问山侧栏、口号、路线/图文双模式、712px Composer、推荐知识脉络与问题建议 |
+| [`01-home.png`](current/01-home.png) | 220px 问山侧栏、口号、712px Composer、推荐知识脉络与问题建议 |
 | [`02-paths.png`](current/02-paths.png) | 工具轨、我的/示例路线切换与路线卡 |
 | [`03-knowledge.png`](current/03-knowledge.png) | 我的/示例知识脉络切换与最终概念卡 |
 | [`04-knowledge-edge.png`](current/04-knowledge-edge.png) | thread-chatbot 风格只读树、分支数字和原因浮层 |
 | [`05-authors.png`](current/05-authors.png) | 找博主雷达初始态；无预置问题、博主和概念，中心直接显示大问题输入 |
 | [`06-settings-dialog.png`](current/06-settings-dialog.png) | 知乎式设置页与清空本地历史模态框 |
-| [`07-session-visual.png`](current/07-session-visual.png) | 来源栏、统一会话、图文模式可交互逻辑图与 Composer |
+| [`07-session-visual.png`](current/07-session-visual.png) | 来源栏、统一学习会话与 Composer（历史截图，图文模式已删除） |
 | [`08-path-3d.png`](current/08-path-3d.png) | 真实 WebGL 运行时、无锁载体主线、刘看山与动态概念桥 |
 | [`09-path-3d-concept-card.png`](current/09-path-3d-concept-card.png) | 最终概念卡，DOM 仅有一个“进入学习”按钮 |
 | [`10-authors-focus.png`](current/10-authors-focus.png) | 雷达扫描完成后动态生成的概念、博主分布、多标签外环、前三推荐与精简咨询卡片 |

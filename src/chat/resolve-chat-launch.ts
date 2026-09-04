@@ -1,4 +1,4 @@
-export type ChatLaunchExperience = 'answer' | 'route' | 'visual'
+export type ChatLaunchExperience = 'answer' | 'route'
 
 export type ChatLaunchReady = {
   kind: 'ready'
@@ -16,7 +16,7 @@ export type ChatLaunchNotFound = {
 export type ChatLaunchResolution = ChatLaunchReady | ChatLaunchNotFound
 
 function normalizeMode(value: unknown): ChatLaunchExperience {
-  return value === 'route' || value === 'visual' || value === 'answer' ? value : 'answer'
+  return value === 'route' || value === 'answer' ? value : 'answer'
 }
 
 export function resolveChatLaunch(raw: unknown): ChatLaunchResolution {

@@ -675,22 +675,18 @@ export function KnowledgeCanvasPage() {
       </section>
       <footer className="canvas-composer">
         {(awaiting || streamText) && <div className="canvas-status" role="status" aria-live="polite">
-          {awaiting && !streamText && <AgentStatus items={[{ label: '正在回答这次追问', detail: '对话直答和脉络结构同时开始；直答成功后才会展示回复，两路都成功才长出新卡。' }]}/>}
+          {awaiting && !streamText && <AgentStatus items={[{ label: '正在回答这次追问' }]}/>}
           {streamText && <div className="canvas-stream"><MarkdownMath source={streamText}/></div>}
         </div>}
         <Composer
           compact
           value={value}
           onChange={setValue}
-          mode={mode}
-          onMode={setMode}
           onSend={send}
           quote={quote}
           onClearQuote={clearQuote}
-          showScope={false}
-          showReference={false}
           showAttachment={false}
-          placeholder={`围绕“${title}”继续提问，或选择上方模式深入理解…`}
+          placeholder={`围绕“${title}”继续提问，或引用上方内容…`}
           requireQuestion
           thinkingDepth={thinkingDepth}
           onThinkingDepth={(next) => { writeLearningThinking(next); setThinkingDepth(next) }}

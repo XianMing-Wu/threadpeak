@@ -1,0 +1,160 @@
+.ux-status {
+  display: grid;
+  justify-items: start;
+  gap: 0;
+  max-width: 36ch;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 15px;
+}
+
+.ux-status[data-align='center'] {
+  justify-items: center;
+  text-align: center;
+}
+
+.ux-status[data-density='inline'] {
+  max-width: 52ch;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.ux-status__eyebrow {
+  margin: 0 0 4px;
+  color: #535861;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.ux-status__title {
+  margin: 0 0 8px !important;
+  color: #1f2329 !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+}
+
+.ux-status[data-density='inline'] .ux-status__title {
+  margin-bottom: 4px !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+.ux-status__body {
+  margin: 0 !important;
+  max-width: 36ch;
+  color: #535861 !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  line-height: 1.7 !important;
+}
+
+.ux-status[data-density='inline'] .ux-status__body {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+.ux-status:has(.ux-status__mascot) {
+  justify-items: center;
+  text-align: center;
+}
+
+.ux-status__mascot {
+  display: block;
+  width: 128px;
+  height: 128px;
+  margin: 0 0 18px;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.ux-status[data-density='inline'] .ux-status__mascot {
+  width: 96px;
+  height: 96px;
+  margin-bottom: 14px;
+}
+
+.ux-status__action {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 36ch;
+  min-width: 160px;
+  min-height: 48px !important;
+  height: auto !important;
+  margin: 24px 0 0 !important;
+  padding: 12px 28px !important;
+  border: 1px solid #e6e8ec !important;
+  border-radius: 22px !important;
+  background: #f4f5f7 !important;
+  color: #1f2329 !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1.5 !important;
+  cursor: pointer;
+}
+
+.ux-status[data-density='inline'] .ux-status__action {
+  width: auto;
+  max-width: none;
+  min-height: 40px !important;
+  margin-top: 16px !important;
+  padding: 10px 22px !important;
+}
+
+.ux-status__action:hover {
+  background: #eceef1 !important;
+}
+
+.ux-status__action:focus-visible {
+  outline: 2px solid rgba(31, 35, 41, 0.18);
+  outline-offset: 2px;
+}
+
+.ux-status-region,
+.conversation:has(> .ux-status[data-density='panel']),
+.thread-canvas:has(.ux-status[data-density='panel']),
+.thread-canvas:has(.square-empty) {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  place-items: center;
+  box-sizing: border-box;
+  min-height: 280px;
+  padding: 32px 20px 48px;
+  background: #fff !important;
+  background-image: none !important;
+}
+
+.path3d-stage:has(.ux-status),
+.path3d-stage:has(.ux-status-region),
+.path3d-stage:has(.path3d-error) {
+  background: #fff !important;
+}
+
+.path3d-error:has(.ux-status),
+.path3d-error.ux-status-region {
+  inset: 0 !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  transform: none !important;
+  padding: 32px 20px 48px !important;
+  background: #fff !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.radar-search-status:has(.ux-status),
+.square-empty:has(.ux-status),
+.chat-answer:has(.ux-status),
+.setting-row:has(.ux-status) {
+  background: #fff !important;
+}

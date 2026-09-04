@@ -43,5 +43,5 @@ test('bootstrapped projection fail-closes when the first-answer hash does not ma
   })
   assert.equal(view.kind, 'unavailable')
   if (view.kind !== 'unavailable') return
-  assert.match(view.message, /同一份首次回复/)
+  assert.match(view.message, /还不完整/)
 })

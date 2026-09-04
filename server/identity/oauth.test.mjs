@@ -30,7 +30,7 @@ test('missing OAuth app credentials is unavailable, not a local login success', 
   })
   const started = oauth.start()
   assert.equal(started.kind, 'unavailable')
-  assert.match(started.message, /不能把本地开关或延时动画当成知乎账号授权成功/)
+  assert.match(started.message, /请稍后再试/)
 })
 
 test('start URL follows official openapi.zhihu.com authorization-code flow', () => {

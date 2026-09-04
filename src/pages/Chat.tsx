@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { AssistantMode } from '../assistant-mode'
-import { Composer, QuickModes } from '../components/Composer'
+import { Composer } from '../components/Composer'
 import { ProductWorkspace } from '../components/Shell'
 import { Icon } from '../icons'
 import { clearActiveHistory, CHAT_LAUNCH_KEY, HISTORY_OPEN_EVENT } from '../history'
@@ -9,9 +8,10 @@ import { buildOrdinaryChatContext } from '../chat/build-ordinary-chat-context'
 import { requestOrdinaryAnswerStream } from '../chat/request-ordinary-answer'
 import { resolveOrdinaryAnswer } from '../chat/resolve-ordinary-answer'
 import { MarkdownMath } from '../lib/MarkdownMath'
-import { resolveVisualAnswer } from '../chat/resolve-visual-answer'
 import { linkedRouteIntro } from '../workspace/catalog'
 import { setActiveConversation } from '../workspace/nav'
+import { EmptyStatus } from '../components/EmptyStatus'
+import { StatusOrbChip } from '../components/StatusOrb'
 import { ChatRoutePanel } from '../path-planning/chat-route-panel'
 import { pathLaunchAttachments, type PathAttachment } from '../path-planning/path-run-client'
 import { NotFoundPage } from './NotFound'
@@ -24,7 +24,7 @@ import {
 } from '../workspace/store'
 import type { LearningTurn } from '../workspace/types'
 
-export type ChatExperience = 'answer' | 'route' | 'visual'
+export type ChatExperience = 'answer' | 'route'
 
 export function launchChat(query:string,mode:ChatExperience,attachments: PathAttachment[] = []) {
   const conversation=createHomeConversation(query,mode)
@@ -43,14 +43,13 @@ function readChatLaunchPayload(): unknown {
 }
 
 function experienceOf(value: unknown, fallback: ChatExperience): ChatExperience {
-  return value === 'route' || value === 'visual' || value === 'answer' ? value : fallback
+  return value === 'route' || value === 'answer' ? value : fallback
 }
 
 function OrdinaryAnswerUnavailable() {
   const resolution=resolveOrdinaryAnswer()
   return <article className="chat-answer" role="alert">
-    <h2>{resolution.title}</h2>
-    <p>{resolution.message}</p>
+    <EmptyStatus kind="error" density="inline" title={resolution.title} body={resolution.message} />
   </article>
 }
 
@@ -101,17 +100,9 @@ function OrdinaryAnswerLive({
     return () => { cancelled = true }
   }, [query])
   if (!query.trim()) return <OrdinaryAnswerUnavailable/>
-  if (error) return <article className="chat-answer" role="alert"><h2>无法生成本次回答</h2><p>{error}</p></article>
-  if (!text) return <article className="chat-answer" aria-live="polite"><h2>正在生成本次回答</h2><p>这次请求会走服务端 R5。没有真实配置时会显式失败。</p></article>
+  if (error) return <article className="chat-answer" role="alert"><EmptyStatus kind="error" density="inline" title="无法生成本次回答" body={error} /></article>
+  if (!text) return <article className="chat-answer" aria-live="polite"><StatusOrbChip label="正在生成本次回答"/></article>
   return <article className="chat-answer" aria-live="polite"><MarkdownMath source={text}/></article>
-}
-
-function VisualAnswerUnavailable() {
-  const resolution=resolveVisualAnswer()
-  return <article className="chat-answer" role="alert">
-    <h2>{resolution.title}</h2>
-    <p>{resolution.message}</p>
-  </article>
 }
 
 function fieldsFromLaunch(next: ChatLaunchReady) {
@@ -139,11 +130,10 @@ export function ChatPage() {
   const [conversationId,setConversationId]=useState(initial?.conversationId??'')
   const [routeId,setRouteId]=useState(initial?.routeId??'')
   const [value,setValue]=useState('')
-  const [composerMode,setComposerMode]=useState<AssistantMode>('')
   const [thinkingDepth,setThinkingDepth]=useState<'fast' | 'deep'>('fast')
   const [turns,setTurns]=useState<LearningTurn[]>(initial?.turns ?? [])
   const [pendingQuestion,setPendingQuestion]=useState(initial?.generate && initial.experience === 'answer' && !(initial.turns.length) ? initial.query : '')
-  const routeSender=useRef<(text:string,mode:AssistantMode)=>void>(()=>undefined)
+  const routeSender=useRef<(text:string)=>void>(()=>undefined)
   useEffect(()=>{if(conversationId)setActiveConversation(conversationId)},[conversationId])
   useEffect(()=>{
     const restore=()=>{
@@ -175,13 +165,7 @@ export function ChatPage() {
     const next=value.trim()
     if(!next)return
     if(experience==='route'){
-      routeSender.current(next,composerMode)
-      setValue('')
-      setComposerMode('')
-      return
-    }
-    if(experience==='visual'){
-      setQuery(next)
+      routeSender.current(next)
       setValue('')
       return
     }
@@ -226,7 +210,7 @@ export function ChatPage() {
     <main className="query-chat">
       <header className="query-chat-header"><div><button aria-label="返回首页" onClick={()=>location.hash='home'}><Icon name="back" size={18}/></button><h1>{query}</h1></div><button className="new-chat-only" onClick={newChat}><Icon name="new-chat" size={17}/>新对话</button></header>
       <section className="query-chat-body"><div className="query-chat-flow">
-        {experience==='visual'?<><div className="query-user-bubble">{query}</div><VisualAnswerUnavailable/></>:experience==='route'?<>
+        {experience==='route'?<>
           {conversation?.kind==='route-followup'&&<article className="chat-answer"><h2>继续同一条路线</h2><p>{linkedRouteIntro(getRoute(routeId)?.title??query,followupOrdinal)}</p></article>}
           {conversation?.kind!=='route-followup'&&<ChatRoutePanel conversationId={conversationId} query={query} existingRouteId={routeId||undefined} thinkingDepth={thinkingDepth} onRouteReady={setRouteId} onSender={(handler)=>{routeSender.current=handler}}/>}
         </>:<>
@@ -239,8 +223,7 @@ export function ChatPage() {
         </>}
       </div></section>
       <div className="query-chat-composer">
-        {experience==='route'&&<QuickModes selected={composerMode} onSelect={setComposerMode}/>}
-        <Composer compact value={value} onChange={setValue} mode={experience==='route'?composerMode:''} onMode={setComposerMode} onSend={followUp} showScope={false} showReference={false} showAttachment={false} thinkingDepth={thinkingDepth} onThinkingDepth={setThinkingDepth}/>
+        <Composer compact value={value} onChange={setValue} onSend={followUp} showAttachment={false} thinkingDepth={thinkingDepth} onThinkingDepth={setThinkingDepth}/>
       </div>
     </main>
   </ProductWorkspace>

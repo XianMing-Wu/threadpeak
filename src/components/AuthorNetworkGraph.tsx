@@ -425,7 +425,7 @@ export function AuthorNetworkGraph({
           <li key={kind}><i style={{ background: NETWORK_KIND_META[kind].color }}/><span>{NETWORK_KIND_META[kind].label}</span></li>
         ))}
       </ul>
-      <svg ref={svgRef} className="author-network-canvas" role="img" aria-label="载体层、概念层、问题层与博主的网络图谱"/>
+      <svg ref={svgRef} className="author-network-canvas" role="img" aria-label="博主与知识的关系图"/>
       {tooltip && (
         <div className="author-network-tooltip" style={{ left: tooltip.x, top: tooltip.y }}>
           <small>{tooltip.kind}</small>

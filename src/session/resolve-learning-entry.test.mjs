@@ -6,7 +6,7 @@ test('missing route or concept does not fall back to linear-algebra', () => {
   const missingRoute = resolveLearningEntry({ routeId: '', conceptId: 'linear-map' })
   assert.equal(missingRoute.kind, 'unavailable')
   assert.equal(missingRoute.reason, 'missing-route')
-  assert.match(missingRoute.message, /不能默认打开线性代数示例/)
+  assert.match(missingRoute.message, /请从路线里选择一个概念/)
 
   const unknownRoute = resolveLearningEntry({ routeId: 'linear-algebra', conceptId: 'linear-map' })
   assert.equal(unknownRoute.kind, 'unavailable')
@@ -19,7 +19,7 @@ test('missing route or concept does not fall back to linear-algebra', () => {
   })
   assert.equal(missingConcept.kind, 'unavailable')
   assert.equal(missingConcept.reason, 'missing-concept')
-  assert.match(missingConcept.message, /不能默认打开“线性变换”/)
+  assert.match(missingConcept.message, /请从路线里进入一个概念/)
 })
 
 test('openLearning does not invent the first blueprint concept', () => {
@@ -39,8 +39,7 @@ test('a selected mine route does not invent a first lesson or knowledge graph', 
   })
   assert.equal(mine.kind, 'unavailable')
   assert.equal(mine.reason, 'missing-canonical-answer')
-  assert.match(mine.message, /不能用草稿发明一课/)
-  assert.match(mine.message, /不能在首次回复之前创建知识脉络/)
+  assert.match(mine.message, /请先从路线进入学习/)
 })
 
 test('an example concept without a marked catalog lesson does not draft one', () => {

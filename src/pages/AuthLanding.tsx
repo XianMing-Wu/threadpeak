@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { EmptyStatus } from '../components/EmptyStatus'
 import { Icon, MountainMark } from '../icons'
 import { resolveAuthSession, type AuthSessionResolution } from '../resolve-auth-session'
 import { requestAuthStart } from '../runtime/request-auth-session'
@@ -43,13 +44,22 @@ export function AuthLanding({ theme, onThemeChange, onAuthorize }: {
     <section className="auth-card" aria-label="登录问山">
       <span className="auth-card-mark">知</span>
       <h2>使用知乎账号登录</h2>
-      <p>授权后即可同步你的公开账号信息，并开始保存学习脉络与路线进度。</p>
+      <p>登录后即可保存你的知识脉络和路线进度。</p>
       <button type="button" className="zhihu-authorize" onClick={startOauth}>
         知乎授权登录<Icon name="arrow-right" size={18}/>
       </button>
-      {oauthNotice && <p className="auth-unavailable" role="alert"><b>{oauthNotice.title}</b> {oauthNotice.message}</p>}
-      <button type="button" className="auth-prototype-enter" onClick={onAuthorize}>进入本地原型</button>
-      <small>当前为认证交互原型。正式接入后，授权凭证将由服务端安全交换，不会保存在浏览器中。</small>
+      {oauthNotice && (
+        <EmptyStatus
+          kind="error"
+          density="inline"
+          title={oauthNotice.title}
+          body={oauthNotice.message}
+          action="重试"
+          onAction={startOauth}
+        />
+      )}
+      <button type="button" className="auth-prototype-enter" onClick={onAuthorize}>先看看产品</button>
+      <small>登录后即可保存你的路线和知识脉络。</small>
     </section>
     <footer>问山 · 让知识成为可以行走的路径</footer>
   </main>

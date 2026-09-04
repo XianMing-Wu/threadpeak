@@ -19,7 +19,7 @@ alwaysApply: false
 | 搜索博主 | 缺额时 N1 拆问、N2 排序 | N0 高权/低权 Graph RAG、N-S 最多 2 路并发知乎搜索（多问法空格拼串） |
 
 - R-S、A-S、N-S、N0、GraphSurgeon、renderer 校验和批注展示都不是 LLM Agent，不得给它们伪造提示词或模型输出。
-- 图文模式的真实编排仍未裁决；请求只能明确失败，不能调用临时 Agent 或返回固定 artifact。
+- 产品已删除图文入口；后端不得新增临时图文 Agent，也不得返回固定 artifact。
 - 所有模型输出都必须先提取合同字段，再用 `agent-specs.md` 对应结构校验。多余键忽略；缺必填时按 0.8 由同一 Agent 自我修复，通过后再进入下一阶段。不得编造缺失字段。引用输入对象时，ID 必须真实存在；R4 节点/边、A2 authorId/evidenceId、N2 authorId/evidenceId 都要做引用完整性校验。
 
 ## 上下文与压缩

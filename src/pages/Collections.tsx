@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
+import { EmptyStatus } from '../components/EmptyStatus'
+import { PeakHero } from '../components/PeakHero'
+import { PeakTabs } from '../components/PeakTabs'
 import { ProductWorkspace } from '../components/Shell'
+import { StatusOrbChip } from '../components/StatusOrb'
 import { Icon } from '../icons'
 import { Path3DStage } from '../path-3d/path-3d-stage'
 import { KnowledgeCanvasPage } from './KnowledgeCanvas'
@@ -23,17 +27,21 @@ export function KnowledgePage() {
   }, [])
   const shown = section === 'mine' && !mineReady ? [] : items
   return <ProductWorkspace active="knowledge" page="knowledge">
-    <main className="knowledge-square">
-      <header className="square-hero"><h1>知识脉络</h1><p>先按与路线一致的名称收纳，再进入每个最终概念自己的知识脉络</p></header>
-      <div className="square-tabs">
-        <button className={section === 'mine' ? 'is-active' : ''} onClick={() => setSection('mine')}>我的知识脉络</button>
-        <button className={section === 'example' ? 'is-active' : ''} onClick={() => setSection('example')}>示例知识脉络</button>
-      </div>
+    <main className="knowledge-square peak-market">
+      <PeakHero title="知识脉络" sub="按路线收纳，再进入每个概念自己的脉络。" />
+      <PeakTabs
+        items={[
+          { id: 'mine', label: '我的知识脉络', icon: 'users' },
+          { id: 'example', label: '示例知识脉络', icon: 'book' },
+        ]}
+        active={section}
+        onChange={setSection}
+      />
       <section className="knowledge-grid">
         {section === 'mine' && !mineReady
-          ? <div className="square-empty" role="status" aria-live="polite"><strong>正在核对已提交的知识脉络</strong><p>只显示已经有首次回复和唯一根的概念，没有图的记录不会出现在这里。</p></div>
+          ? <div className="square-empty" role="status" aria-live="polite"><StatusOrbChip label="正在读取知识脉络"/></div>
           : shown.length === 0
-          ? <div className="square-empty"><strong>还没有自己的知识脉络</strong><p>新建路线后，第一次点击进入学习并生成首段讲解时，才会同步出现在这里</p><button type="button" onClick={() => { location.hash = 'paths' }}>去看我的路线</button></div>
+          ? <div className="square-empty"><EmptyStatus kind="empty" title="还没有自己的知识脉络" body="制定路线并开始学习后，会出现在这里。" action="去看我的路线" onAction={() => { location.hash = 'paths' }} /></div>
           : shown.map((item) => <button className="knowledge-card" key={item.id} onClick={() => { openKnowledge(item.id) }}>
             <span className="knowledge-cover"><Icon name={item.icon} size={26}/></span>
             <span><strong>{item.title}</strong><p>{item.description}</p><small>{item.type} · {item.sources} 个来源</small></span>
@@ -47,15 +55,19 @@ export function PathsPage() {
   const [tab, setTab] = useState<'mine' | 'example'>('mine')
   const shown = useLibrarySelector(selectRouteCards(tab))
   return <ProductWorkspace active="paths" page="paths">
-    <main className="route-list">
-      <header className="square-hero"><h1>路线规划</h1><p>从目标出发，把必要载体和最终概念组织成可以进入的学习路线</p></header>
-      <div className="route-tabs">
-        <button className={tab === 'mine' ? 'is-active' : ''} onClick={() => setTab('mine')}>我的路线</button>
-        <button className={tab === 'example' ? 'is-active' : ''} onClick={() => setTab('example')}>示例路线</button>
-      </div>
+    <main className="route-list peak-market">
+      <PeakHero title="路线规划" sub="从目标出发，把学习内容组织成可以进入的路线。" />
+      <PeakTabs
+        items={[
+          { id: 'mine', label: '我的路线', icon: 'users' },
+          { id: 'example', label: '示例路线', icon: 'book' },
+        ]}
+        active={tab}
+        onChange={setTab}
+      />
       <section className="route-grid">
         {shown.length === 0
-          ? <div className="square-empty"><strong>还没有自己的路线</strong><p>在问山里用路线制定生成后，会出现在这里；知识脉络要等第一次进入学习才会同步生成</p><button type="button" onClick={() => { sessionStorage.setItem('threadpeak-home-select-route', '1'); location.hash = 'home' }}>去问山制定路线</button></div>
+          ? <div className="square-empty"><EmptyStatus kind="empty" title="还没有自己的路线" body="在首页制定路线后，会出现在这里。" action="去问山制定路线" onAction={() => { sessionStorage.setItem('threadpeak-home-select-route', '1'); location.hash = 'home' }} /></div>
           : shown.map((route) => <button key={route.id} className="route-card" onClick={() => { openRoute(route.id, 'paths'); location.hash='path-3d' }}>
             <span className="route-cover"><Icon name={route.icon} size={26}/></span>
             <span><strong>{route.title}</strong><p>{route.summary}</p><small>{route.owner === 'mine' ? '我的路线' : '示例路线'} · {route.carriers} 个载体 · {route.concepts} 个最终概念 · {route.duration}</small></span>
@@ -81,11 +93,11 @@ export function KnowledgeConceptsPage() {
           <button type="button" className="lesson-back" aria-label="返回上一级" onClick={() => { location.hash = readKnowledgeListReturn() }}><Icon name="back" size={18}/></button>
           <div><small>知识脉络</small><h1>{knowledge?.title ?? '知识脉络'}</h1></div>
         </div>
-        <p>每个最终概念都有自己的知识脉络，不同概念的对话不会写进同一张画布</p>
+        <p>每个概念都有自己的脉络，对话不会混在一起。</p>
       </header>
       <section className="knowledge-grid">
         {cards.length === 0
-          ? <div className="square-empty"><strong>还没有概念脉络</strong><p>回到路线里第一次进入学习后，对应概念才会出现在这里</p><button type="button" onClick={() => { location.hash = 'paths' }}>去看我的路线</button></div>
+          ? <div className="square-empty"><EmptyStatus kind="empty" title="还没有概念脉络" body="进入学习后，相关概念会出现在这里。" action="去看我的路线" onAction={() => { location.hash = 'paths' }} /></div>
           : cards.map((item) => <button className="knowledge-card" key={item.id} onClick={() => { openConceptKnowledge(knowledgeId, item.id) }}>
             <span className="knowledge-cover"><Icon name={item.icon} size={26}/></span>
             <span><strong>{item.title}</strong><p>{item.description}</p><small>最终概念 · {item.type} · {item.sources} 个来源</small></span>

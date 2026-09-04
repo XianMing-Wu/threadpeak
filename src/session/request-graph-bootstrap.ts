@@ -99,6 +99,6 @@ export async function requestGraphSnapshot(input: {
   return {
     kind: 'unavailable',
     title: '无法读取这次知识脉络',
-    message: liveMessageOf(got.value, '知识脉络暂时读不到，不能用页面发明节点。'),
+    message: liveMessageOf(got.value, '知识脉络暂时读不到。请稍后再试。'),
   }
 }

@@ -10,6 +10,6 @@ export function resolveOrdinaryAnswer(): OrdinaryAnswerResolution {
     kind: 'unavailable',
     reason: 'missing-answer-provider',
     title: '无法生成本次回答',
-    message: '普通回答还没有接通真实的 R5 模型服务。不能用预写 Mock 冒充成功。',
+    message: '现在无法生成这次回答。请稍后再试。',
   }
 }

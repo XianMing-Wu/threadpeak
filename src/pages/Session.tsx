@@ -5,6 +5,8 @@ import { AskAuthorsPrompt } from '../components/AskAuthorsPrompt'
 import { BasisVisual } from '../components/BasisVisual'
 import type { AssistantMode } from '../assistant-mode'
 import { Composer } from '../components/Composer'
+import { EmptyStatus } from '../components/EmptyStatus'
+import { KanshanAvatar } from '../components/KanshanAvatar'
 import { SelectionToolbar } from '../components/SelectionToolbar'
 import { ProductWorkspace } from '../components/Shell'
 import { Icon } from '../icons'
@@ -13,8 +15,8 @@ import { openKnowledgeCanvas } from '../learningSession'
 import { annotationScopeId, readSelectionAnchor, type SelectionAnchor } from '../session/ask-authors'
 import { useAnnotations, type AskAuthorsAnnotation } from '../session/useAnnotations'
 import { AgentStatus } from '../components/AgentStatus'
+import { StatusOrbChip } from '../components/StatusOrb'
 import { MarkdownMath } from '../lib/MarkdownMath'
-import { resolveVisualAnswer } from '../chat/resolve-visual-answer'
 import { requestFollowUp } from '../session/request-follow-up'
 import { buildFollowUpMessages, buildFollowUpNeighborhood, followUpQuoteForG2 } from '../session/build-follow-up-context'
 import { readLearningThinking, subscribeLearningThinking, writeLearningThinking } from '../session/learning-thinking'
@@ -73,11 +75,14 @@ function SessionUnavailable(props: { title: string; message: string }) {
             <div><small>刘看山陪你学</small><h1>{props.title}</h1></div>
           </div>
         </header>
-        <div className="conversation" role="alert">
-          <article>
-            <h2>无法进入这次学习</h2>
-            <p>{props.message}</p>
-          </article>
+        <div className="conversation ux-status-region" role="alert">
+          <EmptyStatus
+            kind="error"
+            title="无法进入这次学习"
+            body={props.message}
+            action="去看我的路线"
+            onAction={() => { location.hash = 'paths' }}
+          />
         </div>
       </section>
     </main>
@@ -185,8 +190,7 @@ function CanonicalSessionGate({ routeId, conceptId }: { routeId: string; concept
         <section className="lesson-chat">
           <div className="conversation" role="status" aria-live="polite">
             <article>
-              <h2>{generating ? '正在生成这次概念的首次回复' : '正在读取这次概念的首次回复'}</h2>
-              <p>第一次进入会完成三路知乎直答并整理成唯一首轮，同时确定性创建唯一根。再次进入只读取已 settle 的首次回复，不再生成。</p>
+              <StatusOrbChip label={generating ? '正在准备第一段讲解' : '正在读取第一段讲解'}/>
             </article>
           </div>
         </section>
@@ -218,7 +222,7 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
   const lesson = lessonOverride ?? getLesson(routeId, conceptId) ?? {
     heading: title,
     paragraphs: [],
-    placeholder: `围绕“${title}”继续提问，或选择上方模式深入理解…`,
+    placeholder: `围绕“${title}”继续提问，或引用上方内容…`,
   }
 
   useEffect(() => {
@@ -282,12 +286,6 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
   }
   const send = () => {
     const asked = value
-    if (mode === 'visual') {
-      if (!asked.trim()) return
-      setTurns((old)=>[...old,{role:'user',text:asked,mode:'visual'},{role:'assistant',text:resolveVisualAnswer().message,mode:'visual',failed:true}])
-      setValue(''); setQuote(''); setQuoteFromId(''); setMode('')
-      return
-    }
     const lessonText = lesson.paragraphs.join('\n\n')
     const resolved = resolveFollowUpHost({
       question: asked,
@@ -388,7 +386,7 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
     setAuthorQuestion(null)
   }
   const knowledgeReady = graphReady || hasSettledMineConcept(routeId, conceptId) || getRoute(routeId)?.owner === 'example'
-  const placeholder = lesson.placeholder || `围绕“${title}”继续提问，或选择上方模式深入理解…`
+  const placeholder = lesson.placeholder || `围绕“${title}”继续提问，或引用上方内容…`
 
   return <ProductWorkspace active="paths" page="session-learning">
     <main className="learning-session">
@@ -404,7 +402,7 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
           </div>
         </header>
         <div className="conversation" ref={selectRootRef} onMouseUp={onSelect}>
-          <article data-canvas-host="root"><span className="kanshan-avatar">山</span><div>
+          <article data-canvas-host="root"><KanshanAvatar /><div>
             <h2>{lesson.heading}</h2>
             <AnnotatedMarkdown
               className="lesson-markdown"
@@ -422,13 +420,12 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
             if (annotationTurn || afterAnnotation) return null
             return turn.role==='user'
               ? <div className="user-turn" key={i} data-canvas-host={turnAllowsSelection(turns, i) ? `user:${i}` : undefined} data-failed={turnAllowsSelection(turns, i) ? undefined : 'true'}>{turn.text}</div>
-              : <AssistantAnswer key={i} kind={turn.text} host={turn.failed ? undefined : (turn.nodeId || `turn:${i}`)} failed={turn.failed} mode={turn.mode} annotations={annotations.annotations.filter((item)=>item.nodeId===(turn.nodeId || `turn:${i}`))} activeId={annotations.active?.id} onOpen={annotations.open}/>
+              : <AssistantAnswer key={i} kind={turn.text} host={turn.failed ? undefined : (turn.nodeId || `turn:${i}`)} failed={turn.failed} annotations={annotations.annotations.filter((item)=>item.nodeId===(turn.nodeId || `turn:${i}`))} activeId={annotations.active?.id} onOpen={annotations.open}/>
           }) }
-          {awaiting && !streamText && <section className="assistant-turn" role="status" aria-live="polite"><span className="kanshan-avatar">山</span><div><AgentStatus items={[{ label: '正在回答这次追问', detail: '对话直答和脉络结构同时开始；直答成功后才会展示回复，两路都成功才长出新卡。' }]}/></div></section>}
-          {streamText && <section className="assistant-turn" data-canvas-host="pending"><span className="kanshan-avatar">山</span><div><MarkdownMath source={streamText}/></div></section>}
+          {awaiting && !streamText && <section className="assistant-turn" role="status" aria-live="polite"><KanshanAvatar /><div><AgentStatus items={[{ label: '正在回答这次追问' }]}/></div></section>}
+          {streamText && <section className="assistant-turn" data-canvas-host="pending"><KanshanAvatar /><div><MarkdownMath source={streamText}/></div></section>}
         </div>
-        <div className="mode-prompts"><button className={mode==='visual'?'is-active':''} onClick={()=>setMode(mode==='visual'?'':'visual')}><Icon name="image" size={17}/>图文模式</button></div>
-        <Composer compact value={value} onChange={setValue} mode={mode} onMode={setMode} onSend={send} quote={quote} onClearQuote={()=>{setQuote('');setQuoteFromId('')}} showScope={false} showReference={false} showAttachment={false} placeholder={placeholder} requireQuestion thinkingDepth={thinkingDepth} onThinkingDepth={(next) => { writeLearningThinking(next); setThinkingDepth(next) }}/>
+        <Composer compact value={value} onChange={setValue} onSend={send} quote={quote} onClearQuote={()=>{setQuote('');setQuoteFromId('')}} showAttachment={false} placeholder={placeholder} requireQuestion thinkingDepth={thinkingDepth} onThinkingDepth={(next) => { writeLearningThinking(next); setThinkingDepth(next) }}/>
       </section>
       {annotations.panelOpen && annotations.active && <AnnotationPanel annotation={annotations.active} onClose={annotations.close}/>}
       {!annotations.panelOpen && annotations.annotations.length > 0 && <button type="button" className="annotation-panel-reopen" aria-label="显示侧边面板" onClick={annotations.reopen}>批注</button>}
@@ -438,10 +435,10 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
   </ProductWorkspace>
 }
 
-function AssistantAnswer({kind,host,failed,mode,annotations,activeId,onOpen}:{kind:string;host?:string;failed?:boolean;mode?:AssistantMode;annotations:readonly AskAuthorsAnnotation[];activeId?:string|null;onOpen:(id:string)=>void}) {
-  if(failed || kind==='visual') {
-    const unavailable = mode==='visual' || kind==='visual' ? resolveVisualAnswer() : { title: '无法生成本次回答', message: kind }
-    return <section className="assistant-turn" data-failed="true" role="alert"><span className="kanshan-avatar">山</span><div><h2>{unavailable.title}</h2><p>{unavailable.message}</p></div></section>
+function AssistantAnswer({kind,host,failed,annotations,activeId,onOpen}:{kind:string;host?:string;failed?:boolean;annotations:readonly AskAuthorsAnnotation[];activeId?:string|null;onOpen:(id:string)=>void}) {
+  if(failed) {
+    const unavailable = { title: '无法生成本次回答', message: kind }
+    return <section className="assistant-turn" data-failed="true" role="alert"><KanshanAvatar /><div><EmptyStatus kind="error" density="inline" title={unavailable.title} body={unavailable.message} /></div></section>
   }
-  return <section className="assistant-turn" data-canvas-host={host}><span className="kanshan-avatar">山</span><div><AnnotatedMarkdown source={kind} annotations={annotations} activeId={activeId} onOpen={onOpen}/></div></section>
+  return <section className="assistant-turn" data-canvas-host={host}><KanshanAvatar /><div><AnnotatedMarkdown source={kind} annotations={annotations} activeId={activeId} onOpen={onOpen}/></div></section>
 }

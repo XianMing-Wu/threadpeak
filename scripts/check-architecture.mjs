@@ -82,15 +82,6 @@ function resolveSpecifier(fromFile, specifier) {
   if (bare === 'liu-kanshan-learning-path-3d') {
     return path.join(repoRoot, 'src/vendor/learning-path-3d/index.js')
   }
-  if (bare.startsWith('organic-mindmap/')) {
-    return path.join(repoRoot, 'vendor/charts', bare)
-  }
-  if (bare.startsWith('sunburst-chart/')) {
-    return path.join(repoRoot, 'vendor/charts', bare)
-  }
-  if (bare.startsWith('wine-timeline/')) {
-    return path.join(repoRoot, 'vendor/charts', bare)
-  }
   return null
 }
 

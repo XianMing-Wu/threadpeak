@@ -25,9 +25,9 @@ export type AuthorNetworkGraphModel = {
 }
 
 export const NETWORK_KIND_META: Record<AuthorNetworkKind, { label: string; color: string; radius: number; mass: number }> = {
-  carrier: { label: '载体层', color: '#5dade2', radius: 13, mass: 4 },
-  concept: { label: '概念层', color: '#c0392b', radius: 7.5, mass: 2 },
-  question: { label: '问题层', color: '#f4d03f', radius: 5, mass: 1 },
+  carrier: { label: '载体', color: '#5dade2', radius: 13, mass: 4 },
+  concept: { label: '概念', color: '#c0392b', radius: 7.5, mass: 2 },
+  question: { label: '问题', color: '#f4d03f', radius: 5, mass: 1 },
   author: { label: '博主', color: '#1f4e79', radius: 6.5, mass: 1.2 },
 }
 
@@ -79,7 +79,7 @@ export function projectAuthorNetworkGraph(
       id: authorKey,
       kind: 'author',
       label: member.name,
-      detail: member.weight === 'high' ? '高权 · 问博主写入' : '低权 · 搜索补位',
+      detail: member.weight === 'high' ? '来自问博主' : '来自搜索',
     })
     const question = member.question.trim()
     const conceptTitle = resolveNetworkLayerTitle(member.conceptTitle, routes)
@@ -93,12 +93,12 @@ export function projectAuthorNetworkGraph(
     let hostId = ''
     if (carrierTitle && member.weight === 'high') {
       const carrierKey = nodeId('carrier', slug(carrierTitle, 'carrier'))
-      upsertNode(store, { id: carrierKey, kind: 'carrier', label: carrierTitle, detail: '问博主时所在的载体层' })
+      upsertNode(store, { id: carrierKey, kind: 'carrier', label: carrierTitle, detail: '所在的学习内容' })
       hostId = carrierKey
     }
     if (conceptTitle && member.weight === 'high') {
       const conceptKey = nodeId('concept', slug(conceptTitle, 'concept'))
-      upsertNode(store, { id: conceptKey, kind: 'concept', label: conceptTitle, detail: '问博主时所在的概念层' })
+      upsertNode(store, { id: conceptKey, kind: 'concept', label: conceptTitle, detail: '所在的概念' })
       if (hostId) upsertEdge(store, hostId, conceptKey, 'has-concept')
       hostId = conceptKey
     }
@@ -108,7 +108,7 @@ export function projectAuthorNetworkGraph(
         id: questionKey,
         kind: 'question',
         label: question,
-        detail: member.weight === 'high' ? '问博主整理后的问题' : '搜索博主时的问题',
+        detail: member.weight === 'high' ? '当时的问题' : '搜索时的问题',
       })
       if (hostId) upsertEdge(store, hostId, questionKey, 'has-question')
       hostId = questionKey

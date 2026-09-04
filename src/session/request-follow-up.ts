@@ -37,7 +37,7 @@ function fallback(): Extract<FollowUpResult, { kind: 'unavailable' }> {
   return {
     kind: 'unavailable',
     title: '无法完成本次追问',
-    message: '这次学习追问没有得到可用回复。图谱没有改动。',
+    message: '这次追问没有得到回复。请稍后再试。',
   }
 }
 

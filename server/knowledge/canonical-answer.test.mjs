@@ -74,5 +74,5 @@ test('failed generation does not become the canonical first answer', async () =>
 
 test('canonical seed is ordinary explanation and not visual or ask-author', () => {
   assert.match(seedQuestion('线性映射'), /普通概念讲解/)
-  assert.match(seedQuestion('线性映射'), /不要改写成图文模式或问博主/)
+  assert.match(seedQuestion('线性映射'), /不要改写成问博主/)
 })

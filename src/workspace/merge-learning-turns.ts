@@ -1,7 +1,7 @@
 import type { LearningTurn } from './types'
 
 function isFailureSentinel(reply: string) {
-  return reply === 'authors' || reply === 'visual' || reply === 'coach'
+  return reply === 'authors' || reply === 'coach'
 }
 
 export function isUsableAssistantTurn(turn?: LearningTurn) {

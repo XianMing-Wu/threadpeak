@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { getRoute, persistRepairedMineDocument, useWorkspaceTick } from '../workspace/store'
 import type { NodeSemanticBadgeIcon } from 'liu-kanshan-learning-path-3d'
 import { defaultResourceNavigation, LearningPath3DView } from '../components/Path3D'
+import { EmptyStatus } from '../components/EmptyStatus'
 import { Icon } from '../icons'
 import { NAV_EVENT, openLearning, readActiveRouteId } from '../workspace/nav'
 
@@ -74,11 +75,14 @@ export function Path3DStage() {
           <div><small>路线规划</small><strong>{view.title}</strong></div>
         </div>
       </header>
-      <div className="path3d-error learning-path-3d-error" role="alert">
-        <span className="learning-path-3d-error-mark" aria-hidden="true">×</span>
-        <strong>无法打开这条路线</strong>
-        <span>{view.message}</span>
-        <button type="button" onClick={() => { location.hash = 'paths' }}>返回路线列表</button>
+      <div className="path3d-error learning-path-3d-error ux-status-region" role="alert">
+        <EmptyStatus
+          kind="error"
+          title="无法打开这条路线"
+          body={view.message}
+          action="返回路线列表"
+          onAction={() => { location.hash = 'paths' }}
+        />
       </div>
     </section>
   }

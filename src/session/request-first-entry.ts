@@ -22,8 +22,8 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
 function fallback(): Extract<FirstEntryResult, { kind: 'unavailable' }> {
   return {
     kind: 'unavailable',
-    title: '还没有这次概念的首次回复',
-    message: '这条用户路线还没有已 settle 的首次回复。不能用草稿发明一课，也不能在首次回复之前创建知识脉络。',
+    title: '还没有第一段讲解',
+    message: '这次学习还没准备好第一段讲解。请先从路线进入学习。',
   }
 }
 

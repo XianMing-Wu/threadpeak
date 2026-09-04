@@ -13,7 +13,7 @@ export function buildPathDocument(spec: {
   const carriers = spec.carriers
   const cards: LearningPathDocument['data']['cards'] = [
     ...carriers.flatMap((carrier) => [
-      { id: `card-${carrier.id}`, eyebrow: '载体层', title: carrier.title, summary: carrier.summary, tags: ['知乎精选', '学习载体'] },
+      { id: `card-${carrier.id}`, eyebrow: '载体', title: carrier.title, summary: carrier.summary, tags: ['知乎精选', '学习载体'] },
       ...carrier.concepts.map(([id, title, summary]) => ({
         id: `card-${id}`,
         eyebrow: '最终概念',
@@ -78,7 +78,7 @@ const carriers = [
 export const threadPeakPathDocument = buildPathDocument({
   id: 'threadpeak-linear-algebra-v1',
   title: '从线性代数走向机器学习',
-  description: '四个载体层连接八段最终概念知识脉络。',
+  description: '四段学习内容，串起八个核心概念。',
   goalTitle: '理解的高峰',
   goalSummary: '能够用几何语言解释 PCA，并完成一次二维数据降维。',
   startSummary: '刘看山会陪你沿着必要概念抵达目标。',

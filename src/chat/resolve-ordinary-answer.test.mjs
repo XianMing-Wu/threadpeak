@@ -6,5 +6,5 @@ test('ordinary chat answers do not invent prewritten success', () => {
   const resolution = resolveOrdinaryAnswer()
   assert.equal(resolution.kind, 'unavailable')
   assert.equal(resolution.reason, 'missing-answer-provider')
-  assert.match(resolution.message, /不能用预写 Mock 冒充成功/)
+  assert.match(resolution.message, /请稍后再试/)
 })

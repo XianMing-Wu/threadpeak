@@ -4,12 +4,12 @@
   "items": [
     { "id": "auth", "name": "知乎授权入口", "hash": "signed-out", "states": ["default", "dark", "unavailable", "local-prototype"] },
     { "id": "home", "name": "问山主页面", "hash": "#home", "states": ["idle", "focused", "mode-selected", "attachment-ready", "sent"] },
-    { "id": "chat", "name": "问题会话", "hash": "#chat", "states": ["answer-streaming", "answer-complete", "route-questions", "route-ready", "visual-failed", "follow-up", "empty-404"] },
+    { "id": "chat", "name": "问题会话", "hash": "#chat", "states": ["answer-streaming", "answer-complete", "route-questions", "route-ready", "follow-up", "empty-404"] },
     { "id": "paths", "name": "路线列表", "hash": "#paths", "states": ["mine", "example", "empty", "route-open"] },
     { "id": "path-3d", "name": "双层圆台路线", "hash": "#path-3d", "states": ["scene", "panned", "carrier-selected", "concept-selected", "continue-progress", "error"] },
     { "id": "knowledge", "name": "知识脉络", "hash": "#knowledge", "states": ["mine", "example", "empty", "concept-open"] },
     { "id": "knowledge-detail", "name": "只读知识画布", "hash": "#knowledge-detail", "states": ["concepts", "canvas", "panned", "node-viewed", "edge-reason-open", "zoomed"] },
-    { "id": "session-learning", "name": "统一概念学习", "hash": "#session-learning", "states": ["first-entry", "reused-canonical", "quote-ready", "ask-authors", "follow-up", "visual-failed"] },
+    { "id": "session-learning", "name": "统一概念学习", "hash": "#session-learning", "states": ["first-entry", "reused-canonical", "quote-ready", "ask-authors", "follow-up"] },
     { "id": "authors", "name": "博主网络", "hash": "#authors", "states": ["search-tab", "network-tab", "query-open", "results", "empty-network", "unavailable"] },
     { "id": "settings", "name": "设置", "hash": "#settings", "states": ["default", "identity-unavailable", "sources-unavailable", "history-cleared"] }
   ]

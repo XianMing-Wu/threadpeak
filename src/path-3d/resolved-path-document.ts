@@ -53,7 +53,7 @@ export function resolvePath3DView(input: {
       kind: 'unavailable',
       reason: 'missing-route',
       title: '未选择路线',
-      message: '没有可打开的路线。请从我的路线或示例路线进入；不能把内置演示路径当作用户结果。',
+      message: '没有可打开的路线。请从路线列表进入。',
     }
   }
 
@@ -65,8 +65,8 @@ export function resolvePath3DView(input: {
       reason: route.owner === 'mine' ? 'invalid-mine-document' : 'invalid-example-document',
       title: route.title,
       message: route.owner === 'mine'
-        ? '这条用户路线没有已校验的渲染文档，不能回退到内置演示路径。'
-        : '这条示例路线的渲染文档无效。',
+        ? '这条路线打不开。请重新生成。'
+        : '这条示例路线打不开。',
     }
   }
 
@@ -75,7 +75,7 @@ export function resolvePath3DView(input: {
       kind: 'unavailable',
       reason: 'invalid-mine-document',
       title: route.title,
-      message: '用户路线不能使用内置演示文档。请重新生成路线。',
+      message: '这条路线打不开。请重新生成。',
     }
   }
 

@@ -27,7 +27,7 @@ function hashText(text: string): string {
 }
 
 export function seedQuestion(title: string): string {
-  return `请用普通概念讲解说明「${title.trim()}」。这是该概念的首次回复，不要改写成图文模式或问博主。`
+  return `请用普通概念讲解说明「${title.trim()}」。这是该概念的首次回复，不要改写成问博主。`
 }
 
 export function createCanonicalAnswerStore() {

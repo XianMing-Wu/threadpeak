@@ -6,12 +6,12 @@ test('composer attachments do not invent an uploaded PDF', () => {
   const resolution = resolveComposerAttachment()
   assert.equal(resolution.kind, 'unavailable')
   assert.equal(resolution.reason, 'missing-attachment-provider')
-  assert.match(resolution.message, /不能把本地文件名当成已上传 PDF/)
+  assert.match(resolution.message, /请重新添加/)
 })
 
 test('composer source scope does not invent uploaded documents', () => {
   const resolution = resolveComposerSources()
   assert.equal(resolution.kind, 'unavailable')
   assert.equal(resolution.reason, 'missing-sources-provider')
-  assert.match(resolution.message, /不能把知乎或已上传 PDF/)
+  assert.match(resolution.message, /请重新选择/)
 })

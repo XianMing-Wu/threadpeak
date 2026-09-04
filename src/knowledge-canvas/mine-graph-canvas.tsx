@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { StatusOrbChip } from '../components/StatusOrb'
 import { ProductWorkspace } from '../components/Shell'
 import { KnowledgeCanvasPage } from '../pages/KnowledgeCanvas'
 import { conceptTitle } from '../workspace/catalog'
@@ -62,8 +63,7 @@ export function MineGraphCanvasPage({ routeId, conceptId }: { routeId: string; c
       <main className="canvas-page">
         <section className="thread-canvas" role="status" aria-live="polite">
           <article className="square-empty">
-            <strong>正在读取已提交的知识脉络</strong>
-            <p>我的路线先读取已 settle 的首次回复和唯一根，再显示可缩放的知识脉络。</p>
+            <StatusOrbChip label="正在读取知识脉络"/>
           </article>
         </section>
       </main>

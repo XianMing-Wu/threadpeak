@@ -11,7 +11,8 @@
 
 /*
  * Shared recreation of the supplied input reference: a neutral hairline stays
- * still while one coral-to-amber light band makes a two-second orbit around it.
+ * still while one cool light band makes a two-second orbit around it.
+ * Zhihu blue, vivid aqua, and mint stay bright and far enough apart to read.
  * The crisp ring and its blurred bloom are separate so text never animates.
  */
 .input-motion-frame {
@@ -35,13 +36,15 @@
   border-radius: inherit;
   background: conic-gradient(
     from var(--tp-input-motion-angle) at 50% 50%,
-    rgba(244, 137, 151, .72) 0deg,
-    rgba(246, 175, 118, .66) 25deg,
-    rgba(253, 216, 164, .34) 54deg,
+    rgba(23, 114, 246, .82) 0deg,
+    rgba(46, 184, 255, .88) 16deg,
+    rgba(62, 224, 200, .84) 30deg,
+    rgba(232, 241, 255, .5) 54deg,
     transparent 94deg,
     transparent 296deg,
-    rgba(252, 202, 208, .22) 330deg,
-    rgba(244, 137, 151, .72) 360deg
+    rgba(62, 224, 200, .3) 322deg,
+    rgba(46, 184, 255, .62) 342deg,
+    rgba(23, 114, 246, .82) 360deg
   );
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,

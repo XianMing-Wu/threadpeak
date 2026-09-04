@@ -12,7 +12,7 @@ test('canonical request fail-closes without inventing a first lesson', async () 
     },
   })
   assert.equal(result.kind, 'unavailable')
-  assert.match(result.message, /不能用草稿发明一课/)
+  assert.match(result.message, /请先从路线进入学习/)
 })
 
 test('completed canonical text is split into lesson paragraphs and keeps the hash', async () => {

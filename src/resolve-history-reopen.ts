@@ -2,7 +2,7 @@ export type HistoryReopenEntry = {
   id: string
   title: string
   query: string
-  experience: 'answer' | 'route' | 'visual' | 'learning'
+  experience: 'answer' | 'route' | 'learning'
   routeId?: string
   conceptId?: string
 }
@@ -11,7 +11,7 @@ export type HistoryReopenConversation = {
   id: string
   kind: string
   query: string
-  experience?: 'answer' | 'route' | 'visual'
+  experience?: 'answer' | 'route'
   routeId?: string
   conceptId?: string
 }
@@ -27,7 +27,7 @@ export type HistoryReopenResolution =
     kind: 'draft-chat'
     conversationId: string
     query: string
-    experience: 'answer' | 'route' | 'visual'
+    experience: 'answer' | 'route'
     routeId?: string
   }
   | {
@@ -45,8 +45,8 @@ export function resolveHistoryReopen(
     return {
       kind: 'unavailable',
       reason: 'missing-draft',
-      title: '无法重开这次历史',
-      message: '没有可重开的本地草稿。不能编造一次已提交会话。',
+      title: '无法打开这条记录',
+      message: '没有可以重新打开的对话。',
     }
   }
   if (entry.experience === 'learning') {
@@ -71,8 +71,8 @@ export function resolveHistoryReopen(
     return {
       kind: 'unavailable',
       reason: 'missing-draft',
-      title: '无法重开这次历史',
-      message: '这条学习草稿已经不在。不能用空记录冒充精确重开。',
+      title: '无法打开这条记录',
+      message: '这条学习记录已经不在了。',
     }
   }
   const query = (conversation?.query || entry.query).trim()
@@ -80,15 +80,16 @@ export function resolveHistoryReopen(
     return {
       kind: 'unavailable',
       reason: 'missing-draft',
-      title: '无法重开这次历史',
-      message: '这次对话没有可用的发送上下文。不能用预写问题冒充已打开的会话。',
+      title: '无法打开这条记录',
+      message: '这次对话打不开了。',
     }
   }
-  const experience = conversation?.experience === 'route' || conversation?.experience === 'visual' || conversation?.experience === 'answer'
+  const raw = conversation?.experience === 'route' || conversation?.experience === 'answer'
     ? conversation.experience
-    : entry.experience === 'route' || entry.experience === 'visual'
+    : entry.experience === 'route'
       ? entry.experience
       : 'answer'
+  const experience = raw
   return {
     kind: 'draft-chat',
     conversationId: conversation?.id || entry.id,

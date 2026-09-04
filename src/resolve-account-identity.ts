@@ -9,7 +9,7 @@ export function resolveAccountIdentity(): AccountIdentityResolution {
   return {
     kind: 'unavailable',
     reason: 'missing-identity-provider',
-    title: '本地原型账号',
-    message: '侧栏账号还没有接通真实的服务端身份。不能用写死的姓名冒充当前登录用户。',
+    title: '问山账号',
+    message: '打开账号菜单',
   }
 }

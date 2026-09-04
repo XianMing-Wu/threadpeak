@@ -26,7 +26,7 @@ export function resolveLearningEntry(input: LearningEntryInput): LearningEntry {
       kind: 'unavailable',
       reason: 'missing-route',
       title: '未选择学习概念',
-      message: '没有可进入的学习概念。请从已打开的路线进入；不能默认打开线性代数示例，也不能发明首段讲解。',
+      message: '没有可进入的学习内容。请从路线里选择一个概念。',
     }
   }
   if (!conceptId) {
@@ -34,7 +34,7 @@ export function resolveLearningEntry(input: LearningEntryInput): LearningEntry {
       kind: 'unavailable',
       reason: 'missing-concept',
       title: '未选择学习概念',
-      message: '这条路线还没有指定概念。请从 3D 路线进入一个概念；不能默认打开“线性变换”。',
+      message: '这条路线还没有指定概念。请从路线里进入一个概念。',
     }
   }
   if (!input.conceptIds || !input.conceptIds.includes(conceptId)) {
@@ -42,7 +42,7 @@ export function resolveLearningEntry(input: LearningEntryInput): LearningEntry {
       kind: 'unavailable',
       reason: 'concept-not-on-route',
       title: '概念不属于这条路线',
-      message: '当前概念不在这条路线里。不能把另一条路线的概念接到这次学习会话。',
+      message: '当前概念不在这条路线里。请重新选择。',
     }
   }
   return { kind: 'ready', routeId, conceptId }
@@ -90,15 +90,15 @@ export function resolveFirstLesson(input: FirstLessonInput): FirstLessonResoluti
       kind: 'unavailable',
       reason: 'missing-route',
       title: '无法准备这次学习',
-      message: '没有可进入的学习概念。不能发明首段讲解，也不能因此创建知识脉络。',
+      message: '没有可进入的学习内容。请从路线进入。',
     }
   }
   if (input.route.owner === 'mine') {
     return {
       kind: 'unavailable',
       reason: 'missing-canonical-answer',
-      title: '还没有这次概念的首次回复',
-      message: '这条用户路线还没有已 settle 的首次回复。不能用草稿发明一课，也不能在首次回复之前创建知识脉络。',
+      title: '还没有第一段讲解',
+      message: '这次学习还没准备好第一段讲解。请先从路线进入学习。',
     }
   }
   if (!input.catalogLesson) {
@@ -106,7 +106,7 @@ export function resolveFirstLesson(input: FirstLessonInput): FirstLessonResoluti
       kind: 'unavailable',
       reason: 'missing-example-lesson',
       title: '无法准备这次学习',
-      message: '这条示例路线没有已标记的概念讲解，不能用草稿发明一课。',
+      message: '这次示例讲解还没准备好。请换一条路线试试。',
     }
   }
   return { kind: 'ready', source: 'example-catalog', routeId, conceptId }

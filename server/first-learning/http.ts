@@ -28,7 +28,7 @@ export function registerFirstLearningRoutes(app: FastifyInstance, ports: {
 
   app.get('/api/learning/first-entry', async (request, reply) => {
     const traceId = String(request.headers['x-trace-id'] ?? `l0-${Date.now()}`)
-    if (!ports.firstLearning) return send(reply, 503, { kind: 'failed', code: 'CONFIG_INVALID', message: '首次学习存储尚未接通。', traceId })
+    if (!ports.firstLearning) return send(reply, 503, { kind: 'failed', code: 'CONFIG_INVALID', message: '现在读不到第一段讲解。请稍后再试。', traceId })
     const found = ports.firstLearning.get(queryId(request, 'routeId'), queryId(request, 'conceptId'))
     if (!found) return send(reply, 404, { kind: 'missing', traceId })
     return send(reply, 200, {

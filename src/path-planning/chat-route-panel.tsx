@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { AgentStatus } from '../components/AgentStatus'
+import { EmptyStatus } from '../components/EmptyStatus'
 import { Icon } from '../icons'
 import { openRoute } from '../workspace/nav'
 import { createMineRouteFromChat, getConversation, getRoute, saveConversation } from '../workspace/store'
@@ -13,7 +14,6 @@ import {
   startPathRun,
   type PathRunView,
 } from './path-run-client.ts'
-import type { AssistantMode } from '../assistant-mode'
 import { MarkdownMath } from '../lib/MarkdownMath'
 
 const optionLetters = ['A', 'B', 'C', 'D'] as const
@@ -52,7 +52,7 @@ export function ChatRoutePanel(props: {
   existingRouteId?: string
   thinkingDepth?: 'fast' | 'deep'
   onRouteReady: (routeId: string) => void
-  onSender?: (handler: (text: string, mode: AssistantMode) => void) => void
+  onSender?: (handler: (text: string) => void) => void
 }) {
   const existing = props.existingRouteId ? getRoute(props.existingRouteId) : undefined
   const [view, setView] = useState<PathRunView | null>(null)
@@ -110,7 +110,7 @@ export function ChatRoutePanel(props: {
           stage: 'failed',
           questionSets: [],
           knowledgeCreated: false,
-          error: { code: 'PROVIDER_INVALID', message: '找不到这次路线制定。记录丢了只显示失败，不会重新生成。' },
+          error: { code: 'PROVIDER_INVALID', message: '这次路线制定找不到了。请重新开始。' },
         })
       })
       return
@@ -124,13 +124,8 @@ export function ChatRoutePanel(props: {
   }, [existing, props.conversationId, props.query])
 
   useEffect(() => {
-    props.onSender?.((text, mode) => {
+    props.onSender?.((text) => {
       if (!view) return
-      if (mode === 'route' && view.status === 'published') {
-        setReplies([])
-        void run(() => startPathRun({ goal: text, thinkingDepth: props.thinkingDepth }))
-        return
-      }
       if (view.status === 'awaiting_answers') {
         void run(() => followUpPathRun(view.runId, text))
         return
@@ -160,16 +155,17 @@ export function ChatRoutePanel(props: {
   return <article className="route-clarification">
     {(pending || view?.status === 'running') && <AgentStatus items={[{
       label: view?.stage || '正在制定路线',
-      detail: view?.stage ? undefined : '正在拆问、检索知乎并整理探索结果。整段结束后才会出现选择题。',
       done: false,
     }]}/>}
     {view?.status === 'failed' && <section className="route-ready-card" role="alert">
-      <div>
-        <small>本次生成未完成</small>
-        <h2>无法发布这条路线</h2>
-        <p>{publicPathErrorMessage(view.error?.message)}</p>
-        <button type="button" onClick={() => view.runId && run(() => retryPathRun(view.runId))}>重试</button>
-      </div>
+      <EmptyStatus
+        kind="error"
+        eyebrow="本次生成未完成"
+        title="无法发布这条路线"
+        body={publicPathErrorMessage(view.error?.message)}
+        action="重试"
+        onAction={() => view.runId && run(() => retryPathRun(view.runId))}
+      />
     </section>}
     {superseded.map((set) => <section key={`old-${set.round}`} className="clarification-card is-superseded" aria-disabled="true">
       <small>第 {set.round} 轮 · 已替换</small>

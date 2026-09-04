@@ -24,7 +24,7 @@ export function projectBootstrappedGraph(
     return {
       kind: 'unavailable',
       title: graph.root.title,
-      message: '已提交的知识脉络根节点必须绑定同一份首次回复，不能用结构占位或另一份正文代替。',
+      message: '这份知识脉络还不完整。请重新进入学习。',
     }
   }
   const lesson = lessonFromCanonical(graph.root.title, canonical.text)

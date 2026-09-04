@@ -4,8 +4,8 @@ import type { RouteName } from '../components/Shell'
 import type { CanvasEdge, CanvasNode } from '../knowledge-canvas/content'
 
 export type Owner = 'mine' | 'example'
-export type ChatExperience = 'answer' | 'route' | 'visual'
-export type ConversationKind = 'home-answer' | 'home-route' | 'home-visual' | 'route-followup' | 'learning'
+export type ChatExperience = 'answer' | 'route'
+export type ConversationKind = 'home-answer' | 'home-route' | 'route-followup' | 'learning'
 
 export type PathCarrierSpec = {
   id: string

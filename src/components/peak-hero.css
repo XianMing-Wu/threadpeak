@@ -1,0 +1,319 @@
+.peak-hero {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 100%;
+  min-height: 200px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.peak-hero *,
+.peak-hero *::before,
+.peak-hero *::after {
+  box-sizing: border-box;
+}
+
+.peak-hero .lamp-root {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.peak-hero .grid-fade {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: .05;
+}
+
+.peak-hero .grid-fade > div {
+  width: 100%;
+  height: 100%;
+  background-image:
+    linear-gradient(to right, #8080800a 1px, transparent 1px),
+    linear-gradient(to bottom, #8080800a 1px, transparent 1px);
+  background-size: 14px 24px;
+}
+
+.peak-hero .lamp-shaft {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 33.333%;
+  height: 120%;
+  background: linear-gradient(to bottom, rgba(23, 114, 246, .2), transparent, transparent);
+  filter: blur(40px);
+  transform: translateX(-50%);
+}
+
+.peak-hero .lamp-stage {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+  width: 100%;
+  padding-top: 112px;
+  transform: scaleY(1.25);
+}
+
+.peak-hero .conic {
+  position: absolute;
+  inset: auto;
+  width: 15rem;
+  height: 192px;
+  overflow: visible;
+  opacity: .5;
+  transition: width .8s ease-in-out .3s, opacity .8s ease-in-out .3s;
+}
+
+.peak-hero.in-view .conic {
+  width: 30rem;
+  opacity: 1;
+}
+
+.peak-hero .conic-l {
+  right: 50%;
+  background-image: conic-gradient(from 70deg at center top, rgb(23, 114, 246), transparent, transparent);
+}
+
+.peak-hero .conic-r {
+  left: 50%;
+  background-image: conic-gradient(from 290deg at center top, transparent, transparent, rgb(23, 114, 246));
+}
+
+.peak-hero .mask-b,
+.peak-hero .mask-br {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  width: 100%;
+  height: 160px;
+  background: #fafafa;
+  mask-image: linear-gradient(to top, #000, transparent);
+}
+
+.peak-hero .mask-l {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  width: 160px;
+  height: 100%;
+  background: #fafafa;
+  mask-image: linear-gradient(to right, #fff, transparent);
+}
+
+.peak-hero .mask-r {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  width: 160px;
+  height: 100%;
+  background: #fafafa;
+  mask-image: linear-gradient(to left, #000, transparent);
+}
+
+.peak-hero .lamp-blur {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  height: 160px;
+  background: #fafafa;
+  filter: blur(40px);
+  transform: scaleX(1.5) translateY(48px);
+}
+
+.peak-hero .lamp-glass {
+  position: absolute;
+  top: 50%;
+  z-index: 50;
+  width: 100%;
+  height: 160px;
+  background: transparent;
+  opacity: .1;
+  backdrop-filter: blur(12px);
+}
+
+.peak-hero .lamp-orb {
+  position: absolute;
+  inset: auto;
+  z-index: 50;
+  width: 384px;
+  height: 128px;
+  border-radius: 999px;
+  background: rgba(23, 114, 246, .2);
+  opacity: .5;
+  filter: blur(64px);
+  transform: translateY(-64px);
+}
+
+.peak-hero .hero-copy {
+  position: relative;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .7s ease .15s, transform .7s ease .15s;
+}
+
+.peak-hero.in-view .hero-copy {
+  opacity: 1;
+  transform: none;
+}
+
+.peak-hero .peak-hero-heading {
+  position: relative;
+  margin: 0 0 16px;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  text-align: center;
+}
+
+.peak-hero .hero-title {
+  display: block;
+  background-image: linear-gradient(to bottom right, #fff, rgba(245, 245, 245, .8));
+  background-clip: text;
+  color: transparent;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -.75px;
+  line-height: 36px;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.peak-hero .hero-sub {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, .8);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+  -webkit-text-fill-color: rgba(255, 255, 255, .8);
+}
+
+.peak-hero .hero-rule {
+  position: absolute;
+  right: 0;
+  bottom: -8px;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #1772f6, transparent);
+  opacity: 0;
+  transition: opacity .8s ease .45s;
+}
+
+.peak-hero.in-view .hero-rule {
+  opacity: 1;
+}
+
+.peak-market {
+  box-sizing: border-box;
+  padding: 32px 24px 24px;
+  background: #f3f4f6;
+}
+
+.peak-market > .peak-tabs {
+  padding: 8px 0 0;
+}
+
+.consultation-page.peak-market {
+  overflow: auto;
+  padding: 24px 24px 16px;
+  background: #f3f4f6 !important;
+}
+
+.consultation-page.peak-market .peak-hero {
+  min-height: 148px;
+}
+
+.consultation-page.peak-market > .peak-tabs {
+  padding: 8px 0 0;
+}
+
+.consultation-page.peak-market .consultation-body,
+.consultation-page.peak-market .consultation-map-panel,
+.consultation-page.peak-market .consultation-sidebar,
+.consultation-page.peak-market .author-network-pane,
+.consultation-page.peak-market .consultation-map-wrap,
+.consultation-page.peak-market .consultation-map {
+  background: #f3f4f6;
+}
+
+.consultation-page.peak-market .consultation-body {
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+  gap: 20px;
+  padding-top: 16px;
+  min-height: 380px;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
+}
+
+.consultation-page.peak-market .consultation-map-panel {
+  height: 100%;
+  min-height: 0;
+}
+
+.consultation-page.peak-market .consultation-map-wrap {
+  height: 100%;
+  margin: 0;
+  border: 1px solid #e8ebf0;
+}
+
+.consultation-page.peak-market .consultation-sidebar {
+  height: 100%;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid #e8ebf0;
+  border-radius: 13px;
+}
+
+.consultation-page.peak-market .radar-search-status,
+.consultation-page.peak-market .radar-search-status:has(.ux-status) {
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: 32px 28px 40px;
+  background: #f3f4f6 !important;
+}
+
+.consultation-page.peak-market .radar-search-status .ux-status {
+  max-width: 28ch;
+  background: transparent;
+}
+
+.consultation-page.peak-market .radar-search-status .ux-status__mascot {
+  width: 96px;
+  height: 96px;
+  margin-bottom: 16px;
+}
+
+.consultation-page.peak-market .radar-search-status .ux-status__title {
+  margin-bottom: 10px !important;
+}
+
+.consultation-page.peak-market .radar-search-status .ux-status__body {
+  line-height: 1.75 !important;
+}
+
+.consultation-page.peak-market .radar-search-status .ux-status__action {
+  margin-top: 20px !important;
+}

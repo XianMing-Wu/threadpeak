@@ -22,6 +22,7 @@ import type { GraphSnapshot } from '../session/request-graph-bootstrap.ts'
 import { isRenderableMineRoute } from '../path-3d/resolved-path-document.ts'
 import { mineRouteFromValidatedDocument } from './published-route'
 import type {
+  ChatExperience,
   ConceptCard,
   ConversationKind,
   ConversationRecord,
@@ -64,19 +65,28 @@ function validSnapshot(value: unknown): value is WorkspaceSnapshot {
 function migrateConversationModes(snapshot: WorkspaceSnapshot): WorkspaceSnapshot {
   let dirty = false
   const conversations = snapshot.conversations.map((conversation) => {
-    const mode = normalizeAssistantMode((conversation as { mode?: unknown }).mode)
+    const raw = conversation as { mode?: unknown; experience?: unknown; kind?: unknown }
+    const mode = normalizeAssistantMode(raw.mode)
+    const experience: ChatExperience = raw.experience === 'route' ? 'route' : 'answer'
+    const kind: ConversationKind = raw.kind === 'home-visual' ? 'home-answer' : conversation.kind
     let turnsChanged = false
     const turns = conversation.turns.map((turn) => {
       const rawMode = (turn as { mode?: unknown }).mode
       if (rawMode === undefined) return turn
       const nextMode = normalizeAssistantMode(rawMode)
-      if (nextMode === rawMode) return turn
+      const dropVisual = rawMode === 'visual'
+      if (nextMode === rawMode && !dropVisual) return turn
       turnsChanged = true
-      return { ...turn, mode: nextMode }
+      const next: LearningTurn = dropVisual ? { ...turn, failed: true } : { ...turn }
+      if (nextMode) return { ...next, mode: nextMode }
+      const { mode: _ignored, ...rest } = next
+      return rest
     })
-    if (mode === conversation.mode && !turnsChanged) return conversation
+    if (mode === conversation.mode && experience === conversation.experience && kind === conversation.kind && !turnsChanged) {
+      return conversation
+    }
     dirty = true
-    return { ...conversation, mode, turns }
+    return { ...conversation, mode, experience, kind, turns }
   })
   if (!dirty) return snapshot
   const next = { ...snapshot, conversations }
@@ -334,7 +344,7 @@ export function hydrateLearningHistory() {
 }
 
 export function createHomeConversation(query: string, experience: ConversationRecord['experience']): ConversationRecord {
-  const kind: ConversationKind = experience === 'route' ? 'home-route' : experience === 'visual' ? 'home-visual' : 'home-answer'
+  const kind: ConversationKind = experience === 'route' ? 'home-route' : 'home-answer'
   const conversation: ConversationRecord = {
     id: newId('chat'),
     kind,
@@ -619,7 +629,7 @@ function replyParagraphs(reply: string) {
 }
 
 function isFailureSentinel(reply: string) {
-  return reply === 'authors' || reply === 'visual' || reply === 'coach'
+  return reply === 'authors' || reply === 'coach'
 }
 
 export function syncConversationGraph(
@@ -659,7 +669,6 @@ export function syncConversationGraph(
     const user = replay[index]
     const assistant = replay[index + 1]
     if (user.role !== 'user' || user.failed || !isUsableAssistantTurn(assistant)) continue
-    if (user.mode === 'visual' || assistant.mode === 'visual') continue
     const assistantIndex = index + 1
     index += 1
     const parsed = parseQuotedUserTurn(user.text)

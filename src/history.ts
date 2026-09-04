@@ -2,7 +2,7 @@ import { resolveHistoryReopen, type HistoryReopenResolution } from './resolve-hi
 
 /** Isolated draft cache. Product sidebar reopen must not compose this into committed history success. */
 
-export type HistoryExperience = 'answer' | 'route' | 'visual' | 'learning'
+export type HistoryExperience = 'answer' | 'route' | 'learning'
 
 export type ChatHistoryEntry = {
   id:string
@@ -24,7 +24,7 @@ function validEntry(value:unknown):value is ChatHistoryEntry {
   if(!value||typeof value!=='object')return false
   const entry=value as Partial<ChatHistoryEntry>
   return typeof entry.id==='string'&&typeof entry.title==='string'&&typeof entry.query==='string'&&
-    (entry.experience==='answer'||entry.experience==='route'||entry.experience==='visual'||entry.experience==='learning')&&typeof entry.updatedAt==='number'
+    (entry.experience==='answer'||entry.experience==='route'||entry.experience==='learning')&&typeof entry.updatedAt==='number'
 }
 
 export function readChatHistory():ChatHistoryEntry[] {

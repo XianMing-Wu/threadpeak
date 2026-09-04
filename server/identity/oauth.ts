@@ -85,7 +85,7 @@ export function createOauthService(ports: {
   const sessions = ports.sessions ?? new Map<string, OauthSessionRecord & { accessToken: string }>()
   const randomState = ports.randomState ?? (() => randomBytes(24).toString('hex'))
 
-  const unavailableMessage = '登录还没有接通服务端 OAuth。不能把本地开关或延时动画当成知乎账号授权成功。'
+  const unavailableMessage = '现在无法完成知乎登录。请稍后再试。'
   const unavailable = (): Extract<OauthStartResult, { kind: 'unavailable' }> => ({
     kind: 'unavailable',
     title: '无法完成知乎授权',
@@ -116,10 +116,10 @@ export function createOauthService(ports: {
       const expectedState = cookies[OAUTH_STATE_COOKIE]
       const code = input.authorizationCode?.trim()
       if (!code || !input.state || !expectedState || input.state !== expectedState) {
-        return { kind: 'failed', title: '无法完成知乎授权', message: '授权回调缺少有效的 authorization_code 或 state，不能把这次跳转当成登录成功。' }
+        return { kind: 'failed', title: '无法完成知乎授权', message: '现在无法完成知乎登录。请稍后再试。' }
       }
       if (!oauthTokenAllowed(ZHIHU_OAUTH_TOKEN_URL)) {
-        return { kind: 'failed', title: '无法完成知乎授权', message: 'OAuth token 端点不在允许的知乎开放域。' }
+        return { kind: 'failed', title: '无法完成知乎授权', message: '现在无法完成知乎登录。请稍后再试。' }
       }
       const body = new URLSearchParams({
         app_id: ports.oauth.config.appId,
@@ -136,7 +136,7 @@ export function createOauthService(ports: {
         })
         const text = await response.text()
         if (!response.ok) {
-          return { kind: 'failed', title: '无法完成知乎授权', message: '知乎 access_token 交换失败，不能把这次回调当成登录成功。' }
+          return { kind: 'failed', title: '无法完成知乎授权', message: '现在无法完成知乎登录。请稍后再试。' }
         }
         let payload: unknown
         try {
@@ -162,7 +162,7 @@ export function createOauthService(ports: {
           sessionMaxAge: token.expiresIn,
         }
       } catch {
-        return { kind: 'failed', title: '无法完成知乎授权', message: '知乎 OAuth 服务不可用，不能把这次回调当成登录成功。' }
+        return { kind: 'failed', title: '无法完成知乎授权', message: '现在无法完成知乎登录。请稍后再试。' }
       }
     },
 

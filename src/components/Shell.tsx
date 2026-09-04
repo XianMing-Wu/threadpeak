@@ -68,8 +68,8 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
       setAccountIdentity({
         kind: 'unavailable',
         reason: 'missing-identity-provider',
-        title: '知乎已授权',
-        message: '当前会话来自服务端知乎 OAuth。官方文档未给出用户信息接口字段时，不编造姓名。',
+        title: '已登录知乎',
+        message: '打开账号菜单',
       })
     })
   },[])

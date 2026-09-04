@@ -10,7 +10,7 @@ test('missing route id does not fall back to the linear-algebra fixture', () => 
   const view = resolvePath3DView({ routeId: '' })
   assert.equal(view.kind, 'unavailable')
   assert.equal(view.reason, 'missing-route')
-  assert.match(view.message, /不能把内置演示路径当作用户结果/)
+  assert.match(view.message, /请从路线列表进入/)
 })
 
 test('mine routes require a validated document and never use the example fixture id', () => {

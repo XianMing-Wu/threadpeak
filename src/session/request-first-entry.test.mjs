@@ -13,7 +13,7 @@ test('first-entry snapshot is GET and does not invent a lesson', async () => {
     }),
   })
   assert.equal(missing.kind, 'unavailable')
-  assert.match(missing.message, /不能用草稿发明一课/)
+  assert.match(missing.message, /请先从路线进入学习/)
 
   const present = await requestFirstEntrySnapshot({
     routeId: 'generated-path',

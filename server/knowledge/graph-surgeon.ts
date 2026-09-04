@@ -75,7 +75,7 @@ export function createGraphSurgeon(canonical: CanonicalLookup) {
         return {
           kind: 'failed',
           code: 'CANONICAL_MISSING',
-          message: '还没有已 settle 的首次回复，不能创建知识脉络。GraphSurgeon 不会发明根节点，也不会重新生成首次回复。',
+          message: '还没有第一段讲解，暂时不能打开知识脉络。',
         }
       }
       const raced = graphs.get(key)

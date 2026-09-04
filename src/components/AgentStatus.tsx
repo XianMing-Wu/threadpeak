@@ -1,4 +1,5 @@
 import { Icon } from '../icons'
+import { StatusOrbChip } from './StatusOrb'
 
 export type AgentStatusItem = Readonly<{
   label:string
@@ -7,5 +8,5 @@ export type AgentStatusItem = Readonly<{
 }>
 
 export function AgentStatus({items}:{items:readonly AgentStatusItem[]}) {
-  return <div className="route-agent-status" role="status" aria-live="polite">{items.map((status)=><div key={status.label}><div className="route-agent-status-row"><span className="route-agent-status-bullet">{status.done?<Icon name="check" size={13}/>:<i/>}</span><span className={status.done?'is-done':'is-active'}>{status.label}</span></div>{!status.done&&status.detail&&<p>{status.detail}</p>}</div>)}</div>
+  return <div className="route-agent-status" role="status" aria-live="polite">{items.map((status)=><div key={status.label}>{status.done?<div className="route-agent-status-row"><span className="route-agent-status-bullet"><Icon name="check" size={13}/></span><span className="is-done">{status.label}</span></div>:<StatusOrbChip label={status.label}/>}</div>)}</div>
 }

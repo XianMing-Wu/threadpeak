@@ -134,7 +134,7 @@ export function isLiuKanshanName(value: string | null | undefined): boolean {
 export function createUnavailableAuthorNetwork(): AuthorNetworkPort {
   return {
     async searchRelated() {
-      return { kind: 'failed', message: '博主网络还没有接通真实的关系投影。' }
+      return { kind: 'failed', message: '现在连不上博主搜索。请稍后再试。' }
     },
   }
 }

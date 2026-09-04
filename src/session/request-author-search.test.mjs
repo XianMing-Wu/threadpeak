@@ -18,12 +18,12 @@ test('author search surfaces live network-unavailable instead of a generic fallb
       return jsonResponse(503, {
         kind: 'failed',
         code: 'NETWORK_UNAVAILABLE',
-        message: '博主网络还没有接通真实的关系投影。',
+        message: '现在连不上博主搜索。请稍后再试。',
       })
     },
   })
   assert.equal(result.kind, 'unavailable')
-  assert.match(result.message, /关系投影/)
+  assert.match(result.message, /请稍后再试/)
 })
 
 test('author search maps mixed high/low/zhihu people without inventing Liu Kanshan', async () => {

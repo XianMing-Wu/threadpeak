@@ -32,7 +32,7 @@
 | `server/agent-runtime/` | 共用上下文组装、500k/300k 压缩、输出校验和真实 DeepSeek/知乎端口；产品 HTTP 已走该运行时 | 所有 Agent 共用同一套预算/压缩/校验后再进入各域编排；用户请求不得回退 fixture |
 | `src/pages/AuthLanding.tsx`、`src/resolve-auth-session.ts`、`server/identity/` | 知乎授权会请求官方地址；缺配置明确失败；进入本地原型只设置本机开关；用户协议/隐私政策已删除 | 保留授权与进入本地原型两条入口；不假登录；删除无内容的协议/隐私项 |
 | `src/components/Shell.tsx`、`src/history.ts`、`src/resolve-history-reopen.ts` | 侧栏历史是本地草稿；学习记录点哪条开哪条；Chat 重开整段对话；账号菜单有设置 | 学习历史点哪条开哪条；Chat 历史原样恢复整段对话；清历史只清列表；账号菜单增加设置 |
-| `src/pages/Home.tsx`、`src/components/Composer.tsx` | 首页只有路线/图文快捷；附件仅 pdf/md/txt；芯片选中路线并填字；资料范围继续失败 | 不增加首页问博主；芯片选中路线模式并填字、不发送；只在首页上传 pdf/md/txt；资料范围继续失败；只有快速/深度 |
+| `src/pages/Home.tsx`、`src/components/Composer.tsx` | 首页发送进入路线制定；无图文快捷；附件仅 pdf/md/txt；芯片填字不发送；资料范围继续失败 | 不增加首页问博主；无图文入口；芯片选中路线模式并填字、不发送；只在首页上传 pdf/md/txt；资料范围继续失败；只有快速/深度 |
 | `src/pages/Chat.tsx`、`src/path-planning/`、`server/path-generation/` | 产品路线制定只走 R1–R4 `/api/path-runs`；当前题组选完自动进 R4；旧 CandidateSet `/api/paths/generate` 已删除 | R1/R-S/R2/R3/R3b/R4；最多 3 轮；答完自动发布且不建知识；Composer 一直存在；发布后普通发送走 R5 |
 | `src/pages/Collections.tsx`、`src/path-3d/`、`src/components/Path3D.tsx` | 我的路线只显示校验文档；3D 返回路线列表；再次进入交回 renderer 不透明 progress | 空态回首页并选中路线模式；全部 3D 返回路线列表；边不锁节点；每条路线恢复上次位置，具体字段仍未裁决 |
 | `src/pages/Session.tsx`、`server/first-learning/`、`server/knowledge/` | 我的路线第一次进概念走 L0a/L0b；首轮与确定性唯一根同一 settle；跨重启仍只在进程内存 | L0a 三路直答（同时在飞最多 2 路）→ L0b；canonical 首次回复与确定性唯一根作为同一成功结果，根不再调用 LLM，并永久复用 |
@@ -40,7 +40,7 @@
 | `src/session/ask-authors.ts`、`server/authors/` | 划选后 A1→A-S→A2；零位才 A3；结果只做批注；真实作者高权入网 | 有效划选 + 问题 → A1 2–3 问 → A-S 最多 2 路并发（多问法空格拼串）→ A2 选 1–2 位；零位才 A3；只形成批注；真实作者高权入网 |
 | `src/pages/Authors.tsx`、`src/session/resolve-author-search.ts` | N0 高权→低权，不足再查知乎；投影不可用 503；网络 Tab 有人列名单、没人空态 | N0 高权→低权；合计不足 3 人才 N1/N-S/N2 补位；候选不足全部返回；知乎新作者低权入网；网络有人列名单、没人显示空态 |
 | `src/pages/Settings.tsx`、`src/resolve-settings-identity.ts` | 身份和资料没有 provider 时明确失败；已删除密度、减少动效和默认思考深度 | 保留退出、夜间模式、清空历史、身份、资料；删除密度、减少动效、默认思考深度 |
-| `src/visuals/`、图文分支 | 图文发送只会失败，不产生用户 artifact；隔离的图表资产不能冒充成功 | 在真实图文编排未裁决前继续明确失败，不得用 fixture 假成功 |
+| `src/visuals/`、图文分支 | 已从源码删除 | 不得恢复图文入口、失败页或隔离图表资产冒充用户请求成功 |
 | `path-lab.html`、`src/path-lab/`、`/api/paths/generate` | 已从源码删除 | 产品路线制定只走 Chat `/api/path-runs` |
 | `packages/contracts`、`packages/api-client`、`packages/runtime-store` | 已有部分 Zod、decoder 和 headless store | 它们是工程材料，不代表持久化或恢复已经接通 |
 
@@ -108,7 +108,7 @@ ZHIHU_OAUTH_REDIRECT_URI
 
 ## 尚未裁决，不能从参考补出来
 
-- R5 失败重试、历史落盘等普通 Chat 完整目标管线；真实图文编排。
+- R5 失败重试、历史落盘等普通 Chat 完整目标管线。
 - 首次回复和根的持久化表、唯一作用域、跨重启事务与并发策略。
 - 附件大小、数量、解析失败、删除、重复文件与 sourceId 生命周期。
 - 各流程的请求身份、重复提交、取消、超时、部分失败、刷新恢复和迟到响应。
@@ -120,7 +120,7 @@ ZHIHU_OAUTH_REDIRECT_URI
 
 ## 当前未达到的完成条件
 
-- 真实图文编排尚未裁决；当前只有 fail-closed 过渡入口。
+- 产品已删除图文模式，不得恢复入口或假成功。
 - 首次回复、路线会话和博主网络仍在进程内存；跨重启永久复用见 4.2，不能由实现者自行编表。
 - 附件大小/数量/删除、取消/超时/刷新恢复、芯片最终文案、OAuth 回调可见状态、3D 位置字段形态仍未裁决。
 - 当前内存 store、浏览器草稿、schema 或 renderer 测试都不能证明 canonical 永久性、跨重启恢复、权限隔离或 production-ready。
