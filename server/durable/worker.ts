@@ -1,4 +1,5 @@
 import type {TaskActivity} from '../../packages/contracts/src/task-activity.ts'
+import { providerScope } from './provider-scope.ts'
 import { CommandError, digest, type DurableStore, type Job, type Resource } from './store.ts'
 
 export class ToolError extends Error {
@@ -27,7 +28,10 @@ export class TaskContext {
     const pending = this.pending.get(name)
     if (pending) return pending as Promise<T>
     const task = (async () => {
-      const value = await work()
+      const value = await providerScope.run({ownerId:this.job.owner_id,jobId:this.job.id,step:name,queue:async detail=>{
+        const activity=this.job.activities?.find(a=>a.id===name.split('@')[0])
+        if(activity)await this.activity(activity.id,activity.kind,activity.title,'running',detail)
+      }},work)
       this.signal.throwIfAborted()
       await this.store.checkpoint(this.job, name, hash, value)
       return value
@@ -37,7 +41,7 @@ export class TaskContext {
       const id=name.startsWith('L-answer:attach')?'answer:attach':name.startsWith('L-answer:compose')?'answer:write':name.startsWith('memory:')?`context:summary:${name.slice('memory:'.length)}`:name.split('@')[0]
       const activity=this.job.activities?.find(a=>a.id===id)
       if(activity&&!this.signal.aborted&&error instanceof ToolError){
-        const detail=/(?:^|_)HTTP_429$/.test(error.code)?'服务暂时繁忙，等待重试':error.code==='STRUCTURE_NOT_SETTLED'?'这一步尚未完成，已保留正文与前面进度':'服务暂时未响应，已保留前面进度'
+        const detail=error.code==='ZHIHU_RATE_LIMITED'?'知乎请求频率受限，等待冷却后重试':error.code==='RATE_LIMITED'?'模型请求频率受限，等待重试':/QUOTA/.test(error.code)?'服务额度不足，请检查对应账号的额度':/AUTH_INVALID|PROVIDER_AUTH/.test(error.code)?'服务连接认证失败，需要检查配置':/(?:^|_)HTTP_429$/.test(error.code)?'请求频率受限，等待重试':error.code==='STRUCTURE_NOT_SETTLED'?'内容格式校验尚未通过，已保留正文与前面进度':'服务暂时未响应，已保留前面进度'
         await this.activity(activity.id,activity.kind,activity.title,'waiting',detail)
       }
       throw error

@@ -72,10 +72,10 @@ test('issued excerpts preserve every character and cannot bind another source or
 
 test('rate limiting is persisted on the actual step; recovery keeps completed work and its timestamps',async t=>{
  const {store,resource}=await fixture(t);let calls=0
- const tools=new ProductTools({}, {search:async()=>++calls===1?{kind:'failed',code:'HTTP_429',retryable:true}:{kind:'hits',items:[]}})
+ const tools=new ProductTools({}, {search:async()=>++calls===1?{kind:'failed',code:'ZHIHU_RATE_LIMITED',retryable:true}:{kind:'hits',items:[]}})
  const worker=new DurableWorker(store,async ctx=>{await tools.search(ctx,'L-search:0','概念');await ctx.flush();await store.commit(ctx.job,()=>({ok:true}))},1,()=>{})
  await worker.execute(await store.claim());let snapshot=await store.snapshot('owner',resource.id)
- assert.equal(snapshot.job.status,'queued');assert.match(snapshot.job.phase,/繁忙/);assert.equal(snapshot.job.activities[0].status,'waiting');assert.match(snapshot.job.activities[0].detail,/繁忙/)
+ assert.equal(snapshot.job.status,'queued');assert.match(snapshot.job.phase,/频率受限/);assert.equal(snapshot.job.activities[0].status,'waiting');assert.match(snapshot.job.activities[0].detail,/知乎请求频率受限/)
  const start=snapshot.job.activities[0].startedAt
  await store.db.query('UPDATE tp_jobs SET next_at=0 WHERE id=$1',[snapshot.job.id]);await worker.execute(await store.claim());snapshot=await store.snapshot('owner',resource.id)
  assert.equal(snapshot.job.status,'completed');assert.equal(snapshot.job.activities[0].status,'done');assert.equal(snapshot.job.activities[0].startedAt,start)

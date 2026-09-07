@@ -153,7 +153,7 @@ export class DurableStore {
       const resource = await this.lockResource(tx, job.owner_id, job.resource_id)
       await this.ownedJob(tx, job)
       const retry = retryable && job.attempts < 4
-      const phase=retry?(/(?:^|_)HTTP_429$/.test(code)?'服务暂时繁忙，正在等待重试':'服务暂时未响应，正在重试'):'暂时还没完成，内容已保留'
+      const phase=retry?(/RATE_LIMITED|(?:^|_)HTTP_429$/.test(code)?'请求频率受限，正在等待重试':'服务暂时未响应，正在重试'):'暂时还没完成，内容已保留'
       await tx.query('UPDATE tp_jobs SET status=$2,phase=$3,error_code=$4,next_at=$5,lease_until=0,updated_at=$6 WHERE id=$1', [job.id, retry?'queued':'waiting', phase, code, this.now()+Math.min(30_000, 1000*2**job.attempts), this.now()])
       await this.event(tx, resource, retry?'job.recovering':'job.waiting', { jobId: job.id })
     })

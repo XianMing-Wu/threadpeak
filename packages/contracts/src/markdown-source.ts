@@ -250,7 +250,13 @@ export function prepareMarkdown(source: string): PreparedMarkdown {
   const normalized=mathFencesToDelimiters(fenceUnfencedCode(prepareSourceImages(fenceUnfencedCode(source))))
   // Long snake_case names in prose are identifiers. Short x_i remains math;
   // explicit mathematical delimiters and TeX groups retain their authority.
-  const identifiers = splitFences(normalized).map(block => block.code ? block.text : block.text.split(/(\$\$[\s\S]*?\$\$|(?<!\\)\$[^$\n]+\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/g).map((part,i) => i%2 || /\\[A-Za-z]+/.test(part) ? part : part.replace(/(?<![A-Za-z0-9_])[A-Za-z]{2,}_[A-Za-z][A-Za-z0-9_]+(?![A-Za-z0-9_])/g, name => '`'+name+'`')).join('')).join('')
+  const identifiers = splitFences(normalized).map(block => block.code ? block.text : block.text.split(/(\$\$[\s\S]*?\$\$|(?<!\\)\$[^$\n]+\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/g).map((part,i) => {
+    if(i%2)return part
+    // Literal programming separators are not bare LaTeX. Keep their visible
+    // backslashes; explicit math, \nu, \nabla and existing code retain authority.
+    const escaped=part.replace(/(?<![A-Za-z\\])(?:\\[nrt0])+(?![A-Za-z])/g,token=>'`'+token+'`')
+    return /\\[A-Za-z]+/.test(escaped)?escaped:escaped.replace(/(?<![A-Za-z0-9_])[A-Za-z]{2,}_[A-Za-z][A-Za-z0-9_]+(?![A-Za-z0-9_])/g,name=>'`'+name+'`')
+  }).join('')).join('')
   const markdown = splitFences(identifiers.replace(/\r\n/g, '\n')).map((block) => {
     if (block.code) return block.text
     return loosenChineseBlocks(prepareText(block.text))

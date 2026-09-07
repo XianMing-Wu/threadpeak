@@ -83,5 +83,7 @@ export const JSON_AGENT_IDS = new Set<AgentId>([
 export const TEXT_ONLY_AGENT_IDS = new Set<TextAgentId>(['R5', 'L0a', 'G2', 'A3'])
 
 export const ZHIDA_FAST_MODEL = 'zhida-fast-1p5'
+export const ZHIDA_THINKING_MODEL = 'zhida-thinking-1p5'
+export const zhidaModelFor = (depth:string) => depth==='deep'?ZHIDA_THINKING_MODEL:ZHIDA_FAST_MODEL
 
 export const MESSAGE_WRAPPER_TOKENS = 8

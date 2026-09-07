@@ -32,7 +32,7 @@ test('zhihu direct reports retryable 429 to the durable worker without hidden re
     thinkingDepth: 'fast',
   })
   assert.equal(result.kind, 'failed')
-  assert.equal(result.code, 'HTTP_429')
+  assert.equal(result.code, 'ZHIHU_RATE_LIMITED')
   assert.equal(result.retryable, true)
   assert.equal(calls, 1)
 })

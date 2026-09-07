@@ -69,6 +69,15 @@ export async function migrate(db: Sql) {
       owner_id text NOT NULL, source_hash text NOT NULL, summary text NOT NULL,
       created_at bigint NOT NULL, PRIMARY KEY(owner_id,source_hash))`)
     await tx.query(`CREATE TABLE IF NOT EXISTS tp_provider_cooldowns (pool text PRIMARY KEY, until_at bigint NOT NULL)` )
+    await tx.query(`CREATE TABLE IF NOT EXISTS tp_provider_starts (pool text PRIMARY KEY, next_at bigint NOT NULL)`)
+    await tx.query(`CREATE TABLE IF NOT EXISTS tp_provider_cache (
+      owner_id text NOT NULL, cache_key text NOT NULL, body jsonb NOT NULL, expires_at bigint NOT NULL,
+      PRIMARY KEY(owner_id,cache_key))`)
+    await tx.query(`CREATE INDEX IF NOT EXISTS tp_provider_cache_expiry ON tp_provider_cache(expires_at)`)
+    await tx.query(`CREATE TABLE IF NOT EXISTS tp_provider_calls (
+      id text PRIMARY KEY, owner_id text NOT NULL, job_id text NOT NULL, step text NOT NULL,
+      provider text NOT NULL, body jsonb NOT NULL, created_at bigint NOT NULL)`)
+    await tx.query(`CREATE INDEX IF NOT EXISTS tp_provider_calls_owner ON tp_provider_calls(owner_id,created_at)`)
     await tx.query(`CREATE TABLE IF NOT EXISTS tp_provider_slots (
       pool text NOT NULL, slot integer NOT NULL, token text, lease_until bigint NOT NULL,
       PRIMARY KEY(pool,slot))`)

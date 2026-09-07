@@ -6,7 +6,8 @@ import {
   type HttpPort,
 } from '../ports.ts'
 import { parseZhihuSearchPayload, zhihuDirectUrl, zhihuSearchUrl, globalSearchUrl } from '../zhihu.adapter.ts'
-import { ZHIDA_FAST_MODEL } from './constants.ts'
+import { zhidaModelFor } from './constants.ts'
+import { providerDiagnostic,parseProviderError,classifyProviderError,readUsage } from './provider-metadata.ts'
 import type {
   ZhihuDirectInput,
   ZhihuDirectResult,
@@ -91,14 +92,19 @@ export function createAgentZhihuProvider(ports: {
           signal,
         })
         const text = await response.text()
-        if (!response.ok) return { kind: 'failed', message: '知乎检索暂时不可用。', code:`SEARCH_HTTP_${response.status}`, retryable:response.status===429||response.status===408||response.status>=500 }
+        if (!response.ok) {
+          const diagnostic=providerDiagnostic(response.status,parseProviderError(text),response.headers)
+          return {kind:'failed',message:'知乎检索暂时不可用。',...classifyProviderError(response.status,diagnostic.upstreamCode,true),diagnostic}
+        }
         let payload: unknown
         try {
           payload = JSON.parse(text) as unknown
         } catch {
           return { kind: 'failed', message: '知乎检索返回了无法解析的响应。' }
         }
-        return mapHits(parseZhihuSearchPayload(payload,source))
+        const diagnostic=providerDiagnostic(response.status,payload,response.headers)
+        if(diagnostic.upstreamCode&&diagnostic.upstreamCode!=='0')return {kind:'failed',message:'知乎检索未完成。',...classifyProviderError(response.status,diagnostic.upstreamCode,true),diagnostic}
+        return {...mapHits(parseZhihuSearchPayload(payload,source)),diagnostic}
       } catch (cause) {
         if (cause instanceof Error && cause.name === 'AbortError') return { kind: 'failed', message: '知乎检索已中止。' }
         return { kind: 'failed', message: '知乎检索不可用。' }
@@ -112,9 +118,9 @@ export function createAgentZhihuProvider(ports: {
       try {
         assertAllowed(url.toString(), origin)
         const body = JSON.stringify({
-          model: ZHIDA_FAST_MODEL,
+          model: zhidaModelFor(input.thinkingDepth),
           messages: input.messages,
-          ...(input.thinkingDepth === 'deep' ? { thinking: { type: 'enabled' } } : {}),
+          stream:false,
         })
         {
           const response = await ports.http(url.toString(), {
@@ -125,9 +131,8 @@ export function createAgentZhihuProvider(ports: {
           })
           const text = await response.text()
           if (!response.ok) {
-            if (response.status === 429) return { kind: 'failed', code:'HTTP_429', retryable:true, message: '知乎直答限流。' }
-            if (response.status === 401 || response.status === 403) return { kind: 'failed', code:'PROVIDER_AUTH', retryable:false, message: '知乎直答鉴权失败。' }
-            return { kind: 'failed', code:`HTTP_${response.status}`, retryable:response.status===408||response.status>=500, message: `知乎直答不可用（HTTP ${response.status}）。` }
+            const diagnostic=providerDiagnostic(response.status,parseProviderError(text),response.headers)
+            return {kind:'failed',message:'知乎直答未完成。',...classifyProviderError(response.status,diagnostic.upstreamCode,true),diagnostic}
           }
           let payload: unknown
           try {
@@ -136,6 +141,8 @@ export function createAgentZhihuProvider(ports: {
             return { kind: 'failed', message: '知乎直答返回了无法解析的响应。' }
           }
           const root = asRecord(payload)
+          const diagnostic=providerDiagnostic(response.status,payload,response.headers)
+          if(root?.error)return {kind:'failed',message:'知乎直答未完成。',...classifyProviderError(response.status,diagnostic.upstreamCode,true),diagnostic}
           const choices = pick(root, 'choices', 'Choices')
           const first = Array.isArray(choices) ? asRecord(choices[0]) : undefined
           const message = asRecord(pick(first, 'message', 'Message'))
@@ -144,7 +151,8 @@ export function createAgentZhihuProvider(ports: {
           if (content.length > OUTPUT_LIMIT) return { kind: 'failed', message: '知乎直答内容未完整接收。' }
           const finish = pick(first, 'finish_reason', 'FinishReason')
           if (finish && finish !== 'stop') return { kind: 'failed', message: '知乎直答尚未完整完成。' }
-          return { kind: 'completed', text: content }
+          input.signal?.throwIfAborted()
+          return { kind: 'completed', text: content,cacheable:finish==='stop',diagnostic,usage:readUsage(root?.usage) }
         }
       } catch (cause) {
         if (cause instanceof Error && cause.name === 'AbortError') return { kind: 'failed', message: '知乎直答已中止。' }

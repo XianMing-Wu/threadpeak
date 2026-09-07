@@ -9,7 +9,7 @@ import {pause} from './limits.ts'
 async function fixture(t){const db=await openDatabase();await migrate(db);t.after(()=>db.close());return db}
 
 test('search, global search, direct, user data, PDF and OAuth share two permits through body consumption across gate instances',async t=>{
-  const db=await fixture(t),gate=createZhihuGate(db),gate2=createZhihuGate(db)
+  const db=await fixture(t),gate=createZhihuGate(db,0),gate2=createZhihuGate(db,0)
   let active=0,maximum=0;const requests=[]
   const fetcher=async url=>{
     const path=new URL(url).pathname;requests.push(path);active++;maximum=Math.max(maximum,active)
@@ -19,7 +19,7 @@ test('search, global search, direct, user data, PDF and OAuth share two permits 
   }
   const raw={search:async q=>{await(await fetcher(`https://developer.zhihu.com/search/${q}`)).text();return {kind:'empty'}},globalSearch:async()=>{await(await fetcher('https://developer.zhihu.com/global')).text();return {kind:'empty'}},direct:async()=>{await(await fetcher('https://developer.zhihu.com/direct')).text();return {kind:'completed',text:'回答'}}}
   const provider=limitZhihuProvider(raw,gate),data=new ZhihuDataClient('test-secret',fetcher,undefined,undefined,gate2)
-  const login=new ZhihuLogin(db,{mode:'real',appId:'app',appKey:'test-key',redirectUri:'http://127.0.0.1/api/auth/zhihu/callback',origin:'http://127.0.0.1',userInfoUrl:'https://openapi.zhihu.com/profile',userIdPath:'id',tokenSecret:'x'.repeat(32),production:false},fetcher,createZhihuGate(db))
+  const login=new ZhihuLogin(db,{mode:'real',appId:'app',appKey:'test-key',redirectUri:'http://127.0.0.1/api/auth/zhihu/callback',origin:'http://127.0.0.1',userInfoUrl:'https://openapi.zhihu.com/profile',userIdPath:'id',tokenSecret:'x'.repeat(32),production:false},fetcher,createZhihuGate(db,0))
   const start=await login.start(),state=new URL(start.authorizeUrl).searchParams.get('state'),binding=start.cookie.split(';')[0].split('=')[1]
   await Promise.all([
     ...['first','second','third'].map(q=>provider.search(q,10)),provider.globalSearch('全网',20),provider.direct({messages:[]}),
@@ -33,17 +33,17 @@ test('search, global search, direct, user data, PDF and OAuth share two permits 
 })
 
 test('429 cooldown persists across gates; shorter Retry-After cannot shorten it, queued cancellation never calls upstream',async t=>{
-  const db=await fixture(t),gate=createZhihuGate(db),start=Date.now()
+  const db=await fixture(t),gate=createZhihuGate(db,0),start=Date.now()
   const data=new ZhihuDataClient('test',async()=>new Response('',{status:429,headers:{'Retry-After':'0.6'}}),undefined,undefined,gate)
   await assert.rejects(data.user('favlists','test',{}),e=>e.code==='ZHIHU_HTTP_429')
   const [first]=await db.query("SELECT until_at FROM tp_provider_cooldowns WHERE pool='zhihu'")
-  await createZhihuGate(db).observe(new Response('',{status:429,headers:{'Retry-After':'0.1'}}))
+  await createZhihuGate(db,0).observe(new Response('',{status:429,headers:{'Retry-After':'0.1'}}))
   const [second]=await db.query("SELECT until_at FROM tp_provider_cooldowns WHERE pool='zhihu'")
   assert.equal(Number(second.until_at),Number(first.until_at))
   let called=0;const abort=new AbortController()
-  const queued=createZhihuGate(db).run(abort.signal,async()=>{called++}),rejected=assert.rejects(queued)
+  const queued=createZhihuGate(db,0).run(abort.signal,async()=>{called++}),rejected=assert.rejects(queued)
   abort.abort();await rejected;assert.equal(called,0)
-  await createZhihuGate(db).run(undefined,async()=>{assert.ok(Date.now()>=Number(first.until_at));called++})
+  await createZhihuGate(db,0).run(undefined,async()=>{assert.ok(Date.now()>=Number(first.until_at));called++})
   assert.equal(called,1);assert.ok(Date.now()-start>=600)
   await assert.rejects(gate.run(undefined,async()=>{throw Error('transport failure')}),/transport failure/)
   assert.ok((await db.query("SELECT * FROM tp_provider_slots WHERE pool='zhihu'")).every(s=>!s.token))

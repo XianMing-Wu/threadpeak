@@ -134,6 +134,7 @@ export type Summarizer = (input: SummarizeInput) => Promise<string>
 export type TokenEstimator = (text: string) => number
 
 export type LlmCompleteInput = {
+  cacheUserId?: string
   messages: readonly ChatMessage[]
   json: boolean
   thinkingDepth: ThinkingDepth
@@ -143,9 +144,13 @@ export type LlmCompleteInput = {
   onText?: (text: string) => void
 }
 
-export type LlmCompleteResult =
+export type ProviderUsage = { prompt_tokens?:number; completion_tokens?:number; total_tokens?:number; prompt_cache_hit_tokens?:number; prompt_cache_miss_tokens?:number }
+export type ProviderDiagnostic = { httpStatus:number; upstreamCode?:string; requestId?:string }
+export type ProviderMetadata = { usage?:ProviderUsage; diagnostic?:ProviderDiagnostic; cache?:'hit'|'miss'; cacheable?:boolean }
+export type LlmCompleteResult = (
   | { kind: 'completed'; text: string; reasoning?: string }
   | { kind: 'failed'; message: string; code?: string; retryable?: boolean }
+  ) & ProviderMetadata
 
 export type LlmProvider = {
   complete(input: LlmCompleteInput): Promise<LlmCompleteResult>
@@ -155,10 +160,11 @@ export type ZhihuSearchHit = SearchEvidence & {
   queryId?: string
 }
 
-export type ZhihuSearchResult =
+export type ZhihuSearchResult = (
   | { kind: 'hits'; items: readonly ZhihuSearchHit[] }
   | { kind: 'empty' }
   | { kind: 'failed'; message: string; code?: string; retryable?: boolean }
+  ) & ProviderMetadata
 
 export type ZhihuDirectInput = {
   messages: readonly ChatMessage[]
@@ -166,9 +172,10 @@ export type ZhihuDirectInput = {
   signal?: AbortSignal
 }
 
-export type ZhihuDirectResult =
+export type ZhihuDirectResult = (
   | { kind: 'completed'; text: string }
   | { kind: 'failed'; message: string; code?: string; retryable?: boolean }
+  ) & ProviderMetadata
 
 export type ZhihuProvider = {
   globalSearch?(query: string, count: number, signal?: AbortSignal): Promise<ZhihuSearchResult>

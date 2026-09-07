@@ -17,6 +17,7 @@ import { createFlows } from './flows.ts'
 import { createProductApp } from './http.ts'
 import { withPermit } from './limits.ts'
 import { createZhihuGate,limitZhihuProvider,type ZhihuGate } from './zhihu-gate.ts'
+import { instrumentProviders } from './provider-runtime.ts'
 
 export function serverEnvironment():NodeJS.ProcessEnv{
   const env={...process.env}
@@ -61,7 +62,8 @@ export async function startProductServer(env=serverEnvironment()){
     const rawLlm=createAgentLlmProvider({config:config.config,http}),rawZhihu=createAgentZhihuProvider({config:config.config,http:async(url,init)=>{const response=await http(url,init);await gate.observe(response);return response},clock:{now:()=>new Date(),unixSeconds:()=>Math.floor(Date.now()/1000)}})
     const llm:LlmProvider={complete:input=>withPermit(db,'llm',4,input.signal,signal=>rawLlm.complete({...input,signal}))}
     const zhihu=limitZhihuProvider(rawZhihu,gate)
-    handler=createFlows(new ProductTools(llm,zhihu,window),zhihuData,zhihuLogin)
+    const providers=instrumentProviders(db,config.config,llm,zhihu)
+    handler=createFlows(new ProductTools(providers.llm,providers.zhihu,window),zhihuData,zhihuLogin)
   }
   const worker=new DurableWorker(store,handler),app=await createProductApp({store,worker,providersReady:config.ok,zhihuData,zhihuLogin,identity:{production,origin:env.THREADPEAK_PUBLIC_ORIGIN,jwtSecret:env.THREADPEAK_IDENTITY_SECRET,issuer:env.THREADPEAK_IDENTITY_ISSUER,audience:env.THREADPEAK_IDENTITY_AUDIENCE,loginUrl:env.THREADPEAK_LOGIN_URL}})
   app.addHook('onClose',()=>db.close())

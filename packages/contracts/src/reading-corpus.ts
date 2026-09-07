@@ -3,6 +3,7 @@
  */
 export type ReadingCase = {id:string; label:string; source:string; math?:number; code?:string; incomplete?:boolean; unresolved?:boolean}
 export const readingCorpus: ReadingCase[] = [
+  {id:'literal-separators',label:'递归分块的程序转义不误判为公式',source:String.raw`先按段落（\n\n），再按换行（\n），制表符 \t 与 \r\n；保留希腊字母 $\nu$。`,math:1},
   {id:'cpp-sse',label:'C++ SIMD 类型和下划线函数保留为完整代码',source:'// SSE 向量点积\n__m128 dot_product_sse(const float* a, const float* b, int n) {\n    __m128 sum = _mm_setzero_ps();\n    for (int i = 0; i < n; i += 4) {\n        __m128 va = _mm_load_ps(&a[i]);\n        sum = _mm_add_ps(sum, va);\n    }\n    return sum;\n}',math:0,code:'__m128 sum = _mm_setzero_ps();'},
   {id:'cpp-brace-next-line',label:'C++ 花括号另起一行',source:'float length_squared(float x, float y)\n{\n    return x * x + y * y;\n}',math:0,code:'    return x * x + y * y;'},
   {id:'cpp-std',label:'模板类型与循环不是 LaTeX',source:'std::vector<float> values = {1, 2, 3};\nfor (int i = 0; i < 3; ++i) {\n    values[i] *= 2;\n}',math:0,code:'values[i] *= 2;'},

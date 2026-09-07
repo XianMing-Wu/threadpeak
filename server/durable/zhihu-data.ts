@@ -34,6 +34,7 @@ export class ZhihuDataClient {
       await this.gate?.observe(response)
       if(!response.ok){await response.body?.cancel();throw new ToolError(`ZHIHU_HTTP_${response.status}`,response.status===429||response.status>=500)}
       let payload:any;try{payload=await response.json()}catch{throw new ToolError('ZHIHU_RESPONSE_INVALID')}
+      if(Number(payload?.Code)===30001){await this.gate?.observe({status:429});throw new ToolError('ZHIHU_RATE_LIMITED')}
       if(payload?.Code!==0)throw new ToolError(`ZHIHU_CODE_${Number(payload?.Code)||'INVALID'}`,[30001,40003,90001].includes(payload?.Code))
       if(!payload.Data||typeof payload.Data!=='object')throw new ToolError('ZHIHU_RESPONSE_INVALID')
       return payload.Data

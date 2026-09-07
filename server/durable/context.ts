@@ -11,12 +11,13 @@ export const effectiveWindow = (configured: number) => Math.min(500_000, configu
 const contentKeys = new Set(['content','summary','text','description','detailedDescription'])
 const protectedKeys = new Set(['goalContext','goal','rawGoal','questionSets','concept','currentQuestion','currentMessage','followUpMessage','question','background','attempted','desiredOutcome','goalHypothesis','learningGoal','goalAlignment','selectedOptions','answerSections','citationCatalog'])
 type Field = { object: Record<string, any>; key: string; path: string; length: number }
-function contextJson(value:unknown){
+export function contextJson(value:unknown){
   if(!value||typeof value!=='object'||Array.isArray(value))return JSON.stringify(value)
   // Put long evidence first and the immutable task last. Do not bury user intent
   // before dozens of articles, and do not duplicate it to gain recency.
-  const priority=(key:string)=>['currentQuestion','currentMessage','followUpMessage'].includes(key)?4:key==='goalContext'?3:protectedKeys.has(key)?2:0
-  return JSON.stringify(Object.fromEntries(Object.entries(value).sort(([a],[b])=>priority(a)-priority(b))))
+  const priority=(key:string)=>['currentQuestion','currentMessage','followUpMessage'].includes(key)?5:key==='conversation'?4:key==='goalContext'?3:protectedKeys.has(key)?2:0
+  const canonical=(v:any):any=>Array.isArray(v)?v.map(canonical):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(key=>[key,canonical(v[key])])):v
+  return JSON.stringify(Object.fromEntries(Object.entries(value).sort(([a],[b])=>priority(a)-priority(b)||a.localeCompare(b,'en')).map(([key,v])=>[key,canonical(v)])))
 }
 function fields(value: unknown, path = '', result: Field[] = []): Field[] {
   if (!value || typeof value !== 'object') return result
