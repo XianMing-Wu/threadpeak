@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 280" width="440" height="280">
+  <defs>
+    <linearGradient id="h-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c9b8e0"/>
+      <stop offset="40%" stop-color="#f0c8a8"/>
+      <stop offset="100%" stop-color="#6b8a5a"/>
+    </linearGradient>
+    <filter id="h-oil" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="4" seed="3" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="18"/>
+    </filter>
+  </defs>
+  <rect width="440" height="280" fill="url(#h-sky)"/>
+  <g filter="url(#h-oil)">
+    <ellipse cx="80" cy="200" rx="160" ry="70" fill="#4a6a40"/>
+    <ellipse cx="300" cy="210" rx="180" ry="80" fill="#3d5a38"/>
+    <ellipse cx="220" cy="160" rx="120" ry="40" fill="#7a9a60" opacity=".8"/>
+    <path d="M0 250 Q110 210 160 230 T280 220 T440 250 V280 H0 Z" fill="#8a6a48"/>
+    <circle cx="340" cy="70" r="36" fill="#f6d8a0"/>
+    <path d="M150 260 Q190 200 230 230 Q270 190 310 220" fill="none" stroke="#d8b48a" stroke-width="10"/>
+  </g>
+</svg>

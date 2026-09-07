@@ -5,7 +5,7 @@ import {
   type ClockPort,
   type HttpPort,
 } from '../ports.ts'
-import { parseZhihuSearchPayload, zhihuDirectUrl, zhihuSearchUrl } from '../zhihu.adapter.ts'
+import { parseZhihuSearchPayload, zhihuDirectUrl, zhihuSearchUrl, globalSearchUrl } from '../zhihu.adapter.ts'
 import { ZHIDA_FAST_MODEL } from './constants.ts'
 import type {
   ZhihuDirectInput,
@@ -48,16 +48,6 @@ function assertAllowed(url: string, origin: string) {
   if (new URL(url).origin !== origin) throw new Error('ssrf')
 }
 
-const DIRECT_RATE_LIMIT_ATTEMPTS = 3
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-function rateLimitDelay(attempt: number) {
-  return 800 * (2 ** attempt) + Math.floor(Math.random() * 200)
-}
-
 function zhihuHeaders(config: ProviderConfig, clock: ClockPort): Record<string, string> {
   return {
     Authorization: `Bearer ${config.zhihuAccessSecret}`,
@@ -74,6 +64,8 @@ function mapHits(payload: ReturnType<typeof parseZhihuSearchPayload>): ZhihuSear
     authorId: item.authorName && !isLiuKanshanName(item.authorName)
       ? resolveSearchAuthorId(item.authorKey, stableEvidenceId(item.url))
       : null,
+    authorUrl: item.authorUrl,
+    ...Object.fromEntries(Object.entries(item).filter(([key,value])=>value!==undefined&&!['authorKey','excerpt','authorName','authorUrl','title','url'].includes(key))),
     title: item.title,
     summary: item.excerpt,
     url: item.url,
@@ -87,11 +79,10 @@ export function createAgentZhihuProvider(ports: {
   clock: ClockPort
 }): ZhihuProvider {
   const origin = allowedOrigin(ports.config.zhihuApiBaseUrl)
-  return {
-    async search(query, count, signal): Promise<ZhihuSearchResult> {
+  async function search(query:string,count:number,signal:AbortSignal|undefined,source:'zhihu'|'web'):Promise<ZhihuSearchResult> {
       const q = query.trim()
       if (!q) return { kind: 'empty' }
-      const url = zhihuSearchUrl(ports.config.zhihuApiBaseUrl, q, count)
+      const url = (source==='zhihu'?zhihuSearchUrl:globalSearchUrl)(ports.config.zhihuApiBaseUrl, q, count)
       try {
         assertAllowed(url, origin)
         const response = await ports.http(url, {
@@ -100,20 +91,22 @@ export function createAgentZhihuProvider(ports: {
           signal,
         })
         const text = await response.text()
-        if (!response.ok) return { kind: 'failed', message: '知乎检索不可用。' }
+        if (!response.ok) return { kind: 'failed', message: '知乎检索暂时不可用。', code:`SEARCH_HTTP_${response.status}`, retryable:response.status===429||response.status===408||response.status>=500 }
         let payload: unknown
         try {
           payload = JSON.parse(text) as unknown
         } catch {
           return { kind: 'failed', message: '知乎检索返回了无法解析的响应。' }
         }
-        return mapHits(parseZhihuSearchPayload(payload))
+        return mapHits(parseZhihuSearchPayload(payload,source))
       } catch (cause) {
         if (cause instanceof Error && cause.name === 'AbortError') return { kind: 'failed', message: '知乎检索已中止。' }
         return { kind: 'failed', message: '知乎检索不可用。' }
       }
-    },
-
+    }
+  return {
+    search:(query,count,signal)=>search(query,count,signal,'zhihu'),
+    globalSearch:(query,count,signal)=>search(query,count,signal,'web'),
     async direct(input: ZhihuDirectInput): Promise<ZhihuDirectResult> {
       const url = new URL(zhihuDirectUrl(ports.config.zhihuApiBaseUrl))
       try {
@@ -123,7 +116,7 @@ export function createAgentZhihuProvider(ports: {
           messages: input.messages,
           ...(input.thinkingDepth === 'deep' ? { thinking: { type: 'enabled' } } : {}),
         })
-        for (let attempt = 0; attempt < DIRECT_RATE_LIMIT_ATTEMPTS; attempt += 1) {
+        {
           const response = await ports.http(url.toString(), {
             method: 'POST',
             headers: zhihuHeaders(ports.config, ports.clock),
@@ -131,14 +124,10 @@ export function createAgentZhihuProvider(ports: {
             body,
           })
           const text = await response.text()
-          if (response.status === 429 && attempt < DIRECT_RATE_LIMIT_ATTEMPTS - 1) {
-            await sleep(rateLimitDelay(attempt))
-            continue
-          }
           if (!response.ok) {
-            if (response.status === 429) return { kind: 'failed', message: '知乎直答限流。' }
-            if (response.status === 401 || response.status === 403) return { kind: 'failed', message: '知乎直答鉴权失败。' }
-            return { kind: 'failed', message: `知乎直答不可用（HTTP ${response.status}）。` }
+            if (response.status === 429) return { kind: 'failed', code:'HTTP_429', retryable:true, message: '知乎直答限流。' }
+            if (response.status === 401 || response.status === 403) return { kind: 'failed', code:'PROVIDER_AUTH', retryable:false, message: '知乎直答鉴权失败。' }
+            return { kind: 'failed', code:`HTTP_${response.status}`, retryable:response.status===408||response.status>=500, message: `知乎直答不可用（HTTP ${response.status}）。` }
           }
           let payload: unknown
           try {
@@ -152,9 +141,11 @@ export function createAgentZhihuProvider(ports: {
           const message = asRecord(pick(first, 'message', 'Message'))
           const content = asText(pick(message, 'content', 'Content') ?? pick(root, 'answer', 'Answer', 'output', 'Output'))
           if (!content) return { kind: 'failed', message: '知乎直答返回了空内容。' }
-          return { kind: 'completed', text: content.slice(0, OUTPUT_LIMIT) }
+          if (content.length > OUTPUT_LIMIT) return { kind: 'failed', message: '知乎直答内容未完整接收。' }
+          const finish = pick(first, 'finish_reason', 'FinishReason')
+          if (finish && finish !== 'stop') return { kind: 'failed', message: '知乎直答尚未完整完成。' }
+          return { kind: 'completed', text: content }
         }
-        return { kind: 'failed', message: '知乎直答限流。' }
       } catch (cause) {
         if (cause instanceof Error && cause.name === 'AbortError') return { kind: 'failed', message: '知乎直答已中止。' }
         return { kind: 'failed', message: '知乎直答不可用。' }

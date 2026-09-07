@@ -51,17 +51,17 @@ test('Cursor rules expose complete progressive-disclosure metadata', async () =>
   }
 })
 
-test('AGENTS routes every rule and keeps the six frozen product invariants', async () => {
+test('AGENTS routes every rule and keeps the current card-tree product invariants', async () => {
   const agents = await read('AGENTS.md')
 
   for (const name of ruleNames) assert.match(agents, new RegExp(name.replace('.', '\\.')))
   for (const invariant of [
-    '路线不创建知识脉络',
-    '首次回复永久保留',
-    '问博主固定 Zhihu-first',
-    '博主搜索固定 network-first',
+    '路线只生成路线',
+    '新对话清空当前聊天',
+    '知识是一棵单父树',
+    '1–3 位不同新作者',
     '刘看山不是博主',
-    '重构运行时只使用真实数据',
+    '生产调用必须真实 provider',
   ]) assert.ok(agents.includes(invariant), `missing invariant: ${invariant}`)
 })
 
@@ -69,9 +69,9 @@ test('AGENTS, README and reference audit agree on lifecycle and author ordering'
   const documents = await Promise.all(['AGENTS.md', 'README.md', 'REFERENCE_AUDIT.md'].map(read))
 
   for (const source of documents) {
-    assert.match(source, /canonical/)
+    assert.match(source, /新对话/)
     assert.match(source, /初始回复|首次回复/)
-    assert.match(source, /1–2/)
+    assert.match(source, /1–3/)
     assert.match(source, /刘看山/)
     assert.match(source, /network-first|网络优先/)
     assert.match(source, /最多返回 3 位|最多 3 位|最多 3/)
@@ -92,7 +92,8 @@ test('real-provider configuration is server-only and examples contain no values'
     .filter(Boolean)
     .map((line) => line.split('='))
 
-  assert.deepEqual(entries.map(([key]) => key).sort(), [...providerKeys, ...optionalOauthKeys].sort())
+  for(const key of [...providerKeys,...optionalOauthKeys,'DATABASE_URL','THREADPEAK_PUBLIC_ORIGIN','THREADPEAK_IDENTITY_SECRET','DEEPSEEK_CONTEXT_TOKENS'])assert.ok(entries.some(([name])=>name===key))
+  assert.equal(new Set(entries.map(([key])=>key)).size,entries.length)
   assert.ok(entries.every(([, value]) => value === ''), '.env.example must never contain secrets')
   for (const key of [...providerKeys, ...optionalOauthKeys]) {
     assert.ok(backend.includes(key), `${key} missing from backend rule`)

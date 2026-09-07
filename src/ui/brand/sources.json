@@ -1,0 +1,26 @@
+[
+  {
+    "family": "splash",
+    "source": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/splash/Splash-Regular.ttf",
+    "sha256": "42c2ddc11917333bcd24a3eb0bc7df5205278226e2f6521459384479f1b6675c",
+    "text": "Peak",
+    "fontSize": 48,
+    "letterSpacing": -2.4
+  },
+  {
+    "family": "cormorantgaramond",
+    "source": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/cormorantgaramond/CormorantGaramond-Italic%5Bwght%5D.ttf",
+    "sha256": "0f48ea6abb2084537854f7174c470991a463b13036309e3b50a81511611c530d",
+    "text": "with threads",
+    "fontSize": 28,
+    "letterSpacing": 0.28
+  },
+  {
+    "family": "mashanzheng",
+    "source": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/mashanzheng/MaShanZheng-Regular.ttf",
+    "sha256": "6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb",
+    "text": "循着脉络，登上高峰",
+    "fontSize": 20,
+    "letterSpacing": 3.2
+  }
+]

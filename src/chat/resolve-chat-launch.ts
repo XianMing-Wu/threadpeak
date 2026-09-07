@@ -7,6 +7,7 @@ export type ChatLaunchReady = {
   conversationId: string
   routeId?: string
   generate?: boolean
+  thinkingDepth?: 'fast' | 'deep'
 }
 
 export type ChatLaunchNotFound = {
@@ -32,5 +33,6 @@ export function resolveChatLaunch(raw: unknown): ChatLaunchResolution {
     conversationId,
     ...(routeId ? { routeId } : {}),
     ...(record.generate === true ? { generate: true } : {}),
+    ...(record.thinkingDepth === 'deep' || record.thinkingDepth === 'fast' ? { thinkingDepth: record.thinkingDepth } : {}),
   }
 }

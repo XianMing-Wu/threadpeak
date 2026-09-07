@@ -6,12 +6,13 @@ export function mineRouteFromValidatedDocument(
   conversationId: string,
   document: LearningPathDocument,
   createdAt: number,
+  resourceId?: string,
 ): RouteRecord {
   if (document.protocol !== 'learning-path' || document.version !== '1.0') {
     throw new Error('User-triggered routes require a validated renderer document.')
   }
   return {
-    id: document.id,
+    id: resourceId ?? document.id,
     owner: 'mine',
     title: document.metadata.title,
     summary: document.metadata.description ?? query,

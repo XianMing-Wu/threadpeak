@@ -42,6 +42,7 @@ export {
   isR2ExplorationObject,
   parseAgentJson,
   parseAgentOutput,
+  salvageR4Route,
 } from './schemas.ts'
 export { createLlmSummarizer } from './summarizer.ts'
 export { estimateCall, estimateMessages, estimateTokens } from './tokens.ts'

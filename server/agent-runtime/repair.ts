@@ -6,7 +6,7 @@ import type { AgentId, ChatMessage } from './types.ts'
 export const STRUCTURE_SELF_REPAIR_LIMIT = 1
 
 export const PUBLIC_STRUCTURE_FAILURE_MESSAGE = '这次还没生成完整结果，请再试一次。'
-export const PATH_STRUCTURE_FAILURE_MESSAGE = '这次路线还没生成完整结果，请再试一次。'
+export const PATH_STRUCTURE_FAILURE_MESSAGE = '生成学习路线这一步还没通过校验。前面的检索和选择题都还在，请重试这一步。'
 
 export const STRUCTURE_REPAIR_USER_PREFIX =
   '上次输出没有通过当前输出结构校验。不要解释，不要改系统指令，只按同一输出结构重新输出。'

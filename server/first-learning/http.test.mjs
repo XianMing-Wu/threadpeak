@@ -66,9 +66,14 @@ test('GET 404 is missing, POST settles answer and root together, GET then reuses
     payload: concept,
   })
   assert.equal(created.statusCode, 200)
-  const createdBody = JSON.parse(created.body)
+  let createdBody = JSON.parse(created.body)
+  for (let i = 0; i < 50 && createdBody.kind === 'running'; i += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    const polled = await app.inject({ method: 'GET', url: `/api/learning/first-entry${query}` })
+    createdBody = JSON.parse(polled.body)
+  }
   assert.equal(createdBody.kind, 'completed')
-  assert.equal(createdBody.reused, false)
+  assert.equal(createdBody.reused, true)
   assert.equal(createdBody.text, '整理后的首次回复。')
   assert.equal(createdBody.graph.root.title, '线性映射')
   assert.equal(createdBody.graph.root.role, 'root')
@@ -106,6 +111,13 @@ test('POST graph does not bootstrap independently when first-learning is wired',
     payload: concept,
   })
   assert.equal(created.statusCode, 200)
+  const query = `?routeId=${concept.routeId}&conceptId=${concept.conceptId}`
+  let createdBody = JSON.parse(created.body)
+  for (let i = 0; i < 50 && createdBody.kind === 'running'; i += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    createdBody = JSON.parse((await app.inject({ method: 'GET', url: `/api/learning/first-entry${query}` })).body)
+  }
+  assert.equal(createdBody.kind, 'completed')
 
   const after = await app.inject({
     method: 'POST',
@@ -115,8 +127,47 @@ test('POST graph does not bootstrap independently when first-learning is wired',
   })
   assert.equal(after.statusCode, 200)
   assert.equal(JSON.parse(after.body).reused, true)
-  assert.equal(JSON.parse(after.body).graphId, JSON.parse(created.body).graph.graphId)
+  assert.equal(JSON.parse(after.body).graphId, createdBody.graph.graphId)
 
+  await app.close()
+})
+
+test('GET running includes L0b draft text while organize bar is in flight', async () => {
+  let release
+  const gate = new Promise((resolve) => { release = resolve })
+  const firstLearning = createFirstLearningOrchestrator({
+    async invokeText(_agentId, _context, options) {
+      return { kind: 'completed', agentId: 'L0a', text: `${options.angle} 正文`, compressed: false }
+    },
+    async invokeStructured(agentId, _context, options) {
+      options?.onText?.('{"content":"向量与空间变换的核心是"}')
+      await gate
+      return { kind: 'completed', agentId, value: { content: '向量与空间变换的核心是：向量。' }, compressed: false }
+    },
+  })
+  const { app } = await appWithFirstLearning(firstLearning)
+  const query = `?routeId=${concept.routeId}&conceptId=${concept.conceptId}`
+  const created = await app.inject({
+    method: 'POST',
+    url: '/api/learning/first-entry',
+    headers: { 'content-type': 'application/json' },
+    payload: concept,
+  })
+  assert.equal(created.statusCode, 200)
+  let body = JSON.parse(created.body)
+  for (let i = 0; i < 50 && !(body.kind === 'running' && body.draftText); i += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    body = JSON.parse((await app.inject({ method: 'GET', url: `/api/learning/first-entry${query}` })).body)
+  }
+  assert.equal(body.kind, 'running')
+  assert.equal(body.draftText, '向量与空间变换的核心是')
+  assert.ok(body.trace.some((step) => step.id === 'l0b' && step.status === 'running'))
+  release()
+  for (let i = 0; i < 50 && body.kind === 'running'; i += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    body = JSON.parse((await app.inject({ method: 'GET', url: `/api/learning/first-entry${query}` })).body)
+  }
+  assert.equal(body.kind, 'completed')
   await app.close()
 })
 

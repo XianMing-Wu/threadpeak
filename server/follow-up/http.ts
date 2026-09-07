@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
+import { flowSteps } from '../../src/process-trace.ts'
 import type { FollowUpAnnotation, FollowUpGraphEdge, FollowUpGraphNode, FollowUpMessage, FollowUpOrchestrator } from './orchestrator.ts'
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
@@ -127,6 +128,7 @@ export function registerFollowUpRoutes(app: FastifyInstance, ports: {
     }
     try {
       write({ kind: 'status', stage: 'running' })
+      write({ kind: 'trace', steps: flowSteps('follow-up') })
       const result = await ports.followUp.ask({
         routeId: asText(body.routeId),
         conceptId: asText(body.conceptId),
@@ -144,6 +146,7 @@ export function registerFollowUpRoutes(app: FastifyInstance, ports: {
         messages: messagesOf(body.messages),
         thinkingDepth: body.thinkingDepth === 'deep' ? 'deep' : 'fast',
         onText: (text) => write({ kind: 'delta', text }),
+        onReasoning: (agentId, text) => write({ kind: 'reasoning', id: `${agentId.toLowerCase()}-think`, text }),
       })
       if (result.kind !== 'completed') {
         write({ kind: 'failed', code: result.code, message: result.message })

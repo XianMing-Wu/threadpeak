@@ -68,6 +68,16 @@ export function openChatHistory(entry:ChatHistoryEntry, conversation?: Parameter
   return resolveHistoryReopen(entry, conversation)
 }
 
+export function removeChatHistory(id: string) {
+  retainChatHistory(new Set(readChatHistory().filter((item) => item.id !== id).map((item) => item.id)))
+}
+
+export function retainChatHistory(ids: Set<string>) {
+  const active = sessionStorage.getItem(ACTIVE_HISTORY_KEY)
+  if (active && !ids.has(active)) sessionStorage.removeItem(ACTIVE_HISTORY_KEY)
+  writeChatHistory(readChatHistory().filter((item) => ids.has(item.id)))
+}
+
 export function clearActiveHistory() {
   sessionStorage.removeItem(ACTIVE_HISTORY_KEY)
   window.dispatchEvent(new Event(HISTORY_CHANGE_EVENT))

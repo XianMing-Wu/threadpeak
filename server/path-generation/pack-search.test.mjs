@@ -2,12 +2,11 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { joinSearchTexts, packPathSearchQueries } from './pack-search.ts'
 
-test('joinSearchTexts concatenates with spaces and stops before 200 characters', () => {
+test('joinSearchTexts preserves every angle or rejects for same-agent repair', () => {
   assert.equal(joinSearchTexts(['入门', '基础']), '入门 基础')
   const first = '机器学习数学怎么入门'.repeat(20)
-  const packed = joinSearchTexts([first, '机器学习需要哪些数学基础'])
-  assert.ok(packed.length <= 200)
-  assert.equal(packed, first.slice(0, 200))
+  assert.throws(() => joinSearchTexts([first, '机器学习需要哪些数学基础']), /200/)
+  assert.throws(() => joinSearchTexts(['a'.repeat(190), 'b'.repeat(20)]), /200/)
 })
 
 test('packPathSearchQueries keeps two angle packs and does not collapse to one', () => {

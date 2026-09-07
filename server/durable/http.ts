@@ -1,0 +1,258 @@
+import { SearchScopeSchema } from '../../packages/contracts/src/search-scope.ts'
+import {registerSourcePresentation} from './source-presentation.ts'
+import { registerAuthorRoutes } from './authors-http.ts'
+import Fastify, { type FastifyRequest } from 'fastify'
+import { randomUUID } from 'node:crypto'
+import { z } from 'zod'
+import { NodeSchema, paragraphNode, validateTree, type LearningState } from '../../packages/contracts/src/learning-v2.ts'
+import { mergeNodeEdits, NodeEditConflict } from '../../packages/contracts/src/node-edits.ts'
+import { createIdentity, type IdentityConfig } from './auth.ts'
+import { CommandError, digest, type DurableStore, type Resource } from './store.ts'
+import type { DurableWorker } from './worker.ts'
+import { replyInput, selectPathOption, type PathState } from './flows.ts'
+import { pathTrace } from './path-trace.ts'
+import { registerMaterialRoutes } from './materials-http.ts'
+import { inheritedArticles } from './materials.ts'
+import type { ZhihuDataClient } from './zhihu-data.ts'
+import type { ZhihuLogin } from './zhihu-oauth.ts'
+
+const Text=z.string().trim().min(1).max(20000),Id=z.string().min(1).max(240)
+const depth=z.enum(['fast','deep']).default('fast')
+const attachment=z.object({sourceId:Id,fileName:z.string().min(1).max(200),mimeType:z.enum(['application/pdf','text/markdown','text/plain']).optional(),content:z.string().min(1).max(2_000_000)})
+const startSchema=z.object({searchScope:SearchScopeSchema.default({kind:'zhihu'}),goal:Text,attachments:z.array(attachment).max(8).default([]),thinkingDepth:depth})
+const commandSchema=z.object({kind:z.enum(['reply','author','new-conversation','activate-conversation']),question:Text.optional(),selected:z.array(Id).max(200).default([]),conversationId:Id,depth})
+function requestKey(request:FastifyRequest){const key=request.headers['idempotency-key'];return typeof key==='string'&&key.length>=8&&key.length<=200?key:randomUUID()}
+const bodyOf=(request:FastifyRequest)=>request.body??{}
+const resourceId=(request:FastifyRequest)=>(request.params as {id:string}).id
+
+export async function createProductApp(ports:{store:DurableStore;worker:DurableWorker;identity:IdentityConfig;providersReady:boolean;zhihuData?:ZhihuDataClient;zhihuLogin?:ZhihuLogin}){
+  const app=Fastify({logger:false,bodyLimit:20_000_000,requestTimeout:30_000})
+  const identity=createIdentity(ports.store,ports.identity),owners=new WeakMap<FastifyRequest,string>()
+  const owner=(request:FastifyRequest)=>owners.get(request)!
+  app.addHook('onRequest',async(request,reply)=>{
+    reply.header('Cache-Control','no-store').header('X-Content-Type-Options','nosniff')
+    if(request.url.startsWith('/api/')&&!['/api/ready','/api/auth/config','/api/auth/zhihu/start','/api/auth/zhihu/callback'].includes(request.url.split('?')[0]!))owners.set(request,await identity.resolve(request,reply))
+  })
+  app.setErrorHandler((error,_request,reply)=>{
+    const status=error instanceof CommandError?error.status:error instanceof NodeEditConflict?409:error instanceof z.ZodError?400:500
+    const code=error instanceof CommandError?error.code:error instanceof NodeEditConflict?'NODE_EDIT_CONFLICT':status===400?'INVALID_INPUT':'SERVICE_UNAVAILABLE'
+    const notices:Record<string,string>={COLLECTION_SCOPE_INVALID:'请先选择收藏夹并等待内容读取完成。',ZHIHU_LOGIN_REQUIRED:'连接账号后即可选择你的收藏夹。',ZHIHU_NOT_CONFIGURED:'知乎账号连接暂未开放，仍可添加文件开始学习。',ZHIHU_REAUTHORIZE:'知乎授权已到期，请重新连接账号。',PDF_NOT_CONFIGURED:'PDF 解析服务尚未连接，请先添加 Markdown 或文本文件。',MATERIAL_PROCESSING:'资料还在整理，完成后即可生成路线。',COLLECTION_EMPTY:'这个收藏夹还没有可读取的公开内容。'}
+    const message=notices[code]??(code==='ACCOUNT_BUSY'?'正在处理的任务较多，请稍后继续。':code==='PDF_UNREADABLE'||code==='ATTACHMENT_EMPTY'?'这份 PDF 没有可读取的文字，请换成含文字的 PDF、Markdown 或文本文件。':code==='ATTACHMENT_SIZE'||code==='ATTACHMENT_TEXT_SIZE'?'附件较大，请拆成较小的文件再添加。':code==='TEXT_ENCODING'?'请将文本另存为 UTF-8 后添加。':code==='NODE_EDIT_CONFLICT'?'这张卡片的同一内容已在另一处编辑，你的版本仍保留，请选择要保存的版本。':code==='REVISION_CONFLICT'?'内容已在另一处更新，正在读取最新版本。':code==='BUSY'?'当前任务还在进行。':status===404?'找不到这项内容。':status===401?'请先登录。':status===400?'请检查这次输入。':'这次操作暂时还没完成，已有内容已保留。')
+    reply.code(status).send({code,message})
+  })
+  app.get('/health',()=>({ok:true}))
+  app.get('/api/ready',async(_request,reply)=>{
+    try{await ports.store.db.query('SELECT 1')}catch{return reply.code(503).send({ready:false})}
+    return reply.code(ports.providersReady?200:503).send({ready:ports.providersReady,storage:true})
+  })
+  app.get('/api/auth/config',()=>({mode:ports.identity.production?'production':'local',loginUrl:ports.identity.loginUrl??null,zhihuAvailable:!!ports.zhihuLogin,zhihuMode:ports.zhihuLogin?.config.mode??'real',zhihuDemo:ports.zhihuLogin?.config.mode==='mock'}))
+  app.get('/api/auth/zhihu/start',async(request,reply)=>{
+    if(request.headers['sec-fetch-site']==='cross-site'||request.headers.origin&&ports.identity.origin&&request.headers.origin!==ports.identity.origin)throw new CommandError('ORIGIN_DENIED',403)
+    if(!ports.zhihuLogin)throw new CommandError('ZHIHU_NOT_CONFIGURED',503)
+    const current=ports.zhihuLogin.config.mode==='mock'&&request.headers.cookie?.includes('tp_workspace=')?await identity.resolve(request,reply):undefined
+    const result=await ports.zhihuLogin.start(current);reply.header('Set-Cookie',result.cookie);return {kind:'redirect',authorizeUrl:result.authorizeUrl,mode:ports.zhihuLogin.config.mode??'real'}
+  })
+  app.get('/api/auth/zhihu/callback',async(request,reply)=>{
+    try{
+      if(!ports.zhihuLogin)throw new CommandError('ZHIHU_NOT_CONFIGURED',503)
+      const query=z.object({authorization_code:z.string(),state:z.string()}).parse(request.query)
+      const binding=request.headers.cookie?.split(';').map(s=>s.trim()).find(s=>s.startsWith('tp_zhihu_oauth='))?.slice(15)??''
+      const cookie=await ports.zhihuLogin.callback(query.authorization_code,query.state,binding)
+      reply.header('Set-Cookie',[cookie,'tp_zhihu_oauth=; Path=/api/auth/zhihu; HttpOnly; SameSite=Lax; Max-Age=0'])
+      return reply.redirect('/?oauth=success#home')
+    }catch{return reply.redirect('/?oauth=failed#home')}
+  })
+  app.get('/api/v2/session',async request=>{
+    const own=owner(request),[account]=await ports.store.db.query<{profile:unknown}>('SELECT profile FROM tp_zhihu_accounts WHERE owner_id=$1',[own])
+    return {kind:own.startsWith('account:')?'authenticated':'local',provider:account?'zhihu':null,profile:account?.profile,demo:!!(account?.profile as any)?.demo,available:true,workspaceId:digest(own)}
+  })
+  registerMaterialRoutes(app,ports.store,ports.worker,owner,requestKey,ports.zhihuData,ports.zhihuLogin)
+  registerSourcePresentation(app,ports.store,ports.worker,owner)
+  async function ownedAttachments(own:string,items:z.infer<typeof attachment>[]){
+    return Promise.all(items.map(async item=>{
+      const resource=await ports.store.resource(own,item.sourceId)
+      if(resource.kind!=='attachment')throw new CommandError('ATTACHMENT_NOT_FOUND',404)
+      if(resource.body.status==='processing')throw new CommandError('MATERIAL_PROCESSING',409)
+      return {...resource.body,rawContent:undefined,sourceId:resource.id}
+    }))
+  }
+  app.get('/api/auth/session',request=>({kind:owner(request).startsWith('account:')?'authenticated':'anonymous',provider:owner(request).startsWith('account:zhihu:')?'zhihu':'account'}))
+  app.post('/api/auth/logout',async(request,reply)=>{
+    // Local mode has no external identity to recover an erased anonymous account.
+    if(!owner(request).startsWith('account:'))return {kind:'anonymous'}
+    const token=request.headers.cookie?.split(';').map(s=>s.trim()).find(s=>s.startsWith('tp_workspace='))?.slice(13)
+    if(token)await ports.store.db.query('DELETE FROM tp_sessions WHERE token_hash=$1',[digest(token)])
+    reply.header('Set-Cookie','tp_workspace=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0');return {kind:'anonymous'}
+  })
+  app.get('/api/v2/resources/:id',async request=>{
+    const after=(request.query as {after?:string}).after
+    if(after!==undefined){
+      const revision=z.coerce.number().int().min(0).parse(after)
+      const [current]=await ports.store.db.query<{revision:number}>('SELECT revision FROM tp_resources WHERE owner_id=$1 AND id=$2',[owner(request),resourceId(request)])
+      if(!current)throw new CommandError('NOT_FOUND',404)
+      if(current.revision===revision)return {unchanged:true,revision}
+    }
+    return ports.store.snapshot(owner(request),resourceId(request))
+  })
+  app.get('/api/v2/resources/:id/events',request=>{
+    const after=z.coerce.number().int().min(0).parse((request.query as any).after??0)
+    return ports.store.events(owner(request),resourceId(request),after)
+  })
+  app.post('/api/v2/resources/:id/cancel',async request=>{await ports.store.cancel(owner(request),resourceId(request));return ports.store.snapshot(owner(request),resourceId(request))})
+  app.post('/api/v2/resources/:id/resume',async request=>{await ports.store.resume(owner(request),resourceId(request));ports.worker.wake();return ports.store.snapshot(owner(request),resourceId(request))})
+  app.post('/api/v2/chats/enter',async request=>{
+    const input=z.object({chatId:Id,question:Text,attachments:z.array(attachment).max(8).default([]),depth}).parse(bodyOf(request)),own=owner(request)
+    input.attachments=await ownedAttachments(own,input.attachments)
+    const resource=await ports.store.create(own,'chat',input.chatId,{title:input.question,attachments:input.attachments,messages:[]})
+    const existing=(await ports.store.snapshot(own,resource.id)).job
+    if(!existing){
+      await ports.store.enqueue(own,resource.id,'chat.reply',`chat-enter:${resource.id}`,{question:resource.body.title,depth:input.depth},(r,jobId)=>({...r.body,messages:[{id:`question-${jobId}`,role:'user',text:resource.body.title}]}))
+      ports.worker.wake()
+    }
+    return ports.store.snapshot(own,resource.id)
+  })
+  app.post('/api/v2/chats/:id/reply',async request=>{
+    const input=z.object({question:Text,depth}).parse(bodyOf(request)),own=owner(request),id=resourceId(request)
+    await ports.store.enqueue(own,id,'chat.reply',requestKey(request),input,(r,jobId)=>{
+      if(r.kind!=='chat')throw new CommandError('NOT_FOUND',404)
+      return {...r.body,messages:[...r.body.messages,{id:`question-${jobId}`,role:'user',text:input.question}]}
+    });ports.worker.wake();return ports.store.snapshot(own,id)
+  })
+  app.get('/api/v2/library',async request=>{
+    const own=owner(request)
+    const [paths,knowledge,chats]=await Promise.all([ports.store.list(own,'path'),ports.store.list(own,'learning'),ports.store.list(own,'chat')])
+    return {paths:paths.filter(p=>p.body.status==='published').map(p=>({id:p.id,goal:p.body.goal,document:p.body.document,updatedAt:p.updated_at})),knowledge:knowledge.filter(k=>k.body.nodes.length).map(k=>({id:k.id,routeId:k.body.routeId,conceptId:k.body.conceptId,title:k.body.title})),
+      conversations:[...paths,...chats].map(r=>({id:r.kind==='chat'?r.scope:r.id,resourceId:r.id,kind:r.kind,title:r.body.goal??r.body.title??'对话',query:r.body.goal??r.body.title??'',updatedAt:r.updated_at,routeId:r.kind==='path'&&r.body.document?r.id:undefined})).concat(knowledge.flatMap(r=>r.body.conversations.map((c:any)=>({id:c.id,resourceId:r.id,kind:'learning',title:c.title,query:r.body.title,updatedAt:r.updated_at,routeId:r.body.routeId,conceptId:r.body.conceptId}))))}
+  })
+  async function pathByDocument(own:string,documentId:string){
+    const paths=await ports.store.db.query<Resource>("SELECT * FROM tp_resources WHERE owner_id=$1 AND kind='path' AND (id=$2 OR body->'document'->>'id'=$2)",[own,documentId])
+    const path=paths.find(p=>p.id===documentId)??(paths.length===1?paths[0]:undefined)
+    if(!path||path.body.status!=='published')throw new CommandError('NOT_FOUND',404)
+    return path
+  }
+  app.get('/api/v2/paths/:id/progress',async request=>{
+    const path=await pathByDocument(owner(request),resourceId(request));return {value:path.body.progress??null}
+  })
+  app.put('/api/v2/paths/:id/progress',async request=>{
+    const {value}=z.object({value:z.string().max(1_000_000)}).parse(bodyOf(request)),path=await pathByDocument(owner(request),resourceId(request))
+    await ports.store.edit(owner(request),path.id,undefined,r=>({...r.body,progress:value}));return {saved:true}
+  })
+  async function pathView(own:string,id:string){
+    const snapshot=await ports.store.snapshot(own,id),path=snapshot.data as PathState
+    if(snapshot.kind!=='path')throw new CommandError('NOT_FOUND',404)
+    const busy=snapshot.job&&['queued','running'].includes(snapshot.job.status),waiting=snapshot.job?.status==='waiting'||snapshot.job?.status==='cancelled'
+    return {runId:id,searchScope:path.searchScope??{kind:'zhihu'},goal:path.goal,status:busy?'running':waiting?'failed':path.status,stage:snapshot.job?.phase??'',questionSets:path.questionSets,document:path.document,route:path.route,
+      reply:path.conversation.filter((m:any)=>m.role==='assistant').at(-1)?.content,conversation:path.conversation,knowledgeCreated:false,revision:snapshot.revision,
+      trace:pathTrace(await ports.store.db.query<any>('SELECT id,kind,status,checkpoints FROM tp_jobs WHERE owner_id=$1 AND resource_id=$2 ORDER BY created_at,id',[own,id]),path),
+      ...(waiting?{error:{code:'RECOVERABLE',message:'这次还没完成，已收集的资料和选择都已保留。'}}:{})}
+  }
+  app.post('/api/path-runs',async(request,reply)=>{
+    const input=startSchema.parse(bodyOf(request)),key=requestKey(request),own=owner(request)
+    input.attachments=await ownedAttachments(own,input.attachments)
+    if(input.searchScope.kind==='collections'){
+      const folders=new Set(input.searchScope.folderIds)
+      const selected=input.attachments as any[]
+      if(folders.size!==input.searchScope.folderIds.length||[...folders].some(id=>!selected.some(a=>a.origin==='collection'&&a.folderId===id&&a.entries?.length))||selected.some(a=>a.origin!=='upload'&&!(a.origin==='collection'&&folders.has(a.folderId))))throw new CommandError('COLLECTION_SCOPE_INVALID',400)
+    }
+    const state:PathState={searchScope:input.searchScope,goal:input.goal,attachments:input.attachments,depth:input.thinkingDepth,status:'running',questionSets:[],conversation:[{messageId:'goal',role:'user',kind:'text',content:input.goal}]}
+    const resource=await ports.store.create(own,'path',key,state)
+    await ports.store.enqueue(own,resource.id,'path.start',key,{...input,depth:input.thinkingDepth})
+    ports.worker.wake();return reply.code(202).send(await pathView(own,resource.id))
+  })
+  app.get('/api/path-runs/:id',request=>pathView(owner(request),resourceId(request)))
+  app.post('/api/path-runs/:id/select',async request=>{
+    const {questionId,optionId}=z.object({questionId:Id,optionId:Id}).parse(bodyOf(request)),own=owner(request),id=resourceId(request)
+    const state=(await ports.store.resource<PathState>(own,id)).body
+    await ports.store.enqueue(own,id,'path.answer',requestKey(request),{questionId,optionId,depth:state.depth},r=>selectPathOption(r,questionId,optionId))
+    ports.worker.wake();return pathView(own,id)
+  })
+  for(const action of ['follow-up','reply'] as const)app.post(`/api/path-runs/:id/${action}`,async request=>{
+    const {message}=z.object({message:Text}).parse(bodyOf(request)),own=owner(request),id=resourceId(request),state=(await ports.store.resource<PathState>(own,id)).body
+    await ports.store.enqueue(own,id,action==='follow-up'?'path.clarify':'path.chat',requestKey(request),{question:message,depth:state.depth},r=>{
+      if(r.kind!=='path'||action==='reply'&&r.body.status!=='published'||action==='follow-up'&&r.body.status!=='awaiting_answers')throw new CommandError('INVALID_STAGE')
+      r.body.conversation.push({messageId:randomUUID(),role:'user',kind:'text',content:message});return r.body
+    });ports.worker.wake();return pathView(own,id)
+  })
+  app.post('/api/path-runs/:id/retry',async request=>{await ports.store.resume(owner(request),resourceId(request));ports.worker.wake();return pathView(owner(request),resourceId(request))})
+  app.post('/api/v2/learning/enter',async(request,reply)=>{
+    const input=z.object({routeId:Id,conceptId:Id,depth}).parse(bodyOf(request)),own=owner(request)
+    const path=(await ports.store.list(own,'path')).find(p=>p.id===input.routeId||p.body.document?.id===input.routeId||p.body.route?.routeId===input.routeId)
+    if(!path||path.body.status!=='published')throw new CommandError('NOT_FOUND',404)
+    const conceptId=path.body.conceptIdByWireId?.[input.conceptId]??input.conceptId
+    const concept=path.body.route.concepts.find((c:any)=>c.id===conceptId)
+    if(!concept)throw new CommandError('NOT_FOUND',404)
+    const conversationId=randomUUID(),materials=inheritedArticles(path.body.attachments??[])
+    const materialNodes=materials.length?[{id:'root',type:'root' as const,title:concept.title,text:'',sources:materials.map(a=>a.id),parents:[]},...materials.map(a=>({id:a.id,type:'article' as const,title:a.title,text:a.summary,sources:[a.id],parents:['root']}))]:[]
+    const state:LearningState={searchScope:path.body.searchScope??{kind:'zhihu'},version:2,routeId:path.body.document.id,conceptId,title:concept.title,description:concept.detailedDescription,hasDispute:concept.hasDispute,
+      articles:materials,nodes:materialNodes,initialized:false,phase:'searching',active:conversationId,conversations:[{id:conversationId,title:concept.title,date:new Date().toISOString(),messages:[{id:'concept-question',role:'user',text:concept.title}]}]}
+    const resource=await ports.store.create(own,'learning',`${path.id}:${conceptId}`,state)
+    const missing=materials.filter(a=>!resource.body.articles.some((old:any)=>old.id===a.id))
+    if(missing.length)await ports.store.edit(own,resource.id,undefined,r=>{
+      const body=r.body as LearningState
+      if(!body.nodes.length)body.nodes.push({id:'root',type:'root',title:body.title,text:'',sources:[],parents:[]})
+      for(const a of missing)if(!body.articles.some(old=>old.id===a.id)){body.articles.push(a);body.nodes.push({id:a.id,type:'article',title:a.title,text:a.summary,sources:[a.id],parents:['root']})}
+      body.nodes.find(n=>n.type==='root')!.sources=body.articles.map(a=>a.id);return body
+    })
+    if(!resource.body.initialized){
+      const existing=(await ports.store.snapshot(own,resource.id)).job
+      if(!existing){await ports.store.enqueue(own,resource.id,'learning.enter',`enter:${resource.id}`,{depth:input.depth,conversationId:resource.body.active});ports.worker.wake()}
+    }
+    return reply.code(200).send(await ports.store.snapshot(own,resource.id))
+  })
+  app.post('/api/v2/learning/:id/commands',async request=>{
+    const input=commandSchema.parse(bodyOf(request)),own=owner(request),id=resourceId(request)
+    if(input.kind==='new-conversation'||input.kind==='activate-conversation'){
+      const existing=await ports.store.resource<LearningState>(own,id)
+      if(input.kind==='new-conversation'&&existing.body.conversations.some(c=>c.id===input.conversationId))return ports.store.snapshot(own,id)
+      if(input.kind==='new-conversation')await ports.store.cancel(own,id)
+      const resource=await ports.store.resource<LearningState>(own,id)
+      await ports.store.edit(own,id,undefined,r=>{
+        if(r.kind!=='learning')throw new CommandError('NOT_FOUND',404)
+        if(input.kind==='activate-conversation'){if(!r.body.conversations.some((c:any)=>c.id===input.conversationId))throw new CommandError('CONVERSATION_NOT_FOUND');r.body.active=input.conversationId}
+        else {const next={id:input.conversationId,title:'新对话',date:new Date().toISOString(),messages:[]};if(!r.body.conversations.some((c:any)=>c.id===next.id))r.body.conversations.push(next);r.body.active=next.id;if(r.body.nodes.length)r.body.phase='ready'}
+        return r.body
+      });return ports.store.snapshot(own,id)
+    }
+    if(!input.question)throw new CommandError('QUESTION_REQUIRED',400)
+    const key=requestKey(request),previous=await ports.store.existingCommand(own,key)
+    if(previous){if(previous.resource_id!==id||previous.kind!==`learning.${input.kind}`||digest(previous.input.intent)!==digest(input))throw new CommandError('COMMAND_CONFLICT');return ports.store.snapshot(own,id)}
+    const resource=await ports.store.resource<LearningState>(own,id)
+    if(resource.kind!=='learning'||!resource.body.nodes.length)throw new CommandError('MATERIAL_NOT_READY')
+    const context=replyInput(resource.body,input.question,input.selected,input.conversationId)
+    if(input.kind==='author'&&context.cards.length!==1)throw new CommandError('ONE_AUTHOR_HOST_REQUIRED',400)
+    const excludedAuthorIds=[...new Set([...resource.body.nodes.map(n=>n.author?.id),...context.cards.flatMap(card=>resource.body.articles.filter(a=>card.sources.includes(a.id)).map(a=>a.authorId))].filter(Boolean))]
+    const excludedAuthorNames=[...new Set([...resource.body.nodes.map(n=>n.author?.name),...context.cards.flatMap(card=>resource.body.articles.filter(a=>card.sources.includes(a.id)).map(a=>a.author))].filter(Boolean))]
+    await ports.store.enqueue(own,id,`learning.${input.kind}`,key,{...input,intent:input,context,excludedAuthorIds,excludedAuthorNames},(r,jobId)=>{
+      // Freeze the exact card versions seen when accepting this command.
+      if(r.revision!==resource.revision)throw new CommandError('REVISION_CONFLICT')
+      const conversation=r.body.conversations.find((c:any)=>c.id===input.conversationId)
+      conversation.messages.push({id:`question-${jobId}`,role:'user',text:input.question,selected:input.selected})
+      if(conversation.messages.length===1)conversation.title=input.question!.slice(0,80)
+      return r.body
+    });ports.worker.wake();return ports.store.snapshot(own,id)
+  })
+  app.patch('/api/v2/learning/:id/nodes',async request=>{
+    const input=z.object({revision:z.number().int().min(0),nodes:z.array(NodeSchema).max(20_000),baseNodes:z.array(NodeSchema).max(20_000).optional()}).parse(bodyOf(request)),own=owner(request),id=resourceId(request)
+    try{validateTree(input.nodes)}catch{throw new CommandError('INVALID_TREE',400)}
+    await ports.store.edit(own,id,input.baseNodes?undefined:input.revision,r=>{
+      if(r.kind!=='learning')throw new CommandError('NOT_FOUND',404)
+      const old=r.body.nodes as LearningState['nodes']
+      const nodes=input.baseNodes?mergeNodeEdits(input.baseNodes,input.nodes,old):input.nodes
+      try{validateTree(nodes)}catch{throw new CommandError('INVALID_TREE',400)}
+      const retained=(r.body as LearningState).conversations.flatMap(c=>c.messages.flatMap(m=>m.paragraphs??[])).map(paragraphNode)
+      for(const node of old.filter(n=>n.type==='root'||n.type==='article')){
+        const next=nodes.find(n=>n.id===node.id)
+        if(!next||next.type!==node.type||JSON.stringify(next.parents)!==JSON.stringify(node.parents)||JSON.stringify(next.sources)!==JSON.stringify(node.sources))throw new CommandError('SOURCE_IMMUTABLE')
+      }
+      for(const node of nodes){
+        const before=old.find(n=>n.id===node.id)??retained.find(n=>n.id===node.id)
+        if(!before&&node.type!=='custom')throw new CommandError('GENERATED_NODE_IMMUTABLE')
+        if(before&&(before.type!==node.type||JSON.stringify(before.author)!==JSON.stringify(node.author)||JSON.stringify(before.sources)!==JSON.stringify(node.sources)||JSON.stringify(before.parents)!==JSON.stringify(node.parents)||before.basisId!==node.basisId||before.origin!==node.origin))throw new CommandError('NODE_PROVENANCE_IMMUTABLE')
+      }
+      return {...r.body,nodes}
+    });return ports.store.snapshot(own,id)
+  })
+  registerAuthorRoutes(app,ports.store,ports.worker,owner,requestKey)
+  app.addHook('onClose',()=>ports.worker.stop())
+  return app
+}

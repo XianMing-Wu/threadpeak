@@ -4,56 +4,13 @@ globs: "AGENTS.md,.cursor/rules/**,README.md,qa/**,catalog/**,**/*.md,**/*.mdx"
 alwaysApply: false
 ---
 
-# 文档与 Cursor Rules
+# 文档维护
 
-## 两份重构文档的读法
+当前用户裁决最高。[as-implemented-logic.md](../../as-implemented-logic.md)第 1 节记录代码、第 2 节记录目标、第 3 节记录当次验收、第 4 节记录工程决策和上线缺口。[agent-specs.md](../../agent-specs.md)是上下文、压缩、提示词和输出结构的详细合同。
 
-- 当前用户在对话中的明确裁决最高。
-- [`as-implemented-logic.md`](../../as-implemented-logic.md) 第 1 节和第 1.3 节是旧源码现场，不是重构目标；第 2 节和第 4.1 节是已确认目标；第 3 节是差距账本；第 4.2 节是仍未裁决的问题。
-- [`agent-specs.md`](../../agent-specs.md) 专门拥有各 Agent 的上下文获取、压缩算法、系统提示词和输出结构。它描述重构目标，不证明源码已经实现。
-- `as-implemented-logic.md` 标注「提示词待补」而 `agent-specs.md` 已给出完整 Agent 合同时，以后者补齐这个维度；这不表示 `as-implemented-logic.md` 其他未裁决项也自动得到答案。
-- 旧源码、fixture、截图、测试、README、旧算法文档和旧根规则都不能反向覆盖上述目标。
-
-## 根入口与分域规则
-
-- 根 [`AGENTS.md`](../../AGENTS.md) 只保存权威关系、跨域不变量、未裁决边界和规则路由，不复制每个 Agent 的完整提示词或 JSON schema。
-- `.cursor/rules/*.mdc` 把目标分配到架构、路线、知识、博主、可视化、前端、后端、迁移、测试和文档十个关注域。
-- 详细 Agent 合同只链接 `agent-specs.md`；规则可摘要调用顺序和关键边界，但不能另写一份略有不同的提示词或输出结构。
-- 同一个文件匹配多条规则时合并执行。新增或移动关键目录时，同一改动更新 AGENTS 路由表和相关 globs。
-
-## 不得擅自升级为规则的内容
-
-下列内容仍在 `as-implemented-logic.md` 第 4.2 节或 `agent-specs.md` 第 7 节，除非用户之后明确裁决，否则只能标为 unresolved：
-
-- R5 失败重试与跨重启历史落盘。
-- 首轮持久化表、唯一作用域、跨重启事务、并发、幂等、取消、超时、刷新恢复、重复提交和迟到响应。
-- 附件大小/数量/解析失败/删除/sourceId 生命周期。
-- 思考深度冻结点、快捷芯片最终文案。
-- OAuth 可见状态、3D 位置数据格式和持久化、博主网络跨重启存储。
-
-不得把 PostgreSQL、CAS、outbox、SSE、job/lease、某个 SDK、某张表或某套 UI 状态机写成用户已拍板。工程实现若必须选择其中一种，应先补合同/ADR并明确它是技术选择，不是从两个文档推出来的产品裁决。
-
-## Cursor Project Rules 格式
-
-- 根 `AGENTS.md` 无 frontmatter，作为始终加载入口。
-- Project Rules 只能使用 `.cursor/rules/*.mdc`；每条规则包含合法 `description`、非空 `globs` 与 `alwaysApply: false`。
-- globs 以项目根为基准，多个 pattern 用逗号分隔；规则保持单一关注点并少于 500 行。
-- 普通 `.md` 不会自动成为 Cursor Project Rule；文档内容通过 AGENTS 和 `.mdc` 明确引用。
-- 删除、改名或新增规则时检查是否有文件失去覆盖，并同步根路由表。
-
-## 同步方法
-
-1. 先判断修改的是现场记录、已确认目标、Agent 合同、差距账本还是未裁决项。
-2. 产品行为变化先更新 `as-implemented-logic.md` 的目标/消歧部分，再同步根 AGENTS 与 owning rules。
-3. Agent 的上下文、压缩、提示词或输出结构变化先更新 `agent-specs.md`，再同步只引用或摘要它的 rules/contracts/tests。
-4. 未裁决内容得到新答案时，从 unresolved 列表移除并补进 owning 文档；不能只改源码。
-5. 现场实现完成后更新现场/账本和证据，但不能把「写入规则」本身当作实现完成。
-6. 避免在多条规则复制大段易漂移文本；跨域只重复必要不变量，并指出唯一 owner。
-
-## 最低一致性检查
-
-- AGENTS 路由表与实际十个 `.mdc` 一一对应，无孤儿或遗漏。
-- 所有相对链接存在；frontmatter、globs、行数、表格、围栏、标题、trailing whitespace 和 merge marker 正确。
-- 可检索并对齐以下语义：路线不建图；R2 不等于 R4；500k/300k 分支；最多 3 轮；答完当前题组自动进 R4；首轮与根同一成功态；没有已 settle 的图就不能点进我的知识脉络；点击不选宿主；G1/G2 并发汇合；A2 零人才 A3；N0 高权→低权→知乎；候选不足全返回；刘看山不入网；同一 Agent 自我修复；知乎同时在飞最多 2 路且检索多问法空格拼串。
-- 搜索并删除旧冲突措辞，例如「一次 LLM 生成路线」「0 或 2–3 道题」「首次回复成功后另建根」「点击节点选宿主」「网络只要命中就停止」「知乎候选不入网」「压缩失败报错」「JSON 解析失败即该 Agent 失败」和「禁止循环修复 Agent」。
-- 文档检查通过只能报告 documents/rules consistent；不能报告 runtime、browser、provider、transaction 或 production gate 已通过。
+- 本次用户已授权持久工作流、上下文、压缩与完整后端重构。数据库、任务、事务、幂等、恢复、取消、深度冻结属于已记录的工程选择，无需重复问技术细节；域名、生产身份和实测指标仍需真实配置/验收。
+- 当前卡片树、新对话、三路搜索、问博主长卡覆盖旧的 G1/G2、批注和固定首轮展示。旧稿只留 docs/archive 作追溯；不得把旧文档恢复成实现约束。
+- 产品行为变化同步目标；Agent 变化同步四项合同；工程决策同步重构记录；测试数字与实测证据写当次账本，不写成永久产品规则。
+- AGENTS 只放权威关系、必要不变量和十条规则路由，不复制长提示词。匹配多条规则时合并执行。
+- `.mdc` 必须有 description、非空 globs、alwaysApply: false，少于 500 行。新增或改名同步 AGENTS 表。
+- 检查相对链接、围栏、表格、空白、冲突标记和关键语义。文档一致只证明文档一致，不能证明 runtime、provider 或生产完成。

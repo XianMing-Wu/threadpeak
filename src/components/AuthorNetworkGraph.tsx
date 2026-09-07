@@ -150,9 +150,11 @@ export function AuthorNetworkGraph({
   nodes,
   edges,
   highlight,
+  onSelect,
 }: {
   nodes: AuthorNetworkNode[]
   edges: AuthorNetworkEdge[]
+  onSelect?: (node:AuthorNetworkNode)=>void
   highlight?: AuthorNetworkHighlight | null
 }) {
   const hostRef = useRef<HTMLDivElement>(null)
@@ -162,6 +164,8 @@ export function AuthorNetworkGraph({
   const hoverRef = useRef('')
   const highlightRef = useRef(highlight)
   const paintRef = useRef<() => void>(() => {})
+  const selectRef = useRef(onSelect)
+  selectRef.current = onSelect
   highlightRef.current = highlight
   const [tooltip, setTooltip] = useState<{ x: number; y: number; label: string; kind: string } | null>(null)
 
@@ -372,6 +376,7 @@ export function AuthorNetworkGraph({
         drag.node.vx = 0
         drag.node.vy = 0
       }
+      if (drag.node && !drag.moved && event.type !== 'pointercancel') selectRef.current?.(drag.node)
       if (svg.hasPointerCapture(event.pointerId)) svg.releasePointerCapture(event.pointerId)
       drag = null
       dragging = false
@@ -379,6 +384,8 @@ export function AuthorNetworkGraph({
       paint()
     }
     const onWheel = (event: WheelEvent) => {
+      // Let ordinary wheel/trackpad scrolling reach the containing page.
+      if (!event.ctrlKey && !event.metaKey) return
       event.preventDefault()
       const box = svg.getBoundingClientRect()
       const view = viewRef.current

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 280" width="440" height="280">
+  <defs>
+    <radialGradient id="p-sky" cx="70%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#f2e6c4"/>
+      <stop offset="40%" stop-color="#6b7fd4"/>
+      <stop offset="100%" stop-color="#0c1638"/>
+    </radialGradient>
+    <filter id="p-oil" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="4" seed="8" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="12"/>
+    </filter>
+  </defs>
+  <rect width="440" height="280" fill="url(#p-sky)"/>
+  <g filter="url(#p-oil)">
+    <ellipse cx="300" cy="90" rx="70" ry="70" fill="#f7efd2" opacity=".8"/>
+    <path d="M40 230 L300 70 L320 90 L70 250 Z" fill="#c9d4f0" opacity=".35"/>
+    <circle cx="90" cy="190" r="6" fill="#f2e6c4"/>
+    <circle cx="140" cy="160" r="5" fill="#d8c48a"/>
+    <circle cx="190" cy="140" r="7" fill="#f4e8c0"/>
+    <circle cx="240" cy="118" r="5" fill="#fff"/>
+    <circle cx="280" cy="100" r="8" fill="#fff6d8"/>
+    <circle cx="360" cy="160" r="4" fill="#b8c4f0"/>
+    <circle cx="120" cy="220" r="4" fill="#8ea0d8"/>
+    <circle cx="210" cy="200" r="3" fill="#e8d8a8"/>
+  </g>
+</svg>

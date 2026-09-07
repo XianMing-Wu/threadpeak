@@ -4,6 +4,7 @@ import {
   parseAgentJson,
   parseAgentOutput,
   isR2ExplorationObject,
+  salvageR4Route,
 } from './schemas.ts'
 
 const r1Valid = {
@@ -91,6 +92,39 @@ test('R4 rejects cycles, dangling edges, invented attachment ids and missing rea
       { id: 'island', carrierId: 'c1', title: '孤岛', hasDispute: false, detailedDescription: '不可达', attachmentSourceIds: [] },
     ],
   }, { attachmentSourceIds: ['att-1'] }).ok, false)
+})
+
+test('salvageR4Route repairs cycles, dangling edges, islands and invented attachments', () => {
+  const cyclic = salvageR4Route({
+    ...r4Valid,
+    conceptEdges: [...r4Valid.conceptEdges, { id: 'loop', fromConceptId: 'n3', toConceptId: 'n1', reason: '环' }],
+  }, ['att-1'])
+  assert.equal(parseAgentOutput('R4', cyclic, { attachmentSourceIds: ['att-1'] }).ok, true)
+
+  const dangling = salvageR4Route({
+    ...r4Valid,
+    conceptEdges: [{ id: 'bad', fromConceptId: 'n1', toConceptId: 'missing', reason: '悬空' }],
+  }, ['att-1'])
+  assert.equal(parseAgentOutput('R4', dangling, { attachmentSourceIds: ['att-1'] }).ok, true)
+
+  const invented = salvageR4Route({
+    ...r4Valid,
+    concepts: r4Valid.concepts.map((item) => (
+      item.id === 'n2' ? { ...item, attachmentSourceIds: ['invented'] } : item
+    )),
+  }, ['att-1'])
+  const inventedParsed = parseAgentOutput('R4', invented, { attachmentSourceIds: ['att-1'] })
+  assert.equal(inventedParsed.ok, true)
+  assert.deepEqual(inventedParsed.value.concepts.find((item) => item.id === 'n2').attachmentSourceIds, [])
+
+  const island = salvageR4Route({
+    ...r4Valid,
+    concepts: [
+      ...r4Valid.concepts,
+      { id: 'island', carrierId: 'c1', title: '孤岛', hasDispute: false, detailedDescription: '不可达', attachmentSourceIds: [] },
+    ],
+  }, ['att-1'])
+  assert.equal(parseAgentOutput('R4', island, { attachmentSourceIds: ['att-1'] }).ok, true)
 })
 
 test('R4 extracts version 1 and string hasDispute without inventing nodes', () => {

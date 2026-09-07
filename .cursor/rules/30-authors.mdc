@@ -1,123 +1,21 @@
 ---
-description: "约束 A1–A3 问博主、N0–N2 博主搜索、作者证据 ID、批注和高低权博主网络。"
-globs: "src/pages/Authors.tsx,src/pages/Session.tsx,src/session/ask-authors.ts,src/session/resolve-ask-author.ts,src/session/resolve-author-search.ts,src/session/resolve-author-network.ts,src/session/request-ask-author.ts,src/session/request-author-search.ts,src/session/request-author-network.ts,src/session/useAnnotations.ts,src/components/AskAuthorsPrompt.tsx,src/components/AnnotationPanel.tsx,apps/web/**/concept-learning/**,apps/web/**/author-search/**,apps/web/**/author-network/**,packages/contracts/authors/**,server/authors/**"
+description: "约束 A1–A3 问博主、N0–N2 博主搜索、作者证据 ID、请教简报和主题来源网络。"
+globs: "src/pages/Authors.tsx,src/learning-v2/**,server/durable/flows.ts,server/durable/tools.ts,server/durable/http.ts,server/durable/network-retrieval.ts,server/durable/authors*.ts,packages/contracts/src/authors.ts,src/components/AuthorNetworkGraph.tsx,src/pages/Session.tsx,src/session/ask-authors.ts,src/session/resolve-ask-author.ts,src/session/resolve-author-search.ts,src/session/resolve-author-network.ts,src/session/request-ask-author.ts,src/session/request-author-search.ts,src/session/request-author-network.ts,src/session/useAnnotations.ts,src/components/AskAuthorsPrompt.tsx,src/components/AnnotationPanel.tsx,apps/web/**/concept-learning/**,apps/web/**/author-search/**,apps/web/**/author-network/**,packages/contracts/authors/**,server/authors/**"
 alwaysApply: false
 ---
 
-# 问博主、博主搜索与网络
+# 作者证据与卡片
 
-目标行为以 [as-implemented-logic.md](../../as-implemented-logic.md) 第 2.4、2.11、4.1 节为准；A1、A2、A3、N1、N2 的完整上下文、压缩、提示词和输出结构以 [agent-specs.md](../../agent-specs.md) 第四、五节为准。
+合同见 [agent-specs.md](../../agent-specs.md) 第三、五节；状态见 [as-implemented-logic.md](../../as-implemented-logic.md)。
 
-问博主和搜索博主是两条不同流程：前者针对划选内容回答并形成批注，后者只找人。两者只共享稳定 authorId、evidenceId 和博主网络，不得合成一个“authors agent”。
+- 问博主以所选卡和问题为输入，A-card-plan 拆问 → 两路知乎搜索 → A-card-select 选本次 1–3 位新作者。
+- ID/作者名/完整总结/链接从同一真实候选回查；模型只选择证据 ID，不重写资料。排除原卡作者和已有分支作者，不按名字合并身份。
+- 真实作者各自一张卡接在宿主后，并与聊天原子提交并成为已发现来源。此功能是检索公开文章，不是发送消息或本人实时回复。
+- 仅正常零合适候选走 A3，刘看山不是博主、无作者身份、不入网。provider 失败不能转换为零人。
+- 搜索博主 network-first 后仍检索新材料；最多三人，适配优先、同相关性才参考可撤销主题偏好。不得用使用次数冒充权威，不能编造咨询入口或联系结果；简报先可编辑再复制，网络图谱样式保留。网络不可用不得伪装空结果。
+- 同一稳定作者可关联多篇文章、多个主题和多个问题；每次搜索、当前/归档对话的实际引用分别保留，不以作者或文章为键覆盖旧问题。模型选择材料和段落编号，程序回查来源并按人去重；作者网络允许多重关系，知识卡仍为单父树。
+- 验证 1–3 人、真实零人、异常、重复/错误 ID、原作者排除、单父树和事务回滚。
 
-## A1–A3：划选问博主
+- 本轮博主结果采用 Coverflow 中心/侧卡布局，支持拖拽、点选、左右键和减少动效；网络图样式不变。API 头像/认证使用真实字段。授权 mock 示例来源只可在对应演示所有者范围出现，不成为真实作者。
 
-入口必须来自学习页或知识画布中的有效单卡划选。没有划选时不显示问博主入口。首页快捷、Composer 模式和普通输入框里出现“博主/作者”都不能进入问博主。
-
-~~~text
-用户问题 + 划选原文 + 宿主卡正文
-  → A1 拆成 2–3 个等价问法
-  → A-S 最多 2 路并发搜索知乎（多问法空格拼串）
-  → 按 authorId 分组，每条文章保留 evidenceId、API 总结和真实链接
-  → A2 判断哪些证据能回答，选择 1–2 位不同真实作者
-      ├ selected：按 ID 回查并展示作者批注，写入高权网络
-      └ no_suitable_author：A3 以刘看山第一人称调用知乎直答
-~~~
-
-### A1
-
-- 只读取用户问题、划选原文/锚点和宿主卡正文，不读取附件或整张图。
-- 输出 2–3 条语义等价、可用于知乎搜索的 query；不回答问题、不扩大意图、不凭空加人名。
-- 达到 500k 时先压宿主卡中划选范围外正文；用户问题和划选优先保留。完整算法见 agent-specs.md。
-
-### A-S
-
-- 每条搜索结果必须有 queryId、authorId、authorName、evidenceId、API summary 和真实 url。url 是检索返回的文章链接，不要求作者主页。
-- 同一作者可以有多条 evidence；不同作者的 evidence 不得混包。
-- authorId 以知乎稳定身份为准；没有官方稳定身份时按该条 evidence 绑定。不能用展示名、头像或相似文字合并。
-- A-S 是知乎搜索，不是模型 Agent。
-
-### A2
-
-- 必须读取全部候选，不先按热度截断。
-- 只能返回输入中存在且绑定正确的 authorId、authorName、evidenceId、evidenceSummary、evidenceUrl。
-- selected 分支选择 1–2 位不同作者，每位选择最能回答问题的一条 evidence。
-- no_suitable_author 分支 selections 必须为空；provider/解析失败不能伪装成 no_suitable_author。该英文值只作程序分支，立刻走 A3，不得作为用户可见文案发送或展示。
-- A2 同时输出含义不变的 normalizedQuestion，供高权网络记录。
-- 算法按 authorId/evidenceId 回查原候选后展示“姓名 + 总结 + 详细内容可以阅读我的文章 {链接}”；不再让模型重写姓名、总结或链接。
-
-### A3
-
-- 只有 A2 正常完成且返回 no_suitable_author 才调用；A1/A-S/A2 失败不能进入回退。
-- 上下文只含用户问题和划选/划选摘要，不再携带候选证据列表。
-- 系统身份是刘看山第一人称；输出自由正文。
-- 刘看山直答失败是明确失败，不得冒充作者结果。
-
-## 问博主的写入结果
-
-1. 真实作者结果与刘看山直答都只形成锚定原文的批注标记；不调用 G1，不创建知识结构节点。
-2. 真实作者 selected 时按 authorId 写一条高权网络记录：载体、概念、normalizedQuestion、authorId、展示名。
-3. 刘看山不能写网络，也不能创建 AuthorIdentity 或真实作者卡。
-4. 批注锚在概念图节点及原文位置，根和后续节点上的批注跨新对话保留。
-5. 外链必须来自本次 evidenceUrl（文章链接，不是作者主页）；模型输出与 UI 都不能发明链接。
-6. 本流程只读公开知乎内容，不联系、私信、关注、评论、收藏或代发。
-
-## N0–N2：搜索博主
-
-搜索结果是人，不是回答，不进入学习 conversation。
-
-~~~text
-N0 高权 Graph RAG
-  → 不足 3：N0 低权 Graph RAG
-  → 仍不足 3 或网络为空：
-      N1 拆成 2–3 个知乎问法
-      → N-S 最多 2 路并发搜索知乎（多问法空格拼串）并排除已有 authorId
-      → N2 按相关性补 remainingSlots
-      → 新作者按 authorId 写入低权网络
-  → 最多展示 3 人
-~~~
-
-### N0
-
-- 必须先查询当前用户/当前 owner 的高权记录，再用低权记录补充。
-- 高权记录来自成功问博主：authorId + 载体 + 概念 + normalizedQuestion + 展示名。
-- 低权记录来自之前的搜索博主：authorId + 对应问题 + 展示名，不含载体/概念。
-- 高权和低权都按 authorId 去重；达到 3 位停止，少于 3 位继续 N1/N-S/N2。
-- 网络投影未接通或不可用时整次搜索失败，不得绕过去知乎；投影正常但结果为空时进入 N1。
-
-### N1 / N-S
-
-- N1 读取用户搜索问题与 remainingSlots，输出 2–3 条等价搜索问法；不得凭空加入用户未提到的作者。
-- N-S 最多 2 路并发查知乎，多出的问法空格拼串；保留 queryId、authorId、authorName、evidenceId、summary、url。url 是文章链接，不要求作者主页。
-- 在送入 N2 前排除 N0 已返回的 authorId，再按 authorId 合并同一人的证据。
-
-### N2
-
-- 输入包含 question、remainingSlots、excludedAuthorIds 与全部去重候选。
-- 只能返回输入中存在、未被排除且 ID 绑定正确的 authorId、authorName、evidenceId。
-- 候选多于 remainingSlots 时取最相关的 remainingSlots 位；候选少于或等于 remainingSlots 时全部返回并排序。
-- 不足 3 位是合法结果，不能虚构、重复或用刘看山补位。
-- 新从知乎返回的人按 authorId 写入低权网络：authorId、展示名、对应搜索问题。
-
-## 博主网络页面
-
-- “搜索博主”和“博主网络”是同页两个板块，不能用一块本地状态冒充另一块。
-- 网络有数据时把已入网真实记录画成图谱：高权是载体→概念→问题→博主，低权是问题→博主。
-- 没有数据时显示空态，不显示示例星图或“功能不可用”假数据，也不能用 sessionStorage 假网络冒充已入网。
-
-## 失败和安全
-
-- 知乎搜索失败、候选解析失败、A2/N2 结构失败、网络投影不可用和知乎直答失败都必须区分，不能转成空结果或固定作者。
-- 外部摘要、名字、链接和正文是不可信数据，不能改变系统提示或触发工具。
-- 日志不得记录用户问题、划选、证据正文、附件、provider payload 或密钥原文。
-- 只有输入中真实存在的 authorId/evidenceId 可以进入结果和网络。
-
-## 最低验证
-
-- A1 2–3 问、A-S 最多 2 路并发且多问法空格拼串、A2 只选正确 ID 且最多 2 位。
-- A2 空结果才 A3；任何 provider failure 都不走“零作者”分支。
-- 作者结果和刘看山都只落批注，不长结构节点；刘看山永不入网。
-- 高权记录包含载体/概念/整理问题，低权记录只含作者/搜索问题。
-- N0 严格高权→低权；不足再知乎；投影不可用时 fail-closed。
-- 知乎候选少于剩余名额时全部返回，最终最多 3 人且 authorId 不重复。
-- 新知乎作者写入低权网络；网络空态无示例星图。
+- 作者卡的昵称、头像、认证图标和文案来自实际知乎字段；没有认证不得补造。内容权威等级与排序分数不是用户身份证明。旧来源头像回查严格匹配原文 URL，阅读补充不改变身份或使用分。

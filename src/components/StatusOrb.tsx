@@ -1,52 +1,31 @@
-import { ThinkingOrb, type OrbSize, type OrbState } from 'thinking-orbs'
+import { ProcessTrace } from './ProcessTrace'
+import { agentStep, flowSteps, type ProcessFlowId } from '../process-trace'
 import './status-orb.css'
 
-export type { OrbSize, OrbState }
-
-const WAITING_ORB: OrbState = 'searching'
-
-export function StatusOrb({
-  state = WAITING_ORB,
-  size = 64,
-  paused,
-  label,
-  className,
-}: {
-  state?: OrbState
-  size?: OrbSize
-  paused?: boolean
-  label?: string
-  className?: string
-}) {
-  return (
-    <span className={['tp-status-orb', className].filter(Boolean).join(' ')} data-size={size}>
-      <ThinkingOrb
-        state={state}
-        size={size}
-        theme="light"
-        paused={paused}
-        aria-label={label}
-      />
-    </span>
-  )
-}
+export { ProcessTrace, PonderMark } from './ProcessTrace'
+export {
+  flowSteps,
+  agentStep,
+  thinkStep,
+  searchStep,
+  retrieveStep,
+} from '../process-trace'
+export type { ProcessStep, ProcessFlowId } from '../process-trace'
 
 export function StatusOrbChip({
   label,
-  paused,
+  flow,
 }: {
   label: string
+  flow?: ProcessFlowId
   paused?: boolean
 }) {
+  const steps = flow
+    ? flowSteps(flow)
+    : [agentStep('current', label.replace(/^正在/, '').replace(/…$/, ''))]
   return (
-    <span className="tp-status-orb-chip" role="status">
-      <StatusOrb state={WAITING_ORB} size={64} paused={paused} label={label} />
-      <span className="tp-status-orb-chip__copy">
-        <span className="tp-status-orb-chip__text">{label}</span>
-        <span className="tp-status-orb-chip__dots" aria-hidden="true">
-          <i /><i /><i />
-        </span>
-      </span>
+    <span className="tp-status-orb-chip">
+      <ProcessTrace steps={steps} />
     </span>
   )
 }

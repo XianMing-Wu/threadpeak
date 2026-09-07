@@ -80,3 +80,59 @@ test('first-entry POST returns answer and graph together', async () => {
   assert.equal(result.graph.root.title, '核与像')
   assert.equal(result.contentHash, result.graph.canonicalContentHash)
 })
+
+test('running first-entry polls expose L0b draft text', async () => {
+  const drafts = []
+  let calls = 0
+  const result = await requestFirstEntry({
+    routeId: 'generated-path',
+    conceptId: 'kernel-image',
+    title: '核与像',
+    detailedDescription: '讲清保运算',
+    onDraft: (text) => { if (text) drafts.push(text) },
+    fetch: async (url, init) => {
+      if (String(url).includes('/api/ready')) {
+        return { ok: true, status: 200, text: async () => JSON.stringify({ ready: true }) }
+      }
+      calls += 1
+      if ((init?.method ?? 'GET') === 'POST' || calls === 1) {
+        return {
+          ok: true,
+          status: 200,
+          text: async () => JSON.stringify({ kind: 'running', trace: [{ id: 'l0b', kind: 'agent', status: 'running', title: '组织第一段讲解' }] }),
+        }
+      }
+      if (calls === 2) {
+        return {
+          ok: true,
+          status: 200,
+          text: async () => JSON.stringify({
+            kind: 'running',
+            draftText: '向量与空间变换',
+            trace: [{ id: 'l0b', kind: 'agent', status: 'running', title: '组织第一段讲解' }],
+          }),
+        }
+      }
+      return {
+        ok: true,
+        status: 200,
+        text: async () => JSON.stringify({
+          kind: 'completed',
+          text: '向量与空间变换',
+          contentHash: 'hash-1',
+          reused: false,
+          graph: {
+            graphId: 'kg_1',
+            routeId: 'generated-path',
+            conceptId: 'kernel-image',
+            canonicalContentHash: 'hash-1',
+            revision: 1,
+            root: { nodeId: 'root', title: '核与像', role: 'root', canonicalContentHash: 'hash-1' },
+          },
+        }),
+      }
+    },
+  })
+  assert.equal(result.kind, 'completed')
+  assert.ok(drafts.includes('向量与空间变换'))
+})

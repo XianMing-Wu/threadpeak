@@ -73,7 +73,17 @@ function authorKeyOf(name: string, profileUrl: string): string | null {
   return profileUrl || null
 }
 
-export function parseZhihuSearchPayload(payload: unknown): ZhihuSearchResult {
+export function globalSearchUrl(baseUrl: string, query: string, count: number): string {
+  const url = new URL('/api/v1/content/global_search', baseUrl)
+  url.searchParams.set('Query', query)
+  url.searchParams.set('Count', String(Math.min(20, Math.max(1, count))))
+  url.searchParams.set('SearchDB', 'all')
+  return url.href
+}
+function safeWebUrl(raw: string): string {
+  try { const u=new URL(raw); return u.protocol==='https:'&&!u.username&&!u.password ? u.href : '' } catch { return '' }
+}
+export function parseZhihuSearchPayload(payload: unknown, source: 'zhihu'|'web' = 'zhihu'): ZhihuSearchResult {
   const root = asRecord(payload)
   if (!root) return { kind: 'failed', message: 'Zhihu search returned a non-object body.' }
   const code = pick(root, 'Code', 'code')
@@ -86,13 +96,13 @@ export function parseZhihuSearchPayload(payload: unknown): ZhihuSearchResult {
     return { kind: 'failed', message: 'Zhihu search Items was not an array.' }
   }
   const items: EvidenceHit[] = []
-  for (const raw of (Array.isArray(rawItems) ? rawItems : []).slice(0, MAX_ITEMS)) {
+  for (const raw of (Array.isArray(rawItems) ? rawItems : [])) {
     const item = asRecord(raw)
     if (!item) continue
     const author = asRecord(pick(item, 'Author', 'author'))
     const title = asText(pick(item, 'Title', 'title', 'headline'))
-    const url = absoluteZhihuUrl(asText(pick(item, 'Url', 'url', 'URL', 'Link', 'link')))
-    const excerpt = asText(pick(item, 'ContentText', 'contentText', 'Excerpt', 'excerpt', 'Summary', 'summary', 'Content', 'content')).slice(0, MAX_EXCERPT)
+    const url = (source==='zhihu'?absoluteZhihuUrl:safeWebUrl)(asText(pick(item, 'Url', 'url', 'URL', 'Link', 'link')))
+    const excerpt = asText(pick(item, 'ContentText', 'contentText', 'Excerpt', 'excerpt', 'Summary', 'summary', 'Content', 'content'))
     const authorName = asText(
       pick(item, 'AuthorName', 'author_name', 'authorName')
       ?? pick(author, 'Name', 'name', 'FullName', 'fullName'),
@@ -102,8 +112,18 @@ export function parseZhihuSearchPayload(payload: unknown): ZhihuSearchResult {
       ?? pick(author, 'Homepage', 'homepage', 'Url', 'url'),
     ))
     if (!title || !url) continue
-    const safeName = authorName && !isLiuKanshanName(authorName) ? authorName : null
+    const safeName = source==='zhihu' && authorName && !isLiuKanshanName(authorName) ? authorName : null
+    const avatar=asText(pick(item,'AuthorAvatar')),badge=asText(pick(item,'AuthorBadgeText')),likes=pick(item,'VoteUpCount')
+    const number=(key:string)=>typeof item[key]==='number'&&Number.isFinite(item[key])&&Number(item[key])>=0?Number(item[key]):undefined
+    const badgeIcon=asText(item.AuthorBadge)
     items.push({
+      sourceKind:source,site:new URL(url).hostname,
+      contentType:asText(item.ContentType)||undefined,contentId:asText(item.ContentID)||undefined,
+      commentCount:number('CommentCount'),editedAt:number('EditTime'),rankingScore:number('RankingScore'),
+      authorityLevel:asText(item.AuthorityLevel)||undefined,
+      comments:Array.isArray(item.CommentInfoList)?item.CommentInfoList.map(c=>asText(asRecord(c)?.Content)).filter(Boolean):undefined,
+      ...(source==='zhihu'&&/^https:\/\/[^/]+\.zhimg\.com\//.test(badgeIcon)?{badgeIcon}:{}),
+      ...(source==='zhihu'&&/^https:\/\/[^/]+\.zhimg\.com\//.test(avatar)?{avatar}:{}),...(source==='zhihu'&&badge?{badge}:{}),...(typeof likes==='number'&&Number.isFinite(likes)?{likes:Math.max(0,likes)}:{}),
       title,
       url,
       excerpt,

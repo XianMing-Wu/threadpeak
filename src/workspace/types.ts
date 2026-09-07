@@ -77,6 +77,7 @@ export type ConversationRecord = {
   mode: AssistantMode
   canvasHostId?: string
   pathRunId?: string
+  processTrace?: import('../process-trace').ProcessStep[]
   updatedAt: number
 }
 
@@ -92,6 +93,7 @@ export type RouteRecord = {
   document: LearningPathDocument
   conversationIds: string[]
   knowledgeId: string | null
+  processTrace?: import('../process-trace').ProcessStep[]
   createdAt: number
 }
 

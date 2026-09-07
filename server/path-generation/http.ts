@@ -59,6 +59,7 @@ export function registerPathRunRoutes(app: FastifyInstance, ports: {
     stage: 'failed',
     questionSets: [],
     knowledgeCreated: false,
+    trace: [],
     error: { code: 'CONFIG_INVALID', message: 'Required Zhihu or DeepSeek configuration is missing.' },
     traceId,
   })
@@ -71,6 +72,7 @@ export function registerPathRunRoutes(app: FastifyInstance, ports: {
       goal: typeof body.goal === 'string' ? body.goal : '',
       attachments: attachmentsOf(body.attachments),
       thinkingDepth: thinkingOf(body.thinkingDepth),
+      wait: false,
     })
     return send(reply, statusOf(view), { ...view, traceId })
   })
@@ -87,6 +89,7 @@ export function registerPathRunRoutes(app: FastifyInstance, ports: {
         stage: 'failed',
         questionSets: [],
         knowledgeCreated: false,
+        trace: [],
         error: { code: 'PROVIDER_INVALID', message: '找不到这次路线制定。' },
         traceId,
       })
@@ -103,6 +106,7 @@ export function registerPathRunRoutes(app: FastifyInstance, ports: {
       runId,
       questionId: typeof body.questionId === 'string' ? body.questionId : '',
       optionId: typeof body.optionId === 'string' ? body.optionId : '',
+      wait: false,
     })
     return send(reply, statusOf(view), { ...view, traceId })
   })
@@ -111,7 +115,7 @@ export function registerPathRunRoutes(app: FastifyInstance, ports: {
     const traceId = String(request.headers['x-trace-id'] ?? `path-${Date.now()}`)
     if (!ports.ready || !ports.orchestrator) return missing(reply, traceId)
     const runId = String((request.params as { runId?: string }).runId ?? '')
-    const view = await ports.orchestrator.commit(runId)
+    const view = await ports.orchestrator.commit(runId, { wait: false })
     return send(reply, statusOf(view), { ...view, traceId })
   })
 
@@ -123,6 +127,7 @@ export function registerPathRunRoutes(app: FastifyInstance, ports: {
     const view = await ports.orchestrator.followUp({
       runId,
       message: typeof body.message === 'string' ? body.message : '',
+      wait: false,
     })
     return send(reply, statusOf(view), { ...view, traceId })
   })
@@ -131,7 +136,7 @@ export function registerPathRunRoutes(app: FastifyInstance, ports: {
     const traceId = String(request.headers['x-trace-id'] ?? `path-${Date.now()}`)
     if (!ports.ready || !ports.orchestrator) return missing(reply, traceId)
     const runId = String((request.params as { runId?: string }).runId ?? '')
-    const view = await ports.orchestrator.retry(runId)
+    const view = await ports.orchestrator.retry(runId, { wait: false })
     return send(reply, statusOf(view), { ...view, traceId })
   })
 
@@ -143,6 +148,7 @@ export function registerPathRunRoutes(app: FastifyInstance, ports: {
     const view = await ports.orchestrator.reply({
       runId,
       message: typeof body.message === 'string' ? body.message : '',
+      wait: false,
     })
     return send(reply, statusOf(view), { ...view, traceId })
   })

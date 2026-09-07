@@ -1,0 +1,19 @@
+{$SITE_ADDRESS:localhost} {
+  encode zstd gzip
+  header {
+    X-Content-Type-Options nosniff
+    Referrer-Policy strict-origin-when-cross-origin
+    X-Frame-Options DENY
+    # GLTFLoader decodes embedded textures through local blob URLs (fetch/Image).
+    Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+  }
+  @api path /api/* /health
+  handle @api {
+    reverse_proxy api:4312
+  }
+  handle {
+    root * /srv
+    try_files {path} /index.html
+    file_server
+  }
+}

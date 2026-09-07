@@ -353,7 +353,170 @@ function normalizeR4Route(raw: unknown): unknown {
       return flag === undefined ? item : { ...record, hasDispute: flag }
     })
   }
+  if (Array.isArray(next.conceptEdges)) {
+    next.conceptEdges = next.conceptEdges.map((item) => {
+      const record = asRecord(item)
+      if (!record) return item
+      return {
+        ...record,
+        fromConceptId: record.fromConceptId ?? record.from ?? record.fromId,
+        toConceptId: record.toConceptId ?? record.to ?? record.toId,
+      }
+    })
+  }
+  if (Array.isArray(next.carrierEdges)) {
+    next.carrierEdges = next.carrierEdges.map((item) => {
+      const record = asRecord(item)
+      if (!record) return item
+      return {
+        ...record,
+        fromCarrierId: record.fromCarrierId ?? record.from ?? record.fromId,
+        toCarrierId: record.toCarrierId ?? record.to ?? record.toId,
+      }
+    })
+  }
   return next
+}
+
+function asRecords(value: unknown): Record<string, unknown>[] {
+  if (!Array.isArray(value)) return []
+  return value.map(asRecord).filter((item): item is Record<string, unknown> => Boolean(item))
+}
+
+function uniqueById(items: Record<string, unknown>[]): Record<string, unknown>[] {
+  const seen = new Set<string>()
+  const next: Record<string, unknown>[] = []
+  for (const item of items) {
+    const id = typeof item.id === 'string' ? item.id.trim() : ''
+    if (!id || seen.has(id)) continue
+    seen.add(id)
+    next.push({ ...item, id })
+  }
+  return next
+}
+
+function dropCyclicEdges(
+  nodes: readonly string[],
+  edges: Record<string, unknown>[],
+  fromKey: string,
+  toKey: string,
+): Record<string, unknown>[] {
+  const kept: Record<string, unknown>[] = []
+  for (const edge of edges) {
+    const trial = [...kept, edge].map((item) => ({ from: String(item[fromKey]), to: String(item[toKey]) }))
+    if (!hasCycle(nodes, trial)) kept.push(edge)
+  }
+  return kept
+}
+
+export function salvageR4Route(raw: unknown, attachmentSourceIds?: readonly string[]): unknown {
+  const root = asRecord(normalizeR4Route(raw))
+  if (!root) return raw
+  const carriers: Record<string, unknown>[] = uniqueById(asRecords(root.carriers))
+    .filter((item) => typeof item.title === 'string' && item.title.trim())
+    .map((item) => ({
+      ...item,
+      description: typeof item.description === 'string' && item.description.trim()
+        ? item.description
+        : String(item.title),
+    }))
+  if (carriers.length === 0) return raw
+  const carrierIds = new Set(carriers.map((item) => String(item.id)))
+  const defaultCarrierId = String(carriers[0]?.id)
+  const allowedAttachments = attachmentSourceIds ? new Set(attachmentSourceIds) : undefined
+  const concepts: Record<string, unknown>[] = uniqueById(asRecords(root.concepts))
+    .filter((item) => typeof item.title === 'string' && item.title.trim())
+    .map((item) => {
+      const carrierId = carrierIds.has(String(item.carrierId)) ? String(item.carrierId) : defaultCarrierId
+      const flag = asBooleanFlag(item.hasDispute ?? item['争议'])
+      const attachments = Array.isArray(item.attachmentSourceIds)
+        ? item.attachmentSourceIds.filter((id): id is string => (
+          typeof id === 'string' && (!allowedAttachments || allowedAttachments.has(id))
+        ))
+        : []
+      return {
+        ...item,
+        carrierId,
+        hasDispute: flag ?? false,
+        detailedDescription: typeof item.detailedDescription === 'string' && item.detailedDescription.trim()
+          ? item.detailedDescription
+          : String(item.title),
+        attachmentSourceIds: attachments,
+      }
+    })
+  if (concepts.length === 0) return raw
+  const conceptIds = new Set(concepts.map((item) => String(item.id)))
+  let salvageSeq = 1
+  const withEdgeId = (item: Record<string, unknown>, reason: string) => ({
+    ...item,
+    id: typeof item.id === 'string' && item.id.trim() ? item.id : `salvage-e-${salvageSeq++}`,
+    reason: typeof item.reason === 'string' && item.reason.trim() ? item.reason : reason,
+  })
+  const carrierNodes = [...carrierIds]
+  const conceptNodes = [...conceptIds]
+  const carrierEdges = dropCyclicEdges(
+    carrierNodes,
+    uniqueById(asRecords(root.carrierEdges))
+      .filter((item) => (
+        carrierIds.has(String(item.fromCarrierId))
+        && carrierIds.has(String(item.toCarrierId))
+        && item.fromCarrierId !== item.toCarrierId
+      ))
+      .map((item) => withEdgeId(item, '推荐载体流转')),
+    'fromCarrierId',
+    'toCarrierId',
+  )
+  let conceptEdges = dropCyclicEdges(
+    conceptNodes,
+    uniqueById(asRecords(root.conceptEdges))
+      .filter((item) => (
+        conceptIds.has(String(item.fromConceptId))
+        && conceptIds.has(String(item.toConceptId))
+        && item.fromConceptId !== item.toConceptId
+      ))
+      .map((item) => withEdgeId(item, '推荐学习关系')),
+    'fromConceptId',
+    'toConceptId',
+  )
+  const asIdList = (value: unknown) => (
+    Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string' && conceptIds.has(id)) : []
+  )
+  let entryConceptIds = asIdList(root.entryConceptIds)
+  if (entryConceptIds.length === 0) {
+    const incoming = new Set(conceptEdges.map((item) => String(item.toConceptId)))
+    entryConceptIds = conceptNodes.filter((id) => !incoming.has(id))
+    if (entryConceptIds.length === 0) entryConceptIds = [conceptNodes[0]!]
+  }
+  const conceptGraph = () => conceptEdges.map((item) => ({ from: String(item.fromConceptId), to: String(item.toConceptId) }))
+  let seen = reachable(entryConceptIds, conceptGraph())
+  for (const id of conceptNodes) {
+    if (seen.has(id)) continue
+    conceptEdges.push(withEdgeId({
+      fromConceptId: entryConceptIds[0],
+      toConceptId: id,
+    }, '补齐入口可达'))
+    seen.add(id)
+  }
+  conceptEdges = dropCyclicEdges(conceptNodes, conceptEdges, 'fromConceptId', 'toConceptId')
+  let terminalConceptIds = asIdList(root.terminalConceptIds)
+  if (terminalConceptIds.length === 0) {
+    const outgoing = new Set(conceptEdges.map((item) => String(item.fromConceptId)))
+    terminalConceptIds = conceptNodes.filter((id) => !outgoing.has(id))
+    if (terminalConceptIds.length === 0) terminalConceptIds = [conceptNodes[conceptNodes.length - 1]!]
+  }
+  const title = typeof root.title === 'string' && root.title.trim() ? root.title.trim() : '学习路线'
+  const routeId = typeof root.routeId === 'string' && root.routeId.trim() ? root.routeId.trim().slice(0, 128) : 'route-salvaged'
+  return {
+    version: '1.0',
+    routeId,
+    title,
+    carriers,
+    concepts,
+    carrierEdges,
+    conceptEdges,
+    entryConceptIds,
+    terminalConceptIds,
+  }
 }
 
 function normalizeR2Exploration(raw: unknown): unknown {

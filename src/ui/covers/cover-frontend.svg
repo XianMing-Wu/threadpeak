@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 280" width="440" height="280">
+  <defs>
+    <linearGradient id="f-sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1026"/>
+      <stop offset="55%" stop-color="#2a1f6b"/>
+      <stop offset="100%" stop-color="#e07a4a"/>
+    </linearGradient>
+    <filter id="f-oil" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.016" numOctaves="5" seed="21"/>
+      <feDisplacementMap in="SourceGraphic" in2="SourceGraphic" scale="1"/>
+    </filter>
+    <filter id="f-paint" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="4" seed="21" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="14"/>
+    </filter>
+  </defs>
+  <rect width="440" height="280" fill="url(#f-sky)"/>
+  <g filter="url(#f-paint)">
+    <rect x="60" y="70" width="48" height="180" fill="#1c2458"/>
+    <rect x="120" y="40" width="62" height="210" fill="#3a2a88"/>
+    <rect x="196" y="88" width="54" height="162" fill="#152044"/>
+    <rect x="266" y="30" width="70" height="220" fill="#5a3aa8"/>
+    <rect x="350" y="96" width="50" height="154" fill="#241848"/>
+    <rect x="132" y="70" width="10" height="18" fill="#f2c46a"/>
+    <rect x="280" y="58" width="12" height="16" fill="#7ad0d8"/>
+    <rect x="360" y="120" width="10" height="14" fill="#f08a5a"/>
+    <ellipse cx="80" cy="40" rx="90" ry="28" fill="#6a4cc0" opacity=".45"/>
+  </g>
+</svg>

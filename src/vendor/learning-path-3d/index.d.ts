@@ -120,6 +120,8 @@ export interface CharacterAssetUrls {
 }
 
 export type NodeSemanticBadgeIcon =
+  | "carrier"
+  | "concept"
   | "start"
   | "foundation"
   | "vector"
@@ -199,6 +201,8 @@ export interface LearningPathModuleCallbacks {
 export interface LearningPathModule {
   getSnapshot(): LearningPathPublicSnapshot;
   focusNode(nodeId: string): boolean;
+  /** Save the concept return anchor and study bookmark before host navigation. */
+  rememberLearningNode(nodeId: string): Promise<boolean>;
   pause(): void;
   resume(): void;
   dispose(): void;
@@ -242,3 +246,7 @@ export type MountLearningPathOptions = MountLearningPathCommonOptions
   & LearningPathModuleSource;
 
 export declare function mountLearningPath(options: MountLearningPathOptions): Promise<LearningPathModule>;
+
+/** Checks document, content compilation and physical topology without DOM/WebGL. */
+export type LearningPathRuntimeValidation = Readonly<{ok:true}> | Readonly<{ok:false;message:string}>;
+export declare function preflightLearningPath(input:unknown):LearningPathRuntimeValidation;

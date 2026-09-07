@@ -43,7 +43,11 @@ function fallback(): Extract<FollowUpResult, { kind: 'unavailable' }> {
 
 async function readNdjson(
   stream: ReadableStream<Uint8Array>,
-  onDelta?: (text: string) => void,
+  hooks?: {
+    onDelta?: (text: string) => void
+    onTrace?: (steps: unknown) => void
+    onReasoning?: (id: string, text: string) => void
+  },
 ): Promise<FollowUpResult> {
   const missing = fallback()
   const reader = stream.getReader()
@@ -68,13 +72,21 @@ async function readNdjson(
         }
         const record = asRecord(parsed)
         if (!record) continue
+        if (record.kind === 'trace') {
+          hooks?.onTrace?.(record.steps)
+          continue
+        }
+        if (record.kind === 'reasoning' && typeof record.id === 'string' && typeof record.text === 'string') {
+          hooks?.onReasoning?.(record.id, record.text)
+          continue
+        }
         if (record.kind === 'delta' && typeof record.text === 'string') {
           text = record.text
-          onDelta?.(text)
+          hooks?.onDelta?.(text)
           continue
         }
         if (record.kind === 'completed' && typeof record.text === 'string' && record.text.trim()) {
-          onDelta?.(record.text)
+          hooks?.onDelta?.(record.text)
           return {
             kind: 'completed',
             text: record.text,
@@ -105,7 +117,10 @@ export async function requestFollowUp(input: {
   messages: unknown
   thinkingDepth?: 'fast' | 'deep'
   fetch?: FetchPort
+  signal?: AbortSignal
   onDelta?: (text: string) => void
+  onTrace?: (steps: unknown) => void
+  onReasoning?: (id: string, text: string) => void
 }): Promise<FollowUpResult> {
   const missing = fallback()
   const fetchPort = input.fetch ?? createBrowserFetchPort()
@@ -120,6 +135,7 @@ export async function requestFollowUp(input: {
   const response = await fetchPort(LIVE_FOLLOW_UP_URL, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-trace-id': 'follow-up' },
+    signal: input.signal,
     body: JSON.stringify({
       routeId: input.routeId,
       conceptId: input.conceptId,
@@ -142,5 +158,9 @@ export async function requestFollowUp(input: {
     }
     return { ...missing, message: liveMessageOf(parsed, missing.message) }
   }
-  return readNdjson(response.body, input.onDelta)
+  return readNdjson(response.body, {
+    onDelta: input.onDelta,
+    onTrace: input.onTrace,
+    onReasoning: input.onReasoning,
+  })
 }

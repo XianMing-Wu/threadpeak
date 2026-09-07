@@ -103,6 +103,7 @@ export function registerLiveRoutes(app: FastifyInstance, ports: LiveHttpPorts) {
         : undefined,
       thinkingDepth: payload.thinkingDepth === 'deep' ? 'deep' : 'fast',
     })
+    if (result.kind === 'running') return sendJson(reply, 202, { ...result, traceId })
     if (result.kind !== 'completed') {
       return sendJson(reply, result.code === 'PROVIDER_INVALID' ? 400 : 503, { ...result, traceId })
     }

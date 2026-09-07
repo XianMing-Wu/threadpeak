@@ -1,6 +1,7 @@
+import { hostDocumentChanged } from '../path-3d/host-document-persistence'
 import { useEffect, useState } from 'react'
 import { normalizeAssistantMode, type AssistantMode } from '../assistant-mode'
-import { addChatHistory, readChatHistory } from '../history'
+import { addChatHistory, readChatHistory, retainChatHistory } from '../history'
 import {
   blueprintConcepts,
   catalogLesson,
@@ -38,11 +39,66 @@ import type {
 } from './types'
 import { hasSettledMineConceptGraph } from './settled-mine-graph.ts'
 import { readableLayerTitle, titleFromPathLayer } from '../session/layer-title.ts'
+import { asProcessSteps, uniqueTrace, type ProcessStep } from '../process-trace'
 
 export { hasSettledMineConceptGraph } from './settled-mine-graph.ts'
 
 export const WORKSPACE_KEY = 'threadpeak-workspace-v1'
 export const WORKSPACE_EVENT = 'threadpeak:workspace-change'
+export const PROCESS_TRACE_KEY_PREFIX = 'threadpeak-process-trace-v1:'
+
+function processTraceBackupKey(conversationId: string) {
+  return `${PROCESS_TRACE_KEY_PREFIX}${conversationId}`
+}
+
+function readBackupTrace(conversationId: string): ProcessStep[] {
+  try {
+    return asProcessSteps(JSON.parse(localStorage.getItem(processTraceBackupKey(conversationId)) ?? 'null')) ?? []
+  } catch {
+    return []
+  }
+}
+
+function writeBackupTrace(conversationId: string, steps: readonly ProcessStep[]) {
+  if (!steps.length) return
+  try {
+    localStorage.setItem(processTraceBackupKey(conversationId), JSON.stringify(steps))
+  } catch {
+    // quota or private mode — conversation/route copies may still land
+  }
+}
+
+export function loadConversationTrace(conversationId: string, routeId?: string): ProcessStep[] {
+  const fromConversation = asProcessSteps(getConversation(conversationId)?.processTrace) ?? []
+  const fromRoute = routeId ? asProcessSteps(getRoute(routeId)?.processTrace) ?? [] : []
+  return uniqueTrace([...readBackupTrace(conversationId), ...fromRoute, ...fromConversation])
+}
+
+export function saveConversationTrace(
+  conversationId: string,
+  steps: readonly ProcessStep[],
+  extra?: { pathRunId?: string; routeId?: string; routeStep?: number },
+) {
+  const processTrace = uniqueTrace(steps)
+  writeBackupTrace(conversationId, processTrace)
+  mutate((snapshot) => {
+    snapshot.conversations = snapshot.conversations.map((item) => {
+      if (item.id !== conversationId) return item
+      return {
+        ...item,
+        ...(extra?.pathRunId ? { pathRunId: extra.pathRunId } : {}),
+        ...(extra?.routeStep !== undefined ? { routeStep: extra.routeStep } : {}),
+        ...(processTrace.length ? { processTrace } : {}),
+        updatedAt: Date.now(),
+      }
+    })
+    if (extra?.routeId && processTrace.length) {
+      snapshot.routes = snapshot.routes.map((route) => (
+        route.id === extra.routeId ? { ...route, processTrace } : route
+      ))
+    }
+  })
+}
 
 const emptySnapshot = (): WorkspaceSnapshot => ({
   version: 1,
@@ -254,6 +310,8 @@ export function getRoute(id: string): RouteRecord | undefined {
 }
 
 export function persistRepairedMineDocument(routeId: string, document: RouteRecord['document']) {
+  const current = getRoute(routeId)
+  if (current?.owner !== 'mine' || !hostDocumentChanged(current.document, document)) return
   mutate((snapshot) => {
     snapshot.routes = snapshot.routes.map((route) => (
       route.id === routeId && route.owner === 'mine' ? { ...route, document } : route
@@ -337,10 +395,19 @@ export function recordLearningHistory(conversation: ConversationRecord, bump = t
   })
 }
 
+function isFailedHomeConversation(conversation: ConversationRecord) {
+  if (conversation.kind === 'home-route') return !conversation.routeReady && (conversation.routeStep ?? -2) < 0
+  if (conversation.kind === 'home-answer') return !conversation.turns.some((turn) => turn.role === 'assistant' && !turn.failed)
+  return false
+}
+
 export function hydrateLearningHistory() {
-  for (const conversation of readWorkspace().conversations) {
+  const snapshot = readWorkspace()
+  for (const conversation of snapshot.conversations) {
     recordLearningHistory(conversation, false)
   }
+  const keep = new Set(snapshot.conversations.filter((item) => !isFailedHomeConversation(item)).map((item) => item.id))
+  retainChatHistory(new Set(readChatHistory().filter((entry) => keep.has(entry.id)).map((entry) => entry.id)))
 }
 
 export function createHomeConversation(query: string, experience: ConversationRecord['experience']): ConversationRecord {
@@ -363,7 +430,6 @@ export function createHomeConversation(query: string, experience: ConversationRe
   mutate((snapshot) => {
     snapshot.conversations = [conversation, ...snapshot.conversations.filter((item) => item.id !== conversation.id)].slice(0, 40)
   })
-  addChatHistory(query, experience, { id: conversation.id, routeId: conversation.routeId })
   return conversation
 }
 
@@ -384,13 +450,22 @@ export function attachConversationToRoute(routeId: string, conversationId: strin
   })
 }
 
-export function createMineRouteFromChat(query: string, choices: string[], conversationId: string, document: RouteRecord['document']): RouteRecord {
+export function createMineRouteFromChat(query: string, choices: string[], conversationId: string, document: RouteRecord['document'], resourceId?: string): RouteRecord {
   const existing = getConversation(conversationId)
+  const processTrace = loadConversationTrace(conversationId, existing?.routeId)
   if (existing?.routeId) {
     const route = getRoute(existing.routeId)
-    if (route && route.document.id === document.id) return route
+    if (route && route.document.id === document.id && (!resourceId || route.id === resourceId)) {
+      if (processTrace.length && !asProcessSteps(route.processTrace)?.length) {
+        mutate((snapshot) => {
+          snapshot.routes = snapshot.routes.map((item) => item.id === route.id ? { ...item, processTrace } : item)
+        })
+      }
+      return getRoute(existing.routeId) ?? route
+    }
   }
-  const route = mineRouteFromValidatedDocument(query, conversationId, document, Date.now())
+  const created = mineRouteFromValidatedDocument(query, conversationId, document, Date.now(), resourceId)
+  const route = processTrace.length ? { ...created, processTrace } : created
   mutate((snapshot) => {
     snapshot.routes = [route, ...snapshot.routes.filter((item) => item.id !== route.id)]
     snapshot.conversations = snapshot.conversations.map((item) => item.id === conversationId ? {
@@ -399,6 +474,7 @@ export function createMineRouteFromChat(query: string, choices: string[], conver
       routeChoices: choices,
       routeReady: true,
       routeStep: 4,
+      ...(processTrace.length ? { processTrace } : {}),
       updatedAt: Date.now(),
     } : item)
   })
@@ -887,4 +963,18 @@ export function startLearningConversation(routeId: string, conceptId: string): C
 
 export function recommendedExampleKnowledge() {
   return listKnowledge('example').slice(0, 2)
+}
+
+/** Local projection of server-owned resources; source content remains on the server. */
+export function hydrateProductLibrary(data: import('../learning-v2/library').ProductLibrary) {
+  mutate(snapshot=>{
+    snapshot.routes=data.paths.map(p=>mineRouteFromValidatedDocument(p.goal,p.id,p.document,p.updatedAt,p.id))
+    for(const entry of data.conversations){
+      if(entry.kind==='learning')continue
+      const existing=snapshot.conversations.find(c=>c.pathRunId===entry.resourceId||c.id===entry.id)
+      const id=entry.id
+      const conversation:ConversationRecord={id,kind:entry.kind==='path'?'home-route':'home-answer',title:entry.title,query:entry.query,experience:entry.kind==='path'?'route':'answer',routeId:entry.routeId,turns:[],value:'',quote:'',mode:'',updatedAt:entry.updatedAt,...(entry.kind==='path'?{pathRunId:entry.resourceId}:{})}
+      snapshot.conversations=[{...conversation,...existing,id,pathRunId:conversation.pathRunId??existing?.pathRunId,routeId:entry.routeId??existing?.routeId},...snapshot.conversations.filter(c=>c.id!==id&&!(entry.kind==='path'&&c.pathRunId===entry.resourceId))]
+    }
+  })
 }

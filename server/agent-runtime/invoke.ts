@@ -1,5 +1,5 @@
 import { AGENT_CHANNELS, DEFAULT_LIMITS, DEFAULT_MAX_OUTPUT_TOKENS, JSON_AGENT_IDS } from './constants.ts'
-import { createStubSummarizer } from './compress.ts'
+import { createLlmSummarizer } from './summarizer.ts'
 import { prepareAgentCall } from './prepare.ts'
 import {
   PUBLIC_STRUCTURE_FAILURE_MESSAGE,
@@ -37,6 +37,9 @@ export type InvokeOptions = {
   signal?: AbortSignal
   parseInput?: ParseAgentOutputInput
   angle?: L0aAngle
+  onReasoning?: (text: string) => void
+  onText?: (text: string) => void
+  repairLimit?: number
 }
 
 function fail(agentId: AgentId, code: AgentFailure['code'], message: string): AgentFailure {
@@ -48,7 +51,7 @@ async function runPrepared(ports: InvokePorts, input: {
   context: unknown
   options: InvokeOptions
 }) {
-  const summarizer = ports.summarizer ?? createStubSummarizer()
+  const summarizer = ports.summarizer ?? createLlmSummarizer({llm:ports.llm,thinkingDepth:input.options.thinkingDepth})
   return prepareAgentCall({
     agentId: input.agentId,
     context: input.context,
@@ -64,6 +67,8 @@ async function completeChannel(input: {
   messages: readonly ChatMessage[]
   thinkingDepth: ThinkingDepth
   signal?: AbortSignal
+  onReasoning?: (text: string) => void
+  onText?: (text: string) => void
 }): Promise<LlmCompleteResult | ZhihuDirectResult> {
   const channel = AGENT_CHANNELS[input.agentId]
   if (channel === 'zhihu_direct') {
@@ -77,8 +82,10 @@ async function completeChannel(input: {
     messages: input.messages,
     json: JSON_AGENT_IDS.has(input.agentId),
     thinkingDepth: input.thinkingDepth,
-    maxTokens: DEFAULT_MAX_OUTPUT_TOKENS[input.agentId],
+    maxTokens: DEFAULT_MAX_OUTPUT_TOKENS[input.agentId]+(input.thinkingDepth==='deep'?8192:0),
     signal: input.signal,
+    onReasoning: input.onReasoning,
+    onText: input.onText,
   })
 }
 
@@ -94,10 +101,11 @@ export async function invokeStructuredAgent<T>(
   const thinkingDepth = options.thinkingDepth ?? 'fast'
   const prepared = await runPrepared(ports, { agentId, context, options })
   const budget = options.limits?.totalTokens ?? DEFAULT_LIMITS.totalTokens
+  const repairLimit = options.repairLimit ?? STRUCTURE_SELF_REPAIR_LIMIT
   let lastText = ''
   let lastReason = ''
 
-  for (let attempt = 0; attempt <= STRUCTURE_SELF_REPAIR_LIMIT; attempt++) {
+  for (let attempt = 0; attempt <= repairLimit; attempt++) {
     const messages = attempt === 0
       ? prepared.messages
       : appendStructureRepairTurn(prepared.messages, lastText, lastReason, agentId, budget)
@@ -107,6 +115,8 @@ export async function invokeStructuredAgent<T>(
       messages,
       thinkingDepth,
       signal: options.signal,
+      onReasoning: attempt === 0 ? options.onReasoning : undefined,
+      onText: options.onText,
     })
     if (completed.kind === 'failed') {
       return fail(agentId, 'PROVIDER_UNAVAILABLE', completed.message)
@@ -154,6 +164,8 @@ export async function invokeTextAgent(
       messages,
       thinkingDepth,
       signal: options.signal,
+      onReasoning: options.onReasoning,
+      onText: options.onText,
     })
     if (completed.kind === 'failed') {
       return fail(agentId, 'PROVIDER_UNAVAILABLE', completed.message)

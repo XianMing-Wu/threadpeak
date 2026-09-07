@@ -19,7 +19,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:4312',
+        target: process.env.THREADPEAK_API_TARGET ?? 'http://127.0.0.1:4312',
         changeOrigin: false,
         timeout: 360_000,
         proxyTimeout: 360_000,

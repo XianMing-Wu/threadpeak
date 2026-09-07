@@ -57,7 +57,11 @@ export function registerOrdinaryChatRoutes(app: FastifyInstance, ports: {
     }
     try {
       write({ kind: 'status', stage: 'compose' })
-      const result = await ports.ordinaryChat.reply(payloadOf(asRecord(request.body) ?? {}))
+      const body = asRecord(request.body) ?? {}
+      const result = await ports.ordinaryChat.reply({
+        ...payloadOf(body),
+        onReasoning: (text) => write({ kind: 'reasoning', id: 'r5-think', text }),
+      })
       if (result.kind !== 'completed') {
         write({ kind: 'failed', code: result.code, message: result.message })
         reply.raw.end()

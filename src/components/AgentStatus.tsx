@@ -1,5 +1,5 @@
-import { Icon } from '../icons'
-import { StatusOrbChip } from './StatusOrb'
+import { ProcessTrace } from './ProcessTrace'
+import { flowSteps, itemsToSteps, type ProcessFlowId, type ProcessStep } from '../process-trace'
 
 export type AgentStatusItem = Readonly<{
   label:string
@@ -7,6 +7,19 @@ export type AgentStatusItem = Readonly<{
   done?:boolean
 }>
 
-export function AgentStatus({items}:{items:readonly AgentStatusItem[]}) {
-  return <div className="route-agent-status" role="status" aria-live="polite">{items.map((status)=><div key={status.label}>{status.done?<div className="route-agent-status-row"><span className="route-agent-status-bullet"><Icon name="check" size={13}/></span><span className="is-done">{status.label}</span></div>:<StatusOrbChip label={status.label}/>}</div>)}</div>
+export function AgentStatus({
+  items = [],
+  steps,
+  flow,
+}: {
+  items?: readonly AgentStatusItem[]
+  steps?: readonly ProcessStep[]
+  flow?: ProcessFlowId
+}) {
+  const resolved = steps?.length
+    ? steps
+    : flow
+      ? flowSteps(flow)
+      : itemsToSteps(items)
+  return <div className="route-agent-status"><ProcessTrace steps={resolved}/></div>
 }

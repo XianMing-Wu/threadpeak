@@ -1,12 +1,12 @@
 ---
 description: "约束 R1–R5 路线制定、澄清题轮次、附件、最终路线 JSON、发布与 3D handoff。"
-globs: "src/path-planning/**,src/path-3d/**,src/pathDocument.ts,src/pages/Chat.tsx,src/pages/Home.tsx,src/pages/Collections.tsx,src/workspace/**,src/components/Path3D.tsx,src/chat/**,apps/web/**/path-planning/**,apps/web/**/path-3d/**,packages/contracts/path/**,packages/path-3d-host/**,server/path-generation/**,server/ordinary-chat/**"
+globs: "src/path-planning/**,src/path-3d/**,src/pathDocument.ts,src/pages/Chat.tsx,src/pages/Home.tsx,src/pages/Collections.tsx,src/workspace/**,src/components/Path3D.tsx,src/chat/**,apps/web/**/path-planning/**,apps/web/**/path-3d/**,packages/contracts/path/**,packages/path-3d-host/**,server/path-generation/**,server/durable/**,packages/contracts/src/path-document.ts,server/ordinary-chat/**"
 alwaysApply: false
 ---
 
 # 路线制定 R1–R5
 
-目标流程以 [as-implemented-logic.md](../../as-implemented-logic.md) 第 2.6、2.7、2.8、4.1 节为准；每个 Agent 的输入、压缩、系统提示词和输出以 [agent-specs.md](../../agent-specs.md) 第 0 节和第一节为准。旧的一次 CandidateSet、固定五角检索和纯 TypeScript 剪枝不是目标。
+目标流程以 [as-implemented-logic.md](../../as-implemented-logic.md) 第 2 节与第 4.1 节为准；每个 Agent 的输入、压缩、系统提示词和输出以 [agent-specs.md](../../agent-specs.md) 第 0 节和第一节为准。旧的一次 CandidateSet、固定五角检索和纯 TypeScript 剪枝不是目标。
 
 ## 固定流程
 
@@ -18,12 +18,13 @@ alwaysApply: false
   → R3 生成第 1 轮 1–3 道小白选择题
   → [R3b 处理题中追问，最多到第 3 轮]
   → 当前 active 题组全部选完后自动进入 R4（不出现「生成完整路径」）
-  → R4 生成最终路线 JSON，不再搜索
+  → R4 生成顺序/并列阶段 JSON，不再搜索
+  → 程序确定性编译稳定 ID、全部边和入口/终点
   → 3D 文档校验
   → 发布一条新的“我的路线”
 ~~~
 
-1. 生成失败后的“重试”从同一目标的 R1 整段重跑，不从中间 Agent 拼接旧结果。
+1. 临时失败自动恢复同一任务未完成步骤；用户继续也是同一任务。用户重新制定才从 R1 新建路线。
 2. 再次点击路线制定会重新跑完整流程并发布另一条路线，不覆盖上一条。
 3. 路线发布后 Composer 仍在；普通发送走 R5。要再制定一条新路线，回到首页发送并重新走 R1。首页发送一律进入路线制定。
 4. 路线的任何阶段都不能创建概念首轮、conversation、KnowledgeGraph 或根节点。
@@ -51,29 +52,15 @@ alwaysApply: false
 
 ## R4 最终路线
 
-R4 输出固定字段的版本 1.0 路线对象，至少包含：
+R4 只输出 title/stages。外层先后、内层并列，如 `[[A],[B,C],[D]]`；每载体写名称/说明/顺序概念列表。程序生成稳定 ID、显式边、入口/终点，编译到兼容 3D 的路线对象。模型不编写图边，不用启发式修补错误关系。
 
-- routeId、title；
-- carriers：稳定 id、title、description；
-- concepts：稳定 id、carrierId、title、hasDispute、detailedDescription、attachmentSourceIds；
-- carrierEdges 与 conceptEdges：稳定 id、from/to 和 reason；
-- entryConceptIds 与 terminalConceptIds。
+概念描述限定首次学习范围；附件只通过本次 F 编号映射真实 sourceId，未引用不标记内容关联；本次资料目录仍继承到所有概念。格式、引用或 renderer 校验不合格交回同一 R4 修复，不能填造路线。合法阶段的关系由编译器保证，外部 provider 可用性不能宣称 100%。
 
-所有引用必须闭合、全部 ID 在单份路线内唯一、图无环且所有概念从入口可达。结构或图校验不合格时按 0.8 由同一 R4 自我修复，不能用自由文本猜测节点或边。数组顺序只用于稳定展示；显式多出边表示分叉，多入边表示汇合。分叉表示并列同时学，两路下一步接到同一个节点，一路不能先直达终点。
+状态条按持久步骤保留明确名称与完成状态；旧题和已答选择刷新后仍可查看，不能合并为一个“已完成”。
 
-每个概念必须有 detailedDescription，说明首次讲解偏向和要解决的问题。附件相关信息只消化进对应概念的 detailedDescription，并保留真实 attachmentSourceIds；开始学习后不再携带附件原件。
+## 附件与调用预算
 
-每个载体通常包含 2–3 个概念，确有必要时可以只有 1 个；不能再用旧实现强制每个载体只有一个概念。
-
-## 附件与 500k 预算
-
-- 附件只来自首页同一次发送，格式仅 pdf/md/txt。
-- R1、R2、R3、每次 R3b、R4 都携带这次路线请求的附件。
-- 整次调用总量小于 500k 不压缩；达到或超过 500k 才压缩。
-- 非附件部分小于 300k：先做一次有目标额度的附件压缩；仍超预算再压非附件，不重复压附件。
-- 非附件部分大于等于 300k：压非附件，不动附件。
-- 继续收紧允许压缩的正文直到整次调用小于 500k；不返回“上下文过长”产品错误。
-- sourceId、query/evidence/author ID、题目轮次、状态、选项和路线引用关系不能被摘要改写。
+附件首页支持 pdf/md/markdown/txt 和显式导入的知乎授权收藏夹/公开创作，所有本次路线 Agent 均携带。预算/分块压缩按 [Agent 合同](../../agent-specs.md) 第 0 节，不能假定 500k 等于 provider 能力；保留来源、ID、轮次和用户选择，禁止截断 JSON。
 
 ## 发布、列表与 3D
 
@@ -91,9 +78,11 @@ path-lab 与 `/api/paths/generate` 已从源码删除。不得重新加入侧栏
 
 ## 最低验证
 
-- R1 数量/角度、R-S 最多 2 路并发且问法空格拼串、R2 动态探索对象、R3/R3b 三轮上限、R4 固定路线结构。
-- 附件五个阶段都携带、300k 两分支、500k 总预算与无超长错误分支。
+- R1 数量/角度、R-S 最多 2 路并发且问法空格拼串、R2 动态探索对象、R3/R3b 三轮上限、R4 阶段合同与确定性编译。
+- 附件五个阶段都携带、300k 压缩优先级、实际 provider 窗口及原文不截断。
 - 旧题保留/变灰/不可点，当前题组选完自动进 R4，R4 读取全部已选答案且新轮优先。
 - 路线校验失败不发布；发布与 3D 不产生任何知识写入。
 - 分叉/汇合可渲染、所有节点可进入、返回路线列表、非法 concept 不跳学习页。
 - 路线发布后 R5 可继续，重新制定新增路线；path-lab 不再可达。
+
+- 本轮搜索范围合同见 agent-specs.md 第十节。R1 保持拆问，R-S 按全知乎/全网路由；仅收藏夹用 R-materials 读取全部选中资料而不发外部搜索。范围保留到 R2/R3/R3b/R4/R5 及路线每个概念。

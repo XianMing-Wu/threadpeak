@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 280" width="440" height="280">
+  <defs>
+    <linearGradient id="t-sky" x1="0" y1="0" x2=".2" y2="1">
+      <stop offset="0%" stop-color="#3a2416"/>
+      <stop offset="50%" stop-color="#8a4b28"/>
+      <stop offset="100%" stop-color="#e8b86a"/>
+    </linearGradient>
+    <filter id="t-oil" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="4" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="16" xChannelSelector="R" yChannelSelector="B"/>
+    </filter>
+  </defs>
+  <rect width="440" height="280" fill="url(#t-sky)"/>
+  <g filter="url(#t-oil)">
+    <rect x="48" y="70" width="120" height="160" rx="6" fill="#5a2f18"/>
+    <rect x="70" y="92" width="76" height="100" fill="#f0d2a0"/>
+    <ellipse cx="300" cy="200" rx="150" ry="70" fill="#2a1810" opacity=".7"/>
+    <circle cx="330" cy="78" r="38" fill="#f2c46a"/>
+    <path d="M250 240 Q320 140 400 220" fill="none" stroke="#c47a3a" stroke-width="22"/>
+    <path d="M180 250 Q220 180 280 240" fill="#6b3a20"/>
+  </g>
+</svg>

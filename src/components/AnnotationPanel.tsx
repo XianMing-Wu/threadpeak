@@ -54,7 +54,7 @@ export function AnnotationPanel({
           </div>
         ) : annotation.status === 'answering' || !reply ? (
           <div className="annotation-panel__pending" aria-live="polite">
-            <StatusOrbChip label="正在解答"/>
+            <StatusOrbChip label="正在解答" flow="annotation"/>
           </div>
         ) : direct ? (
           <article className="annotation-card annotation-card--direct">

@@ -1,0 +1,801 @@
+/* System fonts keep the product usable without third-party font requests. */
+:is(.ux-flowith-home, .ux-flowith-shell) {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 72vh;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 0 0 2px #e6e6e6;
+  color: #000;
+  font-family: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) *,
+:is(.ux-flowith-home, .ux-flowith-shell) *::before,
+:is(.ux-flowith-home, .ux-flowith-shell) *::after {
+  box-sizing: border-box;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) button,
+:is(.ux-flowith-home, .ux-flowith-shell) input,
+:is(.ux-flowith-home, .ux-flowith-shell) textarea {
+  font-family: inherit;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .shell {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .stage {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .sidebar,
+:is(.ux-flowith-home, .ux-flowith-shell) .sidebar :is(button, span, p, div) {
+  font-family: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif !important;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .sidebar {
+  display: flex;
+  width: 240px;
+  flex-shrink: 0;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 0;
+  margin: 6px 0 6px 6px;
+  padding: 12px 0 8px;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 12px;
+  color: #000;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .side-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .side-top {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  padding: 0 12px 0 16px;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .logo-btn {
+  display: flex;
+  width: 32px;
+  height: 32px;
+  margin-left: 4px;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 4px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .logo-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .icon-btn {
+  display: flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #5a6272;
+  cursor: pointer;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .icon-btn:hover {
+  background: #f1f2f4;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .icon-btn svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .nav {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 2px;
+  height: 168px;
+  margin-top: 12px;
+  padding: 0 12px;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .sec-row.proj {
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #2d3139 !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.28px !important;
+  line-height: 20px !important;
+  cursor: pointer;
+  user-select: none;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .nav-item svg {
+  display: block;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: #2d3139;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .nav-item:hover,
+:is(.ux-flowith-home, .ux-flowith-shell) .nav-item[aria-current="page"] {
+  background: #f1f2f4;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .nav-item span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 20px;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .nav-item.nav-slot {
+  pointer-events: none;
+  visibility: hidden;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .sec-row {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  width: 216px;
+  height: 24px;
+  margin: 0 12px;
+  padding-right: 6px;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .sec-lab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 16px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: #8d95a5 !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.24px !important;
+  line-height: 16px !important;
+  cursor: pointer;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .sec-lab svg {
+  display: block;
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  color: #8d95a5;
+  opacity: 0.7;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .caret {
+  display: flex;
+  width: 12px;
+  height: 12px;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .sec-row.folded .caret {
+  transform: rotate(-90deg);
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .ico-sm {
+  display: flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #737373;
+  cursor: pointer;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .ico-sm.folder {
+  color: #5a6272;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .ico-sm.filter {
+  color: #737373;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .ico-sm svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .ico-sm:hover {
+  background: #f1f2f4;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .hist-list {
+  flex: 1;
+  min-height: 0;
+  padding: 0 12px;
+  overflow: auto;
+  scrollbar-width: none;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .hist-list::-webkit-scrollbar {
+  display: none;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .hist {
+  position: relative;
+  display: flex;
+  width: 216px;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .hist:hover {
+  background: #f1f2f4;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .hist-th {
+  display: flex;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 8px;
+  border-radius: 12px;
+  background: #f1f2f4;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .hist-th p {
+  flex: 1;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+  color: #5a6272 !important;
+  font-size: 8px !important;
+  font-weight: 350 !important;
+  letter-spacing: -0.2px !important;
+  line-height: 10px !important;
+  text-align: start;
+  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .hist .meta {
+  display: flex;
+  min-width: 0;
+  height: 48px;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .t-wrap {
+  padding: 2px 6px;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .t {
+  overflow: hidden;
+  padding-right: 8px;
+  color: #2d3139 !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.26px !important;
+  line-height: 20px !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .d-wrap {
+  display: flex;
+  height: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  padding-left: 6px;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .d {
+  color: #8d95a5 !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.2px !important;
+  line-height: 12px !important;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .user {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+  width: 216px;
+  height: 40px;
+  margin: 16px 12px 0;
+  padding: 0 8px 0 0;
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .user:hover {
+  background: #f1f2f4;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .user-ava {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .user-ava span {
+  position: relative;
+  display: flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #e2e4e8;
+  box-shadow: 0 0 0 1px #f1f2f4;
+  color: #5a6272;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .name {
+  overflow: hidden;
+  max-width: 100px;
+  color: #000 !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.28px !important;
+  line-height: 22px !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .free-chip {
+  display: flex;
+  height: 20px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  padding: 4px 6px;
+  border-radius: 88px;
+  background: #f1f2f4;
+  color: #5a6272 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.2px !important;
+  line-height: 12px !important;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .stage-home {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  margin: 6px;
+  overflow: hidden;
+  border: 1px solid #f1f2f4;
+  border-radius: 6px;
+  background: #fff;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .home-head {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+  height: 32px;
+  margin: 12px 12px 0;
+  gap: 8px;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .home-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 24px 24px;
+  overflow: auto;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .home-h1,
+.ux-flowith-skin .home-h1 {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  margin: 59px 0 0 !important;
+  font-size: 48px !important;
+  font-weight: 400 !important;
+  letter-spacing: -2.4px !important;
+  line-height: 44px !important;
+}
+
+/* Fixed brand lettering is outlined SVG, so there is no font request or fallback flash. */
+:is(.ux-flowith-home, .ux-flowith-shell) .flow-text,
+.ux-flowith-skin .flow-text {
+  display: inline-flex;
+  color: rgba(23, 114, 246, 0.72);
+  filter: drop-shadow(0 0 12px rgba(23, 114, 246, 0.14));
+  transition: color .3s ease, filter .3s ease;
+}
+:is(.ux-flowith-home, .ux-flowith-shell) .flow-text:hover,
+.ux-flowith-skin .flow-text:hover {
+  color: #1772f6;
+  filter: drop-shadow(0 0 22px rgba(23, 114, 246, 0.32));
+}
+.brand-lettering { display: block; flex: none; overflow: visible; }
+:is(.ux-flowith-home, .ux-flowith-shell) .ideas,
+.ux-flowith-skin .ideas { display: inline-flex; margin-left: 6px; color: #111214; }
+:is(.ux-flowith-home, .ux-flowith-shell) .home-sub,
+.ux-flowith-skin .home-sub {
+  display: inline-flex;
+  margin: 18px 0 0 !important;
+  line-height: 1 !important;
+  color: #101012;
+}
+.home-sub-ink { color: inherit; }
+@media (prefers-reduced-motion: reduce) {
+  .flow-text { transition: none !important; }
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .composer-wrap,
+.ux-flowith-skin.ux-flowith-composer-wrap,
+.ux-flowith-composer-wrap {
+  position: relative;
+  z-index: 90;
+  display: flex;
+  width: 100%;
+  max-width: 720px;
+  flex-direction: column;
+  gap: 4px;
+  margin: 32px auto 0;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .ux-beam,
+.ux-flowith-skin .ux-beam {
+  overflow: hidden;
+  border-radius: 20px;
+  --beam-opacity: 1;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .composer,
+:is(.ux-flowith-home, .ux-flowith-shell) .ux-flowith-composer,
+.ux-flowith-skin .composer,
+.ux-flowith-skin .ux-flowith-composer {
+  position: relative;
+  z-index: 0 !important;
+  display: flex;
+  width: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0 8px !important;
+  overflow: visible;
+  border: 0.5px solid #e2e4e8 !important;
+  border-radius: 20px !important;
+  background: #fff !important;
+  box-shadow: 0 6px 12px 0 rgba(41, 37, 100, 0.04) !important;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .style-row,
+.ux-flowith-skin .style-row {
+  padding: 0 16px;
+}
+
+.ux-flowith-skin .style-chip {
+  display: inline-flex;
+  height: 40px !important;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px 0 10px !important;
+  border: 1px dashed #e2e4e8;
+  border-radius: 16px;
+  background: #fff;
+  color: #2d3139;
+  font-size: 12px !important;
+  letter-spacing: -0.24px !important;
+  line-height: 16px !important;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .composer-input,
+.ux-flowith-skin .composer-input {
+  position: relative;
+  width: 100%;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .composer-input textarea,
+.ux-flowith-skin .composer-input textarea,
+.ux-flowith-skin .composer-field textarea {
+  display: block;
+  width: 100%;
+  min-height: 76px !important;
+  height: auto !important;
+  padding: 2px 16px !important;
+  border: 0 !important;
+  outline: 0;
+  background: transparent !important;
+  color: #2d3139;
+  font-size: 14px !important;
+  letter-spacing: -0.28px;
+  line-height: 24px !important;
+  resize: none;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .composer-input textarea::placeholder,
+.ux-flowith-skin .composer-input textarea::placeholder {
+  color: #8d95a5;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .composer-bar .ux-flowith-skin,
+.ux-flowith-skin .composer-bar .ux-flowith-skin {
+  display: contents;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .composer-bar,
+.ux-flowith-skin .composer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .bar-l,
+:is(.ux-flowith-home, .ux-flowith-shell) .bar-r,
+.ux-flowith-skin .bar-l,
+.ux-flowith-skin .bar-r {
+  display: flex;
+  align-items: center;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .bar-l,
+.ux-flowith-skin .bar-l {
+  gap: 4px;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .bar-r,
+.ux-flowith-skin .bar-r {
+  gap: 8px;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .bar-l button,
+:is(.ux-flowith-home, .ux-flowith-shell) .bar-r .composer-icon,
+.ux-flowith-skin .bar-l button,
+.ux-flowith-skin .bar-r .composer-icon,
+.ux-flowith-skin .composer-pill,
+.ux-flowith-skin .composer-icon {
+  display: flex;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #000;
+  font-size: 13px !important;
+  letter-spacing: -0.26px !important;
+  line-height: 20px !important;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .bar-l button:hover,
+:is(.ux-flowith-home, .ux-flowith-shell) .bar-r .composer-icon:hover,
+.ux-flowith-skin .composer-pill:hover,
+.ux-flowith-skin .composer-icon:hover {
+  background: #f1f2f4;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .composer-send,
+.ux-flowith-skin .composer-send {
+  display: flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: #2d3139 !important;
+  color: #fff !important;
+  cursor: pointer;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .composer-send:disabled,
+.ux-flowith-skin .composer-send:disabled {
+  opacity: 0.35;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .composer-send.is-stop,
+.ux-flowith-skin .composer-send.is-stop {
+  background: #1a1c1f !important;
+  opacity: 1;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .home-discovery {
+  width: 100%;
+  max-width: 720px;
+  margin: 24px 0 0;
+  padding: 0 8px;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .suggestion-marquee {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding: 1px 0 2px;
+  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .suggestion-track {
+  display: flex;
+  width: max-content;
+  animation: suggestion-loop 24s linear infinite;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .suggestion-marquee:hover .suggestion-track,
+:is(.ux-flowith-home, .ux-flowith-shell) .suggestion-marquee:focus-within .suggestion-track {
+  animation-play-state: paused;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .home-suggestions .suggestion-group {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  padding-right: 8px;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .home-suggestions button {
+  display: inline-flex;
+  height: 33px;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid #e6e8ec;
+  border-radius: 17px;
+  background: #fff;
+  color: #737a85;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .home-suggestions button:hover {
+  color: #2265d4;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .home-recommendations {
+  margin-top: 20px;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .home-recommendations > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .home-recommendations button {
+  display: grid;
+  width: 100%;
+  min-height: 48px;
+  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-rows: 21px auto;
+  align-items: start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .home-recommendations button > span {
+  display: grid;
+  grid-row: 1 / 3;
+  width: 29px;
+  height: 29px;
+  place-items: center;
+  border-radius: 8px;
+  background:#fff;
+  color: #7770dc;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .home-recommendations button.home-route > span {
+  background: #eaf3ff;
+  color: #3479d6;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .home-recommendations button > b {
+  overflow: hidden;
+  min-width: 0;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .home-recommendations button > small {
+  display: block;
+  color: #9ca2ab;
+}
+
+:is(.ux-flowith-home, .ux-flowith-shell) .home-recommendations button:hover {
+  color: #2265d4;
+}
+
+.brand-accessible-text { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

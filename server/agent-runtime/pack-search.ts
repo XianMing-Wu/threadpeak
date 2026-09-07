@@ -16,17 +16,9 @@ export type PackedSearchQuery = {
 export function joinSearchTexts(texts: readonly string[], max = ZHIHU_SEARCH_QUERY_MAX): string {
   const parts = texts.map((item) => item.trim()).filter(Boolean)
   if (parts.length === 0) return ''
-  const accepted: string[] = []
-  for (const part of parts) {
-    const next = accepted.length === 0 ? part : `${accepted.join(' ')} ${part}`
-    if (next.length <= max) {
-      accepted.push(part)
-      continue
-    }
-    if (accepted.length === 0) return part.slice(0, max)
-    break
-  }
-  return accepted.join(' ')
+  const combined = parts.join(' ')
+  if (combined.length > max) throw new Error('检索问法合并后超过 200 字，请保留所有角度并简写各条问法。')
+  return combined
 }
 
 export function packZhihuSearchQueries(

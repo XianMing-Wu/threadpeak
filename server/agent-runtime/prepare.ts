@@ -5,6 +5,7 @@ import {
   compressAttachmentsOnce,
   compressNonAttachment,
   protectedSourceIds,
+  listCompressibleFields,
 } from './compress.ts'
 import { OUTPUT_STRUCTURE_TEXT, systemPromptFor } from './prompts.ts'
 import { estimateCall, estimateTokens } from './tokens.ts'
@@ -84,7 +85,9 @@ export async function prepareAgentCall(input: PrepareInput): Promise<PreparedCal
     if (estimated < limits.totalTokens) break
 
     const overhead = estimated - estimator(messages[1]?.content ?? '')
-    const contextTarget = Math.max(32, limits.totalTokens - overhead - 8)
+    const contentTokens=listCompressibleFields(input.agentId,context).reduce((sum,field)=>sum+estimator(field.text),0)
+    const metadataTokens=Math.max(0,estimator(messages[1]?.content??'')-contentTokens)
+    const contextTarget = Math.max(32, limits.totalTokens - overhead - metadataTokens - 512)
     if (compressAttachmentsFirst && !didAttachments) {
       const attachmentTarget = Math.max(8, contextTarget - Math.max(0, initialNonAttachment - overhead))
       await compressAttachmentsOnce(context, attachmentTarget, input.summarizer, estimator)
@@ -106,14 +109,7 @@ export async function prepareAgentCall(input: PrepareInput): Promise<PreparedCal
   messages = assembleMessages(input.agentId, context, input.angle)
   estimated = estimateCall(messages, input.agentId, limits.totalTokens, estimator)
   if (estimated >= limits.totalTokens) {
-    const user = messages[1]
-    if (user) {
-      const overhead = estimated - estimator(user.content)
-      const allowed = Math.max(32, limits.totalTokens - overhead - 8)
-      user.content = user.content.slice(0, Math.max(32, Math.floor(user.content.length * (allowed / Math.max(1, estimator(user.content))))))
-      messages = [messages[0]!, user]
-      compressed = true
-    }
+    throw new Error('CONTEXT_REQUIRES_PARTITION')
   }
 
   return {

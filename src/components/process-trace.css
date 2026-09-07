@@ -1,0 +1,198 @@
+.tp-process {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 520px;
+  color: #1f2329;
+}
+
+.tp-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  width: fit-content;
+  min-width: 0;
+  margin: 8px 0;
+  padding: 5px 9px;
+  border: 1px solid #e6e8ec;
+  border-radius: 20px;
+  background: #f4f5f7;
+  color: #5b626d;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.tp-pill.running-step {
+  color: #727276;
+}
+
+.tp-pill b {
+  flex-shrink: 0;
+  color: #1f2329;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tp-pill .extra {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  color: #8a9099;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tp-pill svg {
+  flex-shrink: 0;
+}
+
+.tp-think {
+  margin: 0 0 8px;
+  width: 100%;
+}
+
+.tp-think summary {
+  list-style: none;
+  cursor: pointer;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.tp-think summary::-webkit-details-marker {
+  display: none;
+}
+
+.tp-think .tp-pill {
+  margin-bottom: 4px;
+}
+
+.tp-think[open] summary {
+  margin-bottom: 4px;
+}
+
+.tp-thought {
+  max-height: min(52vh, 420px);
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #e8eaed;
+  border-radius: 7px;
+  background: #f7f8fa;
+  color: #4e555f;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font:
+    12px/1.65 -apple-system,
+    BlinkMacSystemFont,
+    "PingFang SC",
+    "Microsoft YaHei",
+    sans-serif;
+}
+
+.tp-tool {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.tp-tool .tp-pill {
+  margin-bottom: 8px;
+}
+
+.tp-step-progress {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 30px;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    #fff6 50%,
+    transparent 80%
+  );
+  animation: tool-shimmer 1400ms linear infinite;
+}
+
+.tp-spinner {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #b4b4b4;
+  border-top-color: #242424;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.running-step .tp-spinner {
+  width: 12px;
+  height: 12px;
+}
+
+.tp-pondering {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 14px 0 20px;
+  color: #8a9099;
+  font-size: 12px;
+}
+
+.tp-ponder-mark {
+  display: flex;
+  animation: ponder-pulse 1300ms ease-in-out infinite;
+}
+
+.tp-ponder-mark img {
+  width: 13px;
+  height: 13px;
+  object-fit: contain;
+  opacity: 0.6;
+}
+
+.tp-status-orb-chip {
+  display: block;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  color: #1f2329;
+  line-height: 1.2;
+}
+
+.loading-panel:has(.tp-process) {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: 0;
+  min-width: 0;
+}
+
+.loading-panel .tp-process,
+.loading-panel .tp-status-orb-slot {
+  flex: none;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes tool-shimmer {
+  from { background-position: -160px 0; }
+  to { background-position: 320px 0; }
+}
+
+@keyframes ponder-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-ponder-mark,
+  .tp-step-progress {
+    animation: none !important;
+  }
+}

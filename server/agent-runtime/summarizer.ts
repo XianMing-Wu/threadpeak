@@ -25,11 +25,10 @@ export function createLlmSummarizer(ports: {
       ],
     })
     if (completed.kind === 'failed') {
-      const prefix = `[来源摘要 sourceId=${sourceId}] `
-      return `${prefix}${text.slice(0, Math.max(8, targetTokens))}`
+      throw new Error('SUMMARY_UNAVAILABLE')
     }
     const summary = completed.text.trim()
     if (estimateTokens(summary) <= targetTokens) return `[来源摘要 sourceId=${sourceId}]\n${summary}`
-    return `[来源摘要 sourceId=${sourceId}]\n${summary.slice(0, Math.max(8, targetTokens * 2))}`
+    throw new Error('SUMMARY_REQUIRES_REDUCTION')
   }
 }

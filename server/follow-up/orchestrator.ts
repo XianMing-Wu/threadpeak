@@ -54,13 +54,13 @@ export type FollowUpResult =
 export type FollowUpInvokeStructured = <T>(
   agentId: StructuredAgentId,
   context: unknown,
-  options?: { thinkingDepth?: ThinkingDepth },
+  options?: { thinkingDepth?: ThinkingDepth; onReasoning?: (text: string) => void },
 ) => Promise<StructuredInvokeResult<T>>
 
 export type FollowUpInvokeText = (
   agentId: 'G2',
   context: unknown,
-  options?: { thinkingDepth?: ThinkingDepth },
+  options?: { thinkingDepth?: ThinkingDepth; onReasoning?: (text: string) => void },
 ) => Promise<TextInvokeResult>
 
 function asNode(value: FollowUpGraphNode | undefined): FollowUpGraphNode | undefined {
@@ -95,6 +95,7 @@ export function createFollowUpOrchestrator(ports: {
     messages?: FollowUpMessage[]
     thinkingDepth?: ThinkingDepth
     onText?: (text: string) => void
+    onReasoning?: (agentId: 'G1' | 'G2', text: string) => void
   }): Promise<FollowUpResult> => {
     const question = input.question.trim()
     const conversationId = input.conversationId.trim()
@@ -142,8 +143,14 @@ export function createFollowUpOrchestrator(ports: {
       },
     }
 
-    const g1Promise = ports.invokeStructured<G1Output>('G1', g1Context, { thinkingDepth })
-    const g2Promise = ports.invokeText('G2', g2Context, { thinkingDepth })
+    const g1Promise = ports.invokeStructured<G1Output>('G1', g1Context, {
+      thinkingDepth,
+      onReasoning: (text) => input.onReasoning?.('G1', text),
+    })
+    const g2Promise = ports.invokeText('G2', g2Context, {
+      thinkingDepth,
+      onReasoning: (text) => input.onReasoning?.('G2', text),
+    })
     const g2 = await g2Promise
     if (g2.kind === 'failed') {
       await g1Promise.catch(() => undefined)

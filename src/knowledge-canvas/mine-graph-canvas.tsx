@@ -63,7 +63,7 @@ export function MineGraphCanvasPage({ routeId, conceptId }: { routeId: string; c
       <main className="canvas-page">
         <section className="thread-canvas" role="status" aria-live="polite">
           <article className="square-empty">
-            <StatusOrbChip label="正在读取知识脉络"/>
+            <StatusOrbChip label="正在读取知识脉络" flow="knowledge-read"/>
           </article>
         </section>
       </main>

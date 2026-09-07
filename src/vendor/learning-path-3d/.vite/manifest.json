@@ -6,8 +6,8 @@
       "_three-runtime-CHDI8JSc.js"
     ]
   },
-  "_overpassSpec-CjJGXqVE.js": {
-    "file": "overpassSpec-CjJGXqVE.js",
+  "_overpassSpec-3Tu8NqTy.js": {
+    "file": "overpassSpec-3Tu8NqTy.js",
     "name": "overpassSpec"
   },
   "_three-runtime-CHDI8JSc.js": {
@@ -15,12 +15,12 @@
     "name": "three-runtime"
   },
   "src/app/LearningPathSession.ts": {
-    "file": "LearningPathSession-BhENLC7P.js",
+    "file": "LearningPathSession-WoZaqSLh.js",
     "name": "LearningPathSession",
     "src": "src/app/LearningPathSession.ts",
     "isDynamicEntry": true,
     "imports": [
-      "_overpassSpec-CjJGXqVE.js",
+      "_overpassSpec-3Tu8NqTy.js",
       "_three-runtime-CHDI8JSc.js",
       "_CharacterRig-BpJUYaY6.js"
     ]
@@ -40,7 +40,7 @@
     "src": "src/module/index.ts",
     "isEntry": true,
     "imports": [
-      "_overpassSpec-CjJGXqVE.js"
+      "_overpassSpec-3Tu8NqTy.js"
     ],
     "dynamicImports": [
       "src/app/LearningPathSession.ts",

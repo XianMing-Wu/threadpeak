@@ -377,19 +377,22 @@ function B(e) {
 //#endregion
 //#region src/content/compiler.ts
 var pe = 3.75, me = 3.5, he = 3.75, ge = 4.4, _e = .523;
+function V(e) {
+	return ve(g(e));
+}
 function ve(e) {
-	let { subjects: t, concepts: n, flow: r, flowGroups: i } = e.structure, a = Ce(r, (e) => e.fromSubjectId), o = Ce(r, (e) => e.toSubjectId), s = be(t, a, o), c = xe(s, o), l = Se(s, c), u = H(n), f = new Map(e.data.cards.map((e) => [e.id, e])), p = new Map(e.data.actions.map((e) => [e.id, e])), m = new Map(e.data.resources.map((e) => [e.id, e])), h = e.presentation.layout.subjectGap ?? pe, g = e.presentation.layout.layerGap ?? me, _ = e.presentation.layout.conceptGap ?? he, v = e.presentation.layout.conceptColumnGap ?? ge, y = Math.max(...c.values()), b = -(y * g) / 2, ee = [], x = t.length, S = [], C = /* @__PURE__ */ new Map();
+	let { subjects: t, concepts: n, flow: r, flowGroups: i } = e.structure, a = we(r, (e) => e.fromSubjectId), o = we(r, (e) => e.toSubjectId), s = xe(t, a, o), c = Se(s, o), l = H(s, c), u = Ce(n), f = new Map(e.data.cards.map((e) => [e.id, e])), p = new Map(e.data.actions.map((e) => [e.id, e])), m = new Map(e.data.resources.map((e) => [e.id, e])), h = e.presentation.layout.subjectGap ?? pe, g = e.presentation.layout.layerGap ?? me, _ = e.presentation.layout.conceptGap ?? he, v = e.presentation.layout.conceptColumnGap ?? ge, y = Math.max(...c.values()), b = -(y * g) / 2, ee = [], x = t.length, S = [], C = /* @__PURE__ */ new Map();
 	for (let e = 0; e <= y; e += 1) {
-		let t = l.get(e) ?? [], n = -((t.length - 1) * h) / 2, r = Oe(b + e * g);
+		let t = l.get(e) ?? [], n = -((t.length - 1) * h) / 2, r = Ae(b + e * g);
 		for (let [e, i] of t.entries()) C.set(i.id, {
-			x: Oe(n + e * h),
+			x: Ae(n + e * h),
 			z: r
 		});
 		let i = t.flatMap((e) => u.get(e.id) ?? []), a = n + Math.max(0, t.length - 1) * h + v;
 		for (let n of t) {
 			let t = u.get(n.id) ?? [];
 			for (let [n, i] of t.entries()) {
-				let t = W(f, i.cardRef, "card"), o = W(p, i.actionRef, "action"), s = W(m, o.resourceId, "resource");
+				let t = U(f, i.cardRef, "card"), o = U(p, i.actionRef, "action"), s = U(m, o.resourceId, "resource");
 				ee.push(Object.freeze({
 					id: i.id,
 					entityId: i.id,
@@ -397,14 +400,14 @@ function ve(e) {
 					navigationOrder: x,
 					label: t.title,
 					position: Object.freeze({
-						x: Oe(a + n * _),
+						x: Ae(a + n * _),
 						z: r
 					}),
 					layer: e,
 					initiallyGreen: !1,
 					initiallyVisible: !1,
 					completionPolicy: "preserve-variant",
-					activationGroupId: De(i.subjectId),
+					activationGroupId: ke(i.subjectId),
 					surfaceY: _e,
 					variant: "brown",
 					card: t,
@@ -423,15 +426,15 @@ function ve(e) {
 		}));
 	}
 	let te = new Map(s.map((e, t) => [e.id, t])), w = s.map((e) => {
-		let t = W(f, e.cardRef, "card");
+		let t = U(f, e.cardRef, "card");
 		return Object.freeze({
 			id: e.id,
 			entityId: e.id,
 			entityKind: "subject",
-			navigationOrder: W(te, e.id, "navigation order"),
+			navigationOrder: U(te, e.id, "navigation order"),
 			label: t.title,
-			position: Object.freeze(W(C, e.id, "position")),
-			layer: W(c, e.id, "layer"),
+			position: Object.freeze(U(C, e.id, "position")),
+			layer: U(c, e.id, "layer"),
 			initiallyGreen: !0,
 			initiallyVisible: !0,
 			completionPolicy: "promote-to-green",
@@ -441,7 +444,7 @@ function ve(e) {
 		});
 	}), T = ee, E = /* @__PURE__ */ new Map();
 	for (let e of T) e.ownerSubjectId && !E.has(e.ownerSubjectId) && E.set(e.ownerSubjectId, e);
-	let D = Object.freeze([...w, ...T]), O = [...r].sort(we).map((e) => Object.freeze({
+	let D = Object.freeze([...w, ...T]), O = [...r].sort(Ee).map((e) => Object.freeze({
 		id: e.id,
 		fromNodeId: e.fromSubjectId,
 		toNodeId: e.toSubjectId,
@@ -450,20 +453,20 @@ function ve(e) {
 		completionPolicy: "promote-to-green",
 		sourceKind: "subject-flow",
 		...e.semantics ? { flowSemantics: Object.freeze({ ...e.semantics }) } : {}
-	})), ne = V(i, r, w, new Set(O.map((e) => e.id))), re = [], ie = [];
+	})), ne = ye(i, r, w, new Set(O.map((e) => e.id))), re = [], ie = [];
 	for (let e of s) {
 		let t = u.get(e.id) ?? [];
 		if (t.length === 0) continue;
-		let n = W(C, e.id, "subject position"), r = W(E, e.id, "first concept node"), i = (l.get(W(c, e.id, "layer")) ?? []).some((t) => {
+		let n = U(C, e.id, "subject position"), r = U(E, e.id, "first concept node"), i = (l.get(U(c, e.id, "layer")) ?? []).some((t) => {
 			if (t.id === e.id) return !1;
-			let i = W(C, t.id, "sibling subject position");
+			let i = U(C, t.id, "sibling subject position");
 			return i.x > Math.min(n.x, r.position.x) && i.x < Math.max(n.x, r.position.x);
-		}), a = De(e.id), o = [], s = [{
+		}), a = ke(e.id), o = [], s = [{
 			kind: "node",
-			id: G(t, 0, "first concept").id
+			id: W(t, 0, "first concept").id
 		}];
 		for (let e = 1; e < t.length; e += 1) {
-			let n = G(t, e - 1, "previous concept"), r = G(t, e, "current concept"), i = `concept-flow:${n.id}:${r.id}`;
+			let n = W(t, e - 1, "previous concept"), r = W(t, e, "current concept"), i = `concept-flow:${n.id}:${r.id}`;
 			o.push(i), re.push(Object.freeze({
 				id: i,
 				fromNodeId: n.id,
@@ -486,7 +489,7 @@ function ve(e) {
 			activationSubjectNodeId: e.id,
 			entryConnection: Object.freeze({
 				fromSubjectNodeId: e.id,
-				toConceptNodeId: G(t, 0, "first concept").id,
+				toConceptNodeId: W(t, 0, "first concept").id,
 				preferredPathKind: i ? "overpass" : "straight"
 			}),
 			memberConceptNodeIds: Object.freeze(t.map((e) => e.id)),
@@ -514,17 +517,20 @@ function ve(e) {
 		edgeById: new Map(k.map((e) => [e.id, e]))
 	});
 }
-function V(e, t, n, r) {
-	let i = new Map(n.map((e) => [e.id, e])), a = [];
+function ye(e, t, n, r) {
+	let i = new Map(n.map((e) => [e.id, e])), a = [], o = /* @__PURE__ */ new Set();
 	for (let n of e) {
 		if (n.type !== "split" || n.policy !== "parallel") continue;
-		let e = t.filter((e) => e.fromSubjectId === n.anchorSubjectId && e.semantics?.splitGroupId === n.id).map((e) => W(i, e.toSubjectId, "parallel subject")).sort((e, t) => e.position.x - t.position.x || e.navigationOrder - t.navigationOrder || e.id.localeCompare(t.id));
+		let e = t.filter((e) => e.fromSubjectId === n.anchorSubjectId && e.semantics?.splitGroupId === n.id).map((e) => U(i, e.toSubjectId, "parallel subject")).sort((e, t) => e.position.x - t.position.x || e.navigationOrder - t.navigationOrder || e.id.localeCompare(t.id));
 		for (let t = 1; t < e.length; t += 1) {
-			let i = G(e, t - 1, "left parallel subject"), o = G(e, t, "right parallel subject"), s = ye(`parallel-peer:${n.id}:${i.id}:${o.id}`, r);
-			r.add(s), a.push(Object.freeze({
-				id: s,
+			let i = W(e, t - 1, "left parallel subject"), s = W(e, t, "right parallel subject"), c = JSON.stringify([i.id, s.id].sort());
+			if (o.has(c)) continue;
+			o.add(c);
+			let l = be(`parallel-peer:${n.id}:${i.id}:${s.id}`, r);
+			r.add(l), a.push(Object.freeze({
+				id: l,
 				fromNodeId: i.id,
-				toNodeId: o.id,
+				toNodeId: s.id,
 				pathKind: "straight",
 				initiallyVisible: !0,
 				completionPolicy: "promote-to-green",
@@ -534,27 +540,27 @@ function V(e, t, n, r) {
 	}
 	return Object.freeze(a);
 }
-function ye(e, t) {
+function be(e, t) {
 	if (!t.has(e)) return e;
 	let n = 2;
 	for (; t.has(`${e}:${n}`);) n += 1;
 	return `${e}:${n}`;
 }
-function be(e, t, n) {
-	let r = new Map(e.map((e) => [e.id, e])), i = new Map(e.map((e) => [e.id, n.get(e.id)?.length ?? 0])), a = e.filter((e) => i.get(e.id) === 0).sort(U), o = [];
+function xe(e, t, n) {
+	let r = new Map(e.map((e) => [e.id, e])), i = new Map(e.map((e) => [e.id, n.get(e.id)?.length ?? 0])), a = e.filter((e) => i.get(e.id) === 0).sort(Te), o = [];
 	for (; a.length > 0;) {
 		let e = a.shift();
 		if (!e) break;
 		o.push(e);
 		for (let n of t.get(e.id) ?? []) {
 			let e = (i.get(n.toSubjectId) ?? 0) - 1;
-			i.set(n.toSubjectId, e), e === 0 && Te(a, W(r, n.toSubjectId, "subject"));
+			i.set(n.toSubjectId, e), e === 0 && De(a, U(r, n.toSubjectId, "subject"));
 		}
 	}
 	if (o.length !== e.length) throw Error("Compiler received a cyclic or incomplete document. Validate before compiling.");
 	return o;
 }
-function xe(e, t) {
+function Se(e, t) {
 	let n = /* @__PURE__ */ new Map();
 	for (let r of e) {
 		let e = (t.get(r.id) ?? []).reduce((e, t) => Math.max(e, (n.get(t.fromSubjectId) ?? -1) + 1), 0);
@@ -562,58 +568,58 @@ function xe(e, t) {
 	}
 	return n;
 }
-function Se(e, t) {
+function H(e, t) {
 	let n = /* @__PURE__ */ new Map();
-	for (let r of e) Ee(n, W(t, r.id, "layer"), r);
-	for (let e of n.values()) e.sort(U);
+	for (let r of e) Oe(n, U(t, r.id, "layer"), r);
+	for (let e of n.values()) e.sort(Te);
 	return n;
 }
-function H(e) {
+function Ce(e) {
 	let t = /* @__PURE__ */ new Map();
-	for (let n of e) Ee(t, n.subjectId, n);
-	for (let e of t.values()) e.sort(U);
+	for (let n of e) Oe(t, n.subjectId, n);
+	for (let e of t.values()) e.sort(Te);
 	return t;
 }
-function Ce(e, t) {
+function we(e, t) {
 	let n = /* @__PURE__ */ new Map();
-	for (let r of e) Ee(n, t(r), r);
-	for (let e of n.values()) e.sort(we);
+	for (let r of e) Oe(n, t(r), r);
+	for (let e of n.values()) e.sort(Ee);
 	return n;
 }
-function U(e, t) {
+function Te(e, t) {
 	return (e.orderHint ?? 2 ** 53 - 1) - (t.orderHint ?? 2 ** 53 - 1) || e.id.localeCompare(t.id);
 }
-function we(e, t) {
+function Ee(e, t) {
 	return e.fromSubjectId.localeCompare(t.fromSubjectId) || e.toSubjectId.localeCompare(t.toSubjectId) || e.id.localeCompare(t.id);
 }
-function Te(e, t) {
+function De(e, t) {
 	let n = 0;
-	for (; n < e.length && U(G(e, n, "queued subject"), t) < 0;) n += 1;
+	for (; n < e.length && Te(W(e, n, "queued subject"), t) < 0;) n += 1;
 	e.splice(n, 0, t);
 }
-function Ee(e, t, n) {
+function Oe(e, t, n) {
 	let r = e.get(t);
 	r ? r.push(n) : e.set(t, [n]);
 }
-function W(e, t, n) {
+function U(e, t, n) {
 	let r = e.get(t);
 	if (r === void 0) throw Error(`Missing compiled ${n}.`);
 	return r;
 }
-function G(e, t, n) {
+function W(e, t, n) {
 	let r = e[t];
 	if (r === void 0) throw Error(`Missing compiled ${n}.`);
 	return r;
 }
-function De(e) {
+function ke(e) {
 	return `concept-zone:${e}`;
 }
-function Oe(e) {
+function Ae(e) {
 	return Math.round(e * 1e6) / 1e6;
 }
 //#endregion
 //#region src/progression/persistence/types.ts
-var ke = "learning-progress", Ae = Object.freeze([
+var je = "learning-progress", Me = Object.freeze([
 	"schema",
 	"version",
 	"pathRevision",
@@ -623,78 +629,78 @@ var ke = "learning-progress", Ae = Object.freeze([
 	"visitedNodeIds",
 	"celebrationSeen",
 	"celebrationCount"
-]), je = /* @__PURE__ */ new Set([
+]), Ne = /* @__PURE__ */ new Set([
 	"locked",
 	"available",
 	"completed"
-]), Me = /* @__PURE__ */ new Set([
+]), Pe = /* @__PURE__ */ new Set([
 	"locked",
 	"available",
 	"in-progress",
 	"completed"
 ]);
-function Ne(e) {
+function Fe(e) {
 	if (typeof e != "object" || !e || Array.isArray(e)) return !1;
 	let t = Object.getPrototypeOf(e);
 	return t === Object.prototype || t === null;
 }
-function Pe(e, t) {
+function Ie(e, t) {
 	let n = Object.keys(e).sort(), r = [...t].sort();
 	return n.length === r.length && n.every((e, t) => e === r[t]);
 }
-function Fe(e) {
+function Le(e) {
 	return typeof e == "string" && e.trim().length > 0;
 }
-function Ie(e, t) {
-	return Ne(e) ? Object.entries(e).every(([e, n]) => Fe(e) && t.has(n)) : !1;
-}
-function Le(e) {
-	return e.schema === "learning-progress" && Fe(e.pathRevision) && Fe(e.lastSafeNodeId) && Ie(e.subjectStatusById, je) && Ie(e.conceptStatusById, Me) && typeof e.celebrationSeen == "boolean" && Number.isSafeInteger(e.celebrationCount) && e.celebrationCount >= 0 && (e.celebrationCount === 0 || e.celebrationSeen === !0);
-}
-function Re(e) {
-	return !Ne(e) || !Pe(e, Ae) || e.version !== 1 || !Le(e) || !Ne(e.visitedNodeIds) ? !1 : Object.entries(e.visitedNodeIds).every(([e, t]) => Fe(e) && t === !0);
+function Re(e, t) {
+	return Fe(e) ? Object.entries(e).every(([e, n]) => Le(e) && t.has(n)) : !1;
 }
 function ze(e) {
-	if (!Ne(e) || !Pe(e, Ae) || e.version !== 2 || !Le(e) || !Array.isArray(e.visitedNodeIds)) return !1;
-	let t = e.visitedNodeIds;
-	return t.every(Fe) && new Set(t).size === t.length;
+	return e.schema === "learning-progress" && Le(e.pathRevision) && Le(e.lastSafeNodeId) && Re(e.subjectStatusById, Ne) && Re(e.conceptStatusById, Pe) && typeof e.celebrationSeen == "boolean" && Number.isSafeInteger(e.celebrationCount) && e.celebrationCount >= 0 && (e.celebrationCount === 0 || e.celebrationSeen === !0);
 }
 function Be(e) {
-	return Object.freeze(Object.fromEntries(Object.entries(e).sort(([e], [t]) => e.localeCompare(t))));
+	return !Fe(e) || !Ie(e, Me) || e.version !== 1 || !ze(e) || !Fe(e.visitedNodeIds) ? !1 : Object.entries(e.visitedNodeIds).every(([e, t]) => Le(e) && t === !0);
 }
 function Ve(e) {
+	if (!Fe(e) || !Ie(e, Me) || e.version !== 2 || !ze(e) || !Array.isArray(e.visitedNodeIds)) return !1;
+	let t = e.visitedNodeIds;
+	return t.every(Le) && new Set(t).size === t.length;
+}
+function He(e) {
+	return Object.freeze(Object.fromEntries(Object.entries(e).sort(([e], [t]) => e.localeCompare(t))));
+}
+function Ue(e) {
 	return Object.freeze({
-		schema: ke,
+		schema: je,
 		version: 2,
 		pathRevision: e.pathRevision,
 		lastSafeNodeId: e.lastSafeNodeId,
-		subjectStatusById: Be(e.subjectStatusById),
-		conceptStatusById: Be(e.conceptStatusById),
+		subjectStatusById: He(e.subjectStatusById),
+		conceptStatusById: He(e.conceptStatusById),
 		visitedNodeIds: Object.freeze([...e.visitedNodeIds]),
 		celebrationSeen: e.celebrationSeen,
 		celebrationCount: e.celebrationCount
 	});
 }
-function He(e) {
-	if (!Ne(e) || e.schema !== "learning-progress") return Object.freeze({
+function We(e) {
+	if (!Fe(e) || e.schema !== "learning-progress") return Object.freeze({
 		ok: !1,
 		reason: "invalid-document"
 	});
-	if (e.version === 2) return ze(e) ? Object.freeze({
+	if (e.version === 2) return Ve(e) ? Object.freeze({
 		ok: !0,
-		document: Ve(e),
+		document: Ue(e),
 		migratedFromVersion: null
 	}) : Object.freeze({
 		ok: !1,
 		reason: "invalid-document"
 	});
 	if (e.version === 1) {
-		if (!Re(e)) return Object.freeze({
+		if (!Be(e)) return Object.freeze({
 			ok: !1,
 			reason: "invalid-document"
 		});
 		let t = {
-			schema: ke,
+			schema: je,
 			version: 2,
 			pathRevision: e.pathRevision,
 			lastSafeNodeId: e.lastSafeNodeId,
@@ -706,7 +712,7 @@ function He(e) {
 		};
 		return Object.freeze({
 			ok: !0,
-			document: Ve(t),
+			document: Ue(t),
 			migratedFromVersion: 1
 		});
 	}
@@ -715,9 +721,9 @@ function He(e) {
 		reason: "unknown-version"
 	});
 }
-function Ue(e) {
-	let t = He({
-		schema: ke,
+function Ge(e) {
+	let t = We({
+		schema: je,
 		version: 2,
 		...e
 	});
@@ -726,37 +732,37 @@ function Ue(e) {
 }
 //#endregion
 //#region src/progression/persistence/codec.ts
-function We(e, t) {
+function Ke(e, t) {
 	let n = e.trim();
 	if (n.length === 0) throw TypeError(`${t} must be a non-empty string.`);
 	return n;
 }
-function Ge(e) {
+function qe(e) {
 	return /* @__PURE__ */ new Set([...Object.keys(e.subjectStatusById), ...Object.keys(e.conceptStatusById)]);
 }
-function Ke(e, t) {
+function Je(e, t) {
 	let n = Object.keys(e).sort(), r = Object.keys(t).sort();
 	return n.length === r.length && n.every((e, t) => e === r[t]);
 }
-function qe(e, t) {
-	if (!Ke(e.subjectStatusById, t.subjectStatusById) || !Ke(e.conceptStatusById, t.conceptStatusById)) return !1;
-	let n = Ge(t);
+function Ye(e, t) {
+	if (!Je(e.subjectStatusById, t.subjectStatusById) || !Je(e.conceptStatusById, t.conceptStatusById)) return !1;
+	let n = qe(t);
 	return n.has(e.lastSafeNodeId) && e.visitedNodeIds.includes(e.lastSafeNodeId) && e.visitedNodeIds.every((e) => n.has(e));
 }
-function Je(e) {
+function Xe(e) {
 	return Object.freeze({ ...e });
 }
-function Ye(e) {
+function Ze(e) {
 	return Object.freeze(Object.fromEntries(e.map((e) => [e, !0])));
 }
-function Xe(e, t, n) {
-	let r = Ge(e).has(t) ? t : e.currentNodeId, i = n?.visitedNodeIds ?? Object.keys(e.visitedNodeIds), a = i.includes(r) ? i : [...i, r];
+function Qe(e, t, n) {
+	let r = qe(e).has(t) ? t : e.currentNodeId, i = n?.visitedNodeIds ?? Object.keys(e.visitedNodeIds), a = i.includes(r) ? i : [...i, r];
 	return Object.freeze({
 		...e,
 		currentNodeId: r,
-		subjectStatusById: Je(n?.subjectStatusById ?? e.subjectStatusById),
-		conceptStatusById: Je(n?.conceptStatusById ?? e.conceptStatusById),
-		visitedNodeIds: Ye(a),
+		subjectStatusById: Xe(n?.subjectStatusById ?? e.subjectStatusById),
+		conceptStatusById: Xe(n?.conceptStatusById ?? e.conceptStatusById),
+		visitedNodeIds: Ze(a),
 		celebrationSeen: n?.celebrationSeen ?? e.celebrationSeen,
 		celebrationCount: n?.celebrationCount ?? e.celebrationCount,
 		lastNavigationDecision: null,
@@ -770,19 +776,19 @@ function Xe(e, t, n) {
 		lastRejection: null
 	});
 }
-function Ze(e, t) {
+function $e(e, t) {
 	let n = e.fallbackSafeNodeId ?? e.fallbackContext.currentNodeId;
 	return Object.freeze({
 		status: "fallback",
-		context: Xe(e.fallbackContext, n),
+		context: Qe(e.fallbackContext, n),
 		reason: t
 	});
 }
-function Qe(e, t) {
-	let n = We(t.pathRevision, "pathRevision"), r = We(t.lastSafeNodeId, "lastSafeNodeId");
-	if (!Ge(e).has(r)) throw TypeError("lastSafeNodeId is not part of the learning path.");
+function et(e, t) {
+	let n = Ke(t.pathRevision, "pathRevision"), r = Ke(t.lastSafeNodeId, "lastSafeNodeId");
+	if (!qe(e).has(r)) throw TypeError("lastSafeNodeId is not part of the learning path.");
 	if (e.visitedNodeIds[r] !== !0) throw TypeError("lastSafeNodeId must be present in visitedNodeIds.");
-	let i = Ue({
+	let i = Ge({
 		pathRevision: n,
 		lastSafeNodeId: r,
 		subjectStatusById: e.subjectStatusById,
@@ -793,35 +799,35 @@ function Qe(e, t) {
 	});
 	return JSON.stringify(i);
 }
-function $e(e, t) {
-	We(t.pathRevision, "pathRevision");
+function tt(e, t) {
+	Ke(t.pathRevision, "pathRevision");
 	let n = e;
 	if (typeof e == "string") {
-		if (e.trim().length === 0) return Ze(t, "empty");
+		if (e.trim().length === 0) return $e(t, "empty");
 		try {
 			n = JSON.parse(e);
 		} catch {
-			return Ze(t, "corrupt-json");
+			return $e(t, "corrupt-json");
 		}
 	}
-	let r = He(n);
-	return r.ok ? r.document.pathRevision === t.pathRevision.trim() ? qe(r.document, t.fallbackContext) ? Object.freeze({
+	let r = We(n);
+	return r.ok ? r.document.pathRevision === t.pathRevision.trim() ? Ye(r.document, t.fallbackContext) ? Object.freeze({
 		status: "restored",
-		context: Xe(t.fallbackContext, r.document.lastSafeNodeId, r.document),
+		context: Qe(t.fallbackContext, r.document.lastSafeNodeId, r.document),
 		document: r.document,
 		migratedFromVersion: r.migratedFromVersion
-	}) : Ze(t, "path-shape-mismatch") : Ze(t, "path-revision-mismatch") : Ze(t, r.reason);
+	}) : $e(t, "path-shape-mismatch") : $e(t, "path-revision-mismatch") : $e(t, r.reason);
 }
 //#endregion
 //#region src/progression/persistence/storagePort.ts
-var et = class extends Error {
+var nt = class extends Error {
 	code;
 	constructor(e, t, n) {
 		super(t, n), this.name = "LearningProgressStorageError", this.code = e;
 	}
 };
-function tt(e, t) {
-	return e instanceof et ? Object.freeze({
+function rt(e, t) {
+	return e instanceof nt ? Object.freeze({
 		code: e.code,
 		message: e.message
 	}) : Object.freeze({
@@ -831,22 +837,22 @@ function tt(e, t) {
 }
 //#endregion
 //#region src/progression/persistence/machine.ts
-var nt = 250;
-function rt(e, t) {
+var it = 250;
+function at(e, t) {
 	let n = e.trim();
 	if (n.length === 0) throw TypeError(`${t} must be a non-empty string.`);
 	return n;
 }
-function it(e, t) {
+function ot(e, t) {
 	if (!Number.isSafeInteger(e) || e < 0) throw TypeError(`${t} must be a non-negative safe integer.`);
 	return e;
 }
-function at(e) {
-	if (e === void 0) return nt;
+function st(e) {
+	if (e === void 0) return it;
 	if (!Number.isSafeInteger(e) || e < 0) throw TypeError("debounceMs must be a non-negative safe integer.");
 	return e;
 }
-function K(e) {
+function G(e) {
 	return Object.freeze({
 		sessionRevision: e.sessionRevision,
 		pathRevision: e.pathRevision,
@@ -854,43 +860,43 @@ function K(e) {
 		operationId: e.operationId
 	});
 }
-function ot(e, t) {
+function ct(e, t) {
 	return e !== null && t !== null && e.sessionRevision === t.sessionRevision && e.pathRevision === t.pathRevision && e.progressRevision === t.progressRevision && e.operationId === t.operationId;
 }
-function st(e) {
+function lt(e) {
 	return typeof e != "object" || !e || !("output" in e) ? null : e.output ?? null;
 }
-function ct(e) {
-	return $e("", {
+function ut(e) {
+	return tt("", {
 		pathRevision: e.pathRevision,
 		fallbackContext: e.fallbackContext,
 		fallbackSafeNodeId: e.fallbackSafeNodeId
 	}).context;
 }
-function lt(e) {
+function dt(e) {
 	return Object.freeze({
-		...K(e),
-		serialized: Qe(e.context, {
+		...G(e),
+		serialized: et(e.context, {
 			pathRevision: e.pathRevision,
 			lastSafeNodeId: e.lastSafeNodeId
 		})
 	});
 }
-function ut(e, t) {
+function ft(e, t) {
 	return Object.freeze([...e, t].slice(-128));
 }
-function dt(e) {
+function pt(e) {
 	let t = s(async ({ input: t, signal: n }) => {
 		try {
 			let r = await e.read({ key: t.storageKey }, { signal: n });
 			if (n.aborted) throw new DOMException("Persistence read aborted.", "AbortError");
-			let i = $e(r ?? "", {
+			let i = tt(r ?? "", {
 				pathRevision: t.pathRevision,
 				fallbackContext: t.fallbackContext,
 				fallbackSafeNodeId: t.fallbackSafeNodeId
 			});
 			if (i.status === "fallback") return Object.freeze({
-				correlation: K(t),
+				correlation: G(t),
 				loadResult: Object.freeze({
 					status: "fallback",
 					context: i.context,
@@ -900,12 +906,12 @@ function dt(e) {
 				migrationWrite: null,
 				failure: null
 			});
-			let a = Qe(i.context, {
+			let a = et(i.context, {
 				pathRevision: t.pathRevision,
 				lastSafeNodeId: i.document.lastSafeNodeId
 			});
 			return Object.freeze({
-				correlation: K(t),
+				correlation: G(t),
 				loadResult: Object.freeze({
 					status: "restored",
 					context: i.context,
@@ -913,7 +919,7 @@ function dt(e) {
 				}),
 				canonicalJson: a,
 				migrationWrite: i.migratedFromVersion === 1 ? Object.freeze({
-					...K({
+					...G({
 						...t,
 						operationId: `${t.operationId}:migrate-v2`
 					}),
@@ -922,7 +928,7 @@ function dt(e) {
 				failure: null
 			});
 		} catch (e) {
-			let n = tt(e, "read-failed"), r = K(t), i = ct(t);
+			let n = rt(e, "read-failed"), r = G(t), i = ut(t);
 			return Object.freeze({
 				correlation: r,
 				loadResult: Object.freeze({
@@ -946,11 +952,11 @@ function dt(e) {
 				value: t.operation.serialized
 			}, { signal: n }), n.aborted) throw new DOMException("Persistence write aborted.", "AbortError");
 			return Object.freeze({
-				correlation: K(t.operation),
+				correlation: G(t.operation),
 				failure: null
 			});
 		} catch (e) {
-			let n = tt(e, "write-failed"), r = K(t.operation);
+			let n = rt(e, "write-failed"), r = G(t.operation);
 			return Object.freeze({
 				correlation: r,
 				failure: Object.freeze({
@@ -970,10 +976,10 @@ function dt(e) {
 		delays: { debounce: ({ context: e }) => e.debounceMs },
 		guards: {
 			currentSaveRequest: ({ context: e, event: t }) => t.type === "PERSISTENCE.SAVE.REQUESTED" && t.sessionRevision === e.sessionRevision && t.pathRevision === e.pathRevision && Number.isSafeInteger(t.progressRevision) && t.progressRevision > e.latestProgressRevision && t.operationId.trim().length > 0 && !e.seenOperationIds.includes(t.operationId),
-			currentFlushRequest: ({ context: e, event: t }) => t.type === "PERSISTENCE.FLUSH.REQUESTED" && ot(e.pendingWrite, t),
+			currentFlushRequest: ({ context: e, event: t }) => t.type === "PERSISTENCE.FLUSH.REQUESTED" && ct(e.pendingWrite, t),
 			currentLoadResult: ({ context: e, event: t }) => {
-				let n = st(t);
-				return n !== null && ot(n.correlation, {
+				let n = lt(t);
+				return n !== null && ct(n.correlation, {
 					sessionRevision: e.sessionRevision,
 					pathRevision: e.pathRevision,
 					progressRevision: 0,
@@ -981,19 +987,19 @@ function dt(e) {
 				});
 			},
 			currentWriteSucceeded: ({ context: e, event: t }) => {
-				let n = st(t);
-				return n !== null && n.failure === null && ot(e.activeWrite, n.correlation);
+				let n = lt(t);
+				return n !== null && n.failure === null && ct(e.activeWrite, n.correlation);
 			},
 			currentWriteFailed: ({ context: e, event: t }) => {
-				let n = st(t);
-				return n !== null && n.failure !== null && ot(e.activeWrite, n.correlation);
+				let n = lt(t);
+				return n !== null && n.failure !== null && ct(e.activeWrite, n.correlation);
 			},
 			hasPendingWrite: ({ context: e }) => e.pendingWrite !== null,
 			hasNoPendingWrite: ({ context: e }) => e.pendingWrite === null
 		},
 		actions: {
 			acceptLoadResult: n(({ context: e, event: t }) => {
-				let n = st(t);
+				let n = lt(t);
 				if (!n) return {};
 				let r = e.pendingWrite !== null && n.loadResult.status === "restored" && n.loadResult.migratedFromVersion === null && e.pendingWrite.serialized === n.canonicalJson, i = r ? null : e.pendingWrite, a = i ?? n.migrationWrite, o = i === null && !r && n.migrationWrite !== null;
 				return {
@@ -1002,26 +1008,26 @@ function dt(e) {
 					pendingWrite: a,
 					lastPersistedJson: n.loadResult.status === "restored" ? n.canonicalJson : null,
 					lastFailure: n.failure,
-					lastCompletedCorrelation: r && e.pendingWrite ? K(e.pendingWrite) : e.lastCompletedCorrelation,
-					seenOperationIds: o && n.migrationWrite ? ut(e.seenOperationIds, n.migrationWrite.operationId) : e.seenOperationIds
+					lastCompletedCorrelation: r && e.pendingWrite ? G(e.pendingWrite) : e.lastCompletedCorrelation,
+					seenOperationIds: o && n.migrationWrite ? ft(e.seenOperationIds, n.migrationWrite.operationId) : e.seenOperationIds
 				};
 			}),
 			queueSave: n(({ context: e, event: t }) => {
 				if (t.type !== "PERSISTENCE.SAVE.REQUESTED") return {};
 				try {
-					let n = lt(t), r = e.activeWrite === null && e.lastPersistedJson === n.serialized;
+					let n = dt(t), r = e.activeWrite === null && e.lastPersistedJson === n.serialized;
 					return {
 						latestProgressRevision: n.progressRevision,
-						seenOperationIds: ut(e.seenOperationIds, n.operationId),
+						seenOperationIds: ft(e.seenOperationIds, n.operationId),
 						pendingWrite: r ? null : n,
-						lastCompletedCorrelation: r ? K(n) : e.lastCompletedCorrelation,
+						lastCompletedCorrelation: r ? G(n) : e.lastCompletedCorrelation,
 						lastFailure: null
 					};
 				} catch (n) {
-					let r = K(t);
+					let r = G(t);
 					return {
 						latestProgressRevision: t.progressRevision,
-						seenOperationIds: ut(e.seenOperationIds, t.operationId),
+						seenOperationIds: ft(e.seenOperationIds, t.operationId),
 						pendingWrite: null,
 						lastFailure: Object.freeze({
 							phase: "request",
@@ -1037,18 +1043,18 @@ function dt(e) {
 				pendingWrite: null
 			})),
 			commitWrite: n(({ context: e, event: t }) => {
-				if (!st(t) || !e.activeWrite) return {};
+				if (!lt(t) || !e.activeWrite) return {};
 				let n = e.pendingWrite?.serialized === e.activeWrite.serialized ? e.pendingWrite : null;
 				return {
 					lastPersistedJson: e.activeWrite.serialized,
-					lastCompletedCorrelation: K(n ?? e.activeWrite),
+					lastCompletedCorrelation: G(n ?? e.activeWrite),
 					pendingWrite: n ? null : e.pendingWrite,
 					activeWrite: null,
 					lastFailure: null
 				};
 			}),
 			failWrite: n(({ context: e, event: t }) => {
-				let n = st(t);
+				let n = lt(t);
 				return !n?.failure || !e.activeWrite ? {} : {
 					pendingWrite: e.pendingWrite ?? e.activeWrite,
 					activeWrite: null,
@@ -1060,12 +1066,12 @@ function dt(e) {
 		id: "learningProgressPersistence",
 		initial: "loading",
 		context: ({ input: e }) => {
-			let t = it(e.sessionRevision, "sessionRevision"), n = rt(e.pathRevision, "pathRevision"), r = rt(e.storageKey, "storageKey"), i = rt(e.loadOperationId, "loadOperationId"), a = e.fallbackSafeNodeId ?? e.fallbackContext.currentNodeId;
+			let t = ot(e.sessionRevision, "sessionRevision"), n = at(e.pathRevision, "pathRevision"), r = at(e.storageKey, "storageKey"), i = at(e.loadOperationId, "loadOperationId"), a = e.fallbackSafeNodeId ?? e.fallbackContext.currentNodeId;
 			return {
 				storageKey: r,
 				sessionRevision: t,
 				pathRevision: n,
-				debounceMs: at(e.debounceMs),
+				debounceMs: st(e.debounceMs),
 				fallbackContext: e.fallbackContext,
 				fallbackSafeNodeId: a,
 				restoredContext: e.fallbackContext,
@@ -1095,7 +1101,7 @@ function dt(e) {
 						fallbackSafeNodeId: e.fallbackSafeNodeId
 					}),
 					onDone: [{
-						guard: ({ context: e, event: t }) => (e.pendingWrite !== null || st(t)?.migrationWrite !== null) && ot(st(t)?.correlation ?? null, {
+						guard: ({ context: e, event: t }) => (e.pendingWrite !== null || lt(t)?.migrationWrite !== null) && ct(lt(t)?.correlation ?? null, {
 							sessionRevision: e.sessionRevision,
 							pathRevision: e.pathRevision,
 							progressRevision: 0,
@@ -1191,17 +1197,17 @@ function dt(e) {
 }
 //#endregion
 //#region src/application/learning-resource/machine.ts
-function ft(e) {
+function mt(e) {
 	if (!Number.isSafeInteger(e) || e < 0) throw TypeError("sessionRevision must be a non-negative safe integer.");
 	return e;
 }
-function pt(e) {
+function ht(e) {
 	return typeof e.nodeId == "string" && e.nodeId.length > 0 && typeof e.actionId == "string" && e.actionId.length > 0 && typeof e.resourceId == "string" && e.resourceId.length > 0 && typeof e.href == "string" && e.href.length > 0 && (e.target === "self" || e.target === "blank");
 }
-function mt(e) {
+function gt(e) {
 	return e.type === "RESOURCE.LAUNCH.REQUESTED";
 }
-function ht(e) {
+function _t(e) {
 	return Object.freeze({
 		binding: Object.freeze({ ...e.binding }),
 		intent: e.intent,
@@ -1209,26 +1215,26 @@ function ht(e) {
 		sessionRevision: e.sessionRevision
 	});
 }
-function gt(e, t) {
+function vt(e, t) {
 	let n = e.activeLaunch;
 	return t !== void 0 && n !== null && t.launchId === n.launchId && t.sessionRevision === n.sessionRevision && t.sessionRevision === e.sessionRevision;
 }
-function _t(e) {
+function yt(e) {
 	if (!(typeof e != "object" || !e || !("output" in e))) return e.output;
 }
-function vt(e) {
+function bt(e) {
 	return e instanceof Error ? e.message : typeof e == "string" ? e : "Learning resource navigation failed.";
 }
-function yt(e) {
+function xt(e) {
 	return e.status === "accepted" || e.status === "popup-blocked" || e.status === "invalid-url" || e.status === "failed" ? Object.freeze({ ...e }) : Object.freeze({
 		status: "failed",
 		message: "Navigator returned an unsupported result."
 	});
 }
-function bt(e) {
+function St(e) {
 	let t = s(async ({ input: t, signal: n }) => {
 		try {
-			let r = yt(await e.navigate(t, { signal: n }));
+			let r = xt(await e.navigate(t, { signal: n }));
 			return Object.freeze({
 				...t,
 				...r
@@ -1238,7 +1244,7 @@ function bt(e) {
 			return Object.freeze({
 				...t,
 				status: "failed",
-				message: vt(e)
+				message: bt(e)
 			});
 		}
 	});
@@ -1246,25 +1252,25 @@ function bt(e) {
 		types: {},
 		actors: { navigateResource: t },
 		guards: {
-			acceptsLaunch: ({ context: e, event: t }) => mt(t) && t.sessionRevision === e.sessionRevision && typeof t.launchId == "string" && t.launchId.length > 0 && (t.intent === "start" || t.intent === "continue" || t.intent === "review") && !e.seenLaunchIds.includes(t.launchId) && pt(t.binding),
+			acceptsLaunch: ({ context: e, event: t }) => gt(t) && t.sessionRevision === e.sessionRevision && typeof t.launchId == "string" && t.launchId.length > 0 && (t.intent === "start" || t.intent === "continue" || t.intent === "review") && !e.seenLaunchIds.includes(t.launchId) && ht(t.binding),
 			acceptsRevision: ({ context: e, event: t }) => t.type === "SESSION.REVISION.CHANGED" && Number.isSafeInteger(t.sessionRevision) && t.sessionRevision >= 0 && t.sessionRevision > e.sessionRevision,
 			currentLaunchAccepted: ({ context: e, event: t }) => {
-				let n = _t(t);
-				return gt(e, n) && n.status === "accepted";
+				let n = yt(t);
+				return vt(e, n) && n.status === "accepted";
 			},
 			currentLaunchFailed: ({ context: e, event: t }) => {
-				let n = _t(t);
-				return gt(e, n) && n.status !== "accepted";
+				let n = yt(t);
+				return vt(e, n) && n.status !== "accepted";
 			}
 		},
 		actions: {
-			beginLaunch: n(({ context: e, event: t }) => mt(t) ? {
-				activeLaunch: ht(t),
+			beginLaunch: n(({ context: e, event: t }) => gt(t) ? {
+				activeLaunch: _t(t),
 				seenLaunchIds: Object.freeze([...e.seenLaunchIds, t.launchId])
 			} : {}),
 			acceptResult: n(({ event: e }) => ({
 				activeLaunch: null,
-				lastResult: _t(e) ?? null
+				lastResult: yt(e) ?? null
 			})),
 			advanceRevision: n(({ event: e }) => e.type === "SESSION.REVISION.CHANGED" ? {
 				sessionRevision: e.sessionRevision,
@@ -1277,7 +1283,7 @@ function bt(e) {
 		id: "learningResource",
 		initial: "idle",
 		context: ({ input: e }) => ({
-			sessionRevision: ft(e.sessionRevision),
+			sessionRevision: mt(e.sessionRevision),
 			activeLaunch: null,
 			seenLaunchIds: Object.freeze([]),
 			lastResult: null
@@ -1333,13 +1339,13 @@ function bt(e) {
 }
 //#endregion
 //#region src/application/scene-session/machine.ts
-var xt = /* @__PURE__ */ new Set([
+var Ct = /* @__PURE__ */ new Set([
 	"PRESENTATION.EXECUTE",
 	"PRESENTATION.CANCEL_TRANSACTION",
 	"MOTION.EXECUTE",
 	"MOTION.ABORT",
 	"CHARACTER.FORCE_SETTLE"
-]), St = /* @__PURE__ */ new Set([
+]), wt = /* @__PURE__ */ new Set([
 	"PRESENTATION.ACCEPTED",
 	"PRESENTATION.DEFERRED",
 	"PRESENTATION.STARTED",
@@ -1355,35 +1361,35 @@ var xt = /* @__PURE__ */ new Set([
 	"CHARACTER.FAILED",
 	"SCENE_RUNTIME.COMMAND_REJECTED"
 ]);
-function Ct(e) {
-	return xt.has(e.type);
-}
-function wt(e) {
-	return St.has(e.type) ? "transactionId" in e && "operationId" in e && "attemptId" in e && "attempt" in e : !1;
-}
 function Tt(e) {
-	return (e.type === "PRESENTATION.STARTED" || e.type === "PRESENTATION.FAILED") && !("transactionId" in e);
+	return Ct.has(e.type);
 }
 function Et(e) {
+	return wt.has(e.type) ? "transactionId" in e && "operationId" in e && "attemptId" in e && "attempt" in e : !1;
+}
+function Dt(e) {
+	return (e.type === "PRESENTATION.STARTED" || e.type === "PRESENTATION.FAILED") && !("transactionId" in e);
+}
+function Ot(e) {
 	if (e.type === "PRESENTATION.SETTLED") {
 		let { result: t, ...n } = e;
 		return Object.freeze(n);
 	}
 	return Object.freeze({ ...e });
 }
-function Dt(e, t) {
+function kt(e, t) {
 	return Object.freeze({
 		...e.readiness,
 		...t
 	});
 }
-function Ot(e, t) {
+function At(e, t) {
 	return Object.freeze({
 		stage: e,
 		message: t
 	});
 }
-function kt(r) {
+function jt(r) {
 	let i = typeof r == "function" ? null : r;
 	if (i && !Number.isFinite(i.sessionRevision)) throw Error("sceneSessionMachine requires a finite sessionRevision.");
 	let a = typeof r == "function" ? r : () => r, s = (e) => {
@@ -1408,15 +1414,15 @@ function kt(r) {
 		actors: { sceneRuntimeGateway: c },
 		guards: {
 			currentSession: ({ context: e, event: t }) => t.sessionRevision === e.sessionRevision,
-			currentLifecyclePresentationEvent: ({ context: e, event: t }) => t.sessionRevision === e.sessionRevision && Tt(t),
-			currentGatewayCommand: ({ context: e, event: t }) => t.sessionRevision === e.sessionRevision && Ct(t),
-			currentGatewayAck: ({ context: e, event: t }) => t.sessionRevision === e.sessionRevision && wt(t),
+			currentLifecyclePresentationEvent: ({ context: e, event: t }) => t.sessionRevision === e.sessionRevision && Dt(t),
+			currentGatewayCommand: ({ context: e, event: t }) => t.sessionRevision === e.sessionRevision && Tt(t),
+			currentGatewayAck: ({ context: e, event: t }) => t.sessionRevision === e.sessionRevision && Et(t),
 			presentationReady: ({ context: e }) => e.readiness.presentationReady,
 			modelReady: ({ context: e }) => e.readiness.modelReady
 		},
 		actions: {
 			beginModelLoad: n(({ context: e }) => ({
-				readiness: Dt(e, {
+				readiness: kt(e, {
 					modelReady: !1,
 					presentationStarted: !1,
 					presentationReady: !1,
@@ -1425,41 +1431,41 @@ function kt(r) {
 				error: null
 			})),
 			markModelReady: n(({ context: e }) => ({
-				readiness: Dt(e, { modelReady: !0 }),
+				readiness: kt(e, { modelReady: !0 }),
 				error: null
 			})),
 			markPresentationStarted: n(({ context: e }) => ({
-				readiness: Dt(e, { presentationStarted: !0 }),
+				readiness: kt(e, { presentationStarted: !0 }),
 				error: null
 			})),
 			markPresentationReady: n(({ context: e }) => ({
-				readiness: Dt(e, {
+				readiness: kt(e, {
 					presentationStarted: !0,
 					presentationReady: !0,
 					contextAvailable: !0
 				}),
 				error: null
 			})),
-			markContextLost: n(({ context: e }) => ({ readiness: Dt(e, { contextAvailable: !1 }) })),
+			markContextLost: n(({ context: e }) => ({ readiness: kt(e, { contextAvailable: !1 }) })),
 			markContextRestored: n(({ context: e }) => ({
-				readiness: Dt(e, { contextAvailable: !0 }),
+				readiness: kt(e, { contextAvailable: !0 }),
 				error: null
 			})),
 			recordModelFailure: n(({ context: e, event: t }) => ({
-				readiness: Dt(e, {
+				readiness: kt(e, {
 					modelReady: !1,
 					presentationStarted: !1,
 					presentationReady: !1
 				}),
-				error: t.type === "MODEL.FAILED" ? Ot("model", t.error) : e.error
+				error: t.type === "MODEL.FAILED" ? At("model", t.error) : e.error
 			})),
 			recordPresentationFailure: n(({ context: e, event: t }) => ({
-				readiness: Dt(e, { presentationReady: !1 }),
-				error: t.type === "PRESENTATION.FAILED" && !wt(t) ? Ot("presentation", t.error) : e.error
+				readiness: kt(e, { presentationReady: !1 }),
+				error: t.type === "PRESENTATION.FAILED" && !Et(t) ? At("presentation", t.error) : e.error
 			})),
 			recordGatewayAck: n(({ context: e, event: t }) => ({
-				lastGatewayAck: wt(t) ? Et(t) : null,
-				gatewayAckSequence: wt(t) ? e.gatewayAckSequence + 1 : e.gatewayAckSequence
+				lastGatewayAck: Et(t) ? Ot(t) : null,
+				gatewayAckSequence: Et(t) ? e.gatewayAckSequence + 1 : e.gatewayAckSequence
 			})),
 			forwardGatewayCommand: t("sceneRuntimeGateway", ({ event: e }) => e)
 		}
@@ -1616,7 +1622,7 @@ function kt(r) {
 					target: "presenting"
 				},
 				"PRESENTATION.STARTED": {
-					guard: ({ context: e, event: t }) => t.sessionRevision === e.sessionRevision && Tt(t) && e.readiness.modelReady,
+					guard: ({ context: e, event: t }) => t.sessionRevision === e.sessionRevision && Dt(t) && e.readiness.modelReady,
 					actions: "markPresentationStarted",
 					target: "presenting"
 				},
@@ -1636,7 +1642,7 @@ function kt(r) {
 }
 //#endregion
 //#region src/application/scene-session/lifecycleBinding.ts
-function At(e) {
+function Mt(e) {
 	let t = !0, n = (n) => {
 		if (!(!t || !e.isCurrentSession())) switch (n.type) {
 			case "MODEL.LOAD_STARTED":
@@ -1670,50 +1676,50 @@ function At(e) {
 }
 //#endregion
 //#region src/contracts/json.ts
-function jt(e) {
+function Nt(e) {
 	if (e === null) return "null";
 	if (Array.isArray(e)) return "Array";
 	let t = typeof e;
 	return t === "object" ? (Object.getPrototypeOf(e) === null ? null : e.constructor)?.name ?? "object" : t;
 }
-function Mt(e, t) {
+function Pt(e, t) {
 	return /^[A-Za-z_$][\w$]*$/u.test(t) ? `${e}.${t}` : `${e}[${JSON.stringify(t)}]`;
 }
-function q(e, t, n) {
+function K(e, t, n) {
 	return Object.freeze({
 		safe: !1,
 		failure: Object.freeze({
 			path: e,
 			reason: t,
-			receivedType: jt(n)
+			receivedType: Nt(n)
 		})
 	});
 }
-function Nt(e) {
+function Ft(e) {
 	let t = /* @__PURE__ */ new Map(), n = (e, r) => {
 		if (e === null) return Object.freeze({ safe: !0 });
 		switch (typeof e) {
 			case "string":
 			case "boolean": return Object.freeze({ safe: !0 });
-			case "number": return Number.isFinite(e) ? Object.freeze({ safe: !0 }) : q(r, "numbers must be finite", e);
-			case "undefined": return q(r, "undefined is omitted or coerced by JSON.stringify", e);
+			case "number": return Number.isFinite(e) ? Object.freeze({ safe: !0 }) : K(r, "numbers must be finite", e);
+			case "undefined": return K(r, "undefined is omitted or coerced by JSON.stringify", e);
 			case "bigint":
 			case "symbol":
-			case "function": return q(r, `${typeof e} values are not JSON data`, e);
+			case "function": return K(r, `${typeof e} values are not JSON data`, e);
 			case "object": break;
-			default: return q(r, "unsupported JavaScript value", e);
+			default: return K(r, "unsupported JavaScript value", e);
 		}
 		let i = e, a = t.get(i);
-		if (a) return q(r, `cyclic reference to ${a}`, e);
+		if (a) return K(r, `cyclic reference to ${a}`, e);
 		let o = Object.getPrototypeOf(i), s = Array.isArray(i);
-		if (!s && o !== Object.prototype && o !== null) return q(r, "only arrays and plain objects may cross the actor serialization boundary", e);
-		if (Object.getOwnPropertySymbols(i).length > 0) return q(r, "symbol-keyed properties are not representable in JSON", e);
+		if (!s && o !== Object.prototype && o !== null) return K(r, "only arrays and plain objects may cross the actor serialization boundary", e);
+		if (Object.getOwnPropertySymbols(i).length > 0) return K(r, "symbol-keyed properties are not representable in JSON", e);
 		t.set(i, r);
 		try {
 			if (s) {
 				let e = i;
 				for (let t = 0; t < e.length; t += 1) {
-					if (!Object.hasOwn(e, t)) return q(`${r}[${t}]`, "sparse array entries are coerced to null by JSON.stringify", void 0);
+					if (!Object.hasOwn(e, t)) return K(`${r}[${t}]`, "sparse array entries are coerced to null by JSON.stringify", void 0);
 					let i = n(e[t], `${r}[${t}]`);
 					if (!i.safe) return i;
 				}
@@ -1722,14 +1728,14 @@ function Nt(e) {
 					let n = Number(t);
 					return !Number.isInteger(n) || n < 0 || n >= e.length || String(n) !== t;
 				});
-				return t.length > 0 ? q(Mt(r, t[0] ?? "<unknown>"), "custom array properties are ignored by JSON.stringify", e[t[0]]) : Object.freeze({ safe: !0 });
+				return t.length > 0 ? K(Pt(r, t[0] ?? "<unknown>"), "custom array properties are ignored by JSON.stringify", e[t[0]]) : Object.freeze({ safe: !0 });
 			}
 			for (let t of Object.getOwnPropertyNames(i)) {
 				let a = Object.getOwnPropertyDescriptor(i, t);
 				if (!a) continue;
-				if (a.get || a.set) return q(Mt(r, t), "accessor properties are executable behavior, not inert JSON data", e);
-				if (!a.enumerable) return q(Mt(r, t), "non-enumerable properties are ignored by JSON.stringify", a.value);
-				let o = n(a.value, Mt(r, t));
+				if (a.get || a.set) return K(Pt(r, t), "accessor properties are executable behavior, not inert JSON data", e);
+				if (!a.enumerable) return K(Pt(r, t), "non-enumerable properties are ignored by JSON.stringify", a.value);
+				let o = n(a.value, Pt(r, t));
 				if (!o.safe) return o;
 			}
 			return Object.freeze({ safe: !0 });
@@ -1741,68 +1747,68 @@ function Nt(e) {
 }
 //#endregion
 //#region src/statecharts/page/revealOrder.ts
-function J(e) {
+function q(e) {
 	return Object.freeze({
 		valid: !1,
 		error: e
 	});
 }
-function Pt(e) {
-	if (typeof e.revision != "string" || e.revision.trim().length === 0) return J("Compiled revision must be a non-empty string.");
-	if (!Array.isArray(e.nodes) || !Array.isArray(e.edges) || !Array.isArray(e.revealOrder)) return J("Compiled nodes, edges, and revealOrder must be arrays.");
+function It(e) {
+	if (typeof e.revision != "string" || e.revision.trim().length === 0) return q("Compiled revision must be a non-empty string.");
+	if (!Array.isArray(e.nodes) || !Array.isArray(e.edges) || !Array.isArray(e.revealOrder)) return q("Compiled nodes, edges, and revealOrder must be arrays.");
 	let t = e.revealOrder[0];
-	if (!t || t.kind !== "node" || t.nodeId !== e.initialNodeId) return J(`revealOrder must begin with initialNodeId "${e.initialNodeId}".`);
+	if (!t || t.kind !== "node" || t.nodeId !== e.initialNodeId) return q(`revealOrder must begin with initialNodeId "${e.initialNodeId}".`);
 	let n = /* @__PURE__ */ new Set(), r = /* @__PURE__ */ new Set();
 	for (let t of e.nodes) {
-		if (n.has(t.id)) return J(`Duplicate compiled node "${t.id}".`);
-		if (typeof t.initiallyVisible != "boolean") return J(`Node "${t.id}" must declare initiallyVisible.`);
+		if (n.has(t.id)) return q(`Duplicate compiled node "${t.id}".`);
+		if (typeof t.initiallyVisible != "boolean") return q(`Node "${t.id}" must declare initiallyVisible.`);
 		n.add(t.id), t.initiallyVisible && r.add(t.id);
 	}
-	if (!n.has(e.initialNodeId)) return J(`Compiled nodes do not contain initialNodeId "${e.initialNodeId}".`);
-	if (!r.has(e.initialNodeId)) return J(`Initial node "${e.initialNodeId}" must be initially visible.`);
+	if (!n.has(e.initialNodeId)) return q(`Compiled nodes do not contain initialNodeId "${e.initialNodeId}".`);
+	if (!r.has(e.initialNodeId)) return q(`Initial node "${e.initialNodeId}" must be initially visible.`);
 	let i = new Map(e.edges.map((e) => [e.id, e]));
-	if (i.size !== e.edges.length) return J("Compiled edges contain duplicate IDs.");
+	if (i.size !== e.edges.length) return q("Compiled edges contain duplicate IDs.");
 	let a = /* @__PURE__ */ new Set();
 	for (let t of e.edges) {
-		if (typeof t.initiallyVisible != "boolean") return J(`Edge "${t.id}" must declare initiallyVisible.`);
-		if (!n.has(t.fromNodeId) || !n.has(t.toNodeId)) return J(`Edge "${t.id}" references an unknown endpoint node.`);
+		if (typeof t.initiallyVisible != "boolean") return q(`Edge "${t.id}" must declare initiallyVisible.`);
+		if (!n.has(t.fromNodeId) || !n.has(t.toNodeId)) return q(`Edge "${t.id}" references an unknown endpoint node.`);
 		t.initiallyVisible && a.add(t.id);
 	}
 	let o = /* @__PURE__ */ new Set(), s = /* @__PURE__ */ new Set();
 	for (let t of e.revealOrder) {
 		if (t.kind === "node") {
-			if (!n.has(t.nodeId)) return J(`Reveal order references unknown node "${t.nodeId}".`);
-			if (!r.has(t.nodeId)) return J(`Reveal order includes hidden node "${t.nodeId}".`);
-			if (o.has(t.nodeId)) return J(`Reveal order repeats node "${t.nodeId}".`);
+			if (!n.has(t.nodeId)) return q(`Reveal order references unknown node "${t.nodeId}".`);
+			if (!r.has(t.nodeId)) return q(`Reveal order includes hidden node "${t.nodeId}".`);
+			if (o.has(t.nodeId)) return q(`Reveal order repeats node "${t.nodeId}".`);
 			o.add(t.nodeId);
 			continue;
 		}
 		let e = i.get(t.edgeId);
-		if (!e) return J(`Reveal order references unknown edge "${t.edgeId}".`);
-		if (!a.has(t.edgeId)) return J(`Reveal order includes hidden edge "${t.edgeId}".`);
-		if (s.has(t.edgeId)) return J(`Reveal order repeats edge "${t.edgeId}".`);
-		if (e.fromNodeId !== t.fromNodeId || e.toNodeId !== t.toNodeId) return J(`Reveal step endpoints do not match edge "${t.edgeId}".`);
-		if (!o.has(t.fromNodeId) || !o.has(t.toNodeId)) return J(`Edge "${t.edgeId}" appears before both endpoint nodes.`);
+		if (!e) return q(`Reveal order references unknown edge "${t.edgeId}".`);
+		if (!a.has(t.edgeId)) return q(`Reveal order includes hidden edge "${t.edgeId}".`);
+		if (s.has(t.edgeId)) return q(`Reveal order repeats edge "${t.edgeId}".`);
+		if (e.fromNodeId !== t.fromNodeId || e.toNodeId !== t.toNodeId) return q(`Reveal step endpoints do not match edge "${t.edgeId}".`);
+		if (!o.has(t.fromNodeId) || !o.has(t.toNodeId)) return q(`Edge "${t.edgeId}" appears before both endpoint nodes.`);
 		s.add(t.edgeId);
 	}
 	return o.size === r.size ? s.size === a.size ? Object.freeze({
 		valid: !0,
 		error: null
-	}) : J("Reveal order does not contain every initially visible edge exactly once.") : J("Reveal order does not contain every initially visible node exactly once.");
+	}) : q("Reveal order does not contain every initially visible edge exactly once.") : q("Reveal order does not contain every initially visible node exactly once.");
 }
-function Ft(e) {
+function Lt(e) {
 	return e.kind === "node" ? `node:${e.nodeId}` : `edge:${e.edgeId}`;
 }
 //#endregion
 //#region src/statecharts/page/runtimeDataRegistry.ts
-var It = /* @__PURE__ */ new Map(), Lt = 0;
-function Rt(e) {
+var Rt = /* @__PURE__ */ new Map(), zt = 0;
+function Bt(e) {
 	if (e.trim().length === 0) throw Error("Compiled page runtime data requires a non-empty revision.");
 }
-function zt(e, t) {
-	Rt(e);
-	let n = `${e}:runtime:${++Lt}`;
-	return It.set(e, Object.freeze({
+function Vt(e, t) {
+	Bt(e);
+	let n = `${e}:runtime:${++zt}`;
+	return Rt.set(e, Object.freeze({
 		token: n,
 		value: t
 	})), Object.freeze({
@@ -1811,32 +1817,32 @@ function zt(e, t) {
 		token: n
 	});
 }
-function Bt(e) {
-	let t = It.get(e.revision);
+function Ht(e) {
+	let t = Rt.get(e.revision);
 	return t?.token === e.token ? t.value : null;
 }
-function Vt(e) {
-	return !e || It.get(e.revision)?.token !== e.token ? !1 : It.delete(e.revision);
+function Ut(e) {
+	return !e || Rt.get(e.revision)?.token !== e.token ? !1 : Rt.delete(e.revision);
 }
 //#endregion
 //#region src/statecharts/page/pageGenerationMachine.ts
-var Ht = 8e3;
-function Ut(e) {
+var Wt = 8e3;
+function Gt(e) {
 	return e instanceof Error ? e.message : typeof e == "string" ? e : "Unknown generation error.";
 }
-function Wt(e) {
+function Kt(e) {
 	return typeof e == "object" && e && "output" in e ? e.output : null;
 }
-function Gt(e) {
-	let t = Nt(e);
+function qt(e) {
+	let t = Ft(e);
 	if (!t.safe) throw TypeError(`Page template is not JSON-safe at ${t.failure.path}: ${t.failure.reason}.`);
-	return typeof e != "object" || !e ? e : Object.freeze(Array.isArray(e) ? e.map((e) => Gt(e)) : Object.fromEntries(Object.entries(e).map(([e, t]) => [e, Gt(t)])));
+	return typeof e != "object" || !e ? e : Object.freeze(Array.isArray(e) ? e.map((e) => qt(e)) : Object.fromEntries(Object.entries(e).map(([e, t]) => [e, qt(t)])));
 }
-function Kt(e) {
-	let t = Wt(e);
-	return t == null ? null : Gt(t);
+function Jt(e) {
+	let t = Kt(e);
+	return t == null ? null : qt(t);
 }
-function qt(e, t, n) {
+function Yt(e, t, n) {
 	return Object.freeze({
 		kind: t,
 		transactionId: e.transactionId,
@@ -1844,18 +1850,18 @@ function qt(e, t, n) {
 		message: n
 	});
 }
-function Jt(e, t) {
+function Xt(e, t) {
 	return t.type === "PAGE.GENERATE.REQUESTED" && "template" in t ? t.template ?? null : e.template;
 }
-function Yt(e, t) {
-	let n = Jt(e, t);
-	return n !== null && Nt(n).safe;
+function Zt(e, t) {
+	let n = Xt(e, t);
+	return n !== null && Ft(n).safe;
 }
-function Xt(e) {
-	let t = Wt(e);
+function Qt(e) {
+	let t = Kt(e);
 	return typeof t != "object" || !t ? null : t;
 }
-function Zt(e) {
+function $t(e) {
 	return Object.freeze({
 		revision: e.revision,
 		initialNodeId: e.initialNodeId,
@@ -1865,17 +1871,17 @@ function Zt(e) {
 		...e.data ? { data: Object.freeze({ ...e.data }) } : {}
 	});
 }
-function Qt(e) {
-	Vt(e?.data);
+function en(e) {
+	Ut(e?.data);
 }
-function $t(e, t) {
+function tn(e, t) {
 	let n = e.outstandingCommand;
 	return !n || t.type !== "PAGE.PATH_STEP.SETTLED" && t.type !== "PAGE.CHARACTER.SETTLED" && t.type !== "PAGE.PRESENTATION.FAILED" ? !1 : t.transactionId === n.transactionId && t.revision === n.revision && t.token === n.token;
 }
-function en(e) {
+function nn(e) {
 	let t = e.compiledPath, n = e.transactionId, r = e.revision, i = t?.revealOrder[e.revealIndex];
 	if (!t || !n || !r || !i) return null;
-	let a = `page:reveal:${e.revealIndex}:${Ft(i)}`;
+	let a = `page:reveal:${e.revealIndex}:${Lt(i)}`;
 	return Object.freeze({
 		type: "PAGE.PRESENTATION.REVEAL_PATH_STEP",
 		transactionId: n,
@@ -1888,7 +1894,7 @@ function en(e) {
 		step: i
 	});
 }
-function tn(e) {
+function rn(e) {
 	let t = e.compiledPath, n = e.transactionId, r = e.revision;
 	if (!t || !n || !r) return null;
 	let i = `page:character:${t.initialNodeId}`;
@@ -1902,7 +1908,7 @@ function tn(e) {
 		nodeId: t.initialNodeId
 	});
 }
-function nn(e) {
+function an(e) {
 	return o({
 		types: {},
 		actors: {
@@ -1911,10 +1917,10 @@ function nn(e) {
 				return e((e) => {
 					t = e.reference;
 				}), () => {
-					Vt(t), t = null;
+					Ut(t), t = null;
 				};
 			}),
-			validateTemplate: s(async ({ input: t, signal: n }) => Gt(await e.validateTemplate({
+			validateTemplate: s(async ({ input: t, signal: n }) => qt(await e.validateTemplate({
 				...t,
 				signal: n
 			}))),
@@ -1929,27 +1935,27 @@ function nn(e) {
 		},
 		delays: { presentationAckTimeout: ({ context: e }) => e.presentationAckTimeoutMs },
 		guards: {
-			hasTemplateForRequest: ({ context: e, event: t }) => Yt(e, t),
+			hasTemplateForRequest: ({ context: e, event: t }) => Zt(e, t),
 			hasRetryTemplate: ({ context: e }) => e.template !== null,
-			receivedTemplateIsJsonSafe: ({ event: e }) => e.type === "PAGE.TEMPLATE.RECEIVED" && Nt(e.template).safe,
+			receivedTemplateIsJsonSafe: ({ event: e }) => e.type === "PAGE.TEMPLATE.RECEIVED" && Ft(e.template).safe,
 			compiledContractIsValid: ({ event: e }) => {
-				let t = Xt(e);
+				let t = Qt(e);
 				if (!t) return !1;
 				try {
-					return Nt(t).safe && (t.data === void 0 || t.data.revision === t.revision) && Pt(t).valid;
+					return Ft(t).safe && (t.data === void 0 || t.data.revision === t.revision) && It(t).valid;
 				} catch {
 					return !1;
 				}
 			},
 			hasMorePathSteps: ({ context: e }) => e.compiledPath !== null && e.revealIndex < e.compiledPath.revealOrder.length,
-			pathAckMatches: ({ context: e, event: t }) => t.type === "PAGE.PATH_STEP.SETTLED" && e.outstandingCommand?.type === "PAGE.PRESENTATION.REVEAL_PATH_STEP" && $t(e, t),
-			characterAckMatches: ({ context: e, event: t }) => t.type === "PAGE.CHARACTER.SETTLED" && e.outstandingCommand?.type === "PAGE.PRESENTATION.REVEAL_CHARACTER" && $t(e, t),
-			failureMatches: ({ context: e, event: t }) => t.type === "PAGE.PRESENTATION.FAILED" && $t(e, t)
+			pathAckMatches: ({ context: e, event: t }) => t.type === "PAGE.PATH_STEP.SETTLED" && e.outstandingCommand?.type === "PAGE.PRESENTATION.REVEAL_PATH_STEP" && tn(e, t),
+			characterAckMatches: ({ context: e, event: t }) => t.type === "PAGE.CHARACTER.SETTLED" && e.outstandingCommand?.type === "PAGE.PRESENTATION.REVEAL_CHARACTER" && tn(e, t),
+			failureMatches: ({ context: e, event: t }) => t.type === "PAGE.PRESENTATION.FAILED" && tn(e, t)
 		},
 		actions: {
-			receiveTemplate: n(({ event: e }) => e.type === "PAGE.TEMPLATE.RECEIVED" ? { template: Gt(e.template) } : {}),
+			receiveTemplate: n(({ event: e }) => e.type === "PAGE.TEMPLATE.RECEIVED" ? { template: qt(e.template) } : {}),
 			beginGeneration: n(({ context: t, event: n }) => {
-				let r = Jt(t, n), i = r === null ? null : Gt(r), a = n.type === "PAGE.GENERATE.REQUESTED" ? n.reducedMotion ?? t.reducedMotion : t.reducedMotion;
+				let r = Xt(t, n), i = r === null ? null : qt(r), a = n.type === "PAGE.GENERATE.REQUESTED" ? n.reducedMotion ?? t.reducedMotion : t.reducedMotion;
 				return {
 					template: i,
 					transactionTemplate: i,
@@ -1966,16 +1972,16 @@ function nn(e) {
 			}),
 			recordDuplicateGenerateRequest: n(({ context: e }) => ({ duplicateGenerateRequestCount: e.duplicateGenerateRequestCount + 1 })),
 			recordMissingTemplate: u(({ context: t, enqueue: n }) => {
-				let r = qt(t, "missing-template", "No learning-path JSON template is available.");
+				let r = Yt(t, "missing-template", "No learning-path JSON template is available.");
 				n.assign({ lastError: r }), n(() => e.onGenerationFailed?.(r));
 			}),
 			recordNonJsonTemplate: u(({ context: t, enqueue: n }) => {
-				let r = qt(t, "validation", "Learning-path template must be a finite, plain JSON document.");
+				let r = Yt(t, "validation", "Learning-path template must be a finite, plain JSON document.");
 				n.assign({ lastError: r }), n(() => e.onGenerationFailed?.(r));
 			}),
-			acceptValidatedTemplate: n(({ event: e }) => ({ validatedTemplate: Kt(e) })),
+			acceptValidatedTemplate: n(({ event: e }) => ({ validatedTemplate: Jt(e) })),
 			acceptCompiledPath: u(({ event: e, enqueue: t }) => {
-				let n = Xt(e), r = n ? Zt(n) : null;
+				let n = Qt(e), r = n ? $t(n) : null;
 				n && r && (t.assign({
 					compiledPath: r,
 					revision: r?.revision ?? null,
@@ -1987,7 +1993,7 @@ function nn(e) {
 				}));
 			}),
 			recordValidationFailure: u(({ context: t, event: n, enqueue: r }) => {
-				let i = qt(t, "validation", Ut(typeof n == "object" && n && "error" in n ? n.error : n));
+				let i = Yt(t, "validation", Gt(typeof n == "object" && n && "error" in n ? n.error : n));
 				r.assign({
 					lastError: i,
 					transactionTemplate: null,
@@ -1995,7 +2001,7 @@ function nn(e) {
 				}), r(() => e.onGenerationFailed?.(i));
 			}),
 			recordCompilationFailure: u(({ context: t, event: n, enqueue: r }) => {
-				let i = qt(t, "compilation", Ut(typeof n == "object" && n && "error" in n ? n.error : n));
+				let i = Yt(t, "compilation", Gt(typeof n == "object" && n && "error" in n ? n.error : n));
 				r.assign({
 					lastError: i,
 					transactionTemplate: null,
@@ -2003,16 +2009,16 @@ function nn(e) {
 				}), r(() => e.onGenerationFailed?.(i));
 			}),
 			recordCompiledContractFailure: u(({ context: t, event: n, enqueue: r }) => {
-				let i = Xt(n);
-				Qt(i);
+				let i = Qt(n);
+				en(i);
 				let a = "Compiler returned an invalid learning-path contract.";
 				if (i) try {
-					a = Pt(i).error ?? a;
+					a = It(i).error ?? a;
 				} catch (e) {
-					a = Ut(e);
+					a = Gt(e);
 				}
 				let o = Object.freeze({
-					...qt(t, "compiled-contract", a),
+					...Yt(t, "compiled-contract", a),
 					revision: i?.revision ?? t.revision
 				});
 				r.assign({
@@ -2024,8 +2030,8 @@ function nn(e) {
 				}), r(() => e.onGenerationFailed?.(o));
 			}),
 			recordPresentationPreparationFailure: u(({ context: t, event: n, enqueue: r }) => {
-				Qt(t.compiledPath);
-				let i = qt(t, "presentation-preparation", Ut(typeof n == "object" && n && "error" in n ? n.error : n));
+				en(t.compiledPath);
+				let i = Yt(t, "presentation-preparation", Gt(typeof n == "object" && n && "error" in n ? n.error : n));
 				r.assign({
 					lastError: i,
 					transactionTemplate: null,
@@ -2035,7 +2041,7 @@ function nn(e) {
 				}), r(() => e.onGenerationFailed?.(i));
 			}),
 			issuePathRevealCommand: u(({ context: t, enqueue: n }) => {
-				let r = en(t);
+				let r = nn(t);
 				r && (n.assign({ outstandingCommand: r }), n(() => e.executePresentation(r)));
 			}),
 			commitPathRevealAck: n(({ context: e }) => ({
@@ -2043,20 +2049,20 @@ function nn(e) {
 				outstandingCommand: null
 			})),
 			issueCharacterRevealCommand: u(({ context: t, enqueue: n }) => {
-				let r = tn(t);
+				let r = rn(t);
 				r && (n.assign({ outstandingCommand: r }), n(() => e.executePresentation(r)));
 			}),
 			recordPresentationFailure: u(({ context: t, event: n, enqueue: r }) => {
-				Qt(t.compiledPath);
-				let i = qt(t, "presentation", n.type === "PAGE.PRESENTATION.FAILED" ? n.error : "Presentation command failed.");
+				en(t.compiledPath);
+				let i = Yt(t, "presentation", n.type === "PAGE.PRESENTATION.FAILED" ? n.error : "Presentation command failed.");
 				r.assign({
 					lastError: i,
 					outstandingCommand: null
 				}), r(() => e.onGenerationFailed?.(i));
 			}),
 			recordPresentationTimeout: u(({ context: t, enqueue: n }) => {
-				Qt(t.compiledPath);
-				let r = t.outstandingCommand, i = qt(t, "presentation-timeout", r ? `Presentation ACK timed out for "${r.operationId}".` : "Presentation ACK timed out.");
+				en(t.compiledPath);
+				let r = t.outstandingCommand, i = Yt(t, "presentation-timeout", r ? `Presentation ACK timed out for "${r.operationId}".` : "Presentation ACK timed out.");
 				n.assign({
 					lastError: i,
 					outstandingCommand: null
@@ -2075,14 +2081,14 @@ function nn(e) {
 						revision: a,
 						compiledPath: r
 					});
-					n(() => e.onGenerationReady?.(t)), n(() => Qt(r)), n.sendTo("runtimeDataLifetime", {
+					n(() => e.onGenerationReady?.(t)), n(() => en(r)), n.sendTo("runtimeDataLifetime", {
 						type: "RUNTIME_DATA.OWNERSHIP_CHANGED",
 						reference: null
 					});
 				}
 			}),
 			releaseCurrentCompiledRuntimeData: u(({ context: e, enqueue: t }) => {
-				Qt(e.compiledPath), t.sendTo("runtimeDataLifetime", {
+				en(e.compiledPath), t.sendTo("runtimeDataLifetime", {
 					type: "RUNTIME_DATA.OWNERSHIP_CHANGED",
 					reference: null
 				});
@@ -2092,7 +2098,7 @@ function nn(e) {
 		id: "learning-path-page-generation",
 		initial: "awaitingGenerate",
 		context: ({ input: e }) => ({
-			template: e.initialTemplate === void 0 ? null : Gt(e.initialTemplate),
+			template: e.initialTemplate === void 0 ? null : qt(e.initialTemplate),
 			transactionTemplate: null,
 			validatedTemplate: null,
 			compiledPath: null,
@@ -2101,7 +2107,7 @@ function nn(e) {
 			revealIndex: 0,
 			outstandingCommand: null,
 			reducedMotion: e.reducedMotion ?? !1,
-			presentationAckTimeoutMs: Math.max(1, e.presentationAckTimeoutMs ?? Ht),
+			presentationAckTimeoutMs: Math.max(1, e.presentationAckTimeoutMs ?? Wt),
 			generationAttempt: 0,
 			duplicateGenerateRequestCount: 0,
 			lastError: null
@@ -2123,7 +2129,7 @@ function nn(e) {
 						actions: ["releaseCurrentCompiledRuntimeData", "beginGeneration"]
 					},
 					{
-						guard: ({ context: e, event: t }) => Jt(e, t) === null,
+						guard: ({ context: e, event: t }) => Xt(e, t) === null,
 						actions: "recordMissingTemplate"
 					},
 					{ actions: "recordNonJsonTemplate" }
@@ -2262,18 +2268,18 @@ function nn(e) {
 }
 //#endregion
 //#region src/ui/node-card/cardPlacementPolicy.ts
-var rn = 132, an = 14, on = 20;
-function sn(e) {
-	let t = Math.max(0, e.reservedBottomPixels ?? rn), n = Math.max(0, e.shadowAllowancePixels ?? an), r = e.viewportBottomClientY - t, i = e.cardBottomClientY + n - r;
+var on = 132, sn = 14, cn = 20;
+function ln(e) {
+	let t = Math.max(0, e.reservedBottomPixels ?? on), n = Math.max(0, e.shadowAllowancePixels ?? sn), r = e.viewportBottomClientY - t, i = e.cardBottomClientY + n - r;
 	return Math.min(Math.max(0, e.maximumLiftPixels), Math.max(0, e.currentLiftPixels + i));
 }
-function cn(e) {
-	let t = Math.max(0, e.maximumOffsetPixels), n = Math.max(0, e.safeMarginPixels ?? on), r = e.viewportLeftClientX + n, i = e.viewportRightClientX - n, a = r - e.cardLeftClientX, o = e.cardRightClientX - i, s = e.currentOffsetPixels;
+function un(e) {
+	let t = Math.max(0, e.maximumOffsetPixels), n = Math.max(0, e.safeMarginPixels ?? cn), r = e.viewportLeftClientX + n, i = e.viewportRightClientX - n, a = r - e.cardLeftClientX, o = e.cardRightClientX - i, s = e.currentOffsetPixels;
 	return a > 0 ? s += a : o > 0 ? s -= o : s > 0 ? s = Math.max(0, s - Math.max(0, e.cardLeftClientX - r)) : s < 0 && (s = Math.min(0, s + Math.max(0, i - e.cardRightClientX))), Math.min(t, Math.max(-t, s));
 }
 //#endregion
 //#region src/ui/node-card/createNodeCardViewModel.ts
-function ln(e) {
+function dn(e) {
 	let t = e.nodeId, n = e.runtime.source.nodeById.get(t), r = e.progress.nodeStatusById[t];
 	if (!n || !r) return null;
 	let i = r === "completed" ? n.entityKind === "concept" ? "brown" : "green" : r === "in-progress" ? "brown" : "gray", a = r === "locked" ? "未解锁" : r === "available" ? "可学习" : r === "in-progress" ? "学习中" : "已完成", o = r === "locked" ? Object.freeze({
@@ -2322,7 +2328,7 @@ function ln(e) {
 }
 //#endregion
 //#region src/ui/node-card/types.ts
-var un = Object.freeze([
+var fn = Object.freeze([
 	"unlock:go",
 	"subject:enter",
 	"learn:start",
@@ -2330,26 +2336,26 @@ var un = Object.freeze([
 	"learn:review",
 	"concept:defer",
 	"concept:complete"
-]), dn = new Set(un);
-function fn(e) {
-	return dn.has(e);
+]), pn = new Set(fn);
+function mn(e) {
+	return pn.has(e);
 }
 //#endregion
 //#region src/ui/node-card/machine.ts
-function pn(e) {
+function hn(e) {
 	return e === void 0 || !Number.isFinite(e) ? 0 : Math.max(0, Math.trunc(e));
 }
-function mn(e, t) {
+function gn(e, t) {
 	return t.type !== "NODE_CARD.DISMISS" && t.type !== "NODE_CARD.ACTION_REQUESTED" ? !1 : e.nodeId !== null && t.instance.nodeId === e.nodeId && t.instance.revision === e.revision;
 }
-function hn(e, t) {
-	return t.type === "NODE_CARD.ACTION_REQUESTED" && t.enabled !== !1 && fn(t.actionId) && mn(e, t);
+function _n(e, t) {
+	return t.type === "NODE_CARD.ACTION_REQUESTED" && t.enabled !== !1 && mn(t.actionId) && gn(e, t);
 }
-var gn = o({
+var vn = o({
 	types: {},
 	guards: {
-		targetsCurrentInstance: ({ context: e, event: t }) => mn(e, t),
-		acceptsActionRequest: ({ context: e, event: t }) => hn(e, t)
+		targetsCurrentInstance: ({ context: e, event: t }) => gn(e, t),
+		acceptsActionRequest: ({ context: e, event: t }) => _n(e, t)
 	},
 	actions: {
 		openCard: n(({ context: e, event: t }) => t.type !== "NODE_CARD.PIN" && t.type !== "NODE_CARD.REOPEN" ? {} : {
@@ -2364,7 +2370,7 @@ var gn = o({
 				actionId: null
 			})
 		} : {}),
-		closeForAction: n(({ event: e }) => e.type !== "NODE_CARD.ACTION_REQUESTED" || !fn(e.actionId) ? {} : {
+		closeForAction: n(({ event: e }) => e.type !== "NODE_CARD.ACTION_REQUESTED" || !mn(e.actionId) ? {} : {
 			nodeId: null,
 			lastAction: Object.freeze({
 				...e.instance,
@@ -2391,7 +2397,7 @@ var gn = o({
 	initial: "hidden",
 	context: ({ input: e }) => ({
 		nodeId: null,
-		revision: pn(e.initialRevision),
+		revision: hn(e.initialRevision),
 		lastClose: null,
 		lastAction: null
 	}),
@@ -2425,7 +2431,7 @@ var gn = o({
 			}
 		} }
 	}
-}), _n = class {
+}), yn = class {
 	viewport;
 	view;
 	resolveContext;
@@ -2477,14 +2483,14 @@ var gn = o({
 	applySafeArea(e, t, n) {
 		let r = this.view.getCardLayoutMetrics(), i = e.overlay, a = i.getOverlayComposition();
 		if (n?.visible && r.visible && r.placed) {
-			let n = cn({
+			let n = un({
 				currentOffsetPixels: a.horizontalOffsetPixels,
 				cardLeftClientX: r.centerX - r.width / 2,
 				cardRightClientX: r.centerX + r.width / 2,
 				viewportLeftClientX: t.left,
 				viewportRightClientX: t.right,
 				maximumOffsetPixels: t.width * .8
-			}), o = sn({
+			}), o = ln({
 				currentLiftPixels: a.verticalOffsetPixels,
 				cardBottomClientY: r.bottom,
 				viewportBottomClientY: t.bottom,
@@ -2497,7 +2503,7 @@ var gn = o({
 			}, e.reducedMotion);
 			return;
 		}
-		vn(i, e.reducedMotion);
+		bn(i, e.reducedMotion);
 	}
 	schedule() {
 		this.frameHandle !== 0 || this.disposed || this.nodeId === null || (this.frameHandle = this.scheduler.requestAnimationFrame(this.update));
@@ -2506,10 +2512,10 @@ var gn = o({
 		this.frameHandle !== 0 && (this.scheduler.cancelAnimationFrame(this.frameHandle), this.frameHandle = 0);
 	}
 	clearPlacement() {
-		this.view.setCardPlacement(null), this.lastOverlay && vn(this.lastOverlay, !1), this.lastOverlay = null;
+		this.view.setCardPlacement(null), this.lastOverlay && bn(this.lastOverlay, !1), this.lastOverlay = null;
 	}
 };
-function vn(e, t) {
+function bn(e, t) {
 	e.setOverlayComposition({
 		horizontalOffsetPixels: 0,
 		verticalOffsetPixels: 0,
@@ -2518,7 +2524,7 @@ function vn(e, t) {
 }
 //#endregion
 //#region src/ui/node-card/selectors.ts
-function yn(e) {
+function xn(e) {
 	let t = e.context.nodeId;
 	return !e.matches("visible") || t === null ? null : Object.freeze({
 		nodeId: t,
@@ -2527,10 +2533,10 @@ function yn(e) {
 }
 //#endregion
 //#region src/workflows/journey/machine.ts
-function bn(e) {
+function Sn(e) {
 	return Object.freeze({ ...e });
 }
-function xn(e) {
+function Cn(e) {
 	return Object.freeze({
 		sourceNodeId: e.sourceNodeId,
 		targetNodeId: e.targetNodeId,
@@ -2538,34 +2544,34 @@ function xn(e) {
 		requiredCompletionNodeIds: Object.freeze([...e.requiredCompletionNodeIds])
 	});
 }
-function Sn(e) {
+function wn(e) {
 	return Object.freeze([...e]);
 }
-function Cn(e) {
+function Tn(e) {
 	return "transactionId" in e;
 }
-function wn(e) {
+function En(e) {
 	return e.type === "NODE_TRAVERSED" || e.type === "NODE_ARRIVED" ? e.nodeId : void 0;
 }
-function Tn(e, t, n) {
+function Dn(e, t, n) {
 	return e.sourceNodeId === n ? e.targetNodeId === t.targetNodeId ? e.routeNodeIds.length === 0 ? "plan-route-empty" : e.routeNodeIds[0] === n ? e.routeNodeIds.at(-1) === t.targetNodeId ? null : "plan-route-must-end-at-target-node" : "plan-route-must-start-at-current-node" : "plan-target-mismatch" : "plan-source-mismatch";
 }
-function En(e) {
+function On(e) {
 	let t = e.plan?.routeNodeIds;
 	return t ? t[e.reachedNodeIds.length] ?? null : null;
 }
-function Dn(e, t) {
-	return e.reachedNodeIds.at(-1) === t ? e.reachedNodeIds : Sn([...e.reachedNodeIds, t]);
+function kn(e, t) {
+	return e.reachedNodeIds.at(-1) === t ? e.reachedNodeIds : wn([...e.reachedNodeIds, t]);
 }
-function On(e) {
+function An(e) {
 	return o({
 		types: {},
 		guards: {
 			hasPlan: ({ context: e }) => e.plan !== null,
-			activeTransactionMatches: ({ context: e, event: t }) => Cn(t) && e.transactionId !== null && t.transactionId === e.transactionId,
-			staleTransaction: ({ context: e, event: t }) => Cn(t) && t.transactionId !== e.transactionId,
-			expectedTraversedNode: ({ context: e, event: t }) => t.type === "NODE_TRAVERSED" && t.transactionId === e.transactionId && t.nodeId === En(e) && t.nodeId !== e.plan?.targetNodeId,
-			expectedDestinationArrival: ({ context: e, event: t }) => t.type === "NODE_ARRIVED" && t.transactionId === e.transactionId && t.nodeId === e.plan?.targetNodeId && (t.nodeId === En(e) || e.plan?.routeNodeIds.includes(t.nodeId) === !0)
+			activeTransactionMatches: ({ context: e, event: t }) => Tn(t) && e.transactionId !== null && t.transactionId === e.transactionId,
+			staleTransaction: ({ context: e, event: t }) => Tn(t) && t.transactionId !== e.transactionId,
+			expectedTraversedNode: ({ context: e, event: t }) => t.type === "NODE_TRAVERSED" && t.transactionId === e.transactionId && t.nodeId === On(e) && t.nodeId !== e.plan?.targetNodeId,
+			expectedDestinationArrival: ({ context: e, event: t }) => t.type === "NODE_ARRIVED" && t.transactionId === e.transactionId && t.nodeId === e.plan?.targetNodeId && (t.nodeId === On(e) || e.plan?.routeNodeIds.includes(t.nodeId) === !0)
 		},
 		actions: {
 			beginRequest: n(({ context: t, event: n }) => {
@@ -2573,10 +2579,10 @@ function On(e) {
 				let r = e.createTransactionId();
 				if (r.length === 0) throw Error("createTransactionId() must return a non-empty string.");
 				return {
-					request: bn(n.request),
+					request: Sn(n.request),
 					plan: null,
 					transactionId: r,
-					reachedNodeIds: Sn([t.currentNodeId]),
+					reachedNodeIds: wn([t.currentNodeId]),
 					lastOutcome: null
 				};
 			}),
@@ -2599,7 +2605,7 @@ function On(e) {
 							reason: i.reason
 						})
 					};
-					let a = xn(i.plan), o = Tn(a, n, t.currentNodeId);
+					let a = Cn(i.plan), o = Dn(a, n, t.currentNodeId);
 					return o ? {
 						plan: null,
 						transactionId: null,
@@ -2628,7 +2634,7 @@ function On(e) {
 			}),
 			recordReachedNode: n(({ context: e, event: t }) => t.type !== "NODE_TRAVERSED" && t.type !== "NODE_ARRIVED" ? {} : {
 				currentNodeId: t.nodeId,
-				reachedNodeIds: Dn(e, t.nodeId),
+				reachedNodeIds: kn(e, t.nodeId),
 				lastOutcome: null
 			}),
 			settleJourney: n(({ context: e, event: t }) => t.type !== "VISUAL_SETTLED" || !e.plan || !e.transactionId ? {} : {
@@ -2639,17 +2645,17 @@ function On(e) {
 					type: "settled",
 					transactionId: e.transactionId,
 					targetNodeId: e.plan.targetNodeId,
-					reachedNodeIds: Sn(e.reachedNodeIds)
+					reachedNodeIds: wn(e.reachedNodeIds)
 				})
 			}),
 			cancelJourney: n(({ context: e, event: t }) => {
 				if (t.type !== "CANCELLED" || !e.plan || !e.transactionId) return {};
-				let n = Dn(e, t.safeNodeId), r = Object.freeze({
+				let n = kn(e, t.safeNodeId), r = Object.freeze({
 					type: "cancelled",
 					transactionId: e.transactionId,
 					targetNodeId: e.plan.targetNodeId,
 					safeNodeId: t.safeNodeId,
-					reachedNodeIds: Sn(n),
+					reachedNodeIds: wn(n),
 					reason: t.reason
 				});
 				return {
@@ -2661,7 +2667,7 @@ function On(e) {
 					lastOutcome: r
 				};
 			}),
-			recordStaleEvent: n(({ context: e, event: t }) => Cn(t) ? { lastOutcome: Object.freeze({
+			recordStaleEvent: n(({ context: e, event: t }) => Tn(t) ? { lastOutcome: Object.freeze({
 				type: "event-ignored",
 				eventType: t.type,
 				transactionId: t.transactionId,
@@ -2671,24 +2677,24 @@ function On(e) {
 			recordUnexpectedEvent: n(({ context: e, event: t }) => ({ lastOutcome: Object.freeze({
 				type: "event-rejected",
 				eventType: t.type,
-				transactionId: Cn(t) ? t.transactionId : null,
+				transactionId: Tn(t) ? t.transactionId : null,
 				activeTransactionId: e.transactionId,
 				reason: t.type === "REQUESTED" ? "journey-active" : "invalid-state",
-				...wn(t) ? { nodeId: wn(t) } : {}
+				...En(t) ? { nodeId: En(t) } : {}
 			}) })),
 			recordUnexpectedRouteNode: n(({ context: e, event: t }) => ({ lastOutcome: Object.freeze({
 				type: "event-rejected",
 				eventType: t.type,
-				transactionId: Cn(t) ? t.transactionId : null,
+				transactionId: Tn(t) ? t.transactionId : null,
 				activeTransactionId: e.transactionId,
 				reason: "unexpected-route-node",
-				...wn(t) ? { nodeId: wn(t) } : {}
+				...En(t) ? { nodeId: En(t) } : {}
 			}) })),
 			resetJourney: n(({ context: e }) => ({
 				request: null,
 				plan: null,
 				transactionId: null,
-				reachedNodeIds: Sn([e.currentNodeId]),
+				reachedNodeIds: wn([e.currentNodeId]),
 				lastOutcome: null
 			}))
 		}
@@ -2700,7 +2706,7 @@ function On(e) {
 			plan: null,
 			transactionId: null,
 			currentNodeId: e.currentNodeId,
-			reachedNodeIds: Sn([e.currentNodeId]),
+			reachedNodeIds: wn([e.currentNodeId]),
 			lastOutcome: null
 		}),
 		on: {
@@ -2809,10 +2815,10 @@ Object.freeze([
 ]);
 //#endregion
 //#region src/workflows/completion-celebration/machine.ts
-function kn(e) {
+function jn(e) {
 	return Number.isSafeInteger(e) && (e ?? 0) >= 0 ? e ?? 0 : 0;
 }
-var An = o({
+var Mn = o({
 	types: {},
 	guards: {
 		recordsNewCelebration: ({ context: e, event: t }) => t.type === "PROGRESS.CELEBRATION_RECORDED" && Number.isSafeInteger(t.count) && t.count > e.acknowledgedCount,
@@ -2828,7 +2834,7 @@ var An = o({
 		clearPresentation: n({ activeCount: null }),
 		resetSession: n(({ event: e }) => {
 			if (e.type !== "SESSION.RESET") return {};
-			let t = kn(e.restoredCount);
+			let t = jn(e.restoredCount);
 			return {
 				observedCount: t,
 				activeCount: null,
@@ -2840,7 +2846,7 @@ var An = o({
 	id: "completionCelebration",
 	initial: "hidden",
 	context: ({ input: e }) => {
-		let t = kn(e.restoredCount);
+		let t = jn(e.restoredCount);
 		return {
 			observedCount: t,
 			activeCount: null,
@@ -2881,16 +2887,16 @@ var An = o({
 			}
 		} }
 	}
-}), jn = Object.freeze([
+}), Nn = Object.freeze([
 	"hidden",
 	"showing",
 	"acknowledged"
 ]);
-function Mn(e) {
-	return jn.find((t) => e.matches(t)) ?? "hidden";
+function Pn(e) {
+	return Nn.find((t) => e.matches(t)) ?? "hidden";
 }
-function Nn(e) {
-	let t = Mn(e);
+function Fn(e) {
+	let t = Pn(e);
 	return Object.freeze({
 		phase: t,
 		visible: t === "showing",
@@ -2900,14 +2906,14 @@ function Nn(e) {
 }
 //#endregion
 //#region src/progression/domain/graph.ts
-function Y(e, t) {
+function J(e, t) {
 	return [...e].sort((e, n) => {
 		let r = t.get(e), i = t.get(n);
 		return (r?.navigationOrder ?? 2 ** 53 - 1) - (i?.navigationOrder ?? 2 ** 53 - 1) || e.localeCompare(n);
 	});
 }
-function Pn(e) {
-	let t = e.nodes.filter((e) => e.entityKind === "subject"), n = e.nodes.filter((e) => e.entityKind === "concept"), r = Y(t.map((e) => e.id), e.nodeById), i = Y(n.map((e) => e.id), e.nodeById), a = /* @__PURE__ */ new Map(), o = /* @__PURE__ */ new Map();
+function In(e) {
+	let t = e.nodes.filter((e) => e.entityKind === "subject"), n = e.nodes.filter((e) => e.entityKind === "concept"), r = J(t.map((e) => e.id), e.nodeById), i = J(n.map((e) => e.id), e.nodeById), a = /* @__PURE__ */ new Map(), o = /* @__PURE__ */ new Map();
 	for (let e of r) a.set(e, []), o.set(e, []);
 	for (let t of e.edges) t.sourceKind === "subject-flow" && (a.get(t.toNodeId)?.push(t.fromNodeId), o.get(t.fromNodeId)?.push(t.toNodeId));
 	let s = /* @__PURE__ */ new Map();
@@ -2919,31 +2925,31 @@ function Pn(e) {
 		subjectIds: r,
 		conceptIds: i,
 		goalIds: new Set(e.goalNodeIds),
-		incomingBySubjectId: new Map([...a].map(([t, n]) => [t, Y(n, e.nodeById)])),
-		outgoingBySubjectId: new Map([...o].map(([t, n]) => [t, Y(n, e.nodeById)])),
-		conceptsBySubjectId: new Map([...s].map(([t, n]) => [t, Y(n, e.nodeById)]))
+		incomingBySubjectId: new Map([...a].map(([t, n]) => [t, J(n, e.nodeById)])),
+		outgoingBySubjectId: new Map([...o].map(([t, n]) => [t, J(n, e.nodeById)])),
+		conceptsBySubjectId: new Map([...s].map(([t, n]) => [t, J(n, e.nodeById)]))
 	});
 }
 //#endregion
 //#region src/progression/domain/policies.ts
-function Fn(e) {
-	return Object.freeze({ ...e });
-}
-function In(e) {
-	return Object.freeze({ ...e });
-}
 function Ln(e) {
+	return Object.freeze({ ...e });
+}
+function Rn(e) {
+	return Object.freeze({ ...e });
+}
+function zn(e) {
 	let t = {}, n = {};
 	for (let n of e.subjectIds) t[n] = "locked";
 	for (let t of e.conceptIds) n[t] = "locked";
 	t[e.path.entryNodeId] = "completed";
 	for (let t of e.conceptsBySubjectId.get(e.path.entryNodeId) ?? []) n[t] = "completed";
-	return zn(e, t), Object.freeze({
+	return Vn(e, t), Object.freeze({
 		currentNodeId: e.path.entryNodeId,
 		goalNodeIds: Object.freeze([...e.path.goalNodeIds]),
-		subjectStatusById: Fn(t),
-		conceptStatusById: Fn(n),
-		visitedNodeIds: In({ [e.path.entryNodeId]: !0 }),
+		subjectStatusById: Ln(t),
+		conceptStatusById: Ln(n),
+		visitedNodeIds: Rn({ [e.path.entryNodeId]: !0 }),
 		celebrationSeen: !1,
 		celebrationCount: 0,
 		lastNavigationDecision: null,
@@ -2957,7 +2963,7 @@ function Ln(e) {
 		lastRejection: null
 	});
 }
-function Rn(e) {
+function Bn(e) {
 	return {
 		...e,
 		subjectStatusById: { ...e.subjectStatusById },
@@ -2965,44 +2971,44 @@ function Rn(e) {
 		visitedNodeIds: { ...e.visitedNodeIds }
 	};
 }
-function X(e) {
+function Y(e) {
 	return Object.freeze({
 		...e,
-		subjectStatusById: Fn({ ...e.subjectStatusById }),
-		conceptStatusById: Fn({ ...e.conceptStatusById }),
-		visitedNodeIds: In({ ...e.visitedNodeIds })
+		subjectStatusById: Ln({ ...e.subjectStatusById }),
+		conceptStatusById: Ln({ ...e.conceptStatusById }),
+		visitedNodeIds: Rn({ ...e.visitedNodeIds })
 	});
 }
-function zn(e, t) {
+function Vn(e, t) {
 	for (let n of e.subjectIds) {
 		if (t[n] !== "locked") continue;
 		let r = e.incomingBySubjectId.get(n) ?? [];
 		r.length > 0 && r.every((e) => t[e] === "completed") && (t[n] = "available");
 	}
 }
-function Bn(e, t, n) {
+function Hn(e, t, n) {
 	let r = e.nodeById.get(n);
 	return r ? r.entityKind === "subject" ? t.subjectStatusById[n] ?? null : t.conceptStatusById[n] ?? null : null;
 }
-function Z(e, t, n, r = "nodeId" in t ? t.nodeId ?? null : null) {
+function X(e, t, n, r = "nodeId" in t ? t.nodeId ?? null : null) {
 	e.lastRejection = Object.freeze({
 		eventType: t.type,
 		nodeId: r,
 		reason: n
 	});
 }
-function Q(e, t) {
+function Z(e, t) {
 	e.lastNavigationDecision = Object.freeze({
 		...t,
 		routeNodeIds: Object.freeze([...t.routeNodeIds]),
 		requiredCompletionNodeIds: Object.freeze([...t.requiredCompletionNodeIds])
 	}), t.accepted && (e.lastRejection = null);
 }
-function Vn(e, t) {
+function Un(e, t) {
 	let n = e.nodeById.get(t);
 	return n ? n.entityKind === "subject" ? n.id : n.ownerSubjectId ?? null : null;
 }
-function Hn(e, t, n) {
+function Wn(e, t, n) {
 	if (t === n) return Object.freeze([t]);
 	let r = [[t]], i = /* @__PURE__ */ new Set([t]);
 	for (; r.length > 0;) {
@@ -3017,14 +3023,14 @@ function Hn(e, t, n) {
 	}
 	return null;
 }
-function Un(e, t) {
+function Gn(e, t) {
 	let n = /* @__PURE__ */ new Set(), r = (t) => {
 		for (let i of e.incomingBySubjectId.get(t) ?? []) n.has(i) || (n.add(i), r(i));
 	};
-	return r(t), Y(n, e.nodeById);
+	return r(t), J(n, e.nodeById);
 }
-function Wn(e, t, n) {
-	let r = Vn(e, n), i = Vn(e, t.currentNodeId);
+function Kn(e, t, n) {
+	let r = Un(e, n), i = Un(e, t.currentNodeId);
 	if (!r || !i) return null;
 	let a = e.nodeById.get(t.currentNodeId), o = e.nodeById.get(n);
 	if (!a || !o) return null;
@@ -3036,14 +3042,14 @@ function Wn(e, t, n) {
 			...t.slice(0, r + 1)
 		]);
 	}
-	let s = Hn(e, i, r) ?? Hn(e, e.path.entryNodeId, r);
+	let s = Wn(e, i, r) ?? Wn(e, e.path.entryNodeId, r);
 	if (!s) return null;
 	let c = a.entityKind === "concept" ? [a.id, ...s] : [...s];
 	if (o.entityKind === "subject") return Object.freeze(c);
 	let l = e.conceptsBySubjectId.get(r) ?? [], u = l.indexOf(n);
 	return u < 0 ? null : Object.freeze([...c, ...l.slice(0, u + 1)]);
 }
-function Gn(e, t, n, r, i) {
+function qn(e, t, n, r, i) {
 	t.subjectStatusById[n] !== "completed" && (t.subjectStatusById = {
 		...t.subjectStatusById,
 		[n]: "completed"
@@ -3053,7 +3059,7 @@ function Gn(e, t, n, r, i) {
 		[r]: "completed"
 	}, i.push(r));
 }
-function Kn(e, t, n) {
+function Jn(e, t, n) {
 	let r = e.conceptsBySubjectId.get(n) ?? [];
 	if (r.length === 0) return;
 	let i = r.findIndex((e) => t.conceptStatusById[e] !== "completed");
@@ -3064,18 +3070,18 @@ function Kn(e, t, n) {
 		[a]: "available"
 	});
 }
-function qn(e, t, n) {
+function Yn(e, t, n) {
 	let r = e.conceptsBySubjectId.get(n) ?? [];
 	if (r.length === 0 || !r.every((e) => t.conceptStatusById[e] === "completed")) {
-		Kn(e, t, n);
+		Jn(e, t, n);
 		return;
 	}
 	t.subjectStatusById = {
 		...t.subjectStatusById,
 		[n]: "completed"
-	}, zn(e, t.subjectStatusById);
+	}, Vn(e, t.subjectStatusById);
 }
-function Jn(e, t, n) {
+function Xn(e, t, n) {
 	let r = e.nodeById.get(n);
 	if (!r) return !1;
 	if (r.entityKind === "subject") t.subjectStatusById[n] === "locked" && (t.subjectStatusById = {
@@ -3097,7 +3103,7 @@ function Jn(e, t, n) {
 		[n]: !0
 	}, !0;
 }
-function Yn(e, t, n, r) {
+function Zn(e, t, n, r) {
 	let i = e.nodeById.get(n), a = e.nodeById.get(r);
 	if (!i) return !1;
 	if (i.entityKind === "subject") {
@@ -3116,46 +3122,46 @@ function Yn(e, t, n, r) {
 	return t.visitedNodeIds = {
 		...t.visitedNodeIds,
 		[n]: !0
-	}, zn(e, t.subjectStatusById), !0;
+	}, Vn(e, t.subjectStatusById), !0;
 }
-function Xn(e, t, n) {
-	for (let r of n.requiredCompletionNodeIds) Yn(e, t, r, n.targetNodeId);
+function Qn(e, t, n) {
+	for (let r of n.requiredCompletionNodeIds) Zn(e, t, r, n.targetNodeId);
 }
-function Zn(e, t, n) {
+function $n(e, t, n) {
 	let r = t.currentNodeId, i = e.nodeById.get(r), a = new Set(n.requiredCompletionNodeIds), o = /* @__PURE__ */ new Set();
 	if (a.has(r) && o.add(r), i?.entityKind === "subject") for (let t of e.outgoingBySubjectId.get(r) ?? []) for (let n of e.incomingBySubjectId.get(t) ?? []) a.has(n) && o.add(n);
-	for (let r of Y(o, e.nodeById)) Yn(e, t, r, n.targetNodeId);
+	for (let r of J(o, e.nodeById)) Zn(e, t, r, n.targetNodeId);
 }
-function Qn(e, t, n, r) {
+function er(e, t, n, r) {
 	let i = e.nodeById.get(r);
 	if (!i) return !1;
-	let a = new Set(n.requiredCompletionNodeIds), o = /* @__PURE__ */ new Set(), s = Vn(e, r);
-	if (s) for (let t of Un(e, s)) a.has(t) && o.add(t);
+	let a = new Set(n.requiredCompletionNodeIds), o = /* @__PURE__ */ new Set(), s = Un(e, r);
+	if (s) for (let t of Gn(e, s)) a.has(t) && o.add(t);
 	if (i.entityKind === "concept" && i.ownerSubjectId) {
 		let t = e.conceptsBySubjectId.get(i.ownerSubjectId) ?? [], n = t.indexOf(r);
 		for (let e of t.slice(0, Math.max(0, n))) a.has(e) && o.add(e);
 	}
 	a.has(r) && o.add(r);
-	for (let r of Y(o, e.nodeById)) Yn(e, t, r, n.targetNodeId);
+	for (let r of J(o, e.nodeById)) Zn(e, t, r, n.targetNodeId);
 	return !0;
 }
-function $n(e, t, n) {
-	let r = Vn(e, t);
+function tr(e, t, n) {
+	let r = Un(e, t);
 	if (!r) return Object.freeze([]);
-	let i = new Set(Un(e, r));
+	let i = new Set(Gn(e, r));
 	for (let e of n) {
 		if (e === t) break;
 		i.add(e);
 	}
-	return Object.freeze(Y(i, e.nodeById));
+	return Object.freeze(J(i, e.nodeById));
 }
-function er(e, t, n) {
+function nr(e, t, n) {
 	let r = e.nodeById.get(t);
 	return r ? r.entityKind === "subject" ? n === "subject-enter" : n !== "subject-enter" : !1;
 }
 //#endregion
 //#region src/progression/domain/unlockCommit.ts
-function tr(e) {
+function rr(e) {
 	let t = e.transactionId.trim();
 	if (t.length === 0) throw TypeError("Pending unlock commit requires a non-empty Journey transaction id.");
 	return Object.freeze({
@@ -3166,9 +3172,9 @@ function tr(e) {
 }
 //#endregion
 //#region src/progression/domain/reducer.ts
-function nr(e, t, n) {
-	let r = Rn(t), i = e.nodeById.get(n.nodeId);
-	if (!i) return Z(r, n, "unknown-node"), r.lastCatchUpResult = Object.freeze({
+function ir(e, t, n) {
+	let r = Bn(t), i = e.nodeById.get(n.nodeId);
+	if (!i) return X(r, n, "unknown-node"), r.lastCatchUpResult = Object.freeze({
 		accepted: !1,
 		sourceNodeId: t.currentNodeId,
 		targetNodeId: n.nodeId,
@@ -3177,23 +3183,23 @@ function nr(e, t, n) {
 		completedConceptNodeIds: Object.freeze([]),
 		targetStatus: null,
 		reason: "unknown-node"
-	}), X(r);
-	let a = Wn(e, t, n.nodeId);
-	if (!a) return Z(r, n, "no-authored-route"), r.lastCatchUpResult = Object.freeze({
+	}), Y(r);
+	let a = Kn(e, t, n.nodeId);
+	if (!a) return X(r, n, "no-authored-route"), r.lastCatchUpResult = Object.freeze({
 		accepted: !1,
 		sourceNodeId: t.currentNodeId,
 		targetNodeId: n.nodeId,
 		routeNodeIds: Object.freeze([]),
 		completedSubjectNodeIds: Object.freeze([]),
 		completedConceptNodeIds: Object.freeze([]),
-		targetStatus: Bn(e, t, n.nodeId),
+		targetStatus: Hn(e, t, n.nodeId),
 		reason: "no-authored-route"
-	}), X(r);
-	let o = Vn(e, n.nodeId);
-	if (!o) return Z(r, n, "unknown-node"), X(r);
+	}), Y(r);
+	let o = Un(e, n.nodeId);
+	if (!o) return X(r, n, "unknown-node"), Y(r);
 	let s = [], c = [];
-	for (let t of Un(e, o)) Gn(e, r, t, s, c);
-	if (zn(e, r.subjectStatusById), i.entityKind === "concept") {
+	for (let t of Gn(e, o)) qn(e, r, t, s, c);
+	if (Vn(e, r.subjectStatusById), i.entityKind === "concept") {
 		r.subjectStatusById[o] === "locked" && (r.subjectStatusById = {
 			...r.subjectStatusById,
 			[o]: "available"
@@ -3215,18 +3221,18 @@ function nr(e, t, n) {
 		routeNodeIds: Object.freeze([...a]),
 		completedSubjectNodeIds: Object.freeze(s),
 		completedConceptNodeIds: Object.freeze(c),
-		targetStatus: Bn(e, r, n.nodeId)
-	}), Q(r, {
+		targetStatus: Hn(e, r, n.nodeId)
+	}), Z(r, {
 		accepted: !0,
 		sourceNodeId: t.currentNodeId,
 		targetNodeId: n.nodeId,
 		mode: "catch-up",
 		routeNodeIds: a,
 		requiredCompletionNodeIds: Object.freeze([])
-	}), X(r);
+	}), Y(r);
 }
-function rr(e, t, n, r) {
-	let i = Rn(t), a = e.nodeById.get(n.nodeId), o = t.conceptStatusById[n.nodeId] ?? null, s = (e) => {
+function ar(e, t, n, r) {
+	let i = Bn(t), a = e.nodeById.get(n.nodeId), o = t.conceptStatusById[n.nodeId] ?? null, s = (e) => {
 		let t = Object.freeze({
 			accepted: !1,
 			kind: r,
@@ -3234,7 +3240,7 @@ function rr(e, t, n, r) {
 			status: o,
 			reason: e
 		});
-		return i.lastConceptAction = t, Z(i, n, e), X(i);
+		return i.lastConceptAction = t, X(i, n, e), Y(i);
 	};
 	if (!a) return s("unknown-node");
 	if (a.entityKind !== "concept") return s("not-a-concept");
@@ -3243,16 +3249,16 @@ function rr(e, t, n, r) {
 	return r === "start" ? (l = o === "available" || o === "in-progress", l && (c = "in-progress")) : r === "continue" ? l = o === "in-progress" : r === "mark-completed" ? (l = o === "available" || o === "in-progress" || o === "completed", l && (c = "completed")) : l = r === "defer" ? o === "available" : o === "completed", !l || !c ? s("invalid-concept-status") : (c !== o && (i.conceptStatusById = {
 		...i.conceptStatusById,
 		[n.nodeId]: c
-	}), r === "mark-completed" && a.ownerSubjectId && qn(e, i, a.ownerSubjectId), i.lastConceptAction = Object.freeze({
+	}), r === "mark-completed" && a.ownerSubjectId && Yn(e, i, a.ownerSubjectId), i.lastConceptAction = Object.freeze({
 		accepted: !0,
 		kind: r,
 		nodeId: n.nodeId,
 		status: c
-	}), i.lastRejection = null, X(i));
+	}), i.lastRejection = null, Y(i));
 }
-function ir(e, t, n) {
-	let r = Rn(t);
-	if (!e.nodeById.get(n.nodeId)) return Z(r, n, "unknown-node"), Q(r, {
+function or(e, t, n) {
+	let r = Bn(t);
+	if (!e.nodeById.get(n.nodeId)) return X(r, n, "unknown-node"), Z(r, {
 		accepted: !1,
 		sourceNodeId: t.currentNodeId,
 		targetNodeId: n.nodeId,
@@ -3260,9 +3266,9 @@ function ir(e, t, n) {
 		routeNodeIds: [],
 		requiredCompletionNodeIds: Object.freeze([]),
 		reason: "unknown-node"
-	}), X(r);
-	let i = Wn(e, t, n.nodeId);
-	if (!i) return Z(r, n, "no-authored-route"), Q(r, {
+	}), Y(r);
+	let i = Kn(e, t, n.nodeId);
+	if (!i) return X(r, n, "no-authored-route"), Z(r, {
 		accepted: !1,
 		sourceNodeId: t.currentNodeId,
 		targetNodeId: n.nodeId,
@@ -3270,34 +3276,34 @@ function ir(e, t, n) {
 		routeNodeIds: [],
 		requiredCompletionNodeIds: Object.freeze([]),
 		reason: "no-authored-route"
-	}), X(r);
-	let a = $n(e, n.nodeId, i);
-	return r.lastMovementCancellation = null, Q(r, {
+	}), Y(r);
+	let a = tr(e, n.nodeId, i);
+	return r.lastMovementCancellation = null, Z(r, {
 		accepted: !0,
 		sourceNodeId: t.currentNodeId,
 		targetNodeId: n.nodeId,
 		mode: "catch-up",
 		routeNodeIds: i,
 		requiredCompletionNodeIds: a
-	}), X(r);
+	}), Y(r);
 }
-function ar(e, t, n) {
-	let r = Rn(t), i = e.nodeById.get(n.nodeId), a = Bn(e, t, n.nodeId);
-	if (!i) Z(r, n, "unknown-node");
-	else if (a === "locked") Z(r, n, "locked-node");
-	else if (!er(e, n.nodeId, n.kind)) Z(r, n, "invalid-concept-status");
+function sr(e, t, n) {
+	let r = Bn(t), i = e.nodeById.get(n.nodeId), a = Hn(e, t, n.nodeId);
+	if (!i) X(r, n, "unknown-node");
+	else if (a === "locked") X(r, n, "locked-node");
+	else if (!nr(e, n.nodeId, n.kind)) X(r, n, "invalid-concept-status");
 	else return r.pendingLearningIntent = Object.freeze({
 		nodeId: n.nodeId,
 		kind: n.kind
-	}), Q(r, {
+	}), Z(r, {
 		accepted: !0,
 		sourceNodeId: t.currentNodeId,
 		targetNodeId: n.nodeId,
 		mode: "direct",
 		routeNodeIds: Object.freeze([t.currentNodeId, n.nodeId]),
 		requiredCompletionNodeIds: Object.freeze([])
-	}), X(r);
-	return Q(r, {
+	}), Y(r);
+	return Z(r, {
 		accepted: !1,
 		sourceNodeId: t.currentNodeId,
 		targetNodeId: n.nodeId,
@@ -3305,29 +3311,29 @@ function ar(e, t, n) {
 		routeNodeIds: [],
 		requiredCompletionNodeIds: Object.freeze([]),
 		reason: r.lastRejection?.reason ?? "unknown-node"
-	}), X(r);
+	}), Y(r);
 }
-function or(e, t, n) {
+function cr(e, t, n) {
 	let r = t.pendingLearningIntent, i = t.learningLaunchRevision + 1;
 	if (!r || r.nodeId !== n.nodeId || t.currentNodeId !== n.nodeId) {
-		let e = Rn(t);
+		let e = Bn(t);
 		return e.lastLearningLaunch = Object.freeze({
 			accepted: !1,
 			nodeId: n.nodeId,
 			kind: r?.kind ?? "subject-enter",
 			revision: i,
 			reason: "not-current-node"
-		}), e.learningLaunchRevision = i, Z(e, n, "not-current-node"), X(e);
+		}), e.learningLaunchRevision = i, X(e, n, "not-current-node"), Y(e);
 	}
 	if (r.kind === "subject-enter") {
-		let e = Rn(t);
+		let e = Bn(t);
 		return e.pendingLearningIntent = null, e.lastLearningLaunch = Object.freeze({
 			...r,
 			accepted: !0,
 			revision: i
-		}), e.learningLaunchRevision = i, e.lastRejection = null, X(e);
+		}), e.learningLaunchRevision = i, e.lastRejection = null, Y(e);
 	}
-	let a = rr(e, t, r.kind === "concept-start" ? {
+	let a = ar(e, t, r.kind === "concept-start" ? {
 		type: "CONCEPT.START.REQUESTED",
 		nodeId: r.nodeId
 	} : r.kind === "concept-continue" ? {
@@ -3336,35 +3342,35 @@ function or(e, t, n) {
 	} : {
 		type: "CONCEPT.REVIEW.REQUESTED",
 		nodeId: r.nodeId
-	}, r.kind === "concept-start" ? "start" : r.kind === "concept-continue" ? "continue" : "review"), o = Rn(a), s = a.lastConceptAction?.accepted === !0;
+	}, r.kind === "concept-start" ? "start" : r.kind === "concept-continue" ? "continue" : "review"), o = Bn(a), s = a.lastConceptAction?.accepted === !0;
 	return o.pendingLearningIntent = null, o.lastLearningLaunch = Object.freeze({
 		...r,
 		accepted: s,
 		revision: i,
 		...s ? {} : { reason: a.lastConceptAction?.reason ?? "invalid-concept-status" }
-	}), o.learningLaunchRevision = i, X(o);
+	}), o.learningLaunchRevision = i, Y(o);
 }
-function sr(e, t, n) {
-	if (n.type === "CATCH_UP.REQUESTED") return nr(e, t, n);
-	if (n.type === "UNLOCK.REQUESTED") return ir(e, t, n);
-	if (n.type === "LEARNING.REQUESTED") return ar(e, t, n);
-	if (n.type === "LEARNING.SETTLED") return or(e, t, n);
-	if (n.type === "CONCEPT.START.REQUESTED") return rr(e, t, n, "start");
-	if (n.type === "CONCEPT.CONTINUE.REQUESTED") return rr(e, t, n, "continue");
-	if (n.type === "CONCEPT.MARK_COMPLETED") return rr(e, t, n, "mark-completed");
-	if (n.type === "CONCEPT.DEFERRED") return rr(e, t, n, "defer");
-	if (n.type === "CONCEPT.REVIEW.REQUESTED") return rr(e, t, n, "review");
-	let r = Rn(t), i = (e) => {
+function lr(e, t, n) {
+	if (n.type === "CATCH_UP.REQUESTED") return ir(e, t, n);
+	if (n.type === "UNLOCK.REQUESTED") return or(e, t, n);
+	if (n.type === "LEARNING.REQUESTED") return sr(e, t, n);
+	if (n.type === "LEARNING.SETTLED") return cr(e, t, n);
+	if (n.type === "CONCEPT.START.REQUESTED") return ar(e, t, n, "start");
+	if (n.type === "CONCEPT.CONTINUE.REQUESTED") return ar(e, t, n, "continue");
+	if (n.type === "CONCEPT.MARK_COMPLETED") return ar(e, t, n, "mark-completed");
+	if (n.type === "CONCEPT.DEFERRED") return ar(e, t, n, "defer");
+	if (n.type === "CONCEPT.REVIEW.REQUESTED") return ar(e, t, n, "review");
+	let r = Bn(t), i = (e) => {
 		let n = t.pendingUnlockCommit?.transactionId;
 		return n !== void 0 && e !== n;
 	};
 	if (n.type === "UNLOCK.COMMIT.REGISTERED") {
 		let i = t.lastNavigationDecision, a = n.commit, o = i?.requiredCompletionNodeIds.length === a.requiredCompletionNodeIds.length && i.requiredCompletionNodeIds.every((e, t) => a.requiredCompletionNodeIds[t] === e);
-		!(a.transactionId.trim().length > 0 && i?.accepted === !0 && i.mode === "catch-up" && i.targetNodeId === a.targetNodeId && o && a.requiredCompletionNodeIds.every((t) => e.nodeById.has(t))) || t.pendingUnlockCommit !== null && t.pendingUnlockCommit.transactionId !== a.transactionId ? Z(r, n, "stale-transaction") : (r.pendingUnlockCommit = tr(a), r.lastMovementCancellation = null, r.lastRejection = null);
-	} else if (n.type === "UNLOCK.DEPARTED") i(n.transactionId) ? Z(r, n, "stale-transaction") : (r.lastMovementCancellation = null, r.pendingUnlockCommit && Zn(e, r, r.pendingUnlockCommit), r.lastRejection = null);
+		!(a.transactionId.trim().length > 0 && i?.accepted === !0 && i.mode === "catch-up" && i.targetNodeId === a.targetNodeId && o && a.requiredCompletionNodeIds.every((t) => e.nodeById.has(t))) || t.pendingUnlockCommit !== null && t.pendingUnlockCommit.transactionId !== a.transactionId ? X(r, n, "stale-transaction") : (r.pendingUnlockCommit = rr(a), r.lastMovementCancellation = null, r.lastRejection = null);
+	} else if (n.type === "UNLOCK.DEPARTED") i(n.transactionId) ? X(r, n, "stale-transaction") : (r.lastMovementCancellation = null, r.pendingUnlockCommit && $n(e, r, r.pendingUnlockCommit), r.lastRejection = null);
 	else if (n.type === "MOVEMENT.CANCELLED") {
-		if (i(n.transactionId)) return Z(r, n, "stale-transaction"), X(r);
-		let t = e.nodeById.get(n.safeNodeId), a = Bn(e, r, n.safeNodeId), o = r.pendingUnlockCommit?.targetNodeId ?? r.pendingLearningIntent?.nodeId ?? r.lastNavigationDecision?.targetNodeId ?? null;
+		if (i(n.transactionId)) return X(r, n, "stale-transaction"), Y(r);
+		let t = e.nodeById.get(n.safeNodeId), a = Hn(e, r, n.safeNodeId), o = r.pendingUnlockCommit?.targetNodeId ?? r.pendingLearningIntent?.nodeId ?? r.lastNavigationDecision?.targetNodeId ?? null;
 		t && a !== null && a !== "locked" && (r.currentNodeId = n.safeNodeId, r.visitedNodeIds = {
 			...r.visitedNodeIds,
 			[n.safeNodeId]: !0
@@ -3374,12 +3380,12 @@ function sr(e, t, n) {
 			targetNodeId: o
 		}), r.lastRejection = null;
 	} else if (n.type === "NODE.TRAVERSED") {
-		if (i(n.transactionId)) return Z(r, n, "stale-transaction"), X(r);
-		let a = t.pendingUnlockCommit, o = a?.targetNodeId !== n.nodeId && a?.requiredCompletionNodeIds.includes(n.nodeId), s = Bn(e, t, n.nodeId);
-		(o && a ? Qn(e, r, a, n.nodeId) : s !== null && s !== "locked" && Jn(e, r, n.nodeId)) ? r.lastRejection = null : Z(r, n, s === "locked" ? "locked-node" : "unknown-node");
+		if (i(n.transactionId)) return X(r, n, "stale-transaction"), Y(r);
+		let a = t.pendingUnlockCommit, o = a?.targetNodeId !== n.nodeId && a?.requiredCompletionNodeIds.includes(n.nodeId), s = Hn(e, t, n.nodeId);
+		(o && a ? er(e, r, a, n.nodeId) : s !== null && s !== "locked" && Xn(e, r, n.nodeId)) ? r.lastRejection = null : X(r, n, s === "locked" ? "locked-node" : "unknown-node");
 	} else if (n.type === "NAVIGATION.REQUESTED") {
-		let i = e.nodeById.get(n.nodeId), a = Bn(e, t, n.nodeId);
-		i ? a === "locked" ? (Z(r, n, "locked-node"), Q(r, {
+		let i = e.nodeById.get(n.nodeId), a = Hn(e, t, n.nodeId);
+		i ? a === "locked" ? (X(r, n, "locked-node"), Z(r, {
 			accepted: !1,
 			sourceNodeId: t.currentNodeId,
 			targetNodeId: n.nodeId,
@@ -3391,14 +3397,14 @@ function sr(e, t, n) {
 			eventType: n.type,
 			nodeId: n.nodeId,
 			reason: "locked-node"
-		})) : Q(r, {
+		})) : Z(r, {
 			accepted: !0,
 			sourceNodeId: t.currentNodeId,
 			targetNodeId: n.nodeId,
 			mode: "direct",
 			routeNodeIds: Object.freeze([t.currentNodeId, n.nodeId]),
 			requiredCompletionNodeIds: Object.freeze([])
-		}) : (Z(r, n, "unknown-node"), Q(r, {
+		}) : (X(r, n, "unknown-node"), Z(r, {
 			accepted: !1,
 			sourceNodeId: t.currentNodeId,
 			targetNodeId: n.nodeId,
@@ -3408,11 +3414,11 @@ function sr(e, t, n) {
 			reason: "unknown-node"
 		}));
 	} else if (n.type === "NODE.ARRIVED") {
-		if (i(n.transactionId)) return Z(r, n, "stale-transaction"), X(r);
+		if (i(n.transactionId)) return X(r, n, "stale-transaction"), Y(r);
 		let a = e.nodeById.get(n.nodeId), o = t.pendingUnlockCommit?.targetNodeId === n.nodeId;
-		o && t.pendingUnlockCommit && (Xn(e, r, t.pendingUnlockCommit), Jn(e, r, n.nodeId));
-		let s = Bn(e, r, n.nodeId);
-		a ? s === "locked" ? Z(r, n, "locked-node") : (r.currentNodeId = n.nodeId, r.lastMovementCancellation = null, r.visitedNodeIds = {
+		o && t.pendingUnlockCommit && (Qn(e, r, t.pendingUnlockCommit), Xn(e, r, n.nodeId));
+		let s = Hn(e, r, n.nodeId);
+		a ? s === "locked" ? X(r, n, "locked-node") : (r.currentNodeId = n.nodeId, r.lastMovementCancellation = null, r.visitedNodeIds = {
 			...r.visitedNodeIds,
 			[n.nodeId]: !0
 		}, o && (r.pendingUnlockCommit = null), r.lastRejection = null, e.goalIds.has(n.nodeId) ? (r.subjectStatusById[n.nodeId] !== "completed" && (r.subjectStatusById = {
@@ -3421,33 +3427,33 @@ function sr(e, t, n) {
 		}), t.celebrationSeen || (r.celebrationSeen = !0, r.celebrationCount = t.celebrationCount + 1)) : a.entityKind === "subject" && r.subjectStatusById[n.nodeId] === "available" && ((e.conceptsBySubjectId.get(n.nodeId) ?? []).length === 0 ? (r.subjectStatusById = {
 			...r.subjectStatusById,
 			[n.nodeId]: "completed"
-		}, zn(e, r.subjectStatusById)) : Kn(e, r, n.nodeId))) : Z(r, n, "unknown-node");
+		}, Vn(e, r.subjectStatusById)) : Jn(e, r, n.nodeId))) : X(r, n, "unknown-node");
 	}
-	return X(r);
+	return Y(r);
 }
 //#endregion
 //#region src/application/learning-path/progressChild.ts
-function cr(e) {
+function ur(e) {
 	let t = /* @__PURE__ */ new Map(), n = (n) => {
 		let r = t.get(n);
 		if (r) return r;
-		let i = Pn(e(n));
+		let i = In(e(n));
 		return t.clear(), t.set(n, i), i;
 	};
 	return i((e, t) => Object.freeze({
 		revision: e.revision,
-		model: sr(n(e.revision), e.model, t)
+		model: lr(n(e.revision), e.model, t)
 	}), ({ input: e }) => Object.freeze({
 		revision: e.revision,
-		model: e.initialContext ?? Ln(n(e.revision))
+		model: e.initialContext ?? zn(n(e.revision))
 	}));
 }
-function lr(e, t) {
-	return Ln(Pn(e(t)));
+function dr(e, t) {
+	return zn(In(e(t)));
 }
 //#endregion
 //#region src/application/learning-path/pathOrchestrationChild.ts
-function ur(e) {
+function fr(e) {
 	let t = () => e().services, n = {
 		planNavigation: (...e) => t().planNavigation(...e),
 		planZoneReveal: (...e) => t().planZoneReveal(...e),
@@ -3503,7 +3509,7 @@ function ur(e) {
 }
 //#endregion
 //#region src/application/learning-path/machine.ts
-var dr = /* @__PURE__ */ new Set([
+var pr = /* @__PURE__ */ new Set([
 	"UNLOCK.DEPARTED",
 	"NODE.TRAVERSED",
 	"NODE.ARRIVED",
@@ -3515,17 +3521,11 @@ var dr = /* @__PURE__ */ new Set([
 	"CONCEPT.DEFERRED",
 	"CONCEPT.REVIEW.REQUESTED"
 ]);
-function fr(e) {
-	return typeof e != "object" || !e || !("snapshot" in e) ? null : e.snapshot;
-}
-function pr(e) {
-	return fr(e)?.context ?? null;
-}
 function mr(e) {
 	return typeof e != "object" || !e || !("snapshot" in e) ? null : e.snapshot;
 }
 function hr(e) {
-	return typeof e != "object" || !e || !("snapshot" in e) ? null : e.snapshot;
+	return mr(e)?.context ?? null;
 }
 function gr(e) {
 	return typeof e != "object" || !e || !("snapshot" in e) ? null : e.snapshot;
@@ -3534,9 +3534,15 @@ function _r(e) {
 	return typeof e != "object" || !e || !("snapshot" in e) ? null : e.snapshot;
 }
 function vr(e) {
-	return typeof e != "object" || !e || !("output" in e) ? null : e.output ?? null;
+	return typeof e != "object" || !e || !("snapshot" in e) ? null : e.snapshot;
 }
 function yr(e) {
+	return typeof e != "object" || !e || !("snapshot" in e) ? null : e.snapshot;
+}
+function br(e) {
+	return typeof e != "object" || !e || !("output" in e) ? null : e.output ?? null;
+}
+function xr(e) {
 	switch (e.type) {
 		case "PRESENTATION.STARTED": return {
 			type: "PRESENTATION.STARTED",
@@ -3616,17 +3622,17 @@ function yr(e) {
 		default: return null;
 	}
 }
-function br(e) {
-	let t = e.data ? Bt(e.data) : null;
+function Sr(e) {
+	let t = e.data ? Ht(e.data) : null;
 	if (typeof t != "object" || !t || !("source" in t)) throw Error(`No current CompiledLearningPath runtime data is registered for page revision "${e.revision}".`);
 	let n = t.source;
 	if (typeof n != "object" || !n || !("nodeById" in n) || !("edges" in n)) throw Error(`Page revision "${e.revision}" does not expose a valid data.source progression model.`);
 	return n;
 }
-function xr(e) {
+function Cr(e) {
 	return e.type === "APP.PROGRESS.EVENT" || e.type === "APP.JOURNEY.EVENT" || e.type === "APP.NODE_CARD.EVENT" || e.type === "APP.COMPLETION_CELEBRATION.EVENT" || e.type === "APP.SCENE_RUNTIME.COMMAND" || e.type === "APP.SCENE_SESSION.EVENT" || e.type === "APP.LEARNING_RESOURCE.EVENT" || e.type === "APP.LEARNING_RESOURCE.AFTER_PERSISTENCE.REQUESTED" || e.type === "APP.PERSISTENCE.FLUSH.REQUESTED";
 }
-function Sr(e, t) {
+function wr(e, t) {
 	let n = "sessionRevision" in t ? t.sessionRevision ?? null : null, r = t.type === "APP.PAGE.EVENT" && "transactionId" in t.event || t.type === "APP.JOURNEY.EVENT" && "transactionId" in t.event ? t.event.transactionId : t.type === "APP.SCENE_RUNTIME.COMMAND" ? t.command.transactionId : null;
 	return Object.freeze({
 		eventType: t.type,
@@ -3635,8 +3641,8 @@ function Sr(e, t) {
 		transactionId: r
 	});
 }
-function Cr(e) {
-	let r = /* @__PURE__ */ new Map(), i = e.resolveCompiledLearningPath ?? (({ page: e }) => br(e)), a = nn({
+function Tr(e) {
+	let r = /* @__PURE__ */ new Map(), i = e.resolveCompiledLearningPath ?? (({ page: e }) => Sr(e)), a = an({
 		...e.pageGeneration,
 		onGenerationReady: (t) => {
 			let n = i({
@@ -3646,15 +3652,15 @@ function Cr(e) {
 			});
 			r.clear(), r.set(t.revision, n), e.pageGeneration.onGenerationReady?.(t);
 		}
-	}), c = cr((e) => {
+	}), c = ur((e) => {
 		let t = r.get(e);
 		if (!t) throw Error(`No progression model registered for revision "${e}".`);
 		return t;
-	}), l = On(e.journey), u = /* @__PURE__ */ new Map(), d = /* @__PURE__ */ new Map(), f = /* @__PURE__ */ new Map(), p = () => {
+	}), l = An(e.journey), u = /* @__PURE__ */ new Map(), d = /* @__PURE__ */ new Map(), f = /* @__PURE__ */ new Map(), p = () => {
 		let e = [...f.values()][0];
 		if (!e) throw Error("No active path-orchestration runtime binding is registered.");
 		return e;
-	}, m = ur(p), h = kt((e) => {
+	}, m = fr(p), h = jt((e) => {
 		if (!u.get(e)) throw Error(`No active experience registered for scene session ${e}.`);
 		let t = d.get(e);
 		if (!t) throw Error(`No runtime input registered for scene session ${e}.`);
@@ -3664,7 +3670,7 @@ function Cr(e) {
 			gatewayTimeoutMs: t.defaultTimeoutMs,
 			gatewayScheduler: t.scheduler
 		};
-	}), g = bt(e.learningResource), _ = dt(e.learningProgressStorage), v = s(async ({ input: t, signal: n }) => {
+	}), g = St(e.learningResource), _ = pt(e.learningProgressStorage), v = s(async ({ input: t, signal: n }) => {
 		if (await e.reconcileRestoredProgress({
 			...t.identity,
 			safeNodeId: t.safeNodeId,
@@ -3678,8 +3684,8 @@ function Cr(e) {
 			pageGeneration: a,
 			progress: c,
 			journey: l,
-			nodeCard: gn,
-			completionCelebration: An,
+			nodeCard: vn,
+			completionCelebration: Mn,
 			sceneSession: h,
 			learningResource: g,
 			pathOrchestration: m,
@@ -3688,62 +3694,62 @@ function Cr(e) {
 		},
 		guards: {
 			pageSnapshotIsNewReadyExperience: ({ context: e, event: t }) => {
-				let n = fr(t);
+				let n = mr(t);
 				if (!n?.matches("ready")) return !1;
 				let r = n.context;
 				return r.revision !== null && r.transactionId !== null && r.compiledPath !== null && (e.activeExperience?.revision !== r.revision || e.activeExperience.transactionId !== r.transactionId);
 			},
 			pageSnapshotHasNewFailure: ({ context: e, event: t }) => {
-				let n = pr(t)?.lastError;
+				let n = hr(t)?.lastError;
 				if (!n) return !1;
 				let r = e.lastGenerationFailure;
 				return !r || r.transactionId !== n.transactionId || r.revision !== n.revision || r.kind !== n.kind || r.message !== n.message;
 			},
 			pageEventMatchesGeneration: ({ context: e, event: t }) => t.type === "APP.PAGE.EVENT" ? "transactionId" in t.event ? e.generationTransactionId !== null && t.event.transactionId === e.generationTransactionId && (!("revision" in t.event) || e.generationRevision === null || t.event.revision === e.generationRevision) : !0 : !1,
-			experienceRevisionMatches: ({ context: e, event: t }) => xr(t) && e.activeExperience !== null && t.sessionRevision === e.activeExperience.sessionRevision && (t.type !== "APP.SCENE_RUNTIME.COMMAND" || t.command.sessionRevision === t.sessionRevision) && (t.type !== "APP.SCENE_SESSION.EVENT" || t.event.sessionRevision === t.sessionRevision) && (t.type !== "APP.LEARNING_RESOURCE.EVENT" || t.event.sessionRevision === t.sessionRevision) && (t.type !== "APP.LEARNING_RESOURCE.AFTER_PERSISTENCE.REQUESTED" || t.event.sessionRevision === t.sessionRevision),
+			experienceRevisionMatches: ({ context: e, event: t }) => Cr(t) && e.activeExperience !== null && t.sessionRevision === e.activeExperience.sessionRevision && (t.type !== "APP.SCENE_RUNTIME.COMMAND" || t.command.sessionRevision === t.sessionRevision) && (t.type !== "APP.SCENE_SESSION.EVENT" || t.event.sessionRevision === t.sessionRevision) && (t.type !== "APP.LEARNING_RESOURCE.EVENT" || t.event.sessionRevision === t.sessionRevision) && (t.type !== "APP.LEARNING_RESOURCE.AFTER_PERSISTENCE.REQUESTED" || t.event.sessionRevision === t.sessionRevision),
 			degradationMatches: ({ context: e, event: t }) => t.type === "APP.RUNTIME.DEGRADED" && (t.sessionRevision === void 0 || e.activeExperience?.sessionRevision === t.sessionRevision),
 			recoveryMatches: ({ context: e, event: t }) => t.type === "APP.RUNTIME.RECOVERED" && e.activeExperience !== null && (t.sessionRevision === void 0 || t.sessionRevision === e.activeExperience.sessionRevision),
 			hasActiveExperience: ({ context: e }) => e.activeExperience !== null,
 			journeyReadyRequiresNavigation: ({ context: e, event: t }) => {
-				let n = mr(t), r = n?.context.plan, i = n?.context.transactionId;
+				let n = gr(t), r = n?.context.plan, i = n?.context.transactionId;
 				return !!(n?.matches("ready") && r && i && r.sourceNodeId !== r.targetNodeId && e.lastDispatchedJourneyTransactionId !== i);
 			},
 			journeyReadyIsAlreadyAtTarget: ({ context: e, event: t }) => {
-				let n = mr(t), r = n?.context.plan, i = n?.context.transactionId;
+				let n = gr(t), r = n?.context.plan, i = n?.context.transactionId;
 				return !!(n?.matches("ready") && r && i && r.sourceNodeId === r.targetNodeId && e.lastDispatchedJourneyTransactionId !== i);
 			},
 			sceneSessionSnapshotHasNewMappableGatewayAck: ({ context: e, event: t }) => {
-				let n = hr(t), r = n?.context.lastGatewayAck;
-				return !!(n && r && n.context.gatewayAckSequence > e.lastRoutedGatewayAckSequence && yr(r) !== null);
+				let n = _r(t), r = n?.context.lastGatewayAck;
+				return !!(n && r && n.context.gatewayAckSequence > e.lastRoutedGatewayAckSequence && xr(r) !== null);
 			},
 			sceneSessionSnapshotHasNewGatewayAck: ({ context: e, event: t }) => {
-				let n = hr(t);
+				let n = _r(t);
 				return !!(n?.context.lastGatewayAck && n.context.gatewayAckSequence > e.lastRoutedGatewayAckSequence);
 			},
 			persistenceLoadedForActiveExperience: ({ context: e, event: t }) => {
-				let n = e.activeExperience, r = _r(t)?.context;
+				let n = e.activeExperience, r = yr(t)?.context;
 				return !!(n && e.hydratedProgressContext === null && r?.loadResult && r.sessionRevision === n.sessionRevision && r.pathRevision === n.revision);
 			},
 			reconciliationMatchesActiveExperience: ({ context: e, event: t }) => {
-				let n = e.activeExperience, r = vr(t);
+				let n = e.activeExperience, r = br(t);
 				return !!(n && r && r.identity.sessionRevision === n.sessionRevision && r.identity.revision === n.revision && r.identity.transactionId === n.transactionId);
 			},
-			stableProgressEventMatchesExperience: ({ context: e, event: t }) => t.type === "APP.PROGRESS.EVENT" && e.activeExperience !== null && t.sessionRevision === e.activeExperience.sessionRevision && dr.has(t.event.type),
+			stableProgressEventMatchesExperience: ({ context: e, event: t }) => t.type === "APP.PROGRESS.EVENT" && e.activeExperience !== null && t.sessionRevision === e.activeExperience.sessionRevision && pr.has(t.event.type),
 			hasHydratedProgress: ({ context: e }) => e.activeExperience !== null && e.hydratedProgressContext !== null,
 			progressSnapshotHasPendingPersistenceSave: ({ context: e, event: t }) => {
-				let n = e.activeExperience, r = gr(t);
+				let n = e.activeExperience, r = vr(t);
 				return !!(n && e.pendingPersistenceOperationId && r && r.context.revision === n.revision);
 			},
 			persistenceSnapshotHasNewFailure: ({ context: e, event: t }) => {
-				let n = _r(t)?.context.lastFailure, r = e.lastPersistenceFailure;
+				let n = yr(t)?.context.lastFailure, r = e.lastPersistenceFailure;
 				return !!(n && (r === null || n.correlation.operationId !== r.correlation.operationId || n.code !== r.code || n.phase !== r.phase));
 			},
 			persistenceCompletedPendingLearningResourceLaunch: ({ context: e, event: t }) => {
-				let n = e.pendingLearningResourceLaunch, r = _r(t)?.context.lastCompletedCorrelation;
+				let n = e.pendingLearningResourceLaunch, r = yr(t)?.context.lastCompletedCorrelation;
 				return !!(n && r && r.operationId === n.persistenceOperationId && r.sessionRevision === e.activeExperience?.sessionRevision);
 			},
 			persistenceSnapshotHasNewCompletion: ({ context: e, event: t }) => {
-				let n = _r(t)?.context.lastCompletedCorrelation;
+				let n = yr(t)?.context.lastCompletedCorrelation;
 				return !!(n && n.sessionRevision === e.activeExperience?.sessionRevision && n.operationId !== e.lastCompletedPersistenceOperationId);
 			},
 			deferredLearningResourceLaunchAlreadyPersisted: ({ context: e, event: t }) => t.type === "APP.LEARNING_RESOURCE.AFTER_PERSISTENCE.REQUESTED" && e.activeExperience !== null && t.sessionRevision === e.activeExperience.sessionRevision && t.event.sessionRevision === t.sessionRevision && e.lastPersistenceOperationId !== null && e.lastPersistenceOperationId === e.lastCompletedPersistenceOperationId
@@ -3771,14 +3777,14 @@ function Cr(e) {
 			routeJourneyEvent: t("journey", ({ event: e }) => e.type === "APP.JOURNEY.EVENT" ? e.event : { type: "RESET" }),
 			routeJourneyNavigation: t("pathOrchestration", ({ event: e }) => ({
 				type: "NAVIGATION.REQUESTED",
-				targetNodeId: mr(e)?.context.plan?.targetNodeId ?? "invalid-node"
+				targetNodeId: gr(e)?.context.plan?.targetNodeId ?? "invalid-node"
 			})),
 			beginSettledJourney: t("journey", ({ event: e }) => ({
 				type: "MOVEMENT_STARTED",
-				transactionId: mr(e)?.context.transactionId ?? "invalid-transaction"
+				transactionId: gr(e)?.context.transactionId ?? "invalid-transaction"
 			})),
 			arriveSettledJourney: t("journey", ({ event: e }) => {
-				let t = mr(e);
+				let t = gr(e);
 				return {
 					type: "NODE_ARRIVED",
 					transactionId: t?.context.transactionId ?? "invalid-transaction",
@@ -3787,14 +3793,14 @@ function Cr(e) {
 			}),
 			visuallySettleJourney: t("journey", ({ event: e }) => ({
 				type: "VISUAL_SETTLED",
-				transactionId: mr(e)?.context.transactionId ?? "invalid-transaction"
+				transactionId: gr(e)?.context.transactionId ?? "invalid-transaction"
 			})),
-			recordJourneyDispatch: n(({ event: e }) => ({ lastDispatchedJourneyTransactionId: mr(e)?.context.transactionId ?? null })),
+			recordJourneyDispatch: n(({ event: e }) => ({ lastDispatchedJourneyTransactionId: gr(e)?.context.transactionId ?? null })),
 			routeNodeCardEvent: t("nodeCard", ({ event: e }) => e.type === "APP.NODE_CARD.EVENT" ? e.event : { type: "SESSION.RESET" }),
 			routeCompletionCelebrationEvent: t("completionCelebration", ({ event: e }) => e.type === "APP.COMPLETION_CELEBRATION.EVENT" ? e.event : { type: "SESSION.RESET" }),
 			routeProgressCelebrationCount: t("completionCelebration", ({ event: e }) => ({
 				type: "PROGRESS.CELEBRATION_RECORDED",
-				count: gr(e)?.context.model.celebrationCount ?? 0
+				count: vr(e)?.context.model.celebrationCount ?? 0
 			})),
 			routeSceneRuntimeCommand: t("sceneSession", ({ event: e }) => e.type === "APP.SCENE_RUNTIME.COMMAND" ? e.command : { type: "MOTION.ABORT" }),
 			routeSceneSessionEvent: t("sceneSession", ({ event: e }) => e.type === "APP.SCENE_SESSION.EVENT" ? e.event : {
@@ -3802,11 +3808,11 @@ function Cr(e) {
 				sessionRevision: -1
 			}),
 			routeSceneRuntimeAck: t("pathOrchestration", ({ event: e }) => {
-				let t = hr(e)?.context.lastGatewayAck, n = t ? yr(t) : null;
+				let t = _r(e)?.context.lastGatewayAck, n = t ? xr(t) : null;
 				if (!n) throw Error("Cannot route an unmappable scene-runtime ACK.");
 				return n;
 			}),
-			recordSceneRuntimeAckSequence: n(({ event: e }) => ({ lastRoutedGatewayAckSequence: hr(e)?.context.gatewayAckSequence ?? 0 })),
+			recordSceneRuntimeAckSequence: n(({ event: e }) => ({ lastRoutedGatewayAckSequence: _r(e)?.context.gatewayAckSequence ?? 0 })),
 			routeLearningResourceEvent: t("learningResource", ({ event: e }) => e.type === "APP.LEARNING_RESOURCE.EVENT" ? e.event : {
 				type: "SESSION.REVISION.CHANGED",
 				sessionRevision: -1
@@ -3828,7 +3834,7 @@ function Cr(e) {
 				return e.event;
 			}),
 			clearPendingLearningResourceLaunch: n({ pendingLearningResourceLaunch: null }),
-			recordCompletedPersistenceOperation: n(({ event: e }) => ({ lastCompletedPersistenceOperationId: _r(e)?.context.lastCompletedCorrelation?.operationId ?? null })),
+			recordCompletedPersistenceOperation: n(({ event: e }) => ({ lastCompletedPersistenceOperationId: yr(e)?.context.lastCompletedCorrelation?.operationId ?? null })),
 			armStablePersistenceSave: n(({ context: e, event: t }) => {
 				if (t.type !== "APP.PROGRESS.EVENT" || !e.activeExperience) return {};
 				let n = e.persistenceProgressRevision + 1;
@@ -3838,7 +3844,7 @@ function Cr(e) {
 				};
 			}),
 			persistProgressSnapshot: t("persistence", ({ context: e, event: t }) => {
-				let n = e.activeExperience, r = gr(t);
+				let n = e.activeExperience, r = vr(t);
 				if (!n || !r || !e.pendingPersistenceOperationId) throw Error("Cannot persist an uncorrelated progress snapshot.");
 				return {
 					type: "PERSISTENCE.SAVE.REQUESTED",
@@ -3865,7 +3871,7 @@ function Cr(e) {
 				};
 			}),
 			acceptHydratedProgress: n(({ context: e, event: t }) => {
-				let n = _r(t)?.context, r = n?.loadResult;
+				let n = yr(t)?.context, r = n?.loadResult;
 				return !n || !r ? {} : {
 					hydratedProgressContext: r.context,
 					lastPersistenceFailure: n.lastFailure,
@@ -3878,7 +3884,7 @@ function Cr(e) {
 				let r = e.createSceneRuntimeInput(n), i = e.createPathOrchestrationBinding(n);
 				d.clear(), d.set(n.sessionRevision, r), f.clear(), f.set(n.sessionRevision, i);
 			},
-			recordPersistenceFailure: n(({ event: e }) => ({ lastPersistenceFailure: _r(e)?.context.lastFailure ?? null })),
+			recordPersistenceFailure: n(({ event: e }) => ({ lastPersistenceFailure: yr(e)?.context.lastFailure ?? null })),
 			recordReconciliationFailure: n(({ event: e }) => ({ degradedReason: typeof e == "object" && e && "error" in e ? `Progress scene reconciliation failed: ${String(e.error)}` : "Progress scene reconciliation failed." })),
 			bindPathOrchestrationActor: ({ self: e }) => {
 				let t = e.getSnapshot().children.pathOrchestration;
@@ -3889,7 +3895,7 @@ function Cr(e) {
 				t?.unbindActor(n);
 			},
 			activateExperience: n(({ context: e, event: t }) => {
-				let n = pr(t);
+				let n = hr(t);
 				if (!n?.revision || !n.transactionId || !n.compiledPath) return {};
 				let r = Object.freeze({
 					revision: n.revision,
@@ -3920,12 +3926,12 @@ function Cr(e) {
 				};
 			}),
 			recordGenerationFailure: n(({ event: e }) => ({
-				generationTransactionId: pr(e)?.transactionId ?? null,
-				generationRevision: pr(e)?.revision ?? null,
-				lastGenerationFailure: pr(e)?.lastError ?? null
+				generationTransactionId: hr(e)?.transactionId ?? null,
+				generationRevision: hr(e)?.revision ?? null,
+				lastGenerationFailure: hr(e)?.lastError ?? null
 			})),
 			observePageSnapshot: n(({ event: e }) => {
-				let t = pr(e);
+				let t = hr(e);
 				return t ? {
 					generationTransactionId: t.transactionId,
 					generationRevision: t.revision
@@ -3933,7 +3939,7 @@ function Cr(e) {
 			}),
 			recordIgnoredEvent: n(({ context: e, event: t }) => ({
 				ignoredEventCount: e.ignoredEventCount + 1,
-				lastIgnoredEvent: Sr(e, t)
+				lastIgnoredEvent: wr(e, t)
 			})),
 			recordDegraded: n(({ event: e }) => ({ degradedReason: e.type === "APP.RUNTIME.DEGRADED" ? e.reason : "runtime-degraded" })),
 			clearDegraded: n({ degradedReason: null }),
@@ -4058,7 +4064,7 @@ function Cr(e) {
 							storageKey: n.progressStorageKey || e.resolveLearningProgressStorageKey?.(n) || `learning-path-progress:${n.revision}`,
 							sessionRevision: n.sessionRevision,
 							pathRevision: n.revision,
-							fallbackContext: lr((e) => {
+							fallbackContext: dr((e) => {
 								let t = r.get(e);
 								if (!t) throw Error(`No progression model registered for persistence revision "${e}".`);
 								return t;
@@ -4251,10 +4257,7 @@ function Cr(e) {
 							{
 								id: "pathOrchestration",
 								src: "pathOrchestration",
-								input: ({ context: e }) => ({
-									...p().input,
-									initialNodeId: e.hydratedProgressContext?.currentNodeId ?? e.activeExperience?.initialNodeId ?? "invalid-node"
-								}),
+								input: () => p().input,
 								onSnapshot: { actions: "bindPathOrchestrationActor" }
 							}
 						],
@@ -4353,8 +4356,8 @@ function Cr(e) {
 		}
 	});
 }
-function wr(e, t = {}) {
-	let n = r(Cr(e), {
+function Er(e, t = {}) {
+	let n = r(Tr(e), {
 		input: t.input ?? {},
 		...t.inspect ? { inspect: t.inspect } : {}
 	});
@@ -4362,43 +4365,43 @@ function wr(e, t = {}) {
 }
 //#endregion
 //#region src/application/learning-path/selectors.ts
-var Tr = Object.freeze([
+var Dr = Object.freeze([
 	"gate",
 	"generating",
 	"generationFailed",
 	"degraded"
 ]);
-function Er(e) {
-	return e.matches({ active: "interactive" }) ? "active" : e.matches({ active: "hydrating" }) || e.matches({ active: "reconciling" }) ? "restoring" : e.matches({ active: "draining" }) ? "generating" : Tr.find((t) => e.matches(t)) ?? "gate";
-}
-function Dr(e) {
-	return e.context.activeExperience?.sessionRevision ?? null;
-}
 function Or(e) {
-	return e.children.progress ?? null;
+	return e.matches({ active: "interactive" }) ? "active" : e.matches({ active: "hydrating" }) || e.matches({ active: "reconciling" }) ? "restoring" : e.matches({ active: "draining" }) ? "generating" : Dr.find((t) => e.matches(t)) ?? "gate";
 }
 function kr(e) {
-	return e.children.journey ?? null;
+	return e.context.activeExperience?.sessionRevision ?? null;
 }
 function Ar(e) {
-	return e.children.nodeCard ?? null;
+	return e.children.progress ?? null;
 }
 function jr(e) {
-	return e.children.completionCelebration ?? null;
+	return e.children.journey ?? null;
 }
 function Mr(e) {
-	let t = jr(e);
-	return t ? Nn(t.getSnapshot()) : null;
+	return e.children.nodeCard ?? null;
 }
 function Nr(e) {
-	return e.children.sceneSession ?? null;
+	return e.children.completionCelebration ?? null;
 }
 function Pr(e) {
+	let t = Nr(e);
+	return t ? Fn(t.getSnapshot()) : null;
+}
+function Fr(e) {
+	return e.children.sceneSession ?? null;
+}
+function Ir(e) {
 	return e.children.pathOrchestration ?? null;
 }
 //#endregion
 //#region src/application/shared/subscribeActorSelector.ts
-function Fr(e, t, n, r = {}) {
+function Lr(e, t, n, r = {}) {
 	let i = r.equals ?? Object.is, a = t(e.getSnapshot());
 	return r.emitInitial && n(a, null), e.subscribe((e) => {
 		let r = t(e);
@@ -4409,10 +4412,10 @@ function Fr(e, t, n, r = {}) {
 }
 //#endregion
 //#region src/infrastructure/browser/LearningResourceNavigator.ts
-function Ir() {
+function Rr() {
 	return new DOMException("Learning resource navigation was cancelled.", "AbortError");
 }
-function Lr(e, t) {
+function zr(e, t) {
 	try {
 		let n = new URL(e, t);
 		return n.protocol === "http:" || n.protocol === "https:" ? n : null;
@@ -4420,14 +4423,14 @@ function Lr(e, t) {
 		return null;
 	}
 }
-var Rr = class {
+var Br = class {
 	browserWindow;
 	constructor(e = window) {
 		this.browserWindow = e;
 	}
 	navigate(e, t) {
-		if (t.signal.aborted) throw Ir();
-		let n = Lr(e.binding.href, this.browserWindow.location.href);
+		if (t.signal.aborted) throw Rr();
+		let n = zr(e.binding.href, this.browserWindow.location.href);
 		if (!n) return Object.freeze({
 			status: "invalid-url",
 			message: "Only valid HTTP(S) learning-resource URLs are allowed."
@@ -4453,65 +4456,65 @@ var Rr = class {
 		}
 	}
 };
-function zr(e) {
-	return new Rr(e);
+function Vr(e) {
+	return new Br(e);
 }
 //#endregion
 //#region src/infrastructure/browser/BrowserLearningProgressStorage.ts
-function Br() {
-	return new et("aborted", "Learning progress storage operation was aborted.");
+function Hr() {
+	return new nt("aborted", "Learning progress storage operation was aborted.");
 }
-function Vr(e, t) {
-	if (e instanceof et) return e;
+function Ur(e, t) {
+	if (e instanceof nt) return e;
 	let n = typeof e == "object" && e && "name" in e ? String(e.name) : "";
-	return n === "SecurityError" ? new et("security-error", "Browser storage access was denied.", { cause: e }) : n === "QuotaExceededError" || n === "NS_ERROR_DOM_QUOTA_REACHED" ? new et("quota-exceeded", "Browser storage quota was exceeded.", { cause: e }) : new et(t === "read" ? "read-failed" : "write-failed", `Browser storage ${t} failed.`, { cause: e });
+	return n === "SecurityError" ? new nt("security-error", "Browser storage access was denied.", { cause: e }) : n === "QuotaExceededError" || n === "NS_ERROR_DOM_QUOTA_REACHED" ? new nt("quota-exceeded", "Browser storage quota was exceeded.", { cause: e }) : new nt(t === "read" ? "read-failed" : "write-failed", `Browser storage ${t} failed.`, { cause: e });
 }
-var Hr = class {
+var Wr = class {
 	#e;
 	constructor(e = () => {
-		if (globalThis.localStorage === void 0) throw new et("storage-unavailable", "Browser localStorage is unavailable.");
+		if (globalThis.localStorage === void 0) throw new nt("storage-unavailable", "Browser localStorage is unavailable.");
 		return globalThis.localStorage;
 	}) {
 		this.#e = e;
 	}
 	read(e, t) {
-		if (t.signal.aborted) throw Br();
+		if (t.signal.aborted) throw Hr();
 		try {
 			let n = this.#e().getItem(e.key);
-			if (t.signal.aborted) throw Br();
+			if (t.signal.aborted) throw Hr();
 			return n;
 		} catch (e) {
-			throw Vr(e, "read");
+			throw Ur(e, "read");
 		}
 	}
 	write(e, t) {
-		if (t.signal.aborted) throw Br();
+		if (t.signal.aborted) throw Hr();
 		try {
-			if (this.#e().setItem(e.key, e.value), t.signal.aborted) throw Br();
+			if (this.#e().setItem(e.key, e.value), t.signal.aborted) throw Hr();
 		} catch (e) {
-			throw Vr(e, "write");
+			throw Ur(e, "write");
 		}
 	}
-}, Ur = /* @__PURE__ */ new Set([
+}, Gr = /* @__PURE__ */ new Set([
 	"__proto__",
 	"constructor",
 	"prototype"
 ]);
-function Wr(e, t) {
+function Kr(e, t) {
 	if (typeof e != "object" || !e || Array.isArray(e)) throw TypeError(`${t} 必须是普通 JSON 对象。`);
 	let n = Object.getPrototypeOf(e);
 	if (n !== Object.prototype && n !== null) throw TypeError(`${t} 不能包含类实例或自定义原型。`);
 }
-function Gr(e, t, n) {
+function qr(e, t, n) {
 	let r = new Set(t);
 	for (let t of Reflect.ownKeys(e)) if (typeof t != "string" || !r.has(t)) throw TypeError(`${n} 包含未列入白名单的字段 ${String(t)}。`);
 }
-function Kr(e, t, n) {
+function Jr(e, t, n) {
 	let r = Object.getOwnPropertyDescriptor(e, t);
 	if (!r || !("value" in r) || !r.enumerable) throw TypeError(`${n}.${t} 必须是可枚举的数据属性。`);
 	return r.value;
 }
-function qr(e) {
+function Yr(e) {
 	let t = /* @__PURE__ */ new WeakSet(), n = (e, r) => {
 		if (e === null || typeof e == "string" || typeof e == "boolean") return e;
 		if (typeof e == "number") {
@@ -4533,10 +4536,10 @@ function qr(e) {
 				}
 				return i;
 			}
-			Wr(e, r);
+			Kr(e, r);
 			let t = Object.create(null);
 			for (let i of Reflect.ownKeys(e)) {
-				if (typeof i != "string" || Ur.has(i)) throw TypeError(`${r} 包含不安全字段 ${String(i)}。`);
+				if (typeof i != "string" || Gr.has(i)) throw TypeError(`${r} 包含不安全字段 ${String(i)}。`);
 				let a = Object.getOwnPropertyDescriptor(e, i);
 				if (!a || !("value" in a) || !a.enumerable) throw TypeError(`${r}.${i} 必须是可枚举的数据属性。`);
 				t[i] = n(a.value, `${r}.${i}`);
@@ -4550,20 +4553,20 @@ function qr(e) {
 }
 //#endregion
 //#region src/host/learning-path/templateLoader.ts
-var Jr = /^(?:application|text)\/(?:[a-z0-9!#$&^_.+-]+\+)?json$/i;
-function Yr(e, t) {
+var Xr = /^(?:application|text)\/(?:[a-z0-9!#$&^_.+-]+\+)?json$/i;
+function Zr(e, t) {
 	return Object.prototype.hasOwnProperty.call(e, t);
 }
-function Xr(e) {
+function Qr(e) {
 	if ([
 		"document",
 		"documentUrl",
 		"documentProvider"
-	].filter((t) => Yr(e, t)).length > 1) throw TypeError("document、documentUrl、documentProvider 只能配置一个。");
-	if (Yr(e, "documentUrl") && (typeof e.documentUrl != "string" || e.documentUrl.trim() === "")) throw TypeError("documentUrl 必须是非空字符串。");
-	if (Yr(e, "documentProvider") && typeof e.documentProvider != "function") throw TypeError("documentProvider 必须是函数。");
+	].filter((t) => Zr(e, t)).length > 1) throw TypeError("document、documentUrl、documentProvider 只能配置一个。");
+	if (Zr(e, "documentUrl") && (typeof e.documentUrl != "string" || e.documentUrl.trim() === "")) throw TypeError("documentUrl 必须是非空字符串。");
+	if (Zr(e, "documentProvider") && typeof e.documentProvider != "function") throw TypeError("documentProvider 必须是函数。");
 }
-function Zr(e, t) {
+function $r(e, t) {
 	if (!e) return /* @__PURE__ */ new Set([t.origin]);
 	let n = /* @__PURE__ */ new Set([t.origin]);
 	for (let r of e) {
@@ -4574,21 +4577,21 @@ function Zr(e, t) {
 	}
 	return n;
 }
-async function Qr(e, t) {
-	if (Xr(e), t.signal.aborted) throw new DOMException("Template request cancelled.", "AbortError");
-	if (Yr(e, "document")) return qr(e.document);
-	if (Yr(e, "documentProvider")) {
+async function ei(e, t) {
+	if (Qr(e), t.signal.aborted) throw new DOMException("Template request cancelled.", "AbortError");
+	if (Zr(e, "document")) return Yr(e.document);
+	if (Zr(e, "documentProvider")) {
 		let n = e.documentProvider;
 		if (typeof n != "function") throw TypeError("documentProvider 必须是函数。");
 		let r = await n({ signal: t.signal });
 		if (t.signal.aborted) throw new DOMException("Template request cancelled.", "AbortError");
-		return qr(r);
+		return Yr(r);
 	}
-	let n = new URL(t.baseUrl), r = Yr(e, "documentUrl") ? e.documentUrl : t.defaultDocumentUrl;
+	let n = new URL(t.baseUrl), r = Zr(e, "documentUrl") ? e.documentUrl : t.defaultDocumentUrl;
 	if (typeof r != "string") throw TypeError("documentUrl 必须是非空字符串。");
 	let i = new URL(r, n);
 	if (!/^https?:$/.test(i.protocol) || i.username || i.password) throw TypeError(`学习路径 JSON 只允许 http(s) URL：${i.href}`);
-	if (!Zr(e.allowedDocumentOrigins, n).has(i.origin)) throw TypeError(`学习路径 JSON 来源未列入白名单：${i.origin}`);
+	if (!$r(e.allowedDocumentOrigins, n).has(i.origin)) throw TypeError(`学习路径 JSON 来源未列入白名单：${i.origin}`);
 	let a = await (t.fetcher ?? fetch)(i.href, {
 		signal: t.signal,
 		headers: { Accept: "application/json" },
@@ -4596,10 +4599,10 @@ async function Qr(e, t) {
 	});
 	if (!a.ok) throw Error(`HTTP ${a.status}`);
 	let o = a.headers.get("content-type")?.split(";", 1)[0]?.trim();
-	if (!o || !Jr.test(o)) throw TypeError(`学习路径响应必须使用 JSON Content-Type，当前为 ${o || "缺失"}。`);
-	return qr(await a.json());
+	if (!o || !Xr.test(o)) throw TypeError(`学习路径响应必须使用 JSON Content-Type，当前为 ${o || "缺失"}。`);
+	return Yr(await a.json());
 }
-function $r(e) {
+function ti(e) {
 	let t = new URL({
 		BASE_URL: "/",
 		DEV: !1,
@@ -4611,47 +4614,47 @@ function $r(e) {
 }
 //#endregion
 //#region src/host/learning-path/contracts.ts
-var ei = "__LEARNING_PATH_PAGE_CONFIG__", ti = "learning-path-page";
+var ni = "__LEARNING_PATH_PAGE_CONFIG__", ri = "learning-path-page";
 //#endregion
 //#region src/host/learning-path/windowConfig.ts
-function ni(e) {
-	let t = `$window.${ei}`;
-	if (Wr(e, t), Gr(e, [
+function ii(e) {
+	let t = `$window.${ni}`;
+	if (Kr(e, t), qr(e, [
 		"protocol",
 		"version",
 		"source"
-	], t), Kr(e, "protocol", t) !== "learning-path-page") throw TypeError(`宿主协议必须是 ${ti}。`);
-	if (Kr(e, "version", t) !== "1.0") throw TypeError("宿主协议版本必须是 1.0。");
-	let n = "$window.__LEARNING_PATH_PAGE_CONFIG__.source", r = Kr(e, "source", t);
-	Wr(r, n);
-	let i = Kr(r, "kind", n);
-	if (i === "document") return Gr(r, ["kind", "document"], n), { document: qr(Kr(r, "document", n)) };
+	], t), Jr(e, "protocol", t) !== "learning-path-page") throw TypeError(`宿主协议必须是 ${ri}。`);
+	if (Jr(e, "version", t) !== "1.0") throw TypeError("宿主协议版本必须是 1.0。");
+	let n = "$window.__LEARNING_PATH_PAGE_CONFIG__.source", r = Jr(e, "source", t);
+	Kr(r, n);
+	let i = Jr(r, "kind", n);
+	if (i === "document") return qr(r, ["kind", "document"], n), { document: Yr(Jr(r, "document", n)) };
 	if (i === "url") {
-		Gr(r, ["kind", "documentUrl"], n);
-		let e = Kr(r, "documentUrl", n);
+		qr(r, ["kind", "documentUrl"], n);
+		let e = Jr(r, "documentUrl", n);
 		if (typeof e != "string" || e.trim() === "") throw TypeError("宿主 documentUrl 必须是非空字符串。");
 		return { documentUrl: e };
 	}
 	throw TypeError("宿主 source.kind 只能是 document 或 url。");
 }
-function ri(e) {
-	let t = Object.getOwnPropertyDescriptor(e, ei);
+function ai(e) {
+	let t = Object.getOwnPropertyDescriptor(e, ni);
 	if (!t) return null;
-	if (!("value" in t)) throw TypeError(`${ei} 不能使用 getter/setter。`);
-	return ni(t.value);
+	if (!("value" in t)) throw TypeError(`${ni} 不能使用 getter/setter。`);
+	return ii(t.value);
 }
 //#endregion
 //#region src/diagnostics/LearningPathXStateInspector.ts
-async function ii(e) {
+async function oi(e) {
 	return null;
 }
 //#endregion
 //#region src/progression/domain/selectors.ts
-function ai(e) {
+function si(e) {
 	return "context" in e ? e.context : e;
 }
-function oi(e) {
-	let t = ai(e), n = Object.freeze({
+function ci(e) {
+	let t = si(e), n = Object.freeze({
 		...t.subjectStatusById,
 		...t.conceptStatusById
 	}), r = new Set(t.goalNodeIds), i = {};
@@ -4667,8 +4670,8 @@ function oi(e) {
 		currentNodeId: t.currentNodeId,
 		nodeStatusById: n,
 		nodeLearningStateById: Object.freeze(i),
-		subjectStatusById: Fn({ ...t.subjectStatusById }),
-		conceptStatusById: Fn({ ...t.conceptStatusById }),
+		subjectStatusById: Ln({ ...t.subjectStatusById }),
+		conceptStatusById: Ln({ ...t.conceptStatusById }),
 		celebration: Object.freeze({
 			seen: t.celebrationSeen,
 			count: t.celebrationCount
@@ -4685,7 +4688,7 @@ function oi(e) {
 }
 //#endregion
 //#region src/progression/presentation/NodeLearningPatchProjector.ts
-function si(e) {
+function li(e) {
 	let t = e.context.model;
 	return Object.freeze({
 		goalNodeIds: t.goalNodeIds,
@@ -4693,18 +4696,18 @@ function si(e) {
 		conceptStatusById: t.conceptStatusById
 	});
 }
-function ci(e, t) {
+function ui(e, t) {
 	if (e === t) return !0;
 	let n = Object.keys(e), r = Object.keys(t);
 	return n.length === r.length && n.every((n) => e[n] === t[n]);
 }
-function li(e, t) {
-	return (e.goalNodeIds === t.goalNodeIds || e.goalNodeIds.length === t.goalNodeIds.length && e.goalNodeIds.every((e, n) => e === t.goalNodeIds[n])) && ci(e.subjectStatusById, t.subjectStatusById) && ci(e.conceptStatusById, t.conceptStatusById);
+function di(e, t) {
+	return (e.goalNodeIds === t.goalNodeIds || e.goalNodeIds.length === t.goalNodeIds.length && e.goalNodeIds.every((e, n) => e === t.goalNodeIds[n])) && ui(e.subjectStatusById, t.subjectStatusById) && ui(e.conceptStatusById, t.conceptStatusById);
 }
-function ui(e, t) {
+function fi(e, t) {
 	return e?.kind === t.kind && e.status === t.status;
 }
-var di = class {
+var pi = class {
 	presentedByNodeId = /* @__PURE__ */ new Map();
 	initialized = !1;
 	project(e) {
@@ -4714,7 +4717,7 @@ var di = class {
 				kind: t.has(r) ? "goal" : "subject",
 				status: i
 			});
-			(!this.initialized || !ui(this.presentedByNodeId.get(r), e)) && (this.presentedByNodeId.set(r, e), n.push(Object.freeze({
+			(!this.initialized || !fi(this.presentedByNodeId.get(r), e)) && (this.presentedByNodeId.set(r, e), n.push(Object.freeze({
 				nodeId: r,
 				learningState: e
 			})));
@@ -4724,7 +4727,7 @@ var di = class {
 				kind: "concept",
 				status: r
 			});
-			(!this.initialized || !ui(this.presentedByNodeId.get(t), e)) && (this.presentedByNodeId.set(t, e), n.push(Object.freeze({
+			(!this.initialized || !fi(this.presentedByNodeId.get(t), e)) && (this.presentedByNodeId.set(t, e), n.push(Object.freeze({
 				nodeId: t,
 				learningState: e
 			})));
@@ -4735,13 +4738,13 @@ var di = class {
 			changes: Object.freeze(n)
 		});
 	}
-}, fi = Object.freeze({ actionRequested: "learning-path:contextual-card-action" }), pi = Object.freeze({ settled: "learning-path:completion-celebration-settled" }), mi = "data-learning-path-celebration-styles", hi = /* @__PURE__ */ new WeakMap(), gi = [
+}, mi = Object.freeze({ actionRequested: "learning-path:contextual-card-action" }), hi = Object.freeze({ settled: "learning-path:completion-celebration-settled" }), gi = "data-learning-path-celebration-styles", _i = /* @__PURE__ */ new WeakMap(), vi = [
 	"#ffd33d",
 	"#42d66b",
 	"#ffffff",
 	"#d78224",
 	"#73c8ff"
-], _i = 26, vi = "\n[data-learning-path-root] .lp-completion-celebration {\n  position: absolute;\n  z-index: 20;\n  inset: 0;\n  display: grid;\n  place-items: center;\n  overflow: hidden;\n  pointer-events: none;\n  font-family: Inter, ui-rounded, \"SF Pro Rounded\", \"PingFang SC\", \"Microsoft YaHei\", system-ui, sans-serif;\n}\n[data-learning-path-root] .lp-completion-celebration[hidden] { display: none; }\n[data-learning-path-root] .lp-completion-celebration__halo {\n  position: absolute;\n  width: min(66%, 570px);\n  aspect-ratio: 1;\n  border-radius: 50%;\n  background: radial-gradient(circle, rgb(255 215 59 / 26%), rgb(255 215 59 / 7%) 43%, transparent 69%);\n  opacity: 0;\n}\n[data-learning-path-root] .lp-completion-celebration__message {\n  position: relative;\n  max-width: min(470px, calc(100% - 32px));\n  border: 1px solid rgb(255 255 255 / 86%);\n  border-radius: 24px;\n  padding: 22px 27px 24px;\n  color: #27352c;\n  background: rgb(255 255 255 / 92%);\n  box-shadow: 0 22px 60px rgb(42 66 49 / 20%), 0 7px 0 rgb(223 229 224 / 92%);\n  opacity: 0;\n  text-align: center;\n  backdrop-filter: blur(18px) saturate(1.08);\n}\n[data-learning-path-root] .lp-completion-celebration__mark {\n  display: grid;\n  width: 58px;\n  height: 58px;\n  margin: -51px auto 12px;\n  place-items: center;\n  border: 5px solid #fff;\n  border-radius: 50%;\n  color: #fff;\n  background: linear-gradient(180deg, #48d96e, #21af4d);\n  box-shadow: 0 7px 0 #12883a, 0 12px 22px rgb(25 138 62 / 28%);\n  font-size: 30px;\n  font-weight: 900;\n}\n[data-learning-path-root] .lp-completion-celebration__title { margin: 0; font-size: clamp(25px, 4cqw, 38px); font-weight: 900; letter-spacing: -.035em; line-height: 1.13; }\n[data-learning-path-root] .lp-completion-celebration__body { margin: 9px 0 0; color: #667168; font-size: 14px; font-weight: 620; line-height: 1.55; }\n[data-learning-path-root] .lp-completion-celebration__body[hidden] { display: none; }\n[data-learning-path-root] .lp-completion-celebration__confetti {\n  position: absolute;\n  top: -8cqh;\n  left: var(--lp-confetti-x);\n  width: var(--lp-confetti-w);\n  height: var(--lp-confetti-h);\n  border-radius: 2px;\n  background: var(--lp-confetti-color);\n  opacity: 0;\n  transform: translate3d(0, -8cqh, 0) rotate(var(--lp-confetti-turn));\n}\n[data-learning-path-root] .lp-completion-celebration[data-active=\"true\"] .lp-completion-celebration__halo { animation: lp-celebration-halo 1450ms cubic-bezier(.16,.8,.24,1) both; }\n[data-learning-path-root] .lp-completion-celebration[data-active=\"true\"] .lp-completion-celebration__message { animation: lp-celebration-message 1700ms cubic-bezier(.16,.82,.24,1) both; }\n[data-learning-path-root] .lp-completion-celebration[data-active=\"true\"] .lp-completion-celebration__confetti { animation: lp-celebration-confetti 1540ms cubic-bezier(.18,.72,.28,1) var(--lp-confetti-delay) both; }\n@keyframes lp-celebration-halo {\n  0% { opacity: 0; transform: scale(.35); }\n  27% { opacity: 1; transform: scale(1); }\n  100% { opacity: 0; transform: scale(1.22); }\n}\n@keyframes lp-celebration-message {\n  0% { opacity: 0; transform: translate3d(0, 18px, 0) scale(.84); }\n  18%, 76% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }\n  100% { opacity: 0; transform: translate3d(0, -9px, 0) scale(.985); }\n}\n@keyframes lp-celebration-confetti {\n  0% { opacity: 0; transform: translate3d(0, -8cqh, 0) rotate(0); }\n  9% { opacity: 1; }\n  100% { opacity: 0; transform: translate3d(var(--lp-confetti-drift), 112cqh, 0) rotate(var(--lp-confetti-spin)); }\n}\n[data-learning-path-root] .lp-completion-celebration[data-reduced-motion=\"true\"] .lp-completion-celebration__confetti { display: none; }\n[data-learning-path-root] .lp-completion-celebration[data-reduced-motion=\"true\"][data-active=\"true\"] .lp-completion-celebration__halo { animation: lp-celebration-halo-reduced 700ms ease-out both; }\n[data-learning-path-root] .lp-completion-celebration[data-reduced-motion=\"true\"][data-active=\"true\"] .lp-completion-celebration__message { animation: lp-celebration-message-reduced 700ms ease-out both; }\n@keyframes lp-celebration-halo-reduced { 0%, 100% { opacity: 0; } 20%, 80% { opacity: .65; } }\n@keyframes lp-celebration-message-reduced { 0%, 100% { opacity: 0; } 14%, 82% { opacity: 1; } }\n@media (prefers-reduced-motion: reduce) {\n  [data-learning-path-root] .lp-completion-celebration__confetti { display: none; }\n  [data-learning-path-root] .lp-completion-celebration[data-active=\"true\"] .lp-completion-celebration__halo { animation: lp-celebration-halo-reduced 700ms ease-out both; }\n  [data-learning-path-root] .lp-completion-celebration[data-active=\"true\"] .lp-completion-celebration__message { animation: lp-celebration-message-reduced 700ms ease-out both; }\n}\n", yi = class {
+], yi = 26, bi = "\n[data-learning-path-root] .lp-completion-celebration {\n  position: absolute;\n  z-index: 20;\n  inset: 0;\n  display: grid;\n  place-items: center;\n  overflow: hidden;\n  pointer-events: none;\n  font-family: Inter, ui-rounded, \"SF Pro Rounded\", \"PingFang SC\", \"Microsoft YaHei\", system-ui, sans-serif;\n}\n[data-learning-path-root] .lp-completion-celebration[hidden] { display: none; }\n[data-learning-path-root] .lp-completion-celebration__halo {\n  position: absolute;\n  width: min(66%, 570px);\n  aspect-ratio: 1;\n  border-radius: 50%;\n  background: radial-gradient(circle, rgb(255 215 59 / 26%), rgb(255 215 59 / 7%) 43%, transparent 69%);\n  opacity: 0;\n}\n[data-learning-path-root] .lp-completion-celebration__message {\n  position: relative;\n  max-width: min(470px, calc(100% - 32px));\n  border: 1px solid rgb(255 255 255 / 86%);\n  border-radius: 24px;\n  padding: 22px 27px 24px;\n  color: #27352c;\n  background: rgb(255 255 255 / 92%);\n  box-shadow: 0 22px 60px rgb(42 66 49 / 20%), 0 7px 0 rgb(223 229 224 / 92%);\n  opacity: 0;\n  text-align: center;\n  backdrop-filter: blur(18px) saturate(1.08);\n}\n[data-learning-path-root] .lp-completion-celebration__mark {\n  display: grid;\n  width: 58px;\n  height: 58px;\n  margin: -51px auto 12px;\n  place-items: center;\n  border: 5px solid #fff;\n  border-radius: 50%;\n  color: #fff;\n  background: linear-gradient(180deg, #48d96e, #21af4d);\n  box-shadow: 0 7px 0 #12883a, 0 12px 22px rgb(25 138 62 / 28%);\n  font-size: 30px;\n  font-weight: 900;\n}\n[data-learning-path-root] .lp-completion-celebration__title { margin: 0; font-size: clamp(25px, 4cqw, 38px); font-weight: 900; letter-spacing: -.035em; line-height: 1.13; }\n[data-learning-path-root] .lp-completion-celebration__body { margin: 9px 0 0; color: #667168; font-size: 14px; font-weight: 620; line-height: 1.55; }\n[data-learning-path-root] .lp-completion-celebration__body[hidden] { display: none; }\n[data-learning-path-root] .lp-completion-celebration__confetti {\n  position: absolute;\n  top: -8cqh;\n  left: var(--lp-confetti-x);\n  width: var(--lp-confetti-w);\n  height: var(--lp-confetti-h);\n  border-radius: 2px;\n  background: var(--lp-confetti-color);\n  opacity: 0;\n  transform: translate3d(0, -8cqh, 0) rotate(var(--lp-confetti-turn));\n}\n[data-learning-path-root] .lp-completion-celebration[data-active=\"true\"] .lp-completion-celebration__halo { animation: lp-celebration-halo 1450ms cubic-bezier(.16,.8,.24,1) both; }\n[data-learning-path-root] .lp-completion-celebration[data-active=\"true\"] .lp-completion-celebration__message { animation: lp-celebration-message 1700ms cubic-bezier(.16,.82,.24,1) both; }\n[data-learning-path-root] .lp-completion-celebration[data-active=\"true\"] .lp-completion-celebration__confetti { animation: lp-celebration-confetti 1540ms cubic-bezier(.18,.72,.28,1) var(--lp-confetti-delay) both; }\n@keyframes lp-celebration-halo {\n  0% { opacity: 0; transform: scale(.35); }\n  27% { opacity: 1; transform: scale(1); }\n  100% { opacity: 0; transform: scale(1.22); }\n}\n@keyframes lp-celebration-message {\n  0% { opacity: 0; transform: translate3d(0, 18px, 0) scale(.84); }\n  18%, 76% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }\n  100% { opacity: 0; transform: translate3d(0, -9px, 0) scale(.985); }\n}\n@keyframes lp-celebration-confetti {\n  0% { opacity: 0; transform: translate3d(0, -8cqh, 0) rotate(0); }\n  9% { opacity: 1; }\n  100% { opacity: 0; transform: translate3d(var(--lp-confetti-drift), 112cqh, 0) rotate(var(--lp-confetti-spin)); }\n}\n[data-learning-path-root] .lp-completion-celebration[data-reduced-motion=\"true\"] .lp-completion-celebration__confetti { display: none; }\n[data-learning-path-root] .lp-completion-celebration[data-reduced-motion=\"true\"][data-active=\"true\"] .lp-completion-celebration__halo { animation: lp-celebration-halo-reduced 700ms ease-out both; }\n[data-learning-path-root] .lp-completion-celebration[data-reduced-motion=\"true\"][data-active=\"true\"] .lp-completion-celebration__message { animation: lp-celebration-message-reduced 700ms ease-out both; }\n@keyframes lp-celebration-halo-reduced { 0%, 100% { opacity: 0; } 20%, 80% { opacity: .65; } }\n@keyframes lp-celebration-message-reduced { 0%, 100% { opacity: 0; } 14%, 82% { opacity: 1; } }\n@media (prefers-reduced-motion: reduce) {\n  [data-learning-path-root] .lp-completion-celebration__confetti { display: none; }\n  [data-learning-path-root] .lp-completion-celebration[data-active=\"true\"] .lp-completion-celebration__halo { animation: lp-celebration-halo-reduced 700ms ease-out both; }\n  [data-learning-path-root] .lp-completion-celebration[data-active=\"true\"] .lp-completion-celebration__message { animation: lp-celebration-message-reduced 700ms ease-out both; }\n}\n", xi = class {
 	document;
 	root;
 	title;
@@ -4754,7 +4757,7 @@ var di = class {
 	settleTimer = 0;
 	disposed = !1;
 	constructor(e, t = {}) {
-		this.document = e.ownerDocument, this.releaseStyles = bi(this.document), this.onSettled = t.onSettled, this.root = this.document.createElement("div"), this.root.className = "lp-completion-celebration", this.root.hidden = !0, this.root.setAttribute("role", "status"), this.root.setAttribute("aria-live", "assertive"), this.root.setAttribute("aria-atomic", "true");
+		this.document = e.ownerDocument, this.releaseStyles = Si(this.document), this.onSettled = t.onSettled, this.root = this.document.createElement("div"), this.root.className = "lp-completion-celebration", this.root.hidden = !0, this.root.setAttribute("role", "status"), this.root.setAttribute("aria-live", "assertive"), this.root.setAttribute("aria-atomic", "true");
 		let n = this.document.createElement("div");
 		n.className = "lp-completion-celebration__halo", n.setAttribute("aria-hidden", "true");
 		let r = this.document.createElement("section");
@@ -4788,9 +4791,9 @@ var di = class {
 	}
 	createConfetti() {
 		let e = [];
-		for (let t = 0; t < _i; t += 1) {
+		for (let t = 0; t < yi; t += 1) {
 			let n = this.document.createElement("i");
-			n.className = "lp-completion-celebration__confetti", n.setAttribute("aria-hidden", "true"), n.style.setProperty("--lp-confetti-x", `${3 + t * 37 % 94}%`), n.style.setProperty("--lp-confetti-w", `${6 + t % 4 * 2}px`), n.style.setProperty("--lp-confetti-h", `${10 + t % 3 * 3}px`), n.style.setProperty("--lp-confetti-color", gi[t % gi.length] ?? "#fff"), n.style.setProperty("--lp-confetti-delay", `${t % 7 * 26}ms`), n.style.setProperty("--lp-confetti-drift", `${-84 + t * 53 % 168}px`), n.style.setProperty("--lp-confetti-turn", `${t * 31 % 180}deg`), n.style.setProperty("--lp-confetti-spin", `${440 + t % 6 * 126}deg`), e.push(n);
+			n.className = "lp-completion-celebration__confetti", n.setAttribute("aria-hidden", "true"), n.style.setProperty("--lp-confetti-x", `${3 + t * 37 % 94}%`), n.style.setProperty("--lp-confetti-w", `${6 + t % 4 * 2}px`), n.style.setProperty("--lp-confetti-h", `${10 + t % 3 * 3}px`), n.style.setProperty("--lp-confetti-color", vi[t % vi.length] ?? "#fff"), n.style.setProperty("--lp-confetti-delay", `${t % 7 * 26}ms`), n.style.setProperty("--lp-confetti-drift", `${-84 + t * 53 % 168}px`), n.style.setProperty("--lp-confetti-turn", `${t * 31 % 180}deg`), n.style.setProperty("--lp-confetti-spin", `${440 + t % 6 * 126}deg`), e.push(n);
 		}
 		return e;
 	}
@@ -4802,7 +4805,7 @@ var di = class {
 			playCount: e,
 			occurredAt: this.document.defaultView?.performance.now() ?? Date.now()
 		}), n = this.document.defaultView?.CustomEvent ?? CustomEvent;
-		this.root.dispatchEvent(new n(pi.settled, {
+		this.root.dispatchEvent(new n(hi.settled, {
 			bubbles: !0,
 			composed: !0,
 			detail: t
@@ -4816,39 +4819,39 @@ var di = class {
 		this.activationFrame && e?.cancelAnimationFrame(this.activationFrame), this.settleTimer && e?.clearTimeout(this.settleTimer), this.activationFrame = 0, this.settleTimer = 0;
 	}
 };
-function bi(e) {
-	let t = hi.get(e);
-	if (t) return t.owners += 1, () => xi(e);
+function Si(e) {
+	let t = _i.get(e);
+	if (t) return t.owners += 1, () => Ci(e);
 	let n = e.createElement("style");
-	return n.setAttribute(mi, ""), n.textContent = vi, (e.head ?? e.documentElement).append(n), hi.set(e, {
+	return n.setAttribute(gi, ""), n.textContent = bi, (e.head ?? e.documentElement).append(n), _i.set(e, {
 		element: n,
 		owners: 1
-	}), () => xi(e);
+	}), () => Ci(e);
 }
-function xi(e) {
-	let t = hi.get(e);
-	t && (--t.owners, !(t.owners > 0) && (t.element.remove(), hi.delete(e)));
+function Ci(e) {
+	let t = _i.get(e);
+	t && (--t.owners, !(t.owners > 0) && (t.element.remove(), _i.delete(e)));
 }
 //#endregion
 //#region src/ui/domViewUtils.ts
-var Si = "data-learning-path-ui-styles", Ci = /* @__PURE__ */ new WeakMap(), wi = "\n[data-learning-path-root] .lp-ui-shell {\n  position: absolute;\n  z-index: 8;\n  inset: 0;\n  color: #27302a;\n  pointer-events: none;\n  font-family: Inter, ui-rounded, \"SF Pro Rounded\", \"PingFang SC\", \"Microsoft YaHei\", system-ui, sans-serif;\n}\n[data-learning-path-root] .lp-ui-shell button { font: inherit; }\n[data-learning-path-root] .lp-ui-shell__gate,\n[data-learning-path-root] .lp-ui-shell__context-card,\n[data-learning-path-root] .lp-ui-shell__celebration { position: absolute; inset: 0; pointer-events: none; }\n[data-learning-path-root] .lp-ui-generation-gate {\n  position: absolute;\n  inset: 0;\n  display: grid;\n  place-items: center;\n  pointer-events: auto;\n  background: rgb(250 252 250 / 78%);\n  backdrop-filter: blur(14px) saturate(.9);\n}\n[data-learning-path-root] .lp-ui-generation-gate[hidden] { display: none; }\n[data-learning-path-root] .lp-ui-generation-gate__panel {\n  width: min(440px, calc(100% - 36px));\n  box-sizing: border-box;\n  padding: 34px;\n  border: 1px solid rgb(27 70 42 / 10%);\n  border-radius: 28px;\n  background: rgb(255 255 255 / 94%);\n  box-shadow: 0 24px 70px rgb(38 72 48 / 16%), inset 0 1px 0 #fff;\n}\n[data-learning-path-root] .lp-ui-generation-gate__title {\n  margin: 0;\n  color: #203628;\n  font-size: clamp(26px, 4cqw, 34px);\n  line-height: 1.15;\n  letter-spacing: -.025em;\n}\n[data-learning-path-root] .lp-ui-generation-gate__description {\n  margin: 12px 0 24px;\n  color: #657169;\n  font-size: 14px;\n  font-weight: 600;\n  line-height: 1.65;\n}\n[data-learning-path-root] .lp-ui-generation-gate__actions { display: grid; gap: 14px; }\n[data-learning-path-root] .lp-ui-generation-gate__button {\n  width: 100%;\n  min-height: 50px;\n  border: 1px solid rgb(13 121 50 / 14%);\n  border-radius: 999px;\n  padding: 13px 24px;\n  color: #fff;\n  background: linear-gradient(180deg, #35d56c, #1caf4e);\n  box-shadow: 0 7px 0 #128c3e, 0 18px 34px rgb(27 171 75 / 24%), inset 0 1px 0 rgb(255 255 255 / 35%);\n  cursor: pointer;\n  font-weight: 800;\n  transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;\n}\n[data-learning-path-root] .lp-ui-generation-gate__button[data-tone=\"secondary\"] {\n  color: #176b36;\n  background: #f2fff6;\n  border-color: rgb(23 107 54 / 22%);\n  box-shadow: 0 5px 0 #cbeed6, 0 12px 24px rgb(31 137 69 / 10%);\n}\n[data-learning-path-root] .lp-ui-generation-gate__button[data-tone=\"quiet\"] {\n  color: #56615a;\n  background: #f1f3f1;\n  border-color: rgb(65 76 68 / 12%);\n  box-shadow: 0 5px 0 #d8ddda, 0 10px 20px rgb(45 59 50 / 8%);\n}\n[data-learning-path-root] .lp-ui-generation-gate__button:hover:not(:disabled) { transform: translateY(-2px); filter: saturate(1.06); }\n[data-learning-path-root] .lp-ui-generation-gate__button:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 2px 0 #128c3e; }\n[data-learning-path-root] .lp-ui-generation-gate__button:focus-visible { outline: 3px solid #176b36; outline-offset: 4px; }\n[data-learning-path-root] .lp-ui-generation-gate__button:disabled { cursor: wait; filter: grayscale(.16); opacity: .72; }\n[data-learning-path-root] .lp-ui-generation-gate[data-phase=\"error\"] .lp-ui-generation-gate__button { background: linear-gradient(180deg, #68716b, #505852); box-shadow: 0 7px 0 #3e4540; }\n[data-learning-path-root] .lp-ui-generation-gate__error {\n  margin: 20px 0 0;\n  color: #8a3838;\n  font-size: 13px;\n  font-weight: 650;\n  line-height: 1.5;\n  text-align: center;\n}\n@media (prefers-reduced-motion: reduce) {\n  [data-learning-path-root] .lp-ui-generation-gate__button { transition: none; }\n}\n";
-function Ti(e) {
-	let t = Ci.get(e);
-	if (t) return t.owners += 1, () => Ei(e);
+var wi = "data-learning-path-ui-styles", Ti = /* @__PURE__ */ new WeakMap(), Ei = "\n[data-learning-path-root] .lp-ui-shell {\n  position: absolute;\n  z-index: 8;\n  inset: 0;\n  color: #27302a;\n  pointer-events: none;\n  font-family: Inter, ui-rounded, \"SF Pro Rounded\", \"PingFang SC\", \"Microsoft YaHei\", system-ui, sans-serif;\n}\n[data-learning-path-root] .lp-ui-shell button { font: inherit; }\n[data-learning-path-root] .lp-ui-shell__gate,\n[data-learning-path-root] .lp-ui-shell__context-card,\n[data-learning-path-root] .lp-ui-shell__celebration { position: absolute; inset: 0; pointer-events: none; }\n[data-learning-path-root] .lp-ui-generation-gate {\n  position: absolute;\n  inset: 0;\n  display: grid;\n  place-items: center;\n  pointer-events: auto;\n  background: rgb(250 252 250 / 78%);\n  backdrop-filter: blur(14px) saturate(.9);\n}\n[data-learning-path-root] .lp-ui-generation-gate[hidden] { display: none; }\n[data-learning-path-root] .lp-ui-generation-gate__panel {\n  width: min(440px, calc(100% - 36px));\n  box-sizing: border-box;\n  padding: 34px;\n  border: 1px solid rgb(27 70 42 / 10%);\n  border-radius: 28px;\n  background: rgb(255 255 255 / 94%);\n  box-shadow: 0 24px 70px rgb(38 72 48 / 16%), inset 0 1px 0 #fff;\n}\n[data-learning-path-root] .lp-ui-generation-gate__title {\n  margin: 0;\n  color: #203628;\n  font-size: clamp(26px, 4cqw, 34px);\n  line-height: 1.15;\n  letter-spacing: -.025em;\n}\n[data-learning-path-root] .lp-ui-generation-gate__description {\n  margin: 12px 0 24px;\n  color: #657169;\n  font-size: 14px;\n  font-weight: 600;\n  line-height: 1.65;\n}\n[data-learning-path-root] .lp-ui-generation-gate__actions { display: grid; gap: 14px; }\n[data-learning-path-root] .lp-ui-generation-gate__button {\n  width: 100%;\n  min-height: 50px;\n  border: 1px solid rgb(13 121 50 / 14%);\n  border-radius: 999px;\n  padding: 13px 24px;\n  color: #fff;\n  background: linear-gradient(180deg, #35d56c, #1caf4e);\n  box-shadow: 0 7px 0 #128c3e, 0 18px 34px rgb(27 171 75 / 24%), inset 0 1px 0 rgb(255 255 255 / 35%);\n  cursor: pointer;\n  font-weight: 800;\n  transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;\n}\n[data-learning-path-root] .lp-ui-generation-gate__button[data-tone=\"secondary\"] {\n  color: #176b36;\n  background: #f2fff6;\n  border-color: rgb(23 107 54 / 22%);\n  box-shadow: 0 5px 0 #cbeed6, 0 12px 24px rgb(31 137 69 / 10%);\n}\n[data-learning-path-root] .lp-ui-generation-gate__button[data-tone=\"quiet\"] {\n  color: #56615a;\n  background: #f1f3f1;\n  border-color: rgb(65 76 68 / 12%);\n  box-shadow: 0 5px 0 #d8ddda, 0 10px 20px rgb(45 59 50 / 8%);\n}\n[data-learning-path-root] .lp-ui-generation-gate__button:hover:not(:disabled) { transform: translateY(-2px); filter: saturate(1.06); }\n[data-learning-path-root] .lp-ui-generation-gate__button:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 2px 0 #128c3e; }\n[data-learning-path-root] .lp-ui-generation-gate__button:focus-visible { outline: 3px solid #176b36; outline-offset: 4px; }\n[data-learning-path-root] .lp-ui-generation-gate__button:disabled { cursor: wait; filter: grayscale(.16); opacity: .72; }\n[data-learning-path-root] .lp-ui-generation-gate[data-phase=\"error\"] .lp-ui-generation-gate__button { background: linear-gradient(180deg, #68716b, #505852); box-shadow: 0 7px 0 #3e4540; }\n[data-learning-path-root] .lp-ui-generation-gate__error {\n  margin: 20px 0 0;\n  color: #8a3838;\n  font-size: 13px;\n  font-weight: 650;\n  line-height: 1.5;\n  text-align: center;\n}\n@media (prefers-reduced-motion: reduce) {\n  [data-learning-path-root] .lp-ui-generation-gate__button { transition: none; }\n}\n";
+function Di(e) {
+	let t = Ti.get(e);
+	if (t) return t.owners += 1, () => Oi(e);
 	let n = e.createElement("style");
-	return n.setAttribute(Si, ""), n.textContent = wi, (e.head ?? e.documentElement).append(n), Ci.set(e, {
+	return n.setAttribute(wi, ""), n.textContent = Ei, (e.head ?? e.documentElement).append(n), Ti.set(e, {
 		element: n,
 		owners: 1
-	}), () => Ei(e);
+	}), () => Oi(e);
 }
-function Ei(e) {
-	let t = Ci.get(e);
-	t && (--t.owners, !(t.owners > 0) && (t.element.remove(), Ci.delete(e)));
+function Oi(e) {
+	let t = Ti.get(e);
+	t && (--t.owners, !(t.owners > 0) && (t.element.remove(), Ti.delete(e)));
 }
-function Di(e) {
+function ki(e) {
 	return e.defaultView?.performance.now() ?? Date.now();
 }
-function Oi(e, t, n, r) {
+function Ai(e, t, n, r) {
 	let i = new ((t.defaultView?.CustomEvent) ?? CustomEvent)(n, {
 		bubbles: !0,
 		cancelable: !0,
@@ -4859,7 +4862,7 @@ function Oi(e, t, n, r) {
 }
 //#endregion
 //#region src/ui/GenerationGateView.ts
-var ki = class e {
+var ji = class e {
 	document;
 	root;
 	title;
@@ -4869,7 +4872,7 @@ var ki = class e {
 	onLaunchRequested;
 	disposed = !1;
 	constructor(t, n = {}) {
-		this.document = t.ownerDocument, this.releaseStyles = Ti(this.document), this.onLaunchRequested = n.onLaunchRequested, this.root = this.document.createElement("div"), this.root.className = "lp-ui-generation-gate", this.root.dataset.phase = "ready", this.root.setAttribute("role", "dialog"), this.root.setAttribute("aria-labelledby", `learning-path-gate-title-${e.nextId}`), this.root.setAttribute("aria-modal", "true");
+		this.document = t.ownerDocument, this.releaseStyles = Di(this.document), this.onLaunchRequested = n.onLaunchRequested, this.root = this.document.createElement("div"), this.root.className = "lp-ui-generation-gate", this.root.dataset.phase = "ready", this.root.setAttribute("role", "dialog"), this.root.setAttribute("aria-labelledby", `learning-path-gate-title-${e.nextId}`), this.root.setAttribute("aria-modal", "true");
 		let r = this.document.createElement("section");
 		r.className = "lp-ui-generation-gate__panel", this.title = this.document.createElement("h1"), this.title.className = "lp-ui-generation-gate__title", this.title.id = `learning-path-gate-title-${e.nextId}`, this.title.textContent = "选择学习路径";
 		let i = this.document.createElement("p");
@@ -4918,14 +4921,14 @@ var ki = class e {
 			type: "path.launch",
 			action: n,
 			source: "generation-gate",
-			occurredAt: Di(this.document)
+			occurredAt: ki(this.document)
 		});
-		Oi(this.root, this.document, "learning-path-ui:launch-requested", r).defaultPrevented || (Object.values(this.buttons).forEach((e) => {
+		Ai(this.root, this.document, "learning-path-ui:launch-requested", r).defaultPrevented || (Object.values(this.buttons).forEach((e) => {
 			e.disabled = !0;
 		}), this.root.dataset.phase = "requested", this.root.setAttribute("aria-busy", "true"), t.textContent = n === "continue" ? "正在恢复学习路径…" : n === "reset" ? "正在重置学习路径…" : "正在生成学习路径…", this.root.hidden = !0, this.onLaunchRequested?.(r));
 	};
 	static nextId = 1;
-}, Ai = "data-contextual-learning-card-styles", ji = /* @__PURE__ */ new WeakMap(), Mi = "\n[data-learning-path-root] .lp-context-card {\n  --lp-card-face: #2fca5c;\n  --lp-card-face-hi: #45d96e;\n  --lp-card-side: #159445;\n  --lp-card-side-dark: #0e7535;\n  --lp-card-ink: #fff;\n  --lp-card-soft-ink: rgb(255 255 255 / 82%);\n  --lp-card-arrow-x: 50%;\n  --lp-card-available-width: calc(100% - 24px);\n  --lp-card-max-height: 370px;\n  position: absolute;\n  z-index: 12;\n  left: 0;\n  top: 0;\n  width: min(366px, var(--lp-card-available-width));\n  min-width: min(280px, var(--lp-card-available-width));\n  color: var(--lp-card-ink);\n  filter: drop-shadow(0 18px 19px rgb(23 58 35 / 23%));\n  pointer-events: auto;\n  transform: translate3d(-10000px, -10000px, 0);\n  transform-origin: var(--lp-card-arrow-x) 0;\n  isolation: isolate;\n  font-family: Inter, ui-rounded, \"SF Pro Rounded\", \"PingFang SC\", \"Microsoft YaHei\", system-ui, sans-serif;\n  -webkit-font-smoothing: antialiased;\n  will-change: transform;\n}\n[data-learning-path-root] .lp-context-card[hidden] { display: none; }\n[data-learning-path-root] .lp-context-card[data-placed=\"false\"] { visibility: hidden; }\n[data-learning-path-root] .lp-context-card[data-tone=\"brown\"] {\n  --lp-card-face: #b96b18;\n  --lp-card-face-hi: #cb7b22;\n  --lp-card-side: #87440f;\n  --lp-card-side-dark: #67320c;\n}\n[data-learning-path-root] .lp-context-card[data-tone=\"gray\"] {\n  --lp-card-face: #6f7972;\n  --lp-card-face-hi: #818b84;\n  --lp-card-side: #4e5751;\n  --lp-card-side-dark: #3d443f;\n}\n[data-learning-path-root] .lp-context-card__arrow-depth,\n[data-learning-path-root] .lp-context-card__arrow-face {\n  position: absolute;\n  left: var(--lp-card-arrow-x);\n  width: 25px;\n  height: 25px;\n  border-radius: 5px 0 0;\n  pointer-events: none;\n  transform: translateX(-50%) rotate(45deg);\n}\n[data-learning-path-root] .lp-context-card__arrow-depth {\n  z-index: -2;\n  top: -8px;\n  background: var(--lp-card-side-dark);\n  box-shadow: 3px 3px 0 var(--lp-card-side-dark);\n}\n[data-learning-path-root] .lp-context-card__arrow-face {\n  z-index: 0;\n  top: -12px;\n  background: linear-gradient(135deg, var(--lp-card-face-hi), var(--lp-card-face) 72%);\n  box-shadow: inset 1px 1px 0 rgb(255 255 255 / 22%);\n}\n[data-learning-path-root] .lp-context-card__panel {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  gap: 13px;\n  box-sizing: border-box;\n  min-height: 128px;\n  max-height: min(46cqh, var(--lp-card-max-height));\n  overflow: auto;\n  overscroll-behavior: contain;\n  border: 1px solid rgb(255 255 255 / 16%);\n  border-radius: 18px;\n  padding: 18px 18px 20px;\n  background:\n    radial-gradient(115% 95% at 12% 0%, rgb(255 255 255 / 15%), transparent 47%),\n    linear-gradient(180deg, var(--lp-card-face-hi), var(--lp-card-face) 56%);\n  box-shadow:\n    0 9px 0 var(--lp-card-side),\n    0 12px 0 var(--lp-card-side-dark),\n    inset 0 1px 0 rgb(255 255 255 / 24%),\n    inset 0 -1px 0 rgb(0 0 0 / 8%);\n  scrollbar-width: thin;\n}\n[data-learning-path-root] .lp-context-card__header {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) auto;\n  gap: 10px 14px;\n  align-items: start;\n}\n[data-learning-path-root] .lp-context-card__heading { min-width: 0; }\n[data-learning-path-root] .lp-context-card__eyebrow {\n  margin: 0 0 4px;\n  color: var(--lp-card-soft-ink);\n  font-size: 11px;\n  font-weight: 800;\n  letter-spacing: .105em;\n  line-height: 1.2;\n  text-transform: uppercase;\n}\n[data-learning-path-root] .lp-context-card__title {\n  margin: 0;\n  overflow-wrap: anywhere;\n  font-size: clamp(20px, 2.2cqw, 27px);\n  font-weight: 850;\n  letter-spacing: -.025em;\n  line-height: 1.18;\n  text-wrap: balance;\n}\n[data-learning-path-root] .lp-context-card__status {\n  min-height: 27px;\n  box-sizing: border-box;\n  border: 1px solid rgb(255 255 255 / 19%);\n  border-radius: 999px;\n  padding: 5px 9px;\n  color: #fff;\n  background: rgb(0 0 0 / 12%);\n  box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%);\n  font-size: 11px;\n  font-weight: 800;\n  line-height: 1.35;\n  white-space: nowrap;\n}\n[data-learning-path-root] .lp-context-card__status[hidden] { display: none; }\n[data-learning-path-root] .lp-context-card__description {\n  margin: 0;\n  color: var(--lp-card-soft-ink);\n  font-size: 14px;\n  font-weight: 570;\n  line-height: 1.62;\n  text-wrap: pretty;\n}\n[data-learning-path-root] .lp-context-card__description[hidden] { display: none; }\n[data-learning-path-root] .lp-context-card__actions {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr);\n  gap: 9px;\n  padding-top: 1px;\n}\n[data-learning-path-root] .lp-context-card__actions[hidden] { display: none; }\n[data-learning-path-root] .lp-context-card__button {\n  position: relative;\n  min-height: 48px;\n  box-sizing: border-box;\n  border: 0;\n  border-radius: 13px;\n  padding: 11px 16px;\n  cursor: pointer;\n  font: inherit;\n  font-size: 14px;\n  font-weight: 850;\n  letter-spacing: .008em;\n  line-height: 1.2;\n  transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease, opacity 140ms ease;\n  touch-action: manipulation;\n  -webkit-tap-highlight-color: transparent;\n}\n[data-learning-path-root] .lp-context-card__button[data-slot=\"primary\"] {\n  color: var(--lp-card-side-dark);\n  background: #fff;\n  box-shadow: 0 4px 0 rgb(226 232 227), 0 7px 12px rgb(0 0 0 / 13%);\n}\n[data-learning-path-root] .lp-context-card__button[data-slot=\"secondary\"] {\n  border: 2px solid rgb(255 255 255 / 78%);\n  color: #fff;\n  background: rgb(0 0 0 / 7%);\n  box-shadow: 0 4px 0 rgb(0 0 0 / 13%);\n}\n[data-learning-path-root] .lp-context-card__button:hover:not(:disabled) { filter: brightness(1.035); transform: translateY(-1px); }\n[data-learning-path-root] .lp-context-card__button:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 rgb(0 0 0 / 15%); }\n[data-learning-path-root] .lp-context-card__button:focus-visible {\n  outline: 3px solid #fff3a5;\n  outline-offset: 3px;\n}\n[data-learning-path-root] .lp-context-card__button:disabled {\n  cursor: not-allowed;\n  filter: saturate(.55);\n  opacity: .58;\n}\n[data-learning-path-root] .lp-context-card[data-opening=\"true\"] { animation: lp-context-card-enter 220ms cubic-bezier(.2,.82,.25,1); }\n@keyframes lp-context-card-enter {\n  from { opacity: 0; scale: .965; }\n  to { opacity: 1; scale: 1; }\n}\n@media (min-width: 560px) {\n  [data-learning-path-root] .lp-context-card__actions:has(.lp-context-card__button:nth-child(2)) { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }\n}\n@media (max-width: 559px) {\n  [data-learning-path-root] .lp-context-card {\n    width: min(342px, var(--lp-card-available-width));\n    min-width: min(264px, var(--lp-card-available-width));\n  }\n  [data-learning-path-root] .lp-context-card__panel { gap: 11px; border-radius: 16px; padding: 16px 15px 18px; }\n  [data-learning-path-root] .lp-context-card__title { font-size: clamp(19px, 6cqw, 24px); }\n  [data-learning-path-root] .lp-context-card__description { font-size: 13px; }\n}\n@media (prefers-reduced-motion: reduce) {\n  [data-learning-path-root] .lp-context-card[data-opening=\"true\"] { animation: none; }\n  [data-learning-path-root] .lp-context-card__button { transition: none; }\n}\n", Ni = class e {
+}, Mi = "data-contextual-learning-card-styles", Ni = /* @__PURE__ */ new WeakMap(), Pi = "\n[data-learning-path-root] .lp-context-card {\n --lp-card-arrow-x:50%; --lp-card-available-width:calc(100% - 24px); --lp-card-max-height:370px;\n --lp-card-accent:#327769; position:absolute;z-index:12;left:0;top:0;\n width:min(366px,var(--lp-card-available-width));min-width:min(280px,var(--lp-card-available-width));\n color:#273b43;filter:drop-shadow(8px 8px 16px rgb(26 51 61 / 13%));pointer-events:auto;\n transform:translate3d(-10000px,-10000px,0);transform-origin:var(--lp-card-arrow-x) 0;isolation:isolate;\n font-family:Inter,\"PingFang SC\",\"Microsoft YaHei\",system-ui,sans-serif;-webkit-font-smoothing:antialiased;will-change:transform;\n}\n[data-learning-path-root] .lp-context-card[hidden]{display:none}\n[data-learning-path-root] .lp-context-card[data-placed=\"false\"]{visibility:hidden}\n[data-learning-path-root] .lp-context-card[data-kind=\"concept\"]{--lp-card-accent:#346fbd}\n[data-learning-path-root] .lp-context-card__arrow-depth{display:none}\n[data-learning-path-root] .lp-context-card__arrow-face{position:absolute;left:var(--lp-card-arrow-x);top:-8px;width:18px;height:18px;border-left:1px solid #dbe3e8;border-top:1px solid #dbe3e8;background:#fff;transform:translateX(-50%) rotate(45deg);z-index:2;pointer-events:none}\n[data-learning-path-root] .lp-context-card__panel{position:relative;z-index:1;display:grid;gap:14px;box-sizing:border-box;min-height:128px;max-height:min(46cqh,var(--lp-card-max-height));overflow:auto;overscroll-behavior:contain;border:1px solid #dbe3e8;border-radius:16px;padding:20px;background:#fff;box-shadow:2px 2px 0 #edf1f2;scrollbar-width:thin}\n[data-learning-path-root] .lp-context-card__header{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start}\n[data-learning-path-root] .lp-context-card__heading{min-width:0}\n[data-learning-path-root] .lp-context-card__eyebrow{margin:0 0 8px;color:var(--lp-card-accent);font-size:11px;font-weight:550;letter-spacing:.08em;line-height:1.4}\n[data-learning-path-root] .lp-context-card__title{margin:0;overflow-wrap:anywhere;font-size:22px;font-weight:600;letter-spacing:-.02em;line-height:1.4;text-wrap:pretty}\n[data-learning-path-root] .lp-context-card__status{box-sizing:border-box;border:1px solid #dbe3e8;border-radius:999px;padding:5px 9px;color:#677b85;background:#fff;font-size:11px;font-weight:450;line-height:1.4;white-space:nowrap}\n[data-learning-path-root] .lp-context-card__status[hidden],[data-learning-path-root] .lp-context-card__description[hidden],[data-learning-path-root] .lp-context-card__actions[hidden]{display:none}\n[data-learning-path-root] .lp-context-card__description{margin:0;color:#73818b;font-size:13px;font-weight:400;line-height:1.8;text-wrap:pretty}\n[data-learning-path-root] .lp-context-card__actions{display:grid;grid-template-columns:minmax(0,1fr);gap:9px;padding-top:3px}\n[data-learning-path-root] .lp-context-card__button{min-height:42px;box-sizing:border-box;border:1px solid transparent;border-radius:9px;padding:10px 13px;cursor:pointer;font:inherit;font-size:13px;font-weight:500;line-height:1.5;transition:background 140ms ease;touch-action:manipulation;-webkit-tap-highlight-color:transparent}\n[data-learning-path-root] .lp-context-card__button[data-slot=\"primary\"]{color:#fff;background:var(--lp-card-accent)}\n[data-learning-path-root] .lp-context-card__button[data-slot=\"secondary\"]{border-color:#dbe3e8;color:#5d6e79;background:#fff}\n[data-learning-path-root] .lp-context-card__button:hover:not(:disabled){filter:brightness(.97)}\n[data-learning-path-root] .lp-context-card__button:focus-visible{outline:2px solid #789fc6;outline-offset:3px}\n[data-learning-path-root] .lp-context-card__button:disabled{cursor:not-allowed;opacity:.5}\n[data-learning-path-root] .lp-context-card[data-opening=\"true\"]{animation:lp-context-card-enter 160ms ease-out}\n@keyframes lp-context-card-enter{from{opacity:0}to{opacity:1}}\n@media(min-width:560px){[data-learning-path-root] .lp-context-card__actions:has(.lp-context-card__button:nth-child(2):not([hidden])){grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}}\n@media(max-width:559px){[data-learning-path-root] .lp-context-card{width:min(342px,var(--lp-card-available-width));min-width:min(264px,var(--lp-card-available-width))}[data-learning-path-root] .lp-context-card__panel{gap:11px;padding:16px}[data-learning-path-root] .lp-context-card__title{font-size:20px}}\n@media(prefers-reduced-motion:reduce){[data-learning-path-root] .lp-context-card[data-opening=\"true\"]{animation:none}[data-learning-path-root] .lp-context-card__button{transition:none}}\n", Fi = class e {
 	document;
 	mount;
 	root;
@@ -4954,7 +4957,7 @@ var ki = class e {
 	openingFrame = 0;
 	disposed = !1;
 	constructor(t, n = {}) {
-		this.document = t.ownerDocument, this.mount = t, this.releaseStyles = Pi(this.document), this.onActionRequested = n.onActionRequested, this.root = this.document.createElement("aside"), this.root.className = "lp-context-card", this.root.hidden = !0, this.root.dataset.placed = "false", this.root.setAttribute("role", "dialog"), this.root.setAttribute("aria-modal", "false"), this.root.setAttribute("aria-live", "polite"), this.root.tabIndex = -1;
+		this.document = t.ownerDocument, this.mount = t, this.releaseStyles = Ii(this.document), this.onActionRequested = n.onActionRequested, this.root = this.document.createElement("aside"), this.root.className = "lp-context-card", this.root.hidden = !0, this.root.dataset.placed = "false", this.root.setAttribute("role", "dialog"), this.root.setAttribute("aria-modal", "false"), this.root.setAttribute("aria-live", "polite"), this.root.tabIndex = -1;
 		let r = this.document.createElement("span");
 		r.className = "lp-context-card__arrow-depth", r.setAttribute("aria-hidden", "true");
 		let i = this.document.createElement("span");
@@ -4969,7 +4972,7 @@ var ki = class e {
 	setViewModel(e) {
 		if (this.disposed) return;
 		let t = this.viewModel;
-		if (Ii(t, e)) return;
+		if (Ri(t, e)) return;
 		let n = t !== null && t.visible !== !1;
 		this.viewModel = e;
 		let r = e !== null && e.visible !== !1;
@@ -4980,7 +4983,7 @@ var ki = class e {
 		this.root.dataset.nodeId = e.nodeId, this.root.dataset.instanceId = e.instanceId, this.root.dataset.kind = e.kind, this.root.dataset.tone = e.tone, this.eyebrow.textContent = e.eyebrow?.trim() ?? "", this.eyebrow.hidden = this.eyebrow.textContent.length === 0, this.title.textContent = e.title, this.setOptionalText(this.status, e.statusLabel), this.setOptionalText(this.description, e.description), this.configureButton(this.primaryButton, e.primaryAction, "primary"), this.configureButton(this.secondaryButton, e.secondaryAction, "secondary"), this.actions.hidden = !e.primaryAction && !e.secondaryAction, this.panel.setAttribute("aria-busy", String(e.primaryAction?.busy === !0 || e.secondaryAction?.busy === !0)), this.applyPlacement(), (!n || t?.instanceId !== e.instanceId) && this.playOpeningMotion();
 	}
 	setPlacement(e) {
-		this.disposed || Ri(this.placement, e) || (this.placement = e, this.applyPlacement());
+		this.disposed || Bi(this.placement, e) || (this.placement = e, this.applyPlacement());
 	}
 	getLayoutMetrics() {
 		let e = this.root.getBoundingClientRect();
@@ -5031,7 +5034,7 @@ var ki = class e {
 		let t = e.viewportRect ?? this.mount.getBoundingClientRect(), n = Math.max(8, e.margin ?? 12), r = Math.max(9, e.gap ?? 18);
 		this.root.style.setProperty("--lp-card-available-width", `${Math.max(180, t.width - n * 2)}px`), this.root.style.setProperty("--lp-card-max-height", `${Math.max(150, t.height - n * 2 - r)}px`);
 		let i = this.mount.getBoundingClientRect(), a = this.root.getBoundingClientRect().width || Math.min(366, Math.max(180, t.width - n * 2)), o = e.anchorClientX - a / 2, s = t.left + n, c = Math.max(s, t.left + t.width - n - a), l = Math.min(c, Math.max(s, o)), u = e.anchorClientY + r, d = l - i.left + this.mount.scrollLeft, f = u - i.top + this.mount.scrollTop, p = Math.min(92, Math.max(8, (e.anchorClientX - l) / a * 100));
-		this.root.style.setProperty("--lp-card-arrow-x", `${p}%`), this.root.style.transform = `translate3d(${Bi(d)}, ${Bi(f)}, 0)`, this.root.dataset.anchorClientX = String(e.anchorClientX), this.root.dataset.anchorClientY = String(e.anchorClientY), this.root.dataset.placed = "true";
+		this.root.style.setProperty("--lp-card-arrow-x", `${p}%`), this.root.style.transform = `translate3d(${Hi(d)}, ${Hi(f)}, 0)`, this.root.dataset.anchorClientX = String(e.anchorClientX), this.root.dataset.anchorClientY = String(e.anchorClientY), this.root.dataset.placed = "true";
 	}
 	playOpeningMotion() {
 		this.cancelOpeningFrame(), this.root.removeAttribute("data-opening");
@@ -5056,7 +5059,7 @@ var ki = class e {
 			actionId: i.id,
 			slot: r,
 			occurredAt: this.document.defaultView?.performance.now() ?? Date.now()
-		}), s = new ((this.document.defaultView?.CustomEvent) ?? CustomEvent)(fi.actionRequested, {
+		}), s = new ((this.document.defaultView?.CustomEvent) ?? CustomEvent)(mi.actionRequested, {
 			bubbles: !0,
 			cancelable: !0,
 			composed: !0,
@@ -5072,40 +5075,40 @@ var ki = class e {
 	};
 	static nextId = 1;
 };
-function Pi(e) {
-	let t = ji.get(e);
-	if (t) return t.owners += 1, () => Fi(e);
+function Ii(e) {
+	let t = Ni.get(e);
+	if (t) return t.owners += 1, () => Li(e);
 	let n = e.createElement("style");
-	return n.setAttribute(Ai, ""), n.textContent = Mi, (e.head ?? e.documentElement).append(n), ji.set(e, {
+	return n.setAttribute(Mi, ""), n.textContent = Pi, (e.head ?? e.documentElement).append(n), Ni.set(e, {
 		element: n,
 		owners: 1
-	}), () => Fi(e);
+	}), () => Li(e);
 }
-function Fi(e) {
-	let t = ji.get(e);
-	t && (--t.owners, !(t.owners > 0) && (t.element.remove(), ji.delete(e)));
-}
-function Ii(e, t) {
-	return e === t ? !0 : e === null || t === null ? !1 : e.instanceId === t.instanceId && e.nodeId === t.nodeId && e.kind === t.kind && e.tone === t.tone && e.title === t.title && e.description === t.description && e.eyebrow === t.eyebrow && e.statusLabel === t.statusLabel && e.visible === t.visible && Li(e.primaryAction, t.primaryAction) && Li(e.secondaryAction, t.secondaryAction);
-}
-function Li(e, t) {
-	return e === t ? !0 : !e || !t ? !1 : e.id === t.id && e.label === t.label && e.enabled === t.enabled && e.busy === t.busy && e.ariaLabel === t.ariaLabel;
+function Li(e) {
+	let t = Ni.get(e);
+	t && (--t.owners, !(t.owners > 0) && (t.element.remove(), Ni.delete(e)));
 }
 function Ri(e, t) {
+	return e === t ? !0 : e === null || t === null ? !1 : e.instanceId === t.instanceId && e.nodeId === t.nodeId && e.kind === t.kind && e.tone === t.tone && e.title === t.title && e.description === t.description && e.eyebrow === t.eyebrow && e.statusLabel === t.statusLabel && e.visible === t.visible && zi(e.primaryAction, t.primaryAction) && zi(e.secondaryAction, t.secondaryAction);
+}
+function zi(e, t) {
+	return e === t ? !0 : !e || !t ? !1 : e.id === t.id && e.label === t.label && e.enabled === t.enabled && e.busy === t.busy && e.ariaLabel === t.ariaLabel;
+}
+function Bi(e, t) {
 	if (e === t) return !0;
 	if (e === null || t === null) return !1;
 	let n = e.viewportRect, r = t.viewportRect;
-	return zi(e.anchorClientX, t.anchorClientX) && zi(e.anchorClientY, t.anchorClientY) && e.gap === t.gap && e.margin === t.margin && n !== void 0 && r !== void 0 && zi(n.left, r.left) && zi(n.top, r.top) && zi(n.width, r.width) && zi(n.height, r.height);
+	return Vi(e.anchorClientX, t.anchorClientX) && Vi(e.anchorClientY, t.anchorClientY) && e.gap === t.gap && e.margin === t.margin && n !== void 0 && r !== void 0 && Vi(n.left, r.left) && Vi(n.top, r.top) && Vi(n.width, r.width) && Vi(n.height, r.height);
 }
-function zi(e, t) {
+function Vi(e, t) {
 	return Math.abs(e - t) < .05;
 }
-function Bi(e) {
+function Hi(e) {
 	return `${Math.round(e * 1e3) / 1e3}px`;
 }
 //#endregion
 //#region src/ui/LearningPathPageShell.ts
-var Vi = class {
+var Ui = class {
 	root;
 	generationGate;
 	card;
@@ -5114,13 +5117,13 @@ var Vi = class {
 	disposed = !1;
 	constructor(e, t = {}) {
 		let n = e.ownerDocument;
-		this.releaseStyles = Ti(n), this.root = n.createElement("div"), this.root.className = "lp-ui-shell", this.root.dataset.generationPhase = "ready";
+		this.releaseStyles = Di(n), this.root = n.createElement("div"), this.root.className = "lp-ui-shell", this.root.dataset.generationPhase = "ready";
 		let r = n.createElement("div");
 		r.className = "lp-ui-shell__gate";
 		let i = n.createElement("div");
 		i.className = "lp-ui-shell__context-card";
 		let a = n.createElement("div");
-		a.className = "lp-ui-shell__celebration", this.root.append(r, i, a), e.append(this.root), this.generationGate = new ki(r, { onLaunchRequested: t.onLaunchRequested }), this.card = new Ni(i, { onActionRequested: t.onCardActionRequested }), this.celebration = new yi(a, { onSettled: t.onCelebrationSettled });
+		a.className = "lp-ui-shell__celebration", this.root.append(r, i, a), e.append(this.root), this.generationGate = new ji(r, { onLaunchRequested: t.onLaunchRequested }), this.card = new Fi(i, { onActionRequested: t.onCardActionRequested }), this.celebration = new xi(a, { onSettled: t.onCelebrationSettled });
 	}
 	setViewModel(e) {
 		this.disposed || (this.root.dataset.generationPhase = e.generation.phase, this.root.setAttribute("aria-busy", String(e.generation.phase === "requested" || e.generation.phase === "generating")), this.generationGate.setViewModel(e.generation), this.card.setViewModel(e.card ?? null), this.celebration.setViewModel(e.celebration ?? null));
@@ -5146,13 +5149,13 @@ var Vi = class {
 };
 //#endregion
 //#region src/ui/LearningPathDom.ts
-function Hi(e) {
+function Wi(e) {
 	let t = e.trim();
 	if (!/^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/.test(t)) throw Error("Learning-path instanceId must start with a letter and contain only letters, numbers, '_' or '-'.");
 	return t;
 }
-function Ui(e, t) {
-	let n = Hi(t), r = e.ownerDocument, i = `learning-path-${n}`, a = r.createElement("section");
+function Gi(e, t) {
+	let n = Wi(t), r = e.ownerDocument, i = `learning-path-${n}`, a = r.createElement("section");
 	a.className = "learning-path-root", a.dataset.learningPathRoot = n, a.dataset.pagePhase = "generating", a.dataset.hud = "visible", a.setAttribute("aria-busy", "true"), a.setAttribute("aria-label", "3D 学习路径");
 	let o = r.createElement("div");
 	o.className = "learning-path-workspace";
@@ -5198,20 +5201,20 @@ function Ui(e, t) {
 }
 //#endregion
 //#region src/config/DynamicOverpassCatalog.ts
-var Wi = 1e-6;
-function Gi(e, t) {
-	let n = qi(e), r = new Map(n.map((e) => [e.id, e])), { directPairKeys: i, existingEdgeIds: a } = Ji(t, r), o = /* @__PURE__ */ new Map(), s = n.length * (n.length - 1) / 2 - i.size, c = () => Object.freeze([...o.values()].sort(Qi)), u = () => Object.freeze(c().map((e) => e.edge)), d = (e, t) => {
+var Ki = 1e-6;
+function qi(e, t) {
+	let n = Yi(e), r = new Map(n.map((e) => [e.id, e])), { directPairKeys: i, existingEdgeIds: a } = Xi(t, r), o = /* @__PURE__ */ new Map(), s = n.length * (n.length - 1) / 2 - i.size, c = () => Object.freeze([...o.values()].sort(ea)), u = () => Object.freeze(c().map((e) => e.edge)), d = (e, t) => {
 		if (e === t) return null;
 		let n = r.get(e), s = r.get(t);
 		if (!n || !s) return null;
-		let c = Ki(e, t);
+		let c = Ji(e, t);
 		if (i.has(c)) return null;
 		let u = o.get(c);
 		if (u) return u.edge;
-		let [d, f] = ta(n, s) <= 0 ? [n, s] : [s, n], p = Math.hypot(f.position.x - d.position.x, f.position.z - d.position.z), m = l(p, Math.max(d.surfaceY, f.surfaceY)), h = Xi(d.id, f.id);
+		let [d, f] = ra(n, s) <= 0 ? [n, s] : [s, n], p = Math.hypot(f.position.x - d.position.x, f.position.z - d.position.z), m = l(p, Math.max(d.surfaceY, f.surfaceY)), h = Qi(d.id, f.id);
 		if (a.has(h)) throw Error(`Dynamic bridge ID "${h}" collides with an authored straight edge.`);
 		let g = Object.freeze({
-			edge: Yi(d, f, h, m),
+			edge: Zi(d, f, h, m),
 			profile: m
 		});
 		return o.set(c, g), g.edge;
@@ -5219,7 +5222,7 @@ function Gi(e, t) {
 		for (let e = 0; e < n.length; e += 1) for (let t = e + 1; t < n.length; t += 1) d(n[e].id, n[t].id);
 		return c();
 	}, p = {
-		diagnostics: $i({
+		diagnostics: ta({
 			stableNodes: n,
 			authoredStraightEdgeCount: t.length,
 			directPairCount: i.size,
@@ -5234,12 +5237,12 @@ function Gi(e, t) {
 		get: () => (f(), u())
 	}), Object.freeze(p);
 }
-function Ki(e, t) {
+function Ji(e, t) {
 	if (e === t) throw Error(`A bridge cannot connect node "${e}" to itself.`);
-	let [n, r] = na(e, t) <= 0 ? [e, t] : [t, e];
+	let [n, r] = ia(e, t) <= 0 ? [e, t] : [t, e];
 	return `pair:${encodeURIComponent(n)}|${encodeURIComponent(r)}`;
 }
-function qi(e) {
+function Yi(e) {
 	if (e.length < 1) throw Error("Dynamic bridge catalogue requires at least one node.");
 	let t = /* @__PURE__ */ new Set();
 	return e.forEach((e, n) => {
@@ -5247,15 +5250,15 @@ function qi(e) {
 		if (!Number.isFinite(e.navigationOrder)) throw Error(`Node "${e.id}" has a non-finite navigation order.`);
 		if (!Number.isFinite(e.position.x) || !Number.isFinite(e.position.z) || !Number.isFinite(e.surfaceY)) throw Error(`Node "${e.id}" has non-finite bridge geometry.`);
 		t.add(e.id);
-	}), Object.freeze([...e].sort(ta));
+	}), Object.freeze([...e].sort(ra));
 }
-function Ji(e, t) {
+function Xi(e, t) {
 	let n = /* @__PURE__ */ new Set(), r = /* @__PURE__ */ new Set();
 	return e.forEach((e, i) => {
 		if (e.pathKind !== "straight") throw Error(`Authored edge at index ${i} is not straight.`);
 		if (e.id.trim().length === 0 || r.has(e.id)) throw Error(`Authored graph has an invalid or duplicate edge at index ${i}.`);
 		if (!t.has(e.fromNodeId) || !t.has(e.toNodeId)) throw Error(`Authored edge "${e.id}" references a missing node.`);
-		let a = Ki(e.fromNodeId, e.toNodeId);
+		let a = Ji(e.fromNodeId, e.toNodeId);
 		if (n.has(a)) throw Error(`Authored graph repeats physical pair "${a}".`);
 		n.add(a), r.add(e.id);
 	}), {
@@ -5263,8 +5266,8 @@ function Ji(e, t) {
 		existingEdgeIds: r
 	};
 }
-function Yi(e, t, n, r) {
-	let i = ta(e, t) <= 0 ? e : t, a = i === e ? t : e, o = r.bridge;
+function Zi(e, t, n, r) {
+	let i = ra(e, t) <= 0 ? e : t, a = i === e ? t : e, o = r.bridge;
 	return Object.freeze({
 		id: n,
 		fromNodeId: i.id,
@@ -5284,22 +5287,22 @@ function Yi(e, t, n, r) {
 		requiredClearance: o.requiredClearance
 	});
 }
-function Xi(e, t) {
+function Qi(e, t) {
 	return `edge-overpass:${encodeURIComponent(e)}:${encodeURIComponent(t)}`;
 }
-function Zi(e) {
+function $i(e) {
 	let t = e[0] ?? null;
 	if (t === null) return null;
 	for (let n = 1; n < e.length; n += 1) {
 		let r = e[n];
-		r.profile.chordLength < t.profile.chordLength - Wi && (t = r);
+		r.profile.chordLength < t.profile.chordLength - Ki && (t = r);
 	}
 	return t;
 }
-function Qi(e, t) {
-	return na(e.edge.id, t.edge.id);
+function ea(e, t) {
+	return ia(e.edge.id, t.edge.id);
 }
-function $i(e) {
+function ta(e) {
 	let t = () => [...e.entriesByPairKey.values()], n = {
 		nodeCount: e.stableNodes.length,
 		authoredStraightEdgeCount: e.authoredStraightEdgeCount,
@@ -5322,7 +5325,7 @@ function $i(e) {
 		},
 		minimumChordLength: {
 			enumerable: !0,
-			get: () => Zi(t())?.profile.chordLength ?? 0
+			get: () => $i(t())?.profile.chordLength ?? 0
 		},
 		maximumChordLength: {
 			enumerable: !0,
@@ -5335,13 +5338,13 @@ function $i(e) {
 		shortestBridge: {
 			enumerable: !0,
 			get: () => {
-				let e = Zi(t());
-				return e ? ea(e) : null;
+				let e = $i(t());
+				return e ? na(e) : null;
 			}
 		}
 	}), Object.freeze(n);
 }
-function ea(e) {
+function na(e) {
 	return Object.freeze({
 		edgeId: e.edge.id,
 		fromNodeId: e.edge.fromNodeId,
@@ -5352,15 +5355,15 @@ function ea(e) {
 		predictedMaximumSurfacePitchDegrees: e.profile.predictedMaximumSurfacePitchDegrees
 	});
 }
-function ta(e, t) {
-	return e.navigationOrder - t.navigationOrder || na(e.id, t.id);
+function ra(e, t) {
+	return e.navigationOrder - t.navigationOrder || ia(e.id, t.id);
 }
-function na(e, t) {
+function ia(e, t) {
 	return e < t ? -1 : +(e > t);
 }
 //#endregion
 //#region src/config/pathData.ts
-var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-chain", aa = "special-zone-row-8-brown-chain", oa = "special-zone-row-9-10-brown-chain", sa = Object.freeze([
+var Q = .523, $ = "special-zone-row-2-brown-chain", aa = "special-zone-4-brown-chain", oa = "special-zone-row-8-brown-chain", sa = "special-zone-row-9-10-brown-chain", ca = Object.freeze([
 	{
 		id: "node-1",
 		navigationOrder: 0,
@@ -5372,7 +5375,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !0,
 		initiallyVisible: !0,
 		completionPolicy: "promote-to-green",
-		surfaceY: $,
+		surfaceY: Q,
 		variant: "green"
 	},
 	{
@@ -5386,7 +5389,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !0,
 		initiallyVisible: !0,
 		completionPolicy: "promote-to-green",
-		surfaceY: $,
+		surfaceY: Q,
 		variant: "green"
 	},
 	{
@@ -5400,7 +5403,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !0,
 		initiallyVisible: !0,
 		completionPolicy: "promote-to-green",
-		surfaceY: $,
+		surfaceY: Q,
 		variant: "green"
 	},
 	{
@@ -5414,7 +5417,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !0,
 		initiallyVisible: !0,
 		completionPolicy: "promote-to-green",
-		surfaceY: $,
+		surfaceY: Q,
 		variant: "green"
 	},
 	{
@@ -5428,7 +5431,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !0,
 		initiallyVisible: !0,
 		completionPolicy: "promote-to-green",
-		surfaceY: $,
+		surfaceY: Q,
 		variant: "green"
 	},
 	{
@@ -5442,8 +5445,8 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !1,
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: ia,
-		surfaceY: $,
+		activationGroupId: aa,
+		surfaceY: Q,
 		variant: "brown"
 	},
 	{
@@ -5457,8 +5460,8 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !1,
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: ia,
-		surfaceY: $,
+		activationGroupId: aa,
+		surfaceY: Q,
 		variant: "brown"
 	},
 	{
@@ -5472,7 +5475,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !0,
 		initiallyVisible: !0,
 		completionPolicy: "promote-to-green",
-		surfaceY: $,
+		surfaceY: Q,
 		variant: "green"
 	},
 	{
@@ -5486,7 +5489,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !0,
 		initiallyVisible: !0,
 		completionPolicy: "promote-to-green",
-		surfaceY: $,
+		surfaceY: Q,
 		variant: "green"
 	},
 	{
@@ -5500,7 +5503,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !0,
 		initiallyVisible: !0,
 		completionPolicy: "promote-to-green",
-		surfaceY: $,
+		surfaceY: Q,
 		variant: "green"
 	},
 	{
@@ -5514,7 +5517,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !1,
 		initiallyVisible: !0,
 		completionPolicy: "preserve-variant",
-		surfaceY: $,
+		surfaceY: Q,
 		variant: "gray"
 	},
 	{
@@ -5528,8 +5531,8 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !1,
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: ia,
-		surfaceY: $,
+		activationGroupId: aa,
+		surfaceY: Q,
 		variant: "brown"
 	},
 	{
@@ -5543,8 +5546,8 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !1,
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: ia,
-		surfaceY: $,
+		activationGroupId: aa,
+		surfaceY: Q,
 		variant: "brown"
 	},
 	{
@@ -5558,8 +5561,8 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !1,
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: ra,
-		surfaceY: $,
+		activationGroupId: $,
+		surfaceY: Q,
 		variant: "brown"
 	},
 	{
@@ -5573,8 +5576,8 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !1,
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: ra,
-		surfaceY: $,
+		activationGroupId: $,
+		surfaceY: Q,
 		variant: "brown"
 	},
 	{
@@ -5588,8 +5591,8 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !1,
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: ra,
-		surfaceY: $,
+		activationGroupId: $,
+		surfaceY: Q,
 		variant: "brown"
 	},
 	{
@@ -5603,8 +5606,8 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !1,
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: ra,
-		surfaceY: $,
+		activationGroupId: $,
+		surfaceY: Q,
 		variant: "brown"
 	},
 	{
@@ -5618,8 +5621,8 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !1,
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: aa,
-		surfaceY: $,
+		activationGroupId: oa,
+		surfaceY: Q,
 		variant: "brown"
 	},
 	{
@@ -5633,8 +5636,8 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !1,
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: aa,
-		surfaceY: $,
+		activationGroupId: oa,
+		surfaceY: Q,
 		variant: "brown"
 	},
 	{
@@ -5648,8 +5651,8 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !1,
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: aa,
-		surfaceY: $,
+		activationGroupId: oa,
+		surfaceY: Q,
 		variant: "brown"
 	},
 	{
@@ -5663,8 +5666,8 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !1,
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: aa,
-		surfaceY: $,
+		activationGroupId: oa,
+		surfaceY: Q,
 		variant: "brown"
 	},
 	{
@@ -5678,8 +5681,8 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !1,
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: oa,
-		surfaceY: $,
+		activationGroupId: sa,
+		surfaceY: Q,
 		variant: "brown"
 	},
 	{
@@ -5693,8 +5696,8 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !1,
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: oa,
-		surfaceY: $,
+		activationGroupId: sa,
+		surfaceY: Q,
 		variant: "brown"
 	},
 	{
@@ -5708,8 +5711,8 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !1,
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: oa,
-		surfaceY: $,
+		activationGroupId: sa,
+		surfaceY: Q,
 		variant: "brown"
 	},
 	{
@@ -5723,11 +5726,11 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		initiallyGreen: !1,
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: oa,
-		surfaceY: $,
+		activationGroupId: sa,
+		surfaceY: Q,
 		variant: "brown"
 	}
-]), ca = Object.freeze([
+]), la = Object.freeze([
 	{
 		id: "edge-1-2",
 		fromNodeId: "node-1",
@@ -5791,7 +5794,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		pathKind: "straight",
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: ia
+		activationGroupId: aa
 	},
 	{
 		id: "edge-7-12",
@@ -5800,7 +5803,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		pathKind: "straight",
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: ia
+		activationGroupId: aa
 	},
 	{
 		id: "edge-12-13",
@@ -5809,7 +5812,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		pathKind: "straight",
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: ia
+		activationGroupId: aa
 	},
 	{
 		id: "edge-8-9",
@@ -5850,7 +5853,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		pathKind: "straight",
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: ra
+		activationGroupId: $
 	},
 	{
 		id: "edge-15-16",
@@ -5859,7 +5862,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		pathKind: "straight",
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: ra
+		activationGroupId: $
 	},
 	{
 		id: "edge-16-17",
@@ -5868,7 +5871,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		pathKind: "straight",
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: ra
+		activationGroupId: $
 	},
 	{
 		id: "edge-18-19",
@@ -5877,7 +5880,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		pathKind: "straight",
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: aa
+		activationGroupId: oa
 	},
 	{
 		id: "edge-19-20",
@@ -5886,7 +5889,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		pathKind: "straight",
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: aa
+		activationGroupId: oa
 	},
 	{
 		id: "edge-20-21",
@@ -5895,7 +5898,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		pathKind: "straight",
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: aa
+		activationGroupId: oa
 	},
 	{
 		id: "edge-22-23",
@@ -5904,7 +5907,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		pathKind: "straight",
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: oa
+		activationGroupId: sa
 	},
 	{
 		id: "edge-23-24",
@@ -5913,7 +5916,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		pathKind: "straight",
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: oa
+		activationGroupId: sa
 	},
 	{
 		id: "edge-24-25",
@@ -5922,9 +5925,9 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		pathKind: "straight",
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: oa
+		activationGroupId: sa
 	}
-]), la = Object.freeze([
+]), ua = Object.freeze([
 	{
 		id: "edge-session-2-14",
 		fromNodeId: "node-2",
@@ -5932,7 +5935,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		pathKind: "straight",
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: ra
+		activationGroupId: $
 	},
 	{
 		id: "edge-session-5-6",
@@ -5941,7 +5944,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		pathKind: "straight",
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: ia
+		activationGroupId: aa
 	},
 	{
 		id: "edge-session-8-18",
@@ -5950,7 +5953,7 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		pathKind: "straight",
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: aa
+		activationGroupId: oa
 	},
 	{
 		id: "edge-session-10-22",
@@ -5959,9 +5962,9 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 		pathKind: "straight",
 		initiallyVisible: !1,
 		completionPolicy: "preserve-variant",
-		activationGroupId: oa
+		activationGroupId: sa
 	}
-]), ua = 1e-6, da = Object.freeze({
+]), da = 1e-6, fa = Object.freeze({
 	id: "dynamic-bridge-for-hop-distant-target",
 	distanceMetric: "minimum-hop-count",
 	distanceGraph: "authored-logical",
@@ -5974,10 +5977,10 @@ var $ = .523, ra = "special-zone-row-2-brown-chain", ia = "special-zone-4-brown-
 	reuseExistingEndpointPair: !0,
 	waitForBridgeBeforeTraversal: !0
 });
-function fa(e) {
+function pa(e) {
 	return Object.freeze(e.map((e) => Object.freeze({ ...e })));
 }
-var pa = Object.freeze({
+var ma = Object.freeze({
 	entryConnectorRevealPolicy: "first",
 	activationTrigger: "idle-at-any-activation-node",
 	unlockPolicy: "repeatable-session",
@@ -5993,8 +5996,8 @@ var pa = Object.freeze({
 	memberDynamicBridgeLifetime: "retire-at-physical-arrival",
 	retainedEntryOverpassCountsTowardOrdinaryLimit: !1,
 	entryConnectorAffectsAuthoredHopDistance: !1
-}), ma = Object.freeze({
-	id: ra,
+}), ha = Object.freeze({
+	id: $,
 	activationNodeIds: Object.freeze(["node-2"]),
 	entryNodeId: "node-14",
 	memberNodeIds: Object.freeze([
@@ -6013,7 +6016,7 @@ var pa = Object.freeze({
 		kind: "straight-edge",
 		edgeId: "edge-session-2-14"
 	})]),
-	revealSequence: fa([
+	revealSequence: pa([
 		{ kind: "session-entry-connector" },
 		{
 			kind: "node",
@@ -6044,9 +6047,9 @@ var pa = Object.freeze({
 			nodeId: "node-17"
 		}
 	]),
-	...pa
-}), ha = Object.freeze({
-	id: ia,
+	...ma
+}), ga = Object.freeze({
+	id: aa,
 	activationNodeIds: Object.freeze([
 		"node-3",
 		"node-4",
@@ -6079,7 +6082,7 @@ var pa = Object.freeze({
 			edgeId: "edge-session-5-6"
 		})
 	]),
-	revealSequence: fa([
+	revealSequence: pa([
 		{ kind: "session-entry-connector" },
 		{
 			kind: "node",
@@ -6110,9 +6113,9 @@ var pa = Object.freeze({
 			nodeId: "node-13"
 		}
 	]),
-	...pa
-}), ga = Object.freeze({
-	id: aa,
+	...ma
+}), _a = Object.freeze({
+	id: oa,
 	activationNodeIds: Object.freeze(["node-8"]),
 	entryNodeId: "node-18",
 	memberNodeIds: Object.freeze([
@@ -6131,7 +6134,7 @@ var pa = Object.freeze({
 		kind: "straight-edge",
 		edgeId: "edge-session-8-18"
 	})]),
-	revealSequence: fa([
+	revealSequence: pa([
 		{ kind: "session-entry-connector" },
 		{
 			kind: "node",
@@ -6162,9 +6165,9 @@ var pa = Object.freeze({
 			nodeId: "node-21"
 		}
 	]),
-	...pa
-}), _a = Object.freeze({
-	id: oa,
+	...ma
+}), va = Object.freeze({
+	id: sa,
 	activationNodeIds: Object.freeze(["node-9", "node-10"]),
 	entryNodeId: "node-22",
 	memberNodeIds: Object.freeze([
@@ -6186,7 +6189,7 @@ var pa = Object.freeze({
 		kind: "straight-edge",
 		edgeId: "edge-session-10-22"
 	})]),
-	revealSequence: fa([
+	revealSequence: pa([
 		{ kind: "session-entry-connector" },
 		{
 			kind: "node",
@@ -6217,73 +6220,73 @@ var pa = Object.freeze({
 			nodeId: "node-25"
 		}
 	]),
-	...pa
-}), va = Object.freeze([
-	ma,
+	...ma
+}), ya = Object.freeze([
 	ha,
 	ga,
-	_a
-]), ya = Object.freeze({
-	dynamicBridge: da,
-	specialPathZones: va
-}), ba = Object.freeze(ca.map((e) => Object.freeze({
+	_a,
+	va
+]), ba = Object.freeze({
+	dynamicBridge: fa,
+	specialPathZones: ya
+}), xa = Object.freeze(la.map((e) => Object.freeze({
 	id: e.id,
 	fromNodeId: e.fromNodeId,
 	toNodeId: e.toNodeId,
 	connectionKind: "straight"
 })));
-function xa(e) {
+function Sa(e) {
 	let t = e.initialNodeId ?? "node-1";
-	Sa(e.rules.dynamicBridge);
-	let n = Ma(e.nodes, "node"), r = Ma(e.straightEdges, "straight edge"), i = /* @__PURE__ */ new Set();
+	Ca(e.rules.dynamicBridge);
+	let n = Na(e.nodes, "node"), r = Na(e.straightEdges, "straight edge"), i = /* @__PURE__ */ new Set();
 	for (let t of e.straightEdges) {
-		if (Na(n, t.fromNodeId, `Straight edge "${t.id}"`), Na(n, t.toNodeId, `Straight edge "${t.id}"`), t.fromNodeId === t.toNodeId) throw Error(`Straight edge "${t.id}" cannot be a self-loop.`);
-		let e = Pa(t.fromNodeId, t.toNodeId);
+		if (Pa(n, t.fromNodeId, `Straight edge "${t.id}"`), Pa(n, t.toNodeId, `Straight edge "${t.id}"`), t.fromNodeId === t.toNodeId) throw Error(`Straight edge "${t.id}" cannot be a self-loop.`);
+		let e = Fa(t.fromNodeId, t.toNodeId);
 		if (i.has(e)) throw Error(`Physical straight topology repeats node pair "${e}".`);
 		i.add(e);
 	}
 	let a = /* @__PURE__ */ new Set(), o = /* @__PURE__ */ new Set();
-	for (let i of e.rules.specialPathZones) Ca(i, n, r, a, o, t);
+	for (let i of e.rules.specialPathZones) wa(i, n, r, a, o, t);
 	for (let t of e.nodes) if (t.activationGroupId && !a.has(t.activationGroupId)) throw Error(`Node "${t.id}" references unknown activation group "${t.activationGroupId}".`);
 	for (let t of e.straightEdges) if (t.activationGroupId && !a.has(t.activationGroupId)) throw Error(`Straight edge "${t.id}" references unknown activation group "${t.activationGroupId}".`);
-	Oa(e.authoredLogicalEdges, e.straightEdges, e.rules.specialPathZones, n);
+	ka(e.authoredLogicalEdges, e.straightEdges, e.rules.specialPathZones, n);
 }
-function Sa(e) {
+function Ca(e) {
 	if (!Number.isInteger(e.hopThresholdExclusive) || e.hopThresholdExclusive < 0) throw Error("Dynamic bridge hopThresholdExclusive must be a non-negative integer.");
 	if (!Number.isInteger(e.ordinaryBridgeLimit) || e.ordinaryBridgeLimit < 1) throw Error("Dynamic bridge ordinaryBridgeLimit must be a positive integer.");
 	if (!Number.isInteger(e.outgoingBridgeLimitPerAnchor) || e.outgoingBridgeLimitPerAnchor < 1) throw Error("Dynamic bridge outgoingBridgeLimitPerAnchor must be a positive integer.");
 }
-function Ca(e, t, n, r, i, a) {
+function wa(e, t, n, r, i, a) {
 	if (e.id.trim().length === 0 || r.has(e.id)) throw Error(`Special path zone has an empty or duplicate id "${e.id}".`);
-	if (r.add(e.id), wa(e), e.activationNodeIds.length === 0) throw Error(`Special zone "${e.id}" needs at least one activation node.`);
+	if (r.add(e.id), Ta(e), e.activationNodeIds.length === 0) throw Error(`Special zone "${e.id}" needs at least one activation node.`);
 	let o = /* @__PURE__ */ new Set(), s = [];
 	for (let n of e.activationNodeIds) {
 		if (o.has(n) || i.has(n)) throw Error(`Activation node "${n}" has duplicate row-zone ownership.`);
 		o.add(n), i.add(n);
-		let r = Na(t, n, `Special zone "${e.id}"`);
+		let r = Pa(t, n, `Special zone "${e.id}"`);
 		if (n === a || r.variant !== "green" || !r.initiallyGreen || !r.initiallyVisible) throw Error(`Special zone "${e.id}" activation "${n}" must be an initially visible green node other than the initial node.`);
 		if (r.activationGroupId !== void 0) throw Error(`Activation green "${n}" cannot be a hidden zone member.`);
 		s.push(r);
 	}
 	let c = s[0].position.z;
-	if (s.some((e) => !Fa(e.position.z, c))) throw Error(`Special zone "${e.id}" activation nodes must share one row.`);
+	if (s.some((e) => !Ia(e.position.z, c))) throw Error(`Special zone "${e.id}" activation nodes must share one row.`);
 	if (e.memberNodeIds.length === 0) throw Error(`Special zone "${e.id}" must own at least one brown platform.`);
 	let l = /* @__PURE__ */ new Set(), u = [];
 	for (let n of e.memberNodeIds) {
 		if (l.has(n)) throw Error(`Special zone "${e.id}" repeats member node "${n}".`);
 		l.add(n);
-		let r = Na(t, n, `Special zone "${e.id}"`);
+		let r = Pa(t, n, `Special zone "${e.id}"`);
 		if (r.activationGroupId !== e.id || r.variant !== "brown" || r.initiallyGreen || r.initiallyVisible || r.completionPolicy !== "preserve-variant") throw Error(`Special zone "${e.id}" member "${n}" must be an owned hidden brown platform.`);
-		if (!Fa(r.position.z, c)) throw Error(`Special zone "${e.id}" brown members must share the activation row.`);
+		if (!Ia(r.position.z, c)) throw Error(`Special zone "${e.id}" brown members must share the activation row.`);
 		u.push(r);
 	}
 	if (!l.has(e.entryNodeId)) throw Error(`Special zone "${e.id}" entry must be one of its brown members.`);
 	for (let n of t.values()) if (n.activationGroupId === e.id && !l.has(n.id)) throw Error(`Node "${n.id}" belongs to special zone "${e.id}" but is absent from memberNodeIds.`);
-	let d = Na(t, e.entryNodeId, `Special zone "${e.id}"`), f = Math.min(...u.map((e) => e.position.x));
-	if (!Fa(d.position.x, f)) throw Error(`Special zone "${e.id}" entry must be its leftmost brown platform.`);
-	let p = [...t.values()].filter((e) => e.initiallyVisible && e.initiallyGreen && e.variant === "green" && Fa(e.position.z, c)), m = Math.max(...p.map((e) => e.position.x));
-	if (!(d.position.x > m + ua)) throw Error(`Special zone "${e.id}" first brown platform must sit right of the row's rightmost green platform.`);
-	let h = Da(e, t, n, o, d);
+	let d = Pa(t, e.entryNodeId, `Special zone "${e.id}"`), f = Math.min(...u.map((e) => e.position.x));
+	if (!Ia(d.position.x, f)) throw Error(`Special zone "${e.id}" entry must be its leftmost brown platform.`);
+	let p = [...t.values()].filter((e) => e.initiallyVisible && e.initiallyGreen && e.variant === "green" && Ia(e.position.z, c)), m = Math.max(...p.map((e) => e.position.x));
+	if (!(d.position.x > m + da)) throw Error(`Special zone "${e.id}" first brown platform must sit right of the row's rightmost green platform.`);
+	let h = Oa(e, t, n, o, d);
 	if (e.memberStraightEdgeIds.length !== e.memberNodeIds.length - 1) throw Error(`Special zone "${e.id}" brown chain must contain exactly one fewer road than platforms.`);
 	let g = /* @__PURE__ */ new Set(), _ = [];
 	for (let t of e.memberStraightEdgeIds) {
@@ -6295,15 +6298,15 @@ function Ca(e, t, n, r, i, a) {
 		_.push(r);
 	}
 	for (let t of n.values()) if (t.activationGroupId === e.id && !g.has(t.id) && !h.has(t.id)) throw Error(`Straight edge "${t.id}" belongs to special zone "${e.id}" but is absent from memberStraightEdgeIds.`);
-	Aa(_, l, `Special zone "${e.id}" brown chain`), Ea(e, l, g);
-}
-function wa(e) {
-	if (e.entryConnectorRevealPolicy !== "first" || e.activationTrigger !== "idle-at-any-activation-node" || e.unlockPolicy !== "repeatable-session" || e.retention !== "retain-inside-session-envelope" || e.externalBridgeReplacement !== "retire-entry-overpass-before-ensure" || e.dismissalTrigger !== "departure-from-session-envelope" || e.dismissalBridgeOrder !== "entry-left-to-right-preclear" || e.dismissalConstructOrder !== "reverse-reveal-right-to-left" || e.lockHiddenMembersAfterDismissal !== !0 || !Ta(e.activationMemberRoutingPolicy) || e.recomputeRemainingHopsAtEntry !== !0 || e.retainEntryConnectorDuringMemberRoutes !== !0 || e.memberDynamicBridgeLifetime !== "retire-at-physical-arrival" || e.retainedEntryOverpassCountsTowardOrdinaryLimit !== !1 || e.entryConnectorAffectsAuthoredHopDistance !== !1) throw Error(`Special zone "${e.id}" has an unsupported session policy.`);
+	ja(_, l, `Special zone "${e.id}" brown chain`), Da(e, l, g);
 }
 function Ta(e) {
+	if (e.entryConnectorRevealPolicy !== "first" || e.activationTrigger !== "idle-at-any-activation-node" || e.unlockPolicy !== "repeatable-session" || e.retention !== "retain-inside-session-envelope" || e.externalBridgeReplacement !== "retire-entry-overpass-before-ensure" || e.dismissalTrigger !== "departure-from-session-envelope" || e.dismissalBridgeOrder !== "entry-left-to-right-preclear" || e.dismissalConstructOrder !== "reverse-reveal-right-to-left" || e.lockHiddenMembersAfterDismissal !== !0 || !Ea(e.activationMemberRoutingPolicy) || e.recomputeRemainingHopsAtEntry !== !0 || e.retainEntryConnectorDuringMemberRoutes !== !0 || e.memberDynamicBridgeLifetime !== "retire-at-physical-arrival" || e.retainedEntryOverpassCountsTowardOrdinaryLimit !== !1 || e.entryConnectorAffectsAuthoredHopDistance !== !1) throw Error(`Special zone "${e.id}" has an unsupported session policy.`);
+}
+function Ea(e) {
 	return e === "entry-then-existing-chain" || e === "direct-only-from-activation-to-far-member-otherwise-existing-chain";
 }
-function Ea(e, t, n) {
+function Da(e, t, n) {
 	let r = /* @__PURE__ */ new Set(["session-entry-connector"]);
 	for (let e of t) r.add(`node:${e}`);
 	for (let e of n) r.add(`straight-edge:${e}`);
@@ -6320,18 +6323,18 @@ function Ea(e, t, n) {
 		if (i.has(a)) throw Error(`Special zone "${e.id}" reveal repeats "${a}".`);
 		i.add(a);
 	}
-	if (ja(i, r, `Special zone "${e.id}" reveal sequence`), e.revealSequence[0]?.kind !== "session-entry-connector") throw Error(`Special zone "${e.id}" session entry connector must reveal first.`);
+	if (Ma(i, r, `Special zone "${e.id}" reveal sequence`), e.revealSequence[0]?.kind !== "session-entry-connector") throw Error(`Special zone "${e.id}" session entry connector must reveal first.`);
 }
-function Da(e, t, n, r, i) {
+function Oa(e, t, n, r, i) {
 	if (e.entryConnections.length !== r.size) throw Error(`Special zone "${e.id}" must declare exactly one entry connector per activation node.`);
 	let a = /* @__PURE__ */ new Set(), o = /* @__PURE__ */ new Set();
 	for (let s of e.entryConnections) {
 		if (!r.has(s.activationNodeId)) throw Error(`Special zone "${e.id}" entry connector references non-activation node "${s.activationNodeId}".`);
 		if (a.has(s.activationNodeId)) throw Error(`Special zone "${e.id}" repeats entry connector for activation "${s.activationNodeId}".`);
 		a.add(s.activationNodeId);
-		let c = Na(t, s.activationNodeId, `Special zone "${e.id}" entry connector`);
-		if (!Fa(c.position.z, i.position.z)) throw Error(`Special zone "${e.id}" entry connector endpoints must share one horizontal row.`);
-		let l = [...t.values()].some((e) => e.id !== c.id && e.id !== i.id && Fa(e.position.z, c.position.z) && e.position.x > Math.min(c.position.x, i.position.x) + ua && e.position.x < Math.max(c.position.x, i.position.x) - ua);
+		let c = Pa(t, s.activationNodeId, `Special zone "${e.id}" entry connector`);
+		if (!Ia(c.position.z, i.position.z)) throw Error(`Special zone "${e.id}" entry connector endpoints must share one horizontal row.`);
+		let l = [...t.values()].some((e) => e.id !== c.id && e.id !== i.id && Ia(e.position.z, c.position.z) && e.position.x > Math.min(c.position.x, i.position.x) + da && e.position.x < Math.max(c.position.x, i.position.x) - da);
 		if (s.kind === "overpass") {
 			if (!l) throw Error(`Special zone "${e.id}" adjacent entry ${c.id} <-> ${i.id} must use a straight road.`);
 			continue;
@@ -6343,13 +6346,13 @@ function Da(e, t, n, r, i) {
 		if (!(u.fromNodeId === c.id && u.toNodeId === i.id || u.fromNodeId === i.id && u.toNodeId === c.id) || u.initiallyVisible || u.activationGroupId !== e.id || u.completionPolicy !== "preserve-variant") throw Error(`Special zone "${e.id}" straight entry "${s.edgeId}" must be a hidden owned road joining exactly ${c.id} and ${i.id}.`);
 		o.add(s.edgeId);
 	}
-	return ja(a, r, `Special zone "${e.id}" entry connector activations`), o;
+	return Ma(a, r, `Special zone "${e.id}" entry connector activations`), o;
 }
-function Oa(e, t, n, r) {
-	let i = Ma(e, "authored logical edge"), a = Ma(t, "physical straight edge"), o = new Set(n.flatMap((e) => e.entryConnections.flatMap((e) => e.kind === "straight-edge" ? [e.edgeId] : []))), s = /* @__PURE__ */ new Set();
+function ka(e, t, n, r) {
+	let i = Na(e, "authored logical edge"), a = Na(t, "physical straight edge"), o = new Set(n.flatMap((e) => e.entryConnections.flatMap((e) => e.kind === "straight-edge" ? [e.edgeId] : []))), s = /* @__PURE__ */ new Set();
 	for (let t of e) {
-		Na(r, t.fromNodeId, `Logical edge "${t.id}"`), Na(r, t.toNodeId, `Logical edge "${t.id}"`);
-		let e = Pa(t.fromNodeId, t.toNodeId);
+		Pa(r, t.fromNodeId, `Logical edge "${t.id}"`), Pa(r, t.toNodeId, `Logical edge "${t.id}"`);
+		let e = Fa(t.fromNodeId, t.toNodeId);
 		if (s.has(e)) throw Error(`Authored logical graph repeats node pair "${e}".`);
 		s.add(e);
 		let n = a.get(t.id);
@@ -6365,12 +6368,12 @@ function Oa(e, t, n, r) {
 		if (!t || t.connectionKind !== "straight" || t.fromNodeId !== e.fromNodeId || t.toNodeId !== e.toNodeId) throw Error(`Straight edge "${e.id}" is missing or mismatched in authored logical topology.`);
 	}
 	if (e.length + o.size !== t.length) throw Error("Authored logical topology contains a non-straight or unowned connection.");
-	ka(e, r);
+	Aa(e, r);
 	let c = new Set([...r.values()].filter((e) => e.initiallyVisible).map((e) => e.id));
-	Aa(t.filter((e) => e.initiallyVisible && c.has(e.fromNodeId) && c.has(e.toNodeId)), c, "Initially visible base graph");
-	for (let e of n) Aa(t.filter((t) => e.memberStraightEdgeIds.includes(t.id)), new Set(e.memberNodeIds), `Special zone "${e.id}" brown chain`);
+	ja(t.filter((e) => e.initiallyVisible && c.has(e.fromNodeId) && c.has(e.toNodeId)), c, "Initially visible base graph");
+	for (let e of n) ja(t.filter((t) => e.memberStraightEdgeIds.includes(t.id)), new Set(e.memberNodeIds), `Special zone "${e.id}" brown chain`);
 }
-function ka(e, t) {
+function Aa(e, t) {
 	let n = /* @__PURE__ */ new Map(), r = /* @__PURE__ */ new Map();
 	for (let e of t.keys()) n.set(e, 0), r.set(e, []);
 	for (let t of e) r.get(t.fromNodeId).push(t.toNodeId), n.set(t.toNodeId, n.get(t.toNodeId) + 1);
@@ -6385,7 +6388,7 @@ function ka(e, t) {
 	}
 	if (a !== t.size) throw Error("Authored logical topology must remain a directed acyclic graph.");
 }
-function Aa(e, t, n) {
+function ja(e, t, n) {
 	let r = t.values().next().value;
 	if (!r) throw Error(`${n} requires at least one node.`);
 	let i = /* @__PURE__ */ new Map();
@@ -6395,45 +6398,45 @@ function Aa(e, t, n) {
 	for (let e = 0; e < o.length; e += 1) for (let t of i.get(o[e])) a.has(t) || (a.add(t), o.push(t));
 	if (a.size !== t.size) throw Error(`${n} must be internally connected.`);
 }
-function ja(e, t, n) {
+function Ma(e, t, n) {
 	for (let r of t) if (!e.has(r)) throw Error(`${n} omits "${String(r)}".`);
 	for (let r of e) if (!t.has(r)) throw Error(`${n} contains unexpected "${String(r)}".`);
 }
-function Ma(e, t) {
+function Na(e, t) {
 	let n = /* @__PURE__ */ new Map();
 	return e.forEach((e, r) => {
 		if (e.id.trim().length === 0 || n.has(e.id)) throw Error(`Configured ${t} at index ${r} has an empty or duplicate id.`);
 		n.set(e.id, e);
 	}), n;
 }
-function Na(e, t, n) {
+function Pa(e, t, n) {
 	let r = e.get(t);
 	if (!r) throw Error(`${n} references missing node "${t}".`);
 	return r;
 }
-function Pa(e, t) {
+function Fa(e, t) {
 	if (e === t) throw Error(`Logical connection cannot loop at "${e}".`);
 	return e < t ? `${e}\u0000${t}` : `${t}\u0000${e}`;
 }
-function Fa(e, t) {
-	return Math.abs(e - t) <= ua;
+function Ia(e, t) {
+	return Math.abs(e - t) <= da;
 }
-xa({
-	nodes: sa,
-	straightEdges: Object.freeze([...ca, ...la]),
-	rules: ya,
-	authoredLogicalEdges: ba
+Sa({
+	nodes: ca,
+	straightEdges: Object.freeze([...la, ...ua]),
+	rules: ba,
+	authoredLogicalEdges: xa
 });
 //#endregion
 //#region src/config/createRuntimePathBundle.ts
-function Ia(e) {
-	let t = Object.freeze(e.nodes.map(La)), n = Object.freeze(e.authoredStraightEdges.map(Ra)), r = Object.freeze(e.sessionEntryStraightEdges.map(Ra)), i = Object.freeze([...n, ...r]), a = Object.freeze(n.map((e) => Object.freeze({
+function La(e) {
+	let t = Object.freeze(e.nodes.map(Ra)), n = Object.freeze(e.authoredStraightEdges.map(za)), r = Object.freeze(e.sessionEntryStraightEdges.map(za)), i = Object.freeze([...n, ...r]), a = Object.freeze(n.map((e) => Object.freeze({
 		id: e.id,
 		fromNodeId: e.fromNodeId,
 		toNodeId: e.toNodeId,
 		connectionKind: "straight"
 	})));
-	xa({
+	Sa({
 		nodes: t,
 		straightEdges: i,
 		rules: Object.freeze({
@@ -6444,12 +6447,12 @@ function Ia(e) {
 		initialNodeId: e.initialNodeId
 	});
 	let o = /* @__PURE__ */ new Map();
-	t.forEach((e, t) => o.set(e.id, t)), za(o, e.initialNodeId, "initialNodeId"), za(o, e.entryNodeId, "entryNodeId"), za(o, e.goalNodeId, "goalNodeId");
-	let s = Gi(t, i), c = (e) => o.get(e) ?? -1, l = (e) => {
+	t.forEach((e, t) => o.set(e.id, t)), Ba(o, e.initialNodeId, "initialNodeId"), Ba(o, e.entryNodeId, "entryNodeId"), Ba(o, e.goalNodeId, "goalNodeId");
+	let s = qi(t, i), c = (e) => o.get(e) ?? -1, l = (e) => {
 		if (e === null) return null;
 		let n = c(e);
 		return n >= 0 ? t[n] ?? null : null;
-	}, u = (e, t) => e === t ? null : s.getOverpassBetween(e, t), d = Ba({
+	}, u = (e, t) => e === t ? null : s.getOverpassBetween(e, t), d = Va({
 		specialZones: e.specialZones,
 		sessionEntryStraightEdges: r,
 		runtimeStraightEdges: i,
@@ -6502,19 +6505,19 @@ function Ia(e) {
 		}
 	}), Object.freeze(h);
 }
-function La(e) {
+function Ra(e) {
 	return Object.freeze({
 		...e,
 		position: Object.freeze({ ...e.position })
 	});
 }
-function Ra(e) {
+function za(e) {
 	return Object.freeze({ ...e });
 }
-function za(e, t, n) {
+function Ba(e, t, n) {
 	if (!e.has(t)) throw Error(`Runtime path ${n} references missing node "${t}".`);
 }
-function Ba(e) {
+function Va(e) {
 	let t = /* @__PURE__ */ new Set(), n = /* @__PURE__ */ new Set(), r = new Map(e.runtimeStraightEdges.map((e) => [e.id, e])), i = 0;
 	for (let a of e.specialZones) {
 		if (a.revealSequence.filter((e) => e.kind === "session-entry-connector").length !== 1) throw Error(`Special zone "${a.id}" must declare exactly one session entry connector template.`);
@@ -6536,23 +6539,23 @@ function Ba(e) {
 	if (n.size !== o.size || [...o].some((e) => !n.has(e))) throw Error(`Configured special entries must use all ${o.size} session straight roads exactly once.`);
 	if (t.size !== a - o.size) throw Error(`Expected ${a - o.size} overpass entries, got ${t.size}.`);
 	return Object.freeze({
-		bridgeIds: Object.freeze([...t].sort(Va)),
-		straightEdgeIds: Object.freeze([...n].sort(Va)),
+		bridgeIds: Object.freeze([...t].sort(Ha)),
+		straightEdgeIds: Object.freeze([...n].sort(Ha)),
 		connectorCount: i
 	});
 }
-function Va(e, t) {
+function Ha(e, t) {
 	return e < t ? -1 : +(e > t);
 }
 //#endregion
 //#region src/app/compileLearningPathRuntime.ts
-function Ha(e, t = {}) {
-	let n = Object.freeze(e.nodes.map(Ua)), r = Object.freeze(e.edges.map(Wa)), i = new Set(r.map((e) => e.id)), a = new Set(r.map((e) => ro(e.fromNodeId, e.toNodeId))), o = [], s = [];
+function Ua(e, t = {}) {
+	let n = Object.freeze(e.nodes.map(Wa)), r = Object.freeze(e.edges.map(Ga)), i = new Set(r.map((e) => e.id)), a = new Set(r.map((e) => io(e.fromNodeId, e.toNodeId))), o = [], s = [];
 	for (let t of e.conceptZones) {
-		let n = Ga(t, e.nodes, i, a);
-		o.push(n.zone), n.sessionEntryStraightEdge && (s.push(n.sessionEntryStraightEdge), i.add(n.sessionEntryStraightEdge.id), a.add(ro(n.sessionEntryStraightEdge.fromNodeId, n.sessionEntryStraightEdge.toNodeId)));
+		let n = Ka(t, e.nodes, i, a);
+		o.push(n.zone), n.sessionEntryStraightEdge && (s.push(n.sessionEntryStraightEdge), i.add(n.sessionEntryStraightEdge.id), a.add(io(n.sessionEntryStraightEdge.fromNodeId, n.sessionEntryStraightEdge.toNodeId)));
 	}
-	let c = Object.freeze([...e.goalNodeIds]), l = Ja(e, t.primaryGoalNodeId), u = t.dynamicBridgeRule ?? da, d = Object.freeze(o), f = Object.freeze(s), p = Ia({
+	let c = Object.freeze([...e.goalNodeIds]), l = Ya(e, t.primaryGoalNodeId), u = t.dynamicBridgeRule ?? fa, d = Object.freeze(o), f = Object.freeze(s), p = La({
 		nodes: n,
 		authoredStraightEdges: r,
 		sessionEntryStraightEdges: f,
@@ -6561,7 +6564,7 @@ function Ha(e, t = {}) {
 		initialNodeId: e.initialNodeId,
 		entryNodeId: e.entryNodeId,
 		goalNodeId: l
-	}), m = qa(e), h = Object.freeze(e.nodes.map((e) => Object.freeze({
+	}), m = Ja(e), h = Object.freeze(e.nodes.map((e) => Object.freeze({
 		id: e.id,
 		initiallyVisible: e.entityKind === "subject" && e.initiallyVisible
 	}))), g = Object.freeze(e.edges.map((e) => Object.freeze({
@@ -6569,7 +6572,7 @@ function Ha(e, t = {}) {
 		fromNodeId: e.fromNodeId,
 		toNodeId: e.toNodeId,
 		initiallyVisible: (e.sourceKind === "subject-flow" || e.sourceKind === "parallel-peer") && e.initiallyVisible
-	}))), _ = Ka(e), v = Ya(e, t.revision), y = Object.freeze({
+	}))), _ = qa(e), v = Xa(e, t.revision), y = Object.freeze({
 		source: e,
 		runtimeBundle: p,
 		specialZones: d,
@@ -6583,7 +6586,7 @@ function Ha(e, t = {}) {
 		nodes: h,
 		edges: g,
 		revealOrder: _,
-		data: zt(v, y)
+		data: Vt(v, y)
 	});
 	return Object.freeze({
 		source: e,
@@ -6597,7 +6600,7 @@ function Ha(e, t = {}) {
 		primaryGoalNodeId: l
 	});
 }
-function Ua(e) {
+function Wa(e) {
 	return Object.freeze({
 		id: e.id,
 		navigationOrder: e.navigationOrder,
@@ -6611,7 +6614,7 @@ function Ua(e) {
 		variant: e.variant
 	});
 }
-function Wa(e) {
+function Ga(e) {
 	return Object.freeze({
 		id: e.id,
 		fromNodeId: e.fromNodeId,
@@ -6622,8 +6625,8 @@ function Wa(e) {
 		...e.activationGroupId ? { activationGroupId: e.activationGroupId } : {}
 	});
 }
-function Ga(e, t, n, r) {
-	let i = Qa(t, e.activationSubjectNodeId, `Concept zone "${e.id}" activation`), a = Qa(t, e.entryConnection.toConceptNodeId, `Concept zone "${e.id}" entry`), o = ro(i.id, a.id);
+function Ka(e, t, n, r) {
+	let i = $a(t, e.activationSubjectNodeId, `Concept zone "${e.id}" activation`), a = $a(t, e.entryConnection.toConceptNodeId, `Concept zone "${e.id}" entry`), o = io(i.id, a.id);
 	if (r.has(o)) throw Error(`Concept zone "${e.id}" entry duplicates physical pair "${o}".`);
 	let s, c = null;
 	if (e.entryConnection.preferredPathKind === "overpass") s = Object.freeze({
@@ -6631,7 +6634,7 @@ function Ga(e, t, n, r) {
 		kind: "overpass"
 	});
 	else {
-		let t = Za(e.id, i.id, a.id, n);
+		let t = Qa(e.id, i.id, a.id, n);
 		s = Object.freeze({
 			activationNodeId: i.id,
 			kind: "straight-edge",
@@ -6681,14 +6684,14 @@ function Ga(e, t, n, r) {
 		sessionEntryStraightEdge: c
 	});
 }
-function Ka(e) {
+function qa(e) {
 	let t = e.nodes.filter((e) => e.entityKind === "subject" && e.initiallyVisible), n = new Set(t.map((e) => e.id)), r = e.edges.filter((e) => (e.sourceKind === "subject-flow" || e.sourceKind === "parallel-peer") && e.initiallyVisible && n.has(e.fromNodeId) && n.has(e.toNodeId)), i = r.filter((e) => e.sourceKind === "subject-flow"), a = /* @__PURE__ */ new Map(), o = new Map(t.map((e) => [e.id, 0]));
 	for (let e of i) {
 		let t = a.get(e.fromNodeId) ?? [];
 		t.push(e), a.set(e.fromNodeId, t), o.set(e.toNodeId, (o.get(e.toNodeId) ?? 0) + 1);
 	}
-	for (let e of a.values()) e.sort(to);
-	let s = new Map(t.map((e) => [e.id, e])), c = t.filter((e) => o.get(e.id) === 0).sort((t, n) => $a(t, n, e.initialNodeId)), l = /* @__PURE__ */ new Set(), u = /* @__PURE__ */ new Set(), d = [];
+	for (let e of a.values()) e.sort(no);
+	let s = new Map(t.map((e) => [e.id, e])), c = t.filter((e) => o.get(e.id) === 0).sort((t, n) => eo(t, n, e.initialNodeId)), l = /* @__PURE__ */ new Set(), u = /* @__PURE__ */ new Set(), d = [];
 	for (; c.length > 0;) {
 		let t = c.shift();
 		if (!t) break;
@@ -6696,7 +6699,7 @@ function Ka(e) {
 			kind: "node",
 			nodeId: t.id
 		})), l.add(t.id);
-		let n = r.filter((e) => !u.has(e.id) && l.has(e.fromNodeId) && l.has(e.toNodeId)).sort(to);
+		let n = r.filter((e) => !u.has(e.id) && l.has(e.fromNodeId) && l.has(e.toNodeId)).sort(no);
 		for (let e of n) d.push(Object.freeze({
 			kind: "edge",
 			edgeId: e.id,
@@ -6707,7 +6710,7 @@ function Ka(e) {
 			let t = (o.get(n.toNodeId) ?? 0) - 1;
 			if (o.set(n.toNodeId, t), t === 0) {
 				let t = s.get(n.toNodeId);
-				t && no(c, t, (t, n) => $a(t, n, e.initialNodeId));
+				t && ro(c, t, (t, n) => eo(t, n, e.initialNodeId));
 			}
 		}
 	}
@@ -6716,7 +6719,7 @@ function Ka(e) {
 	if (u.size !== r.length) throw Error("Initial subject reveal omitted one or more visible flow edges.");
 	return Object.freeze(d);
 }
-function qa(e) {
+function Ja(e) {
 	let t = e.nodes.flatMap((e) => e.action ? [[e.id, Object.freeze({
 		nodeId: e.id,
 		action: e.action,
@@ -6728,16 +6731,16 @@ function qa(e) {
 		getAction: (e) => e === null ? null : n.get(e) ?? null
 	});
 }
-function Ja(e, t) {
+function Ya(e, t) {
 	if (t !== void 0) {
 		if (!e.goalNodeIds.includes(t)) throw Error(`Requested primary goal "${t}" is not a compiled goal.`);
 		return t;
 	}
-	let n = e.goalNodeIds.map((t) => Qa(e.nodes, t, "Compiled goal")).sort(eo)[0];
+	let n = e.goalNodeIds.map((t) => $a(e.nodes, t, "Compiled goal")).sort(to)[0];
 	if (!n) throw Error("Compiled learning path must declare at least one goal node.");
 	return n.id;
 }
-function Ya(e, t) {
+function Xa(e, t) {
 	if (t !== void 0) {
 		let e = t.trim();
 		if (e.length === 0) throw Error("Learning path revision cannot be empty.");
@@ -6765,60 +6768,60 @@ function Ya(e, t) {
 			e.sourceKind
 		])
 	].join("");
-	return `${e.sourceDocumentId}@${e.version}-${Xa(n)}`;
+	return `${e.sourceDocumentId}@${e.version}-${Za(n)}`;
 }
-function Xa(e) {
+function Za(e) {
 	let t = 2166136261;
 	for (let n = 0; n < e.length; n += 1) t ^= e.charCodeAt(n), t = Math.imul(t, 16777619);
 	return (t >>> 0).toString(16).padStart(8, "0");
 }
-function Za(e, t, n, r) {
+function Qa(e, t, n, r) {
 	let i = `session-entry:${encodeURIComponent(e)}:${encodeURIComponent(t)}:${encodeURIComponent(n)}`;
 	if (!r.has(i)) return i;
 	let a = 2;
 	for (; r.has(`${i}:${a}`);) a += 1;
 	return `${i}:${a}`;
 }
-function Qa(e, t, n) {
+function $a(e, t, n) {
 	let r = e.find((e) => e.id === t);
 	if (!r) throw Error(`${n} references missing node "${t}".`);
 	return r;
 }
-function $a(e, t, n) {
-	return e.id === n ? t.id === n ? 0 : -1 : t.id === n ? 1 : eo(e, t);
-}
-function eo(e, t) {
-	return e.navigationOrder - t.navigationOrder || io(e.id, t.id);
+function eo(e, t, n) {
+	return e.id === n ? t.id === n ? 0 : -1 : t.id === n ? 1 : to(e, t);
 }
 function to(e, t) {
-	return io(e.id, t.id);
+	return e.navigationOrder - t.navigationOrder || ao(e.id, t.id);
 }
-function no(e, t, n) {
+function no(e, t) {
+	return ao(e.id, t.id);
+}
+function ro(e, t, n) {
 	let r = 0;
 	for (; r < e.length && n(e[r], t) <= 0;) r += 1;
 	e.splice(r, 0, t);
 }
-function ro(e, t) {
-	return io(e, t) <= 0 ? `${e}\u001f${t}` : `${t}\u001f${e}`;
-}
 function io(e, t) {
+	return ao(e, t) <= 0 ? `${e}\u001f${t}` : `${t}\u001f${e}`;
+}
+function ao(e, t) {
 	return e < t ? -1 : +(e > t);
 }
 //#endregion
 //#region src/app/PageGenerationPresenter.ts
-function ao(e) {
+function oo(e) {
 	return `${e.transactionId}\u0000${e.revision}\u0000${e.token}`;
 }
-function oo(e) {
+function so(e) {
 	return e.type === "PAGE.PRESENTATION.REVEAL_PATH_STEP" ? Object.freeze({
 		...e,
 		step: Object.freeze({ ...e.step })
 	}) : Object.freeze({ ...e });
 }
-function so(e) {
+function co(e) {
 	return e instanceof Error ? e.message : typeof e == "string" ? e : "Unknown page presentation failure.";
 }
-function co(e) {
+function lo(e) {
 	return e.type === "PAGE.PRESENTATION.REVEAL_PATH_STEP" ? Object.freeze({
 		type: "PAGE.PATH_STEP.SETTLED",
 		transactionId: e.transactionId,
@@ -6831,16 +6834,16 @@ function co(e) {
 		token: e.token
 	});
 }
-function lo(e, t) {
+function uo(e, t) {
 	return Object.freeze({
 		type: "PAGE.PRESENTATION.FAILED",
 		transactionId: e.transactionId,
 		revision: e.revision,
 		token: e.token,
-		error: so(t)
+		error: co(t)
 	});
 }
-var uo = class {
+var fo = class {
 	queue = [];
 	pendingKeys = /* @__PURE__ */ new Set();
 	finalizedKeys = /* @__PURE__ */ new Set();
@@ -6854,9 +6857,9 @@ var uo = class {
 	}
 	executePresentation = (e) => {
 		if (this.disposed) return;
-		let t = ao(e);
+		let t = oo(e);
 		this.pendingKeys.has(t) || this.finalizedKeys.has(t) || (this.pendingKeys.add(t), this.queue.push(Object.freeze({
-			command: oo(e),
+			command: so(e),
 			key: t,
 			generation: this.generation
 		})), this.requestDrain());
@@ -6900,9 +6903,9 @@ var uo = class {
 				this.active = r;
 				let i;
 				try {
-					await this.perform(t.presentation, r.command, n.signal), i = co(r.command);
+					await this.perform(t.presentation, r.command, n.signal), i = lo(r.command);
 				} catch (e) {
-					i = lo(r.command, e);
+					i = uo(r.command, e);
 				}
 				let a = !this.disposed && r.generation === this.generation && !n.signal.aborted && this.runtime === t && !this.finalizedKeys.has(r.key);
 				this.active = null, this.pendingKeys.delete(r.key), this.finalizedKeys.add(r.key), a && this.emit(t, i);
@@ -6923,30 +6926,30 @@ var uo = class {
 			e.send(t);
 		} catch {}
 	}
-}, fo = null, po = null;
-function mo() {
-	return fo ??= import("./LearningPathSession-BWw2RtRt.js").catch((e) => {
-		throw fo = null, e;
-	}), fo;
-}
+}, po = null, mo = null;
 function ho() {
-	return po ??= import("./prepareLearningPathCharacter-Bvm1PXv0.js").catch((e) => {
+	return po ??= import("./LearningPathSession-WoZaqSLh.js").catch((e) => {
 		throw po = null, e;
 	}), po;
 }
-function go(e) {
-	return e.pagePhase === "ready" && e.hasSnapshot && e.hasRuntime && e.hasProgress;
+function go() {
+	return mo ??= import("./prepareLearningPathCharacter-Bvm1PXv0.js").catch((e) => {
+		throw mo = null, e;
+	}), mo;
 }
 function _o(e) {
+	return e.pagePhase === "ready" && e.hasSnapshot && e.hasRuntime && e.hasProgress;
+}
+function vo(e) {
 	return e.phase === "active" && e.sessionRevision !== null && e.activatedSessionRevision !== e.sessionRevision && e.hasSession && e.hasPathOrchestrationActor;
 }
-function vo(e, t) {
+function yo(e, t) {
 	return Object.prototype.hasOwnProperty.call(e, t);
 }
-function yo(e) {
+function bo(e) {
 	return e instanceof DOMException && e.name === "AbortError";
 }
-function bo(e) {
+function xo(e) {
 	switch (e.kind) {
 		case "validation": return `路径数据未通过校验：${e.message}`;
 		case "compilation": return `路径编译失败：${e.message}`;
@@ -6957,12 +6960,12 @@ function bo(e) {
 		default: return "未找到学习路径模板，请重试。";
 	}
 }
-async function xo(e, t) {
+async function So(e, t) {
 	let n = t.elements, r = n.root, i = n.canvas, a = n.viewport, o = r.ownerDocument, s = o.defaultView;
 	if (!s) throw Error("Learning-path runtime requires a browser window.");
 	let c = t.mode, l = t.instanceId, u = t.standaloneTemplatePool ?? null;
 	if (c === "standalone" && !u) throw Error("Standalone Demo/QA runtime requires its template-pool adapter.");
-	let d = new uo(), f = s.matchMedia("(prefers-reduced-motion: reduce)"), p = () => t?.reducedMotion ?? f.matches, m = await ii(c === "standalone" || t?.diagnostics ? s.location.search : "").catch((e) => (console.warn("[learning-path] Stately Inspector could not start.", e), null)), h = t?.learningProgressStorage ?? new Hr(() => s.localStorage), _ = c === "standalone" ? u.readPersistedLearningPathChoice(s.localStorage) : null;
+	let d = new fo(), f = s.matchMedia("(prefers-reduced-motion: reduce)"), p = () => t?.reducedMotion ?? f.matches, m = await oi(c === "standalone" || t?.diagnostics ? s.location.search : "").catch((e) => (console.warn("[learning-path] Stately Inspector could not start.", e), null)), h = t?.learningProgressStorage ?? new Wr(() => s.localStorage), _ = c === "standalone" ? u.readPersistedLearningPathChoice(s.localStorage) : null;
 	if (c === "standalone" && _) try {
 		u.writePersistedLearningPathChoice(s.localStorage, _);
 	} catch {}
@@ -6973,11 +6976,11 @@ async function xo(e, t) {
 		return n.id = e, n.hidden = !0, n.setAttribute("aria-hidden", "true"), r.append(n), n;
 	})() : null, le = () => {
 		if (!ce || !x) return;
-		let e = x.getSnapshot(), t = Nr(e);
+		let e = x.getSnapshot(), t = Fr(e);
 		ce.textContent = JSON.stringify({
-			phase: Er(e),
+			phase: Or(e),
 			stateValue: e.value,
-			activeSessionRevision: Dr(e),
+			activeSessionRevision: kr(e),
 			ignoredEventCount: e.context.ignoredEventCount,
 			lastIgnoredEvent: e.context.lastIgnoredEvent,
 			sceneSession: t ? {
@@ -6987,7 +6990,7 @@ async function xo(e, t) {
 				lastGatewayAck: t.getSnapshot().context.lastGatewayAck
 			} : null
 		});
-	}, ue = () => M ? Promise.resolve(M) : (oe ??= ho().then((e) => {
+	}, ue = () => M ? Promise.resolve(M) : (oe ??= go().then((e) => {
 		if (v) throw new DOMException("Character preload cancelled.", "AbortError");
 		let n = e.prepareLearningPathCharacter(t?.characterAssetUrls);
 		if (v) throw n.character.dispose(), new DOMException("Character preload cancelled.", "AbortError");
@@ -7017,8 +7020,8 @@ async function xo(e, t) {
 		subjectStatusById: Object.freeze(Object.fromEntries(Object.keys(e.subjectStatusById).map((e) => [e, "completed"]))),
 		conceptStatusById: Object.freeze(Object.fromEntries(Object.keys(e.conceptStatusById).map((e) => [e, "in-progress"])))
 	}) : e, L = () => {
-		let e = x ? Or(x.getSnapshot()) : null;
-		return e ? F(oi(e.getSnapshot().context.model)) : null;
+		let e = x ? Ar(x.getSnapshot()) : null;
+		return e ? F(ci(e.getSnapshot().context.model)) : null;
 	}, de = () => {
 		let e = r.dataset.pagePhase;
 		return Object.freeze({
@@ -7034,7 +7037,7 @@ async function xo(e, t) {
 			error: n,
 			message: r
 		}));
-	}, R = () => x ? Dr(x.getSnapshot()) : null, z = (e) => {
+	}, R = () => x ? kr(x.getSnapshot()) : null, z = (e) => {
 		let t = R();
 		t !== null && x?.send({
 			type: "APP.PROGRESS.EVENT",
@@ -7043,11 +7046,11 @@ async function xo(e, t) {
 		});
 	}, B = () => {
 		let e = x;
-		return e ? kr(e.getSnapshot())?.getSnapshot().context.transactionId ?? null : null;
+		return e ? jr(e.getSnapshot())?.getSnapshot().context.transactionId ?? null : null;
 	}, pe = () => {
 		let e = x;
 		if (!e) return null;
-		let t = kr(e.getSnapshot())?.getSnapshot();
+		let t = jr(e.getSnapshot())?.getSnapshot();
 		return t?.context.transactionId ?? t?.context.lastOutcome?.transactionId ?? null;
 	}, me = (e) => {
 		let t = R();
@@ -7065,7 +7068,7 @@ async function xo(e, t) {
 		});
 	}, ge = () => {
 		let e = x;
-		return e ? Mr(e.getSnapshot()) : null;
+		return e ? Pr(e.getSnapshot()) : null;
 	}, _e = (e, t) => {
 		me({
 			type: "REQUESTED",
@@ -7076,7 +7079,7 @@ async function xo(e, t) {
 		});
 		let n = x;
 		if (!n) return !1;
-		let r = kr(n.getSnapshot())?.getSnapshot(), i = !!(r && (r.matches("ready") || r.matches("moving") || r.matches("settling") || r.matches("idle") && r.context.lastOutcome?.type === "settled"));
+		let r = jr(n.getSnapshot())?.getSnapshot(), i = !!(r && (r.matches("ready") || r.matches("moving") || r.matches("settling") || r.matches("idle") && r.context.lastOutcome?.type === "settled"));
 		return i && t === "unlock" && r?.context.plan && r.context.transactionId && z({
 			type: "UNLOCK.COMMIT.REGISTERED",
 			commit: {
@@ -7086,8 +7089,8 @@ async function xo(e, t) {
 			}
 		}), i;
 	}, V = () => {
-		let e = x ? Ar(x.getSnapshot()) : null;
-		return e ? yn(e.getSnapshot()) : null;
+		let e = x ? Mr(x.getSnapshot()) : null;
+		return e ? xn(e.getSnapshot()) : null;
 	}, ye = (e, t) => `node-card-${e}-${t.revision}-${t.nodeId}`, be = (e, t = !0) => {
 		let n = R(), r = V();
 		return n === null || !r ? !1 : (x?.send({
@@ -7141,13 +7144,13 @@ async function xo(e, t) {
 				}
 			}
 		});
-	}, H = new Vi(a, {
+	}, H = new Ui(a, {
 		onLaunchRequested: (e) => {
-			W(e.action);
+			Oe(e.action);
 		},
 		onCardActionRequested: (e) => {
 			let n = S, r = C, i = R(), a = V(), o = L();
-			if (!n || !r || i === null || !a || !o || e.instanceId !== ye(i, a) || a.nodeId !== e.nodeId || !fn(e.actionId) || !be(e.actionId)) return;
+			if (!n || !r || i === null || !a || !o || e.instanceId !== ye(i, a) || a.nodeId !== e.nodeId || !mn(e.actionId) || !be(e.actionId)) return;
 			if (t?.progressionMode === "open" && e.actionId === "subject:enter") {
 				n.goToNode(e.nodeId, "direct");
 				return;
@@ -7208,7 +7211,7 @@ async function xo(e, t) {
 				count: e.playCount
 			}));
 		}
-	}), Ce = new _n({
+	}), Ce = new yn({
 		viewport: a,
 		view: H,
 		resolveContext: (e) => {
@@ -7218,13 +7221,13 @@ async function xo(e, t) {
 				reducedMotion: p()
 			};
 		}
-	}), U = (e) => {
-		let n = C, i = L(), a = R(), o = V(), s = ge(), c = go({
+	}), we = (e) => {
+		let n = C, i = L(), a = R(), o = V(), s = ge(), c = _o({
 			pagePhase: r.dataset.pagePhase,
 			hasSnapshot: e !== null,
 			hasRuntime: n !== null,
 			hasProgress: i !== null
-		}), l = c && n && i && e && a !== null && o !== null ? ln({
+		}), l = c && n && i && e && a !== null && o !== null ? dn({
 			runtime: n,
 			nodeId: o.nodeId,
 			progress: i,
@@ -7243,15 +7246,15 @@ async function xo(e, t) {
 			} : null
 		};
 		H.setViewModel(u), Ce.setNodeId(l?.nodeId ?? null);
-	}, we = (e) => {
+	}, Te = (e) => {
 		let t = S;
 		if (!t || !se) return;
 		let n = se.project(I(e));
-		n.changes.length !== 0 && (n.type === "replace" ? t.replaceNodeLearningStates(n.changes) : t.patchNodeLearningStates(n.changes), V() !== null && U(k ?? t.getSnapshot()));
-	}, Te = () => {
+		n.changes.length !== 0 && (n.type === "replace" ? t.replaceNodeLearningStates(n.changes) : t.patchNodeLearningStates(n.changes), V() !== null && we(k ?? t.getSnapshot()));
+	}, Ee = () => {
 		Ce.setNodeId(null), d.cancel(), w?.unsubscribe(), T?.unsubscribe(), w = null, T?.unsubscribe(), T = null, E?.unsubscribe(), E = null, D?.unsubscribe(), D = null, O?.unsubscribe(), O = null, re = null, ie = null, S?.dispose(), S = null, C = null, te = null, k = null, A = null, j = 0, se = null, H.setCardPlacement(null), P = null, t?.exposeGlobalDebug && delete s.__LEARNING_PATH_EXPERIENCE__;
 	};
-	x = wr({
+	x = Er({
 		pageGeneration: {
 			createTransactionId: () => `generation-${Date.now()}-${++y}`,
 			validateTemplate: ({ template: e, signal: t }) => {
@@ -7260,13 +7263,13 @@ async function xo(e, t) {
 			},
 			compilePath: ({ validatedTemplate: e, signal: t }) => {
 				if (t.aborted) throw new DOMException("Compilation cancelled.", "AbortError");
-				let n = ve(e), i = Ha(n);
+				let n = ve(e), i = Ua(n);
 				return te = n, C = i, r.dataset.pagePhase = "generating", i.page;
 			},
 			preparePresentation: async ({ revision: e, signal: r }) => {
 				let o = te, u = C;
-				if (Te(), !o || !u || u.page.revision !== e) throw Error("Compiled runtime is unavailable for this revision.");
-				let [f, p] = await Promise.all([mo(), ue()]), { createLearningPathSession: m } = f;
+				if (Ee(), !o || !u || u.page.revision !== e) throw Error("Compiled runtime is unavailable for this revision.");
+				let [f, p] = await Promise.all([ho(), ue()]), { createLearningPathSession: m } = f;
 				if (M === p && (M = null), oe = null, r.aborted) throw p.character.dispose(), new DOMException("Presentation preparation cancelled.", "AbortError");
 				C = u, A = o.entryNodeId;
 				let h = t?.subjectCardTrigger === "hover", g = t?.subjectCardTrigger === "activate-dismiss-on-leave", _ = (e) => o.nodeById.get(e)?.entityKind === "subject", y = () => {
@@ -7291,6 +7294,8 @@ async function xo(e, t) {
 					specialZones: u.specialZones,
 					dynamicBridgeRule: u.dynamicBridgeRule,
 					introAnimation: !0,
+					resumePresentation: !!t?.initialSceneNodeId,
+					lastLearningNodeId: t?.lastLearningNodeId,
 					preparedCharacter: p,
 					nodeBadgeIconById: t?.nodeBadgeIconById,
 					canNavigateToNode: (e, n) => n !== "direct" || t?.progressionMode === "open" || (() => {
@@ -7337,7 +7342,7 @@ async function xo(e, t) {
 								transactionId: t,
 								nodeId: e
 							});
-							let n = x ? kr(x.getSnapshot())?.getSnapshot() : null;
+							let n = x ? jr(x.getSnapshot())?.getSnapshot() : null;
 							n?.matches("moving") && n.context.transactionId === t && n.context.currentNodeId === e && n.context.lastOutcome === null && z({
 								type: "NODE.TRAVERSED",
 								nodeId: e,
@@ -7354,7 +7359,7 @@ async function xo(e, t) {
 								safeNodeId: e,
 								reason: t
 							});
-							let r = x ? kr(x.getSnapshot())?.getSnapshot() : null;
+							let r = x ? jr(x.getSnapshot())?.getSnapshot() : null;
 							r?.matches("cancelled") && r.context.lastOutcome?.type === "cancelled" && r.context.lastOutcome.transactionId === n && z({
 								type: "MOVEMENT.CANCELLED",
 								safeNodeId: e,
@@ -7369,15 +7374,15 @@ async function xo(e, t) {
 					onBackgroundActivated: xe,
 					onStateChanged: (e) => {
 						if (v || S === null) return;
-						let t = k;
-						if (k = e, e.isRunning && t?.isRunning !== !0) {
+						let n = k;
+						if (k = e, e.isRunning && n?.isRunning !== !0) {
 							let e = B();
 							if (e) {
 								me({
 									type: "MOVEMENT_STARTED",
 									transactionId: e
 								});
-								let t = x ? kr(x.getSnapshot())?.getSnapshot() : null;
+								let t = x ? jr(x.getSnapshot())?.getSnapshot() : null;
 								t?.matches("moving") && t.context.transactionId === e && t.context.lastOutcome === null && L()?.pendingUnlockCommit?.transactionId === e && z({
 									type: "UNLOCK.DEPARTED",
 									transactionId: e
@@ -7385,26 +7390,26 @@ async function xo(e, t) {
 							}
 						}
 						if (e.visuallyIdle && !e.isRunning && e.targetNodeId === null && A !== e.currentNodeId) {
-							A = e.currentNodeId;
-							let t = B();
-							if (t) {
+							A = e.currentNodeId, t?.progressionMode === "open" && P !== null && t.onScenePositionChanged?.(e.currentNodeId);
+							let n = B();
+							if (n) {
 								me({
 									type: "NODE_ARRIVED",
-									transactionId: t,
+									transactionId: n,
 									nodeId: e.currentNodeId
 								});
-								let n = x ? kr(x.getSnapshot())?.getSnapshot() : null;
-								n?.matches("settling") && n.context.transactionId === t && n.context.currentNodeId === e.currentNodeId && n.context.lastOutcome === null && (z({
+								let t = x ? jr(x.getSnapshot())?.getSnapshot() : null;
+								t?.matches("settling") && t.context.transactionId === n && t.context.currentNodeId === e.currentNodeId && t.context.lastOutcome === null && (z({
 									type: "NODE.ARRIVED",
 									nodeId: e.currentNodeId,
-									transactionId: t
+									transactionId: n
 								}), me({
 									type: "VISUAL_SETTLED",
-									transactionId: t
+									transactionId: n
 								}));
 							}
 						}
-						L()?.pendingLearningIntent?.nodeId === e.currentNodeId && e.visuallyIdle && !e.isRunning && e.targetNodeId === null && Se(e.currentNodeId), U(e);
+						L()?.pendingLearningIntent?.nodeId === e.currentNodeId && e.visuallyIdle && !e.isRunning && e.targetNodeId === null && Se(e.currentNodeId), we(e);
 					}
 				}), (t?.exposeGlobalDebug ?? c === "standalone") && (s.__LEARNING_PATH_EXPERIENCE__ = Object.freeze({
 					getState: () => {
@@ -7413,7 +7418,7 @@ async function xo(e, t) {
 							progress: e,
 							card: (() => {
 								let n = C, r = k, i = R(), a = V();
-								return e && n && r && i !== null && a ? ln({
+								return e && n && r && i !== null && a ? dn({
 									runtime: n,
 									nodeId: a.nodeId,
 									progress: e,
@@ -7438,12 +7443,12 @@ async function xo(e, t) {
 			},
 			executePresentation: d.executePresentation,
 			onGenerationFailed: (e) => {
-				Te(), r.dataset.pagePhase = c === "module" ? "failed" : "gate", fe("generation", e, bo(e)), H.setViewModel({
+				Ee(), r.dataset.pagePhase = c === "module" ? "failed" : "gate", fe("generation", e, xo(e)), H.setViewModel({
 					generation: {
 						phase: c === "module" ? "hidden" : "error",
 						buttonLabel: "重新生成学习路径",
 						canContinue: _ !== null,
-						errorMessage: bo(e)
+						errorMessage: xo(e)
 					},
 					card: null,
 					celebration: null
@@ -7471,7 +7476,7 @@ async function xo(e, t) {
 				};
 			}
 		},
-		learningResource: t?.learningResource ?? zr(s),
+		learningResource: t?.learningResource ?? Vr(s),
 		learningProgressStorage: h,
 		resolveCompiledLearningPath: ({ revision: e }) => {
 			let t = C;
@@ -7501,7 +7506,7 @@ async function xo(e, t) {
 		},
 		createPathOrchestrationBinding: () => {
 			if (!S) throw Error("Active learning session is unavailable for path orchestration.");
-			return S.getPathOrchestrationBinding();
+			return t?.progressionMode === "open" && t.initialSceneNodeId && (S.reconcileRestoredProgress(t.initialSceneNodeId), k = S.getSnapshot(), A = k.currentNodeId), S.getPathOrchestrationBinding();
 		}
 	}, {
 		input: {
@@ -7510,35 +7515,35 @@ async function xo(e, t) {
 		},
 		...m ? { inspect: m.inspect } : {}
 	});
-	let Ee = () => {
+	let De = () => {
 		let e = x;
 		if (!e) return;
 		let n = e.getSnapshot();
 		le();
-		let r = Dr(n), a = Er(n), o = Pr(n);
+		let r = kr(n), a = Or(n), o = Ir(n);
 		if (a !== "active" || r === null || !o) {
 			w?.unsubscribe(), w = null, T?.unsubscribe(), T = null, E?.unsubscribe(), E = null, D?.unsubscribe(), D = null, O?.unsubscribe(), O = null, se = null, re = null;
 			return;
 		}
 		if (re === r) return;
 		w?.unsubscribe(), T?.unsubscribe(), E?.unsubscribe(), D?.unsubscribe(), O?.unsubscribe();
-		let s = Or(n), c = Ar(n), u = jr(n);
-		se = new di(), w = s ? Fr(s, si, (e) => we(e), {
-			equals: li,
+		let s = Ar(n), c = Mr(n), u = Nr(n);
+		se = new pi(), w = s ? Lr(s, li, (e) => Te(e), {
+			equals: di,
 			emitInitial: !0
 		}) : null, T = s?.subscribe((e) => {
-			t?.onProgressChange?.(F(oi(e.context.model)));
+			t?.onProgressChange?.(F(ci(e.context.model)));
 		}) ?? null, E = u?.subscribe(() => {
-			U(k ?? S?.getSnapshot() ?? null);
+			we(k ?? S?.getSnapshot() ?? null);
 			let e = ge(), n = e?.activeCount ?? 0;
 			e?.visible && n > N && (N = n, t?.onComplete?.(Object.freeze({
 				instanceId: l,
 				playCount: n,
 				snapshot: de()
 			})));
-		}) ?? null, D = c?.subscribe(() => U(k)) ?? null;
+		}) ?? null, D = c?.subscribe(() => we(k)) ?? null;
 		let d = S;
-		O = d ? At({
+		O = d ? Mt({
 			sessionRevision: r,
 			source: d,
 			isCurrentSession: () => !v && S === d && R() === r,
@@ -7547,28 +7552,28 @@ async function xo(e, t) {
 				sessionRevision: r,
 				event: e
 			})
-		}) : null, re = r, _o({
+		}) : null, re = r, vo({
 			phase: a,
 			sessionRevision: r,
 			activatedSessionRevision: ie,
 			hasSession: d !== null,
 			hasPathOrchestrationActor: o !== null
-		}) && d && (ie = r, d.activate(), k = d.getSnapshot(), i.focus({ preventScroll: !0 }), P !== r && (P = r, t?.onReady?.(de()))), d && U(d.getSnapshot());
+		}) && d && (ie = r, d.activate(), k = d.getSnapshot(), i.focus({ preventScroll: !0 }), P !== r && (P = r, t?.onReady?.(de()))), d && we(d.getSnapshot());
 	};
-	ne = x.subscribe(Ee), Ee();
-	let W = async (i) => {
+	ne = x.subscribe(De), De();
+	let Oe = async (i) => {
 		if (!v) {
 			m?.start(), ae?.abort(), ae = new AbortController(), r.dataset.pagePhase = "generating", H.setViewModel({ generation: {
 				phase: "generating",
 				canContinue: _ !== null
 			} });
 			try {
-				let n = vo(e, "document") || vo(e, "documentUrl") || vo(e, "documentProvider") ? e : c === "standalone" ? ri(s) ?? e : e, r = vo(n, "document") || vo(n, "documentUrl") || vo(n, "documentProvider");
+				let n = yo(e, "document") || yo(e, "documentUrl") || yo(e, "documentProvider") ? e : c === "standalone" ? ai(s) ?? e : e, r = yo(n, "document") || yo(n, "documentUrl") || yo(n, "documentProvider");
 				if (c === "standalone" && i === "continue" && _ === null) throw Error("还没有可继续的学习路径，请先生成一条路径。");
-				let a = c === "module" || r ? null : i === "generate" ? u.selectNextLearningPathTemplate(_?.templateId ?? null) : u.BUNDLED_LEARNING_PATH_TEMPLATES.find((e) => e.id === _?.templateId) ?? u.BUNDLED_LEARNING_PATH_TEMPLATES[0], o = await Qr(a ? { documentUrl: u.createBundledLearningPathTemplateUrl(s.location.href, a.fileName) } : n, {
+				let a = c === "module" || r ? null : i === "generate" ? u.selectNextLearningPathTemplate(_?.templateId ?? null) : u.BUNDLED_LEARNING_PATH_TEMPLATES.find((e) => e.id === _?.templateId) ?? u.BUNDLED_LEARNING_PATH_TEMPLATES[0], o = await ei(a ? { documentUrl: u.createBundledLearningPathTemplateUrl(s.location.href, a.fileName) } : n, {
 					signal: ae.signal,
 					baseUrl: s.location.href,
-					defaultDocumentUrl: $r(s.location.href)
+					defaultDocumentUrl: ti(s.location.href)
 				});
 				if (v || ae.signal.aborted) return;
 				let l = a?.id ?? "host-provided", d = s.crypto?.randomUUID?.() ?? `${Date.now()}-${++b}`, f = c === "module" ? t?.progressStorageKey : i === "continue" ? _.progressStorageKey : u.createFreshLearningProgressStorageKey(l, d);
@@ -7591,7 +7596,7 @@ async function xo(e, t) {
 					progressStorageKey: f
 				});
 			} catch (e) {
-				if (v || yo(e)) return;
+				if (v || bo(e)) return;
 				r.dataset.pagePhase = c === "module" ? "failed" : "gate";
 				let t = `无法读取学习路径模板：${e instanceof Error ? e.message : String(e)}`;
 				fe("host", e, t), c === "module" && (n.loadingPanel.dataset.state = "error", n.loadingLabel.textContent = t), H.setViewModel({ generation: {
@@ -7602,34 +7607,34 @@ async function xo(e, t) {
 				} });
 			}
 		}
-	}, G = (e) => {
+	}, U = (e) => {
 		H.containsCardEventPath(e) || e.target === i || xe();
-	}, De = (e) => {
+	}, W = (e) => {
 		if (e.key !== "Escape") return;
 		let t = e.composedPath(), n = o.activeElement;
 		!t.includes(r) && !(n && r.contains(n)) || (xe(), i.focus({ preventScroll: !0 }));
-	}, Oe = () => {
+	}, ke = () => {
 		let e = x;
 		if (!e) return;
-		let t = Dr(e.getSnapshot());
+		let t = kr(e.getSnapshot());
 		t !== null && e.send({
 			type: "APP.PERSISTENCE.FLUSH.REQUESTED",
 			sessionRevision: t
 		});
-	}, ke = () => {
-		Oe();
 	}, Ae = () => {
-		o.visibilityState === "hidden" && Oe();
+		ke();
+	}, je = () => {
+		o.visibilityState === "hidden" && ke();
 	};
-	o.addEventListener("pointerdown", G, { capture: !0 }), o.addEventListener("keydown", De), o.addEventListener("visibilitychange", Ae), s.addEventListener("pagehide", ke);
-	let je = () => {
-		v || (Oe(), v = !0, s.removeEventListener("beforeunload", je), s.removeEventListener("pagehide", ke), o.removeEventListener("pointerdown", G, { capture: !0 }), o.removeEventListener("keydown", De), o.removeEventListener("visibilitychange", Ae), Ce.dispose(), ae?.abort(), ne?.unsubscribe(), ne = null, x?.stop(), x = null, d.dispose(), w?.unsubscribe(), T?.unsubscribe(), E?.unsubscribe(), D?.unsubscribe(), O?.unsubscribe(), S?.dispose(), M?.character.dispose(), M = null, oe = null, H.dispose(), m?.stop(), (t?.exposeGlobalDebug ?? c === "standalone") && delete s.__LEARNING_PATH_EXPERIENCE__, ce?.remove());
+	o.addEventListener("pointerdown", U, { capture: !0 }), o.addEventListener("keydown", W), o.addEventListener("visibilitychange", je), s.addEventListener("pagehide", Ae);
+	let Me = () => {
+		v || (ke(), v = !0, s.removeEventListener("beforeunload", Me), s.removeEventListener("pagehide", Ae), o.removeEventListener("pointerdown", U, { capture: !0 }), o.removeEventListener("keydown", W), o.removeEventListener("visibilitychange", je), Ce.dispose(), ae?.abort(), ne?.unsubscribe(), ne = null, x?.stop(), x = null, d.dispose(), w?.unsubscribe(), T?.unsubscribe(), E?.unsubscribe(), D?.unsubscribe(), O?.unsubscribe(), S?.dispose(), M?.character.dispose(), M = null, oe = null, H.dispose(), m?.stop(), (t?.exposeGlobalDebug ?? c === "standalone") && delete s.__LEARNING_PATH_EXPERIENCE__, ce?.remove());
 	};
-	return s.addEventListener("beforeunload", je, { once: !0 }), c === "module" ? (r.dataset.pagePhase = "generating", H.setViewModel({
+	return s.addEventListener("beforeunload", Me, { once: !0 }), c === "module" ? (r.dataset.pagePhase = "generating", H.setViewModel({
 		generation: { phase: "hidden" },
 		card: null,
 		celebration: null
-	}), await W(t?.launchMode ?? "continue")) : (r.dataset.pagePhase = "gate", H.setViewModel({
+	}), await Oe(t?.launchMode ?? "continue")) : (r.dataset.pagePhase = "gate", H.setViewModel({
 		generation: {
 			phase: "ready",
 			buttonLabel: "生成学习路径",
@@ -7640,26 +7645,68 @@ async function xo(e, t) {
 	}), H.focusGenerationAction()), Object.freeze({
 		getSnapshot: de,
 		focusNode: (e) => S?.selectNode(e) ?? !1,
+		isConceptNode: (e) => !v && C?.source.nodeById.get(e)?.entityKind === "concept",
+		markLastLearningNode: (e) => S?.markLastLearningNode(e),
 		pause: () => S?.pause(),
 		resume: () => S?.resume(),
-		dispose: je
+		dispose: Me
 	});
 }
 //#endregion
+//#region src/module/scenePositionStorage.ts
+async function Co(e, t, n = !1) {
+	let r = { signal: new AbortController().signal }, i = await e.read({ key: t }, r), a = i, o = null, s = null;
+	try {
+		let e = i ? JSON.parse(i) : null;
+		e?.format === "learning-path-scene-v1" && (typeof e.progress == "string" || e.progress === null) && (a = e.progress, typeof e.lastLearningNodeId == "string" && /^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/.test(e.lastLearningNodeId) && (s = e.lastLearningNodeId), typeof e.position == "string" && /^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/.test(e.position) && (o = e.position));
+	} catch {}
+	n && (a = null, o = null, s = null);
+	let c = o, l = Promise.resolve(), u = () => {
+		let n = JSON.stringify({
+			format: "learning-path-scene-v1",
+			progress: a,
+			position: o,
+			lastLearningNodeId: s
+		}), i = l.catch(() => {}).then(() => e.write({
+			key: t,
+			value: n
+		}, r)).then(() => {});
+		return l = i, i;
+	};
+	return {
+		initialPosition: c,
+		lastLearningNodeId: s,
+		rememberLearningNode(e) {
+			return o = e, s = e, u();
+		},
+		progressStorage: {
+			read(e, { signal: t }) {
+				return t.throwIfAborted(), a;
+			},
+			write({ value: e }, { signal: t }) {
+				return t.throwIfAborted(), a = e, u();
+			}
+		},
+		setPosition(e) {
+			return o === e ? l : (o = e, u());
+		}
+	};
+}
+//#endregion
 //#region src/module/instanceRegistry.ts
-var So = /* @__PURE__ */ new WeakMap();
-function Co(e, t) {
-	let n = So.get(e);
-	if (n || (n = /* @__PURE__ */ new Set(), So.set(e, n)), n.has(t)) throw Error(`Learning-path instance "${t}" is already mounted.`);
+var wo = /* @__PURE__ */ new WeakMap();
+function To(e, t) {
+	let n = wo.get(e);
+	if (n || (n = /* @__PURE__ */ new Set(), wo.set(e, n)), n.has(t)) throw Error(`Learning-path instance "${t}" is already mounted.`);
 	n.add(t);
 	let r = !1;
 	return () => {
-		r || (r = !0, n?.delete(t), n?.size === 0 && So.delete(e));
+		r || (r = !0, n?.delete(t), n?.size === 0 && wo.delete(e));
 	};
 }
 //#endregion
 //#region src/module/mountLearningPath.ts
-function wo(e) {
+function Eo(e) {
 	if (e.characterAssets) return e.characterAssets;
 	if (!e.assetBaseUrl) throw Error("mountLearningPath requires assetBaseUrl or characterAssets.");
 	let t = new URL(e.assetBaseUrl, e.mount.ownerDocument.baseURI), n = (e) => new URL(e, t).href;
@@ -7670,11 +7717,11 @@ function wo(e) {
 		turn: n("liu-kanshan-turn.glb")
 	});
 }
-function To(e) {
+function Do(e) {
 	let t = e.mount?.ownerDocument.defaultView?.HTMLElement;
 	if (!t || !(e.mount instanceof t)) throw TypeError("mountLearningPath requires a host HTMLElement.");
 	if (!e.instanceId.trim()) throw Error("mountLearningPath requires a non-empty instanceId.");
-	Hi(e.instanceId);
+	Wi(e.instanceId);
 	let n = e.progressKey.split(":");
 	if (n.length < 4 || n.length % 2 != 0 || n.some((e) => e.trim().length === 0 || /\s/.test(e))) throw Error("mountLearningPath progressKey must use at least two non-empty namespace:value pairs.");
 	if (!(Object.prototype.hasOwnProperty.call(e, "document") || Object.prototype.hasOwnProperty.call(e, "documentUrl") || Object.prototype.hasOwnProperty.call(e, "documentProvider"))) throw Error("mountLearningPath requires document, documentUrl or documentProvider.");
@@ -7683,19 +7730,30 @@ function To(e) {
 		for (let [t, n] of Object.entries(e.characterAssets)) if (!n.trim()) throw Error(`mountLearningPath characterAssets.${t} must be non-empty.`);
 	}
 }
-async function Eo(e) {
-	To(e);
-	let t = Co(e.mount.ownerDocument, e.instanceId), n = null, r = null, i = !1;
+async function Oo(e) {
+	Do(e);
+	let t = To(e.mount.ownerDocument, e.instanceId), n = null, r = null, i = !1, a = !1, o = null;
 	try {
-		n = Ui(e.mount, e.instanceId), r = await xo(e, {
+		o = e.progressionMode === "open" ? await Co(e.storage, e.progressKey, e.launchMode === "reset") : null, n = Gi(e.mount, e.instanceId), r = await So(e, {
 			mode: "module",
 			instanceId: e.instanceId,
 			elements: n,
 			learningResource: e.navigator,
-			learningProgressStorage: e.storage,
+			learningProgressStorage: o?.progressStorage ?? e.storage,
+			initialSceneNodeId: o?.initialPosition ?? void 0,
+			lastLearningNodeId: o?.lastLearningNodeId ?? void 0,
+			onScenePositionChanged: o ? (t) => {
+				a || o.setPosition(t).catch((t) => {
+					e.onError?.({
+						phase: "runtime",
+						message: "Scene position could not be saved.",
+						error: t
+					});
+				});
+			} : void 0,
 			progressStorageKey: e.progressKey,
 			launchMode: e.launchMode ?? "continue",
-			characterAssetUrls: wo(e),
+			characterAssetUrls: Eo(e),
 			reducedMotion: e.reducedMotion,
 			diagnostics: e.diagnostics ?? !1,
 			exposeGlobalDebug: !1,
@@ -7715,18 +7773,39 @@ async function Eo(e) {
 		})), r;
 	}
 	if (!n || !r) throw t(), Error("Learning-path module failed to create a runtime handle.");
-	let a = r, o = n;
+	let s = r, c = n;
 	return Object.freeze({
-		getSnapshot: () => a.getSnapshot(),
-		focusNode: (e) => a.focusNode(e),
-		pause: () => a.pause(),
-		resume: () => a.resume(),
+		getSnapshot: () => s.getSnapshot(),
+		focusNode: (e) => s.focusNode(e),
+		rememberLearningNode: async (e) => {
+			if (i || a || !o || !s.isConceptNode(e)) return !1;
+			a = !0, s.pause();
+			try {
+				return await o.rememberLearningNode(e), i || s.markLastLearningNode(e), !0;
+			} finally {
+				a = !1, i || s.resume();
+			}
+		},
+		pause: () => s.pause(),
+		resume: () => s.resume(),
 		dispose: () => {
-			i || (i = !0, a.dispose(), o.root.remove(), t());
+			i || (i = !0, s.dispose(), c.root.remove(), t());
 		}
 	});
 }
 //#endregion
-export { Eo as mountLearningPath };
+//#region src/module/preflightLearningPath.ts
+function ko(e) {
+	try {
+		return Ut(Ua(V(e), { revision: `preflight:${crypto.randomUUID()}` }).page.data), { ok: !0 };
+	} catch (e) {
+		return {
+			ok: !1,
+			message: e instanceof Error ? e.message : "Path runtime compilation failed."
+		};
+	}
+}
+//#endregion
+export { Oo as mountLearningPath, ko as preflightLearningPath };
 
 //# sourceMappingURL=index.js.map

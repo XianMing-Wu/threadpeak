@@ -4,6 +4,10 @@ import 'katex/dist/katex.min.css'
 import { App } from './App'
 import './styles.css'
 import './input-motion.css'
+import './ui/flowith-home.css'
+import './ui/flowith-market.css'
+import './ui/composer-beam.css'
+import './ui/flowith-product.css'
 
 function syncAppFrame() {
   const inner = window.innerHeight

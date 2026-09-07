@@ -24,7 +24,7 @@ export type OrdinaryChatResult =
 export type OrdinaryChatInvokeText = (
   agentId: 'R5',
   context: unknown,
-  options?: { thinkingDepth?: ThinkingDepth },
+  options?: { thinkingDepth?: ThinkingDepth; onReasoning?: (text: string) => void },
 ) => Promise<TextInvokeResult>
 
 const ROLES = new Set(['user', 'assistant', 'system_event'])
@@ -67,6 +67,7 @@ export function createOrdinaryChatOrchestrator(ports: {
       conversation?: unknown
       attachments?: unknown
       thinkingDepth?: ThinkingDepth
+      onReasoning?: (text: string) => void
     }): Promise<OrdinaryChatResult> {
       const currentMessage = input.currentMessage.trim()
       if (!currentMessage) {
@@ -89,7 +90,7 @@ export function createOrdinaryChatOrchestrator(ports: {
         conversation,
         currentMessage,
         attachments,
-      }, { thinkingDepth })
+      }, { thinkingDepth, onReasoning: input.onReasoning })
       if (answered.kind === 'failed') {
         return { kind: 'failed', code: answered.code, message: answered.message }
       }

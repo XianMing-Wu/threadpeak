@@ -1,3 +1,4 @@
+import type { SearchMetadata } from '../../packages/contracts/src/search-scope.ts'
 export const STRUCTURED_AGENT_IDS = [
   'R1',
   'R2',
@@ -40,7 +41,8 @@ export type AttachmentContext = {
   content: string
 }
 
-export type SearchEvidence = {
+export type SearchEvidence = SearchMetadata & {
+  authorUrl?: string | null
   evidenceId: string
   authorId: string | null
   authorName: string | null
@@ -137,11 +139,13 @@ export type LlmCompleteInput = {
   thinkingDepth: ThinkingDepth
   maxTokens?: number
   signal?: AbortSignal
+  onReasoning?: (text: string) => void
+  onText?: (text: string) => void
 }
 
 export type LlmCompleteResult =
-  | { kind: 'completed'; text: string }
-  | { kind: 'failed'; message: string }
+  | { kind: 'completed'; text: string; reasoning?: string }
+  | { kind: 'failed'; message: string; code?: string; retryable?: boolean }
 
 export type LlmProvider = {
   complete(input: LlmCompleteInput): Promise<LlmCompleteResult>
@@ -154,7 +158,7 @@ export type ZhihuSearchHit = SearchEvidence & {
 export type ZhihuSearchResult =
   | { kind: 'hits'; items: readonly ZhihuSearchHit[] }
   | { kind: 'empty' }
-  | { kind: 'failed'; message: string }
+  | { kind: 'failed'; message: string; code?: string; retryable?: boolean }
 
 export type ZhihuDirectInput = {
   messages: readonly ChatMessage[]
@@ -164,9 +168,10 @@ export type ZhihuDirectInput = {
 
 export type ZhihuDirectResult =
   | { kind: 'completed'; text: string }
-  | { kind: 'failed'; message: string }
+  | { kind: 'failed'; message: string; code?: string; retryable?: boolean }
 
 export type ZhihuProvider = {
+  globalSearch?(query: string, count: number, signal?: AbortSignal): Promise<ZhihuSearchResult>
   search(query: string, count: number, signal?: AbortSignal): Promise<ZhihuSearchResult>
   direct(input: ZhihuDirectInput): Promise<ZhihuDirectResult>
 }

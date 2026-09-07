@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { createRoot, type Root } from 'react-dom/client'
+import { createPortal } from 'react-dom'
 import { EmptyStatus } from './EmptyStatus'
 import { StatusOrbChip } from './StatusOrb'
 import {
@@ -11,6 +11,8 @@ import {
   type NodeSemanticBadgeIcon,
 } from 'liu-kanshan-learning-path-3d'
 import { createPathProgressStorage, pathProgressKey, sessionPathProgressCache } from '../path-3d/path-progress-storage'
+import { createRuntimeLease } from '../path-3d/runtime-lease'
+import { serverProgressStorage } from '../path-3d/server-progress-storage'
 
 let serial = 0
 
@@ -30,6 +32,7 @@ type ContextualCardAction = Readonly<{
 
 export type LearningPath3DViewProps = Readonly<{
   document: LearningPathDocument
+  progressScopeId?: string
   ariaLabel?: string
   className?: string
   instanceIdPrefix?: string
@@ -80,6 +83,7 @@ function safeRuntimeMessage(_value: unknown, fallback: string): string {
  */
 export function LearningPath3DView({
   document,
+  progressScopeId = document.id,
   ariaLabel = '3D 知识脉络',
   className = '',
   instanceIdPrefix = 'threadpeak-path',
@@ -88,12 +92,16 @@ export function LearningPath3DView({
   onResourceNavigate = defaultResourceNavigation,
 }: LearningPath3DViewProps) {
   const mountRef = useRef<HTMLDivElement>(null)
-  const moduleRef = useRef<LearningPathModule | null>(null)
   const onContextualCardActionRef = useRef(onContextualCardAction)
   const onResourceNavigateRef = useRef(onResourceNavigate)
   onContextualCardActionRef.current = onContextualCardAction
   onResourceNavigateRef.current = onResourceNavigate
   const [error, setError] = useState('')
+  const [orbHost, setOrbHost] = useState<HTMLSpanElement | null>(null)
+  const [readingProgress, setReadingProgress] = useState(true)
+  const [recovering, setRecovering] = useState(false)
+  const [attempt, setAttempt] = useState(0)
+  const recoveryCount = useRef(0)
   const documentId = document.id
   const hostGraphKey = [
     document.structure.entrySubjectId,
@@ -102,11 +110,26 @@ export function LearningPath3DView({
   ].join('|')
 
   useEffect(() => {
-    const mount = mountRef.current
-    if (!mount) return
+    recoveryCount.current = 0
+  }, [documentId, progressScopeId])
 
-    let disposed = false
-    let loadingOrb: Root | undefined
+  useEffect(() => {
+    const host = mountRef.current
+    if (!host) return
+    // StrictMode, navigation and delayed storage each get an owned subtree.
+    const mount = globalThis.document.createElement('div')
+    mount.className = 'path3d-runtime'
+    host.append(mount)
+    const lease = createRuntimeLease<LearningPathModule>()
+    const contextLost = (event: Event) => {
+      event.preventDefault()
+      if (lease.signal.aborted) return
+      setRecovering(true)
+      // Rebuild the whole scene: restored GL contexts invalidate cached GPU objects.
+      if (recoveryCount.current++ < 1) setAttempt(value => value + 1)
+      else { setRecovering(false); setError('画面恢复暂未完成，请重新打开这条路线。') }
+    }
+    mount.addEventListener('webglcontextlost', contextLost, true)
     serial += 1
     const instanceSerial = serial
     const navigator: LearningResourceNavigatorPort = {
@@ -116,23 +139,40 @@ export function LearningPath3DView({
       },
     }
     const handleContextualAction = (event: Event) => {
-      onContextualCardActionRef.current?.((event as CustomEvent<ContextualCardAction>).detail ?? {}, event)
+      const detail = (event as CustomEvent<ContextualCardAction>).detail ?? {}
+      const callback = onContextualCardActionRef.current
+      if (callback && detail.nodeId && (detail.actionId?.startsWith('learn:') || detail.actionId?.startsWith('action-'))) {
+        // Intercept synchronously; the renderer owns validation and persistence.
+        event.preventDefault()
+        void lease.current?.rememberLearningNode(detail.nodeId).then(saved => {
+          if (saved && !lease.signal.aborted) callback(detail, event)
+        }).catch(() => {
+          if (!lease.signal.aborted) setError('学习位置暂未保存，请重新打开这条路线。')
+        })
+        return
+      }
+      callback?.(detail, event)
     }
 
     setError('')
-    delete mount.dataset.snapshot
+    setOrbHost(null)
+    setReadingProgress(true)
+    setRecovering(false)
+    delete host.dataset.snapshot
     mount.addEventListener('learning-path:contextual-card-action', handleContextualAction, true)
 
     void (async () => {
-      const progressKey = pathProgressKey(documentId)
-      const existing = await Promise.resolve(pathProgressStorage.read({
+      const storage=instanceIdPrefix==='threadpeak-mine'?serverProgressStorage(progressScopeId):pathProgressStorage
+      const progressKey = pathProgressKey(progressScopeId)
+      const existing = await Promise.resolve(storage.read({
         key: progressKey,
-      }, { signal: new AbortController().signal }))
+      }, { signal: lease.signal }))
+      lease.signal.throwIfAborted()
       const instance = await mountLearningPath({
         mount,
         instanceId: `${instanceIdPrefix}-${instanceSerial}`,
         navigator,
-        storage: pathProgressStorage,
+        storage,
         progressKey,
         document,
         characterAssets,
@@ -142,52 +182,51 @@ export function LearningPath3DView({
         progressionMode:'open',
         nodeBadgeIconById,
         onReady: (snapshot) => {
-          if (!disposed) mount.dataset.snapshot = JSON.stringify(snapshot)
+          if (!lease.signal.aborted) {
+            host.dataset.snapshot = JSON.stringify(snapshot)
+            setReadingProgress(false)
+          }
         },
         onProgressChange: () => {
-          if (!disposed && moduleRef.current) mount.dataset.snapshot = JSON.stringify(moduleRef.current.getSnapshot())
+          if (!lease.signal.aborted && lease.current) host.dataset.snapshot = JSON.stringify(lease.current.getSnapshot())
         },
         onError: ({ phase, message, error: cause }) => {
-          if (disposed) return
-          if (phase === 'runtime') return
+          if (lease.signal.aborted) return
           if (import.meta.env.DEV) console.warn('[path-3d]', phase, message, cause)
           setError(safeRuntimeMessage(message, '3D 路线运行失败'))
         },
       })
 
-      if (disposed) {
-        instance.dispose()
-        return
-      }
-
-      moduleRef.current = instance
-      mount.dataset.snapshot = JSON.stringify(instance.getSnapshot())
+      if (!lease.attach(instance)) return
+      host.dataset.snapshot = JSON.stringify(instance.getSnapshot())
+      const instructions = mount.querySelector('.pointer-copy')
+      if (instructions) instructions.textContent = '点击圆台查看 · 选择“走到这”移动 · 拖动或滚轮浏览'
       const mark = mount.querySelector('.loading-mark')
       if (mark instanceof HTMLElement) {
         const host = globalThis.document.createElement('span')
         host.className = 'tp-status-orb-slot'
         mark.replaceWith(host)
-        loadingOrb = createRoot(host)
-        loadingOrb.render(<StatusOrbChip label="正在召唤刘看山…" />)
+        setOrbHost(host)
       }
     })().catch((cause: unknown) => {
-      if (!disposed) setError(safeRuntimeMessage(cause, '3D 路线初始化失败'))
+      if (!lease.signal.aborted) setError(safeRuntimeMessage(cause, '3D 路线初始化失败'))
     })
 
     return () => {
-      disposed = true
-      loadingOrb?.unmount()
+      mount.removeEventListener('webglcontextlost', contextLost, true)
       mount.removeEventListener('learning-path:contextual-card-action', handleContextualAction, true)
-      moduleRef.current?.dispose()
-      moduleRef.current = null
-      delete mount.dataset.snapshot
+      lease.dispose()
+      mount.remove()
+      delete host.dataset.snapshot
     }
-  }, [documentId, hostGraphKey, instanceIdPrefix, nodeBadgeIconById])
+  }, [documentId, hostGraphKey, instanceIdPrefix, nodeBadgeIconById, progressScopeId, attempt])
 
   return <div className={`learning-path-3d-view ${className}`.trim()} aria-label={ariaLabel}>
+    {orbHost && createPortal(<StatusOrbChip label="正在召唤刘看山…" flow="path3d" />, orbHost)}
     <div ref={mountRef} className="path3d-mount learning-path-3d-mount" />
+    {(recovering || readingProgress) && !error && <div className="path3d-recovering" role="status"><StatusOrbChip label={recovering ? "正在恢复 3D 画面…" : "正在打开这条路线…"} /></div>}
     {error && <div className="path3d-error learning-path-3d-error ux-status-region" role="alert">
-      <EmptyStatus kind="error" title="3D 路线暂时无法打开" body={error} />
+      <EmptyStatus kind="error" title="3D 路线暂时无法打开" body={error} action="重新打开路线" onAction={() => { recoveryCount.current = 0; setAttempt(value => value + 1) }} />
     </div>}
   </div>
 }

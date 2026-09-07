@@ -1,12 +1,12 @@
 ---
 description: "约束最终路线 3D 展示、知识画布交互，并禁止恢复已删除的图文资产。"
-globs: "src/chat/**,src/pages/Chat.tsx,src/knowledge-canvas/**,src/pages/KnowledgeCanvas.tsx,src/pages/Session.tsx,src/components/BasisVisual.tsx,src/components/Path3D.tsx,src/path-3d/**,src/vendor/learning-path-3d/**,src/pathDocument.ts,apps/web/**/path-3d/**,apps/web/**/knowledge-map/**,packages/surface-catalog/**,packages/path-3d-host/**,packages/contracts/visualization/**,server/visualization/**"
+globs: "src/chat/**,src/learning-v2/Graph.tsx,src/learning-v2/Document.tsx,src/learning-v2/tree.ts,src/pages/Chat.tsx,src/knowledge-canvas/**,src/pages/KnowledgeCanvas.tsx,src/pages/Session.tsx,src/components/BasisVisual.tsx,src/components/Path3D.tsx,src/path-3d/**,src/vendor/learning-path-3d/**,src/pathDocument.ts,apps/web/**/path-3d/**,apps/web/**/knowledge-map/**,packages/surface-catalog/**,packages/path-3d-host/**,packages/contracts/visualization/**,server/visualization/**"
 alwaysApply: false
 ---
 
 # 3D 与知识画布
 
-可见目标以 [as-implemented-logic.md](../../as-implemented-logic.md) 第 2.3、2.5、2.7、2.8 和 4.1 节为准。路线结构与 G1/G2 合同分别由 10-path-generation.mdc、20-knowledge-lifecycle.mdc 和 [agent-specs.md](../../agent-specs.md) 负责。
+可见目标以 [as-implemented-logic.md](../../as-implemented-logic.md) 第 2.3、2.5、2.7、2.8 和 4.1 节为准。路线结构与学习卡片树合同分别由 10-path-generation.mdc、20-knowledge-lifecycle.mdc 和 [agent-specs.md](../../agent-specs.md) 负责。
 
 路线 3D 与知识画布是两件事，不能因为都可视化就共用数据或失败 fallback。产品已删除图文模式：不得恢复入口、失败页、`src/visuals/` 或 `vendor/charts/`，也不得用预写图冒充成功。
 
@@ -25,32 +25,21 @@ alwaysApply: false
 5. “走到这”只移动角色或播放动画，不创建 conversation、不生成首轮、不建知识图。
 6. “进入学习”必须带上本路线中合法的 conceptId；缺少或不属于路线时不跳转。
 7. 从学习会话返回 3D；3D 的返回统一到路线列表，不按来源回 Chat 或首页。
-8. 每条路线再次进入时恢复自己的“上次位置”。产品只把 renderer 按 document 写出的不透明 progress 交回；有 progress 时 continue，否则 reset。不得在产品代码里解析成角色坐标、镜头或节点字段，也不得把位置当成学习进度。字段形态仍未裁决。
+8. 每条路线再次进入时恢复自己的“上次位置”。产品只把 renderer 按 document 写出的不透明 progress 交回；有 progress 时 continue，否则 reset。不得在产品代码里解析成角色坐标、镜头或节点字段，也不得把位置当成学习进度。renderer 内部信封分别保存浏览位置与最近学习概念；宿主不得拆解。恢复必须先于导航初始化与画面揭示。最近学习概念用紫色标记，普通移动不覆盖；开始学习先保存概念返回位置再导航。
 9. 3D 交互位置不是学习进度，不锁节点，也不能推导“完成/复习/错题”状态。
 
-## 知识画布
+## 知识画布与文档
 
-- 画布展示的是该概念唯一图和根，以及 G1/G2 两路都成功后提交的新卡；布局和点击都不能生成或改变语义。
-- 根标题永远是概念名，根正文永远是固定首轮。没有合法首轮/根时不能发明占位根。
-- 画布与该概念最新对话使用同一份消息记录。画布发问、流式输出、划选和问博主要实时写回，回到对话无需再生成。
-- 从学习页或知识侧栏进入画布，右上角都显示“回到对话”：有对话回最新一条；没有则新建对话并继续使用同一根。
-- 画布顶栏返回清掉所选概念，回该知识的概念列表。
-- 放大、缩小、重置、拖动画布、拖卡片、重新排列只改视图；不能改宿主、节点关系或正文。
-- 点击节点只查看节点，不选择下次提问宿主。显式引用才选对应卡；无引用时由最近一次成功 LLM 回复卡作宿主。
-- 边上的数字打开逻辑说明，不创建或修改边。
+- 按 [学习生命周期规则](20-knowledge-lifecycle.mdc) 渲染单父卡片树，正交连线，不允许多卡汇入一卡。根为概念，后接文章和问答卡。
+- 画布、文档、研究共用聊天。文档编辑定位到对应卡，原始文章与编辑副本分开。
+- AI 和问博主在卡后新增，配色/同级/子级/撤销重做沿用用户认可的 ux-ui。操作权限、来源及树校验在服务端执行。
+- 相机、缩放和展开状态不改语义；节点选择用于引用材料。切换视图不取消后台任务。
 
-## 批注展示
+## 宿主生命周期
 
-- 问博主的真实作者结果与刘看山直答都只是锚定原文的批注，不是知识节点。
-- 节点正文上只显示批注标记；点击标记后在节点右侧打开同等大小的展示卡，点击卡外关闭。
-- 作者批注卡使用本次 evidence 的真实姓名、总结、链接；刘看山卡明确标注“刘看山直达/不是博主身份”。
-- 根与后续卡批注跨新对话保留；切换 conversation 不能清掉图上标记。
-
-## 视图与语义
-
-- 相机、缩放、拖拽位置、展开状态和批注卡开合都是视图状态，不是路线/知识/作者事实。
-- 布局可以重新计算坐标，但不能合并语义不同的节点、改变 predecessor/successor/parallel 或选择宿主。
-- 颜色不能成为唯一状态编码；关键按钮需有键盘、可见焦点和可读名称。
+- 缓存每次反序列化会产生新引用；按内容判断是否回写，不能由渲染 effect 形成无限更新。
+- 进度读取可取消，每次异步挂载独立拥有 DOM 和实例；旧实例迟到只能销毁自己。场景退出释放显卡上下文，恢复不重生成路线。
+- 正式路线使用持久资源 ID 区分列表、导航与位置；旧 document.id 只在唯一匹配时用于位置兼容读取，不能混用重复文档的两个发布实例。
 
 ## Vendor
 
@@ -58,11 +47,4 @@ src/vendor/learning-path-3d 是同步产物，不直接手改 bundle、source ma
 
 ## 最低验证
 
-- 产品没有图文入口；不得恢复 `src/visuals` 或图表 vendor 资产。
-- R4 文档校验、分叉/汇合、所有节点可进入、非法 concept 不跳转。
-- “走到这”无学习副作用；学习页→3D→路线列表返回正确。
-- 重新进入路线能恢复同一 document 的 renderer progress；测试不解析或冻结未裁决的位置字段。
-- 画布与最新对话实时同步，任何入口都有“回到对话”。
-- 点击/拖动/重排不改宿主或语义；只有引用决定宿主。
-- 批注卡不是结构节点，跨新对话仍存在。
-- 键盘、焦点和低视口操作使用同一份真实数据。
+路线分叉汇合与 renderer 校验、任意节点学习入口、返回关系保持正确。知识图验证单父树、画布/文档对应编辑、问 AI/博主挂卡与新对话保留，不能继续按旧批注语义验收。

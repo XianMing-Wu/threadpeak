@@ -61,7 +61,10 @@ export async function requestOrdinaryAnswer(input: {
 
 async function readNdjson(
   stream: ReadableStream<Uint8Array>,
-  hooks?: { onDelta?: (text: string) => void },
+  hooks?: {
+    onDelta?: (text: string) => void
+    onReasoning?: (id: string, text: string) => void
+  },
 ): Promise<OrdinaryAnswerResult> {
   const fallback = resolveOrdinaryAnswer()
   const reader = stream.getReader()
@@ -86,6 +89,10 @@ async function readNdjson(
         }
         const record = asRecord(parsed)
         if (!record) continue
+        if (record.kind === 'reasoning' && typeof record.id === 'string' && typeof record.text === 'string') {
+          hooks?.onReasoning?.(record.id, record.text)
+          continue
+        }
         if (record.kind === 'delta' && typeof record.text === 'string') {
           full += record.text
           hooks?.onDelta?.(full)
@@ -113,7 +120,9 @@ export async function requestOrdinaryAnswerStream(input: {
   attachments?: readonly OrdinaryChatAttachmentInput[]
   thinkingDepth?: 'fast' | 'deep'
   fetch?: FetchPort
+  signal?: AbortSignal
   onDelta?: (text: string) => void
+  onReasoning?: (id: string, text: string) => void
 }): Promise<OrdinaryAnswerResult> {
   const fallback = resolveOrdinaryAnswer()
   const fetchPort = input.fetch ?? createBrowserFetchPort()
@@ -129,9 +138,10 @@ export async function requestOrdinaryAnswerStream(input: {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: bodyOf(input),
+    signal: input.signal,
   })
   if (response.body) {
-    return readNdjson(response.body, { onDelta: input.onDelta })
+    return readNdjson(response.body, { onDelta: input.onDelta, onReasoning: input.onReasoning })
   }
   return requestOrdinaryAnswer(input)
 }

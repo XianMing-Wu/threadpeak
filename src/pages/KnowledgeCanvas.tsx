@@ -20,6 +20,8 @@ import { closeConceptKnowledge, readActiveKnowledgeId, readKnowledgeConceptId, s
 import { appendFollowUpTurn, blueprintOf, ensureLearningConversation, getConceptGraph, getConversation, getKnowledge, getLesson, latestLearningConversation, saveConversationDraft, useWorkspaceTick } from '../workspace/store'
 import { conversationGraphView, growKindLabel } from '../knowledge-canvas/generate'
 import { AgentStatus } from '../components/AgentStatus'
+import { ProcessTrace } from '../components/ProcessTrace'
+import { applyReasoning, asProcessSteps, flowSteps, settleTrace, type ProcessStep } from '../process-trace'
 import {
   CARD_W,
   DEFAULT_SIZE,
@@ -123,8 +125,10 @@ export function KnowledgeCanvasPage() {
   const [value, setValue] = useState(seed.value)
   const [turns, setTurns] = useState(seed.turns)
   const [awaiting, setAwaiting] = useState(false)
+  const [trace, setTrace] = useState<ProcessStep[]>([])
   const [streamText, setStreamText] = useState('')
   const [thinkingDepth, setThinkingDepth] = useState(readLearningThinking)
+  const followAbort = useRef<AbortController | null>(null)
   useEffect(() => subscribeLearningThinking(() => setThinkingDepth(readLearningThinking())), [])
   const dragRef = useRef<DragState>(null)
   const ignoreClickRef = useRef(false)
@@ -478,6 +482,10 @@ export function KnowledgeCanvasPage() {
     setMode('')
     setAwaiting(true)
     setStreamText('')
+    setTrace(flowSteps('follow-up'))
+    followAbort.current?.abort()
+    const abort = new AbortController()
+    followAbort.current = abort
     void requestFollowUp({
       routeId: knowledge.routeId,
       conceptId,
@@ -488,10 +496,22 @@ export function KnowledgeCanvasPage() {
       neighborhood,
       messages,
       thinkingDepth,
+      signal: abort.signal,
       onDelta: (text) => { setAwaiting(false); setStreamText(text) },
+      onTrace: (steps) => {
+        const parsed = asProcessSteps(steps)
+        if (parsed) setTrace(parsed)
+      },
+      onReasoning: (id, thought) => setTrace((current) => applyReasoning(current, id, thought)),
     }).then((result) => {
+      if (abort.signal.aborted) {
+        setAwaiting(false)
+        setTrace((current) => settleTrace(current, 'stopped'))
+        return
+      }
       setAwaiting(false)
       setStreamText('')
+      setTrace((current) => settleTrace(current, result.kind === 'completed' ? 'done' : 'failed'))
       if (result.kind !== 'completed') {
         setTurns((old) => [...old, { role: 'assistant', text: result.message, failed: true }])
         return
@@ -674,8 +694,8 @@ export function KnowledgeCanvasPage() {
         </div>
       </section>
       <footer className="canvas-composer">
-        {(awaiting || streamText) && <div className="canvas-status" role="status" aria-live="polite">
-          {awaiting && !streamText && <AgentStatus items={[{ label: '正在回答这次追问' }]}/>}
+        {(awaiting || streamText || trace.length > 0) && <div className="canvas-status" role="status" aria-live="polite">
+          {trace.length > 0 ? <ProcessTrace steps={awaiting && !streamText ? trace : settleTrace(trace)}/> : awaiting && !streamText ? <AgentStatus flow="follow-up"/> : null}
           {streamText && <div className="canvas-stream"><MarkdownMath source={streamText}/></div>}
         </div>}
         <Composer
@@ -690,6 +710,8 @@ export function KnowledgeCanvasPage() {
           requireQuestion
           thinkingDepth={thinkingDepth}
           onThinkingDepth={(next) => { writeLearningThinking(next); setThinkingDepth(next) }}
+          busy={awaiting}
+          onStop={() => followAbort.current?.abort()}
         />
       </footer>
       {selection && !authorQuestion && <SelectionToolbar selection={selection} onAddToChat={addToChat} onAskAuthors={openAskAuthors}/>}

@@ -1,0 +1,59 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: threadpeak
+      POSTGRES_USER: threadpeak
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a unique production database password}
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U threadpeak -d threadpeak"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  api:
+    build:
+      context: .
+      target: api
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      NODE_ENV: production
+      THREADPEAK_HOST: 0.0.0.0
+      THREADPEAK_PORT: 4312
+      DATABASE_URL: postgres://threadpeak:${POSTGRES_PASSWORD}@db:5432/threadpeak
+    depends_on:
+      db:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    stop_grace_period: 45s
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:4312/api/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+  web:
+    build:
+      context: .
+      target: web
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?Set the public hostname for HTTPS}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+volumes:
+  database:
+  caddy_data:
+  caddy_config:

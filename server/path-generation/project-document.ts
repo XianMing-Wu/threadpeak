@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto'
-import type { LearningPathDocument } from '../../src/vendor/learning-path-3d/index.js'
-import { addUniqueDraft, stabilizeHostSubjectDrafts } from '../../src/path-3d/host-subject-flow.ts'
-import { validateRendererDocument } from '../../src/path-3d/validate-renderer-document.ts'
+import type { LearningPathDocument } from '../../packages/contracts/src/path-document.ts'
+import { addUniqueDraft, stabilizeHostSubjectDrafts } from '../../packages/contracts/src/host-subject-flow.ts'
+import { validateRendererDocument } from '../../packages/contracts/src/validate-renderer-document.ts'
+import { preflightLearningPath } from '../../src/vendor/learning-path-3d/index.js'
 import type { R4Output } from '../agent-runtime/schemas.ts'
 
 const WIRE = /^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$/
@@ -215,6 +216,12 @@ export function projectRouteToDocument(route: R4Output): { ok: true; value: Proj
   const validated = validateRendererDocument(document)
   if (!validated.ok) {
     return { ok: false, message: `路线未通过 3D 文档校验：${validated.issues.join('，')}` }
+  }
+  // Use the exact renderer shipped to the browser: schema validity alone does
+  // not prove that the physical road topology can be constructed.
+  const runtime = preflightLearningPath(validated.document)
+  if (!runtime.ok) {
+    return { ok: false, message: `路线未通过 3D 运行时编译：${runtime.message}` }
   }
 
   const conceptIdByWireId: Record<string, string> = {}

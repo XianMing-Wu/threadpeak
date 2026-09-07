@@ -10,7 +10,7 @@ const config = {
   deepseekModelName: 'deepseek-chat',
 }
 
-test('zhihu direct retries HTTP 429 then succeeds', { timeout: 8_000 }, async () => {
+test('zhihu direct reports retryable 429 to the durable worker without hidden retries', { timeout: 8_000 }, async () => {
   let calls = 0
   const zhihu = createAgentZhihuProvider({
     config,
@@ -31,9 +31,10 @@ test('zhihu direct retries HTTP 429 then succeeds', { timeout: 8_000 }, async ()
     messages: [{ role: 'user', content: '线性映射' }],
     thinkingDepth: 'fast',
   })
-  assert.equal(result.kind, 'completed')
-  assert.equal(result.text, '具体讲解正文')
-  assert.equal(calls, 2)
+  assert.equal(result.kind, 'failed')
+  assert.equal(result.code, 'HTTP_429')
+  assert.equal(result.retryable, true)
+  assert.equal(calls, 1)
 })
 
 test('search maps official article Url and binds authorId per evidence when homepage is absent', async () => {

@@ -1,0 +1,20 @@
+.tp-floating{display:inline-flex;min-width:0}
+.tp-floating .tp-floating-trigger{display:inline-flex;align-items:center;gap:6px;min-height:32px;height:auto;padding:6px 8px;border:1px solid transparent;border-radius:8px;background:#fff;color:#4f5867;font:inherit;font-size:13px;line-height:20px;cursor:pointer;white-space:nowrap}
+.tp-floating .tp-floating-trigger:hover,.tp-floating .tp-floating-trigger[aria-expanded=true]{border-color:#d9dfe8;color:#262d38}
+.tp-floating .tp-floating-panel[popover]{position:fixed;inset:auto;margin:0;padding:16px;border:1px solid #e1e5eb;border-radius:16px;background:#fff;color:#303640;box-shadow:6px 12px 36px #2632441c;box-sizing:border-box;overflow:auto;overscroll-behavior:contain;font:13px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;text-align:left;white-space:normal}
+.tp-floating-panel::backdrop{background:transparent}
+.tp-floating .tp-floating-panel[popover]>header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px;padding:0;border:0;background:#fff}
+.tp-floating .tp-floating-panel[popover]>header h3{margin:0;font-size:15px;font-weight:600;line-height:1.5;color:#303640}
+.tp-floating .tp-floating-panel[popover] button{position:static;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:0;width:auto;min-height:32px;height:auto;margin:0;padding:6px 10px;border:1px solid #dfe4eb;border-radius:8px;background:#fff;color:#394353;font:inherit;line-height:1.5;cursor:pointer;text-align:left}
+.tp-floating .tp-floating-panel[popover] button:hover{border-color:#a8b3c3}
+.tp-floating .tp-floating-panel[popover]>header button{padding:6px;border-color:transparent}
+.tp-floating .tp-floating-panel[popover] p{margin:0 0 14px;font-size:12px;color:#7b8492;line-height:1.7}
+.tp-floating .tp-floating-panel[popover] label{display:grid;gap:7px;margin:14px 0;padding:0;border:0;font-size:13px;color:#4e5969;background:#fff}
+.tp-floating .tp-floating-panel[popover] textarea{display:block;width:100%;box-sizing:border-box;min-height:72px;max-height:180px;padding:10px 12px;border:1px solid #dfe4eb;border-radius:10px;background:#fff;color:#303640;font:inherit;line-height:1.7;resize:vertical;outline:none}
+.tp-floating .tp-floating-panel[popover] textarea::placeholder{color:#929ba9}
+.tp-floating .tp-floating-panel[popover] textarea:focus{border-color:#8798b0;box-shadow:0 0 0 2px #edf0f4}
+.tp-floating .tp-floating-panel[popover]>footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;color:#8a929e;font-size:11px}
+.tp-floating .tp-floating-panel[popover]>footer button{background:#303640;color:#fff;border-color:#303640;min-width:64px}
+.tp-floating button:focus-visible{outline:2px solid #93a4be;outline-offset:2px}
+.tp-floating .tp-floating-trigger:hover,.tp-floating .tp-floating-trigger[aria-expanded=true]{background:#fff!important}
+.tp-floating .tp-floating-panel[popover]>header h3{font-size:15px!important}

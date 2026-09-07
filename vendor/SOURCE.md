@@ -22,3 +22,17 @@
 | `vendor/evidence/zhihu-3d-path/bootstrapLearningPathPage.ts` | `bb4edffa2481be66bd11b9e8b7091243bd5904147388c058115463558ffffdc0` | 56781 |
 
 `src/vendor/learning-path-3d/` 仍是已同步的 3D renderer artifact；本切片只补齐它引用的 `/assets/*.glb`，不手改 bundle。
+
+## 2026-09-06 稳定性同步
+
+从 `zhihu_3D_path` 的本次工作树通过 `npm run build:module` 重新生成并整份同步（同步前两个 index.js 的 SHA-256 同为 `a2e1e65bddf4454ae7ea16d4d66937bc04bf804fe43f9d862bb5451362debbcb`）。新增 renderer-owned 场景位置状态信封，纯浏览位置与学习完成分开；LearningScene 清理时释放 WebGL 上下文。没有手改 bundle 或反向解析不透明 progress。
+
+当前完整生成物摘要见 [清单](learning-path-3d-manifest.json)。上表的 `vendor/evidence` 是迁移前证据摘录，不代表当前组合根版本；原四个角色资产未变。
+
+连续并列阶段修复：上游 `src/content/compiler.ts` 对共享的 parallel-peer 物理圆台对去重，并导出无 DOM 的 `preflightLearningPath`。经 `build:module` 整份同步 19 个文件并逐文件验证内容一致；当前 index.js SHA-256 为 `545fe3ea68c1d972cff4edba5207824d52119993bde137c4f282dedb06f893f8`。后端发布前使用同一份编译器，未手改生成物。
+
+本次位置一致性修复：再次由上游源码构建整包同步。导航从恢复后的物理位置初始化；最近学习概念为紫色并独立持久化。宿主等待 onReady 揭示画面，学习跳转前调用 rememberLearningNode，不拆解位置字符串。
+
+## 2026-09-07 圆台与学习卡视觉同步
+
+从 `zhihu_3D_path` 工作树重新构建并完整同步：新增 carrier/concept 类别标识，重画 start/goal，圆台详情改用白色面板与统一排版；类别不由学习状态决定。公开声明同步两种新增 SVG 类别，原有语义图标仍兼容。当前各文件摘要以清单为准，未手改 bundle。

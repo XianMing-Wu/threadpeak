@@ -78,10 +78,12 @@ function AuthorSearchPane() {
   const [searchOpen, setSearchOpen] = useState(true)
   const [resolution, setResolution] = useState<AuthorSearchResolution | null>(null)
   const [live, setLive] = useState<AuthorSearchLiveResult | null>(null)
+  const [searching, setSearching] = useState(false)
 
   const openSearch = () => {
     setResolution(null)
     setLive(null)
+    setSearching(false)
     setQuery('')
     setSearchOpen(true)
   }
@@ -91,7 +93,9 @@ function AuthorSearchPane() {
     const asked = query.trim()
     setQuery('')
     setSearchOpen(false)
+    setSearching(true)
     void requestAuthorSearch({ query: asked }).then((result) => {
+      setSearching(false)
       setLive(result)
       setResolution(result.kind === 'unavailable' ? result : null)
     })
@@ -121,7 +125,9 @@ function AuthorSearchPane() {
       </div>
     </section>
     <aside className="consultation-sidebar">
-      {live?.kind === 'results' ? <section className="radar-search-status" role="status">
+      {searching ? <section className="radar-search-status" aria-live="polite">
+        <StatusOrbChip label="正在搜索博主" flow="author-search"/>
+      </section> : live?.kind === 'results' ? <section className="radar-search-status" role="status">
         <small>相关博主</small>
         <h2>找到 {live.authors.length} 位相关博主</h2>
         <div className="radar-found-list">
@@ -167,7 +173,7 @@ function AuthorNetworkPane({ onFindAuthors }: { onFindAuthors: () => void }) {
     <div className="author-network-pane">
       {!live ? <section className="radar-search-status" aria-live="polite">
         <small>博主网络</small>
-        <StatusOrbChip label="正在读取博主"/>
+        <StatusOrbChip label="正在读取博主" flow="author-network"/>
       </section> : live.kind === 'unavailable' ? <AuthorNetworkUnavailable message={live.message} onRetry={loadNetwork}/> : live.authors.length === 0 ? <section className="radar-search-status" role="status">
         <EmptyStatus
           kind="empty"

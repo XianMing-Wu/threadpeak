@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { requestAuthSession, requestAuthStart } from './runtime/request-auth-session.ts'
+import { requestAuthSession, requestAuthStart, isZhihuAuthorizeUrl } from './runtime/request-auth-session.ts'
 
 test('auth start does not invent a Zhihu authorize URL when the server is unavailable', async () => {
   const result = await requestAuthStart(async () => {
@@ -41,4 +41,15 @@ test('auth session does not treat a named profile payload as signed-in identity'
   }))
   assert.equal(result.kind, 'authenticated')
   assert.equal('name' in result, false)
+})
+
+
+test('demo authorization redirects only to the current loopback callback, real URLs remain restricted', () => {
+  const origin='http://localhost:4305',url=origin+'/api/auth/zhihu/callback?authorization_code=tp-demo.test&state=state'
+  assert.equal(isZhihuAuthorizeUrl(url,'mock',origin),true)
+  assert.equal(isZhihuAuthorizeUrl(url,'real',origin),false)
+  assert.equal(isZhihuAuthorizeUrl(url,'mock','http://localhost:4304'),false)
+  assert.equal(isZhihuAuthorizeUrl('https://evil.test/api/auth/zhihu/callback?authorization_code=tp-demo.test','mock',origin),false)
+  assert.equal(isZhihuAuthorizeUrl('https://openapi.zhihu.com/authorize?app_id=app','real',origin),true)
+  assert.equal(isZhihuAuthorizeUrl('https://user@openapi.zhihu.com/authorize','real',origin),false)
 })

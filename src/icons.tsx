@@ -29,6 +29,7 @@ const custom: Record<string, ReactNode> = {
   brain: <><path d="M9 4a3 3 0 0 0-4 3 3.5 3.5 0 0 0-.5 6.8A3.5 3.5 0 0 0 9 19V4ZM15 4a3 3 0 0 1 4 3 3.5 3.5 0 0 1 .5 6.8A3.5 3.5 0 0 1 15 19V4Z"/><path d="M9 9H7M15 9h2M9 15H7M15 15h2"/></>,
   moon: <path d="M20.2 15.5A8.4 8.4 0 0 1 8.5 3.8 8.5 8.5 0 1 0 20.2 15.5Z"/>,
   logout: <><path d="M10 5H5v14h5M14 8l4 4-4 4M8 12h10"/></>,
+  stop: <rect x="7" y="7" width="10" height="10" rx="1.6" fill="currentColor" stroke="none"/>,
 }
 
 /**

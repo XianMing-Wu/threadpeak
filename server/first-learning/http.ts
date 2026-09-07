@@ -23,19 +23,32 @@ export function registerFirstLearningRoutes(app: FastifyInstance, ports: {
     kind: 'failed',
     code: 'CONFIG_INVALID',
     message: 'Required Zhihu or DeepSeek configuration is missing.',
+    trace: [],
     traceId,
   })
 
   app.get('/api/learning/first-entry', async (request, reply) => {
     const traceId = String(request.headers['x-trace-id'] ?? `l0-${Date.now()}`)
-    if (!ports.firstLearning) return send(reply, 503, { kind: 'failed', code: 'CONFIG_INVALID', message: '现在读不到第一段讲解。请稍后再试。', traceId })
-    const found = ports.firstLearning.get(queryId(request, 'routeId'), queryId(request, 'conceptId'))
-    if (!found) return send(reply, 404, { kind: 'missing', traceId })
+    if (!ports.firstLearning) return send(reply, 503, { kind: 'failed', code: 'CONFIG_INVALID', message: '现在读不到第一段讲解。请稍后再试。', trace: [], traceId })
+    const peeked = ports.firstLearning.peek(queryId(request, 'routeId'), queryId(request, 'conceptId'))
+    if (peeked.kind === 'missing') return send(reply, 404, { kind: 'missing', trace: [], traceId })
+    if (peeked.kind === 'running') {
+      return send(reply, 200, {
+        kind: 'running',
+        trace: peeked.trace,
+        ...(peeked.draftText ? { draftText: peeked.draftText } : {}),
+        traceId,
+      })
+    }
+    if (peeked.kind === 'failed') {
+      return send(reply, 200, { kind: 'failed', code: peeked.code, message: peeked.message, trace: peeked.trace, traceId })
+    }
     return send(reply, 200, {
       kind: 'completed',
       reused: true,
-      ...found.answer,
-      graph: found.graph,
+      ...peeked.answer,
+      graph: peeked.graph,
+      trace: peeked.trace,
       draftCount: 0,
       traceId,
     })
@@ -55,7 +68,16 @@ export function registerFirstLearningRoutes(app: FastifyInstance, ports: {
         ? body.attachmentSourceIds.filter((item): item is string => typeof item === 'string')
         : undefined,
       thinkingDepth: body.thinkingDepth === 'deep' ? 'deep' : 'fast',
+      wait: false,
     })
+    if (result.kind === 'running') {
+      return send(reply, 200, {
+        kind: 'running',
+        trace: result.trace,
+        ...(result.draftText ? { draftText: result.draftText } : {}),
+        traceId,
+      })
+    }
     if (result.kind !== 'completed') {
       return send(reply, result.code === 'PROVIDER_INVALID' ? 400 : 503, { ...result, traceId })
     }
@@ -64,6 +86,7 @@ export function registerFirstLearningRoutes(app: FastifyInstance, ports: {
       reused: result.reused,
       ...result.answer,
       graph: result.graph,
+      trace: result.trace,
       draftCount: 0,
       traceId,
     })

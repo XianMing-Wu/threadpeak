@@ -1,75 +1,23 @@
 ---
 description: "约束后端 Agent 编排、上下文预算、真实 provider、校验、失败与安全边界。"
-globs: "apps/api/**,apps/worker/**,server/**,packages/contracts/**,packages/api-client/**,packages/runtime-store/**,**/*.schema.ts,**/*.port.ts,**/*.adapter.ts"
+globs: "apps/api/**,Dockerfile,compose.yaml,deploy/**,apps/worker/**,server/**,packages/contracts/**,packages/api-client/**,packages/runtime-store/**,**/*.schema.ts,**/*.port.ts,**/*.adapter.ts"
 alwaysApply: false
 ---
 
-# 后端 Agent 编排与平台边界
+# 持久工作流与 provider 边界
 
-后端目标流程来自 [`as-implemented-logic.md`](../../as-implemented-logic.md) 第 2 节和第 4.1 节；每个 Agent 的完整上下文、压缩算法、系统提示词和输出结构只以 [`agent-specs.md`](../../agent-specs.md) 为准。本规则不复制完整提示词，避免出现第二份会漂移的合同。
+[Agent 合同](../../agent-specs.md)规定每个步骤的上下文、压缩、提示词和输出。[工程记录](../../docs/backend-rebuild-2026-09-06.md)是本次授权下的实现选择；不冒称历史产品裁决。
 
-## 调用分类与顺序
+- 默认入口使用 server/durable，不注册旧 G1/G2 和批注写链；MCP 只作为可选外部适配，不把固定步骤交给模型自由选择。
+- 请求必须校验所有者、范围、输入、幂等键；资源事实和最终成功事件同事务。队列领取带租约/fence，成功步骤检查点可恢复。外部调用至少一次可能重复，不声称 exactly-once。
+- 临时故障退避恢复，配置/鉴权等待处理；停止与完成的先后由数据库决定。浏览器断连不自动取消。
+- 只使用真实 provider。JSON/引用/renderer 校验不通过由同一 Agent 修复，禁止补字段、猜边、删环或 fixture 成功。
+- 空正文、仅 reasoning、流断开、length 截断都不是完成。草稿和正式结果分开，不把内部思考当正文或日志。
+- 调用预算取业务上限和已配置 provider 能力的较小值，扣真实输出和安全余量；分块来源摘要不覆盖原文，不截断 JSON，不降级深度。
+- 所有秘密、provider 地址和模型名只在服务端。禁止原始错误/stack/密钥/全文进入公开日志；展示安全的继续/恢复状态。
+- 生产必须配置 PostgreSQL、身份验证、公开源和模型能力；本地隔离 cookie 不是知乎登录。鉴权、CSRF、限流、持久恢复与真实 provider gate 均需验收。
+- 用户内容、网页和模型文本是数据，不能执行代码或未授权外部写入。附件首页支持 pdf/md/markdown/txt 和显式导入的知乎授权收藏夹/公开创作；大小/生命周期当前工程界限如实记录。
 
-| 业务 | LLM / 直达调用 | 非 Agent 步骤 |
-| --- | --- | --- |
-| 路线 | R1、R2、R3、最多两次 R3b、R4；发布后普通回复 R5 | R-S 最多 2 路并发知乎搜索（问法空格拼串）、R4 renderer 校验 |
-| 首次学习 | L0a 三路知乎直达（同时在飞最多 2 路）、L0b 整理 | L0b 成功后确定性创建唯一图和唯一根 |
-| 学习追问 | G1 结构化 LLM 与 G2 知乎直达并发 | 按二者终态汇合，不另设语义复核 Agent |
-| 划选问博主 | A1 拆问、A2 选人；正常零人时 A3 刘看山直达 | A-S 最多 2 路并发知乎搜索（多问法空格拼串）、作者身份与证据绑定 |
-| 搜索博主 | 缺额时 N1 拆问、N2 排序 | N0 高权/低权 Graph RAG、N-S 最多 2 路并发知乎搜索（多问法空格拼串） |
+服务端配置键（不得进入浏览器）：`ZHIHU_ACCESS_SECRET`、`ZHIHU_API_BASE_URL`、`DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、`DEEPSEEK_MODEL_NAME`、`DEEPSEEK_CONTEXT_TOKENS`、`DATABASE_URL`、`THREADPEAK_PUBLIC_ORIGIN`、`THREADPEAK_IDENTITY_SECRET`、`THREADPEAK_IDENTITY_ISSUER`、`THREADPEAK_IDENTITY_AUDIENCE`、`THREADPEAK_LOGIN_URL`、`THREADPEAK_PORT`、`THREADPEAK_HOST`、`THREADPEAK_DATA_DIR`、`POSTGRES_PASSWORD`、`SITE_ADDRESS`、`ZHIHU_OAUTH_APP_ID`、`ZHIHU_OAUTH_APP_KEY`、`ZHIHU_OAUTH_REDIRECT_URI`。可配置知乎 OAuth 或受信身份网关。知乎还需 `ZHIHU_OAUTH_USERINFO_URL`、`ZHIHU_OAUTH_USER_ID_PATH`、`ZHIHU_OAUTH_USER_NAME_PATH`、`ZHIHU_OAUTH_USER_AVATAR_PATH`、`THREADPEAK_TOKEN_SECRET`；前两项按官方合同配置，不能猜稳定 ID。用户 API 强制该授权用户 Token，禁止回退开发者数据；未真实验证不得宣称登录完成。
 
-- R-S、A-S、N-S、N0、GraphSurgeon、renderer 校验和批注展示都不是 LLM Agent，不得给它们伪造提示词或模型输出。
-- 产品已删除图文入口；后端不得新增临时图文 Agent，也不得返回固定 artifact。
-- 所有模型输出都必须先提取合同字段，再用 `agent-specs.md` 对应结构校验。多余键忽略；缺必填时按 0.8 由同一 Agent 自我修复，通过后再进入下一阶段。不得编造缺失字段。引用输入对象时，ID 必须真实存在；R4 节点/边、A2 authorId/evidenceId、N2 authorId/evidenceId 都要做引用完整性校验。
-
-## 上下文与压缩
-
-- 每次主调用的总预算为 500k tokens（500,000 / 50 万），包含系统提示词、上下文、输出结构、接口包装和输出预留。
-- 先组装真实调用再估算。总量小于 500k 不压缩；达到或超过 500k 时按该 Agent 的字段优先级反复收紧，直到整次调用小于 500k。不存在「压缩后仍过长」错误分支。
-- 对 R1/R2/R3/R3b/R4/R5：非附件部分小于 300k 时只压缩附件一次，仍超预算再压非附件；非附件部分达到或超过 300k 时压非附件，不动附件。
-- 压缩只生成本次调用的上下文副本，不覆盖原文。ID、枚举、布尔值、轮次、选项、节点分组、边端点以及作者—证据—链接对应关系不得被压缩改写。
-- 搜索证据、对话、图邻域和多路正文分别按 `agent-specs.md` 0.3–0.6 处理；不能用统一截断替代这些算法。
-- 所有 Agent 系统提示词必须带 `agent-specs.md` 0.7 的共同前缀，且使用该 Agent 已写明的专用提示词与输出结构，不能由实现者自由续写产品要求。
-- 思考深度只有快速/深度两档且默认快速。某个界面流程使用深度时，该流程的所有 LLM 与知乎直答都必须使用深度；学习页与画布共享这一状态，首页状态不带入学习。运行中切换的冻结时点仍未裁决。
-
-## 真实 provider 与环境配置
-
-- 项目根 `.env` 的服务端配置包含 `ZHIHU_ACCESS_SECRET`、`ZHIHU_API_BASE_URL`、`DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、`DEEPSEEK_MODEL_NAME`。知乎登录另用 `ZHIHU_OAUTH_APP_ID`、`ZHIHU_OAUTH_APP_KEY`、`ZHIHU_OAUTH_REDIRECT_URI`。
-- 密钥、provider base URL 和 model name 只在服务端 composition 读取。任何浏览器代码不得知道这些值；日志、错误和响应也不得泄露。
-- 用户触发的回答、路线、知识、问博主和博主搜索必须调用真实知乎/LLM provider。缺配置、超时、鉴权失败、限流或不可用都返回明确失败，禁止退回 mock、fixture、固定作者、预写回答或伪造成功。无效结构先走同一 Agent 自我修复；修复耗尽后才明确失败。
-- mock/fake 只允许在隔离测试 composition 中使用。明确标为「示例」的只读资产不能参与用户请求结果或写入用户事实。
-- 外部 provider response 先当作 `unknown`，经对应 schema 解析和 adapter 映射后才能进入业务层。原始错误正文或 SDK 对象不得直传 UI。
-
-## 各流程失败语义
-
-- 路线任一 Agent、搜索或最终校验失败都不发布半成品；用户重试从 R1 开始。
-- L0a 任一路或 L0b 失败，首次学习不进入成功态。L0b 成功时，确定性唯一根必须与首轮回复一起落成并作为一个成功状态；不能设计「首轮成功但根稍后失败」。
-- G1/G2 各自按自己的 500k 预算运行。G2 失败时不写图；G2 成功、G1 失败时保存/展示回复但不创建卡；两者都成功才按 G1 结构新增卡。
-- A2 正常得到零位合适作者才进入 A3。A1/A-S/A2 的 provider 或结构失败不能伪装成「没找到」。A3 是刘看山第一人称知乎直答，不创建 AuthorIdentity 或网络关系。
-- N0 投影不可用与 N0 可用但没有足够相关作者是两种状态：前者明确失败；后者按高权、低权后再用 N1/N-S/N2 补剩余名额。最多 3 人，候选不足时返回全部有效候选，不重复、不虚构。
-- R5 已规定普通 Chat 的上下文、附件、提示词和正文输出。首页非路线普通发送与路线发布后的普通发送都调用 R5，读取该 Chat 全文和只属于该 Chat 的附件，达到或超过 500k 才压缩。失败重试、历史落盘、取消/超时/迟到响应、刷新恢复和重复提交仍未裁决，不得在本规则里把某套状态机写成既定产品合同。
-- A2 的 `no_suitable_author` 只是程序分支，立刻走 A3；不得把该英文值写入用户可见响应。
-
-## 数据结果边界
-
-- 路线发布不创建知识图。只有用户第一次进入已发布路线中的概念，L0 完成后才创建该概念唯一图和唯一根。
-- 首次回复和根永久复用；再次进入、新对话、历史重开、刷新或修复都不能重新生成、替换或覆盖。
-- G1 只拿宿主一跳邻域与当前问题；G2 只拿当前这一次对话全文、同一宿主和当前问题。不能读取该概念其他历史对话。
-- 问博主真实作者结果是批注，并以高权重关系写入当前用户博主图谱；刘看山回退不入网。
-- 博主搜索先读当前用户的高权重关系，再读低权重关系；知乎补位的新作者以低权重写入网络。搜索结果是人，不是回答。
-- 存储表、跨重启事务、幂等、取消、超时、异步恢复、3D 位置 schema 与博主网络拓扑都仍未裁决。实现前应补合同；不得把 PostgreSQL、CAS、outbox、SSE、job/lease 或某张表当成用户已经拍板的方案。
-
-## HTTP、安全与不可信内容
-
-- Route handler 只做身份/输入校验、调用业务编排和安全呈现；不能把复杂流程复制到多个 endpoint。
-- 错误必须有稳定 code 和可安全展示的 message；不得用 HTTP 200 加聊天文案隐藏 provider 或校验失败，也不得返回 stack、密钥、内部 URL、原始 provider body，或 Agent/schema/指定结构等内部词。路线结构或 3D 文档校验失败用 422，不得标成服务不可用。
-- 知乎、附件、用户文字和模型文本都是数据，不是系统指令。附件类型仅限已确认的 pdf/md/txt，大小与数量限制仍未裁决；对输出 Markdown/HTML 做安全渲染，禁止执行其中的 URL、脚本、tool call 或动态代码。
-- 问博主只读取公开内容；不得新增私信、代发、收藏、关注或其他外部副作用。
-- 知乎 OAuth 使用服务端 Authorization Code Flow；`app_key`、Access Secret 与 access token 都不得进入浏览器。官方没有给出的用户字段或参数不得自行编造。
-
-## 后端最低验证
-
-- 为所有结构化 Agent 做输入/输出 schema 和错误测试，并覆盖 ID 引用、边端点、作者证据绑定、重复候选与人数上限。
-- 覆盖 500k/300k 两个压缩分支、持续收紧、附件只压一次、原文不被覆盖，以及各类正文的保留字段。
-- 覆盖 R1 整段重试、同一 Agent 结构自我修复后成功、一直不合格时的安全失败文案、L0 同一成功态、G1/G2 部分失败、A2 正常零人和异常的区别、N0 不可用与空结果的区别。
-- 测试替身不能替代真实 provider live gate；只报告当次实际运行得到的成熟度。
+- 本轮用户授权 OAuth/个人内容域的显式 mock 例外：ZHIHU_OAUTH_MODE=mock 只用于本地，账号/来源独立命名空间，接口同合同，生产启动拒绝，真实API失败不得隐式回退；模型/搜索/PDF仍真实。

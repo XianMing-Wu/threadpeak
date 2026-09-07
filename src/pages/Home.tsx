@@ -1,77 +1,51 @@
-import { useState } from 'react'
+import { MaterialChips, MaterialScope, Materials, useMaterials } from '../materials/Materials'
+import { rememberPathSearchScope } from '../path-planning/path-run-client'
+import { CHAT_LAUNCH_KEY } from '../history'
+import { useEffect, useState } from 'react'
 import { Composer } from '../components/Composer'
-import { Icon } from '../icons'
 import { launchChat } from './Chat'
+import { readLearningThinking, subscribeLearningThinking, writeLearningThinking } from '../session/learning-thinking'
 import { openKnowledge, openRoute } from '../workspace/nav'
 import { useLibrarySelector } from '../runtime/use-library-selector'
 import { selectRecommendedKnowledge, selectRecommendedRoutes } from '../runtime/library-read-model'
-import { pathLaunchAttachments, type PathAttachment } from '../path-planning/path-run-client'
+import { Icon } from '../icons'
+import { HomeLandscape } from '../ui/HomeLandscape'
+import { PeakWordmark } from '../ui/PeakWordmark'
 
 const suggestions = ['给我制定一条机器学习数学路线','帮我规划一条线性代数入门路线','哪些知乎作者擅长讲线性代数？']
 const HOME_SELECT_ROUTE = 'threadpeak-home-select-route'
-
-function extractPdfText(bytes: Uint8Array): string {
-  const text = new TextDecoder('latin1').decode(bytes)
-  return [...text.matchAll(/\((?:\\.|[^\\)]){2,}\)/g)]
-    .map((match) => match[0].slice(1, -1).replace(/\\n/g, '\n').replace(/\\\(/g, '(').replace(/\\\)/g, ')'))
-    .filter((item) => /[\u4e00-\u9fffA-Za-z]/.test(item))
-    .join('\n')
-}
-
-async function readHomeAttachment(file: File): Promise<PathAttachment | { error: string }> {
-  const name = file.name
-  const lower = name.toLowerCase()
-  if (!/\.(pdf|md|txt)$/.test(lower) && !['application/pdf', 'text/markdown', 'text/plain'].includes(file.type)) {
-    return { error: '附件只支持 pdf、md、txt。' }
-  }
-  const sourceId = `att-${crypto.randomUUID()}`
-  if (lower.endsWith('.pdf') || file.type === 'application/pdf') {
-    const content = extractPdfText(new Uint8Array(await file.arrayBuffer()))
-    return { sourceId, fileName: name, mimeType: 'application/pdf', content }
-  }
-  const content = await file.text()
-  return {
-    sourceId,
-    fileName: name,
-    mimeType: lower.endsWith('.md') ? 'text/markdown' : 'text/plain',
-    content,
-  }
-}
 
 export function HomePage() {
   const initial = sessionStorage.getItem('threadpeak-home-prefill') ?? ''
   if (initial) sessionStorage.removeItem('threadpeak-home-prefill')
   if (sessionStorage.getItem(HOME_SELECT_ROUTE) === '1') sessionStorage.removeItem(HOME_SELECT_ROUTE)
   const [value,setValue] = useState(initial)
-  const [attachments,setAttachments] = useState<PathAttachment[]>([])
-  const [attachError,setAttachError] = useState('')
+  const materials=useMaterials()
+  const [thinkingDepth, setThinkingDepth] = useState(readLearningThinking)
+  useEffect(() => subscribeLearningThinking(() => setThinkingDepth(readLearningThinking())), [])
   const send = () => {
     const query=value.trim()
-    if(!query)return
-    launchChat(query, 'route', attachments)
+    if(!query||!materials.ready)return
+    writeLearningThinking(thinkingDepth)
+    launchChat(query, 'route', materials.attachments, thinkingDepth)
+    // launchChat writes this conversation synchronously; the hash route mounts afterwards.
+    // Keep scope keyed to that launch, so later home changes cannot alter a pending request.
+    const launch = JSON.parse(sessionStorage.getItem(CHAT_LAUNCH_KEY) ?? 'null')
+    if (launch?.conversationId) rememberPathSearchScope(`route-start:${launch.conversationId}`, materials.searchScope)
   }
   const exampleKnowledge = useLibrarySelector(selectRecommendedKnowledge)
   const exampleRoutes = useLibrarySelector(selectRecommendedRoutes)
   return <main className="home" data-page="home">
-    <div className="home-heading">循着问题与答案的脉络，登上理解的高峰。</div>
-    <div className="home-center">
-      {attachments.length > 0 && <div className="home-attachments">{attachments.map((item) => <span key={item.sourceId} className="attachment-chip">{item.fileName}<button type="button" aria-label={`移除${item.fileName}`} onClick={() => setAttachments((current) => current.filter((entry) => entry.sourceId !== item.sourceId))}>×</button></span>)}</div>}
-      {attachError && <p className="composer-unavailable" role="alert">{attachError}</p>}
-      <Composer value={value} onChange={setValue} onSend={send} onPickFiles={(files) => {
-        void Promise.all([...files].map(readHomeAttachment)).then((items) => {
-          const failed = items.find((item) => 'error' in item)
-          if (failed && 'error' in failed) {
-            setAttachError(failed.error)
-            return
-          }
-          setAttachError('')
-          setAttachments((current) => [...current, ...items as PathAttachment[]])
-        })
-      }}/>
+    <HomeLandscape/>
+    <div className="home-head" aria-hidden="true" />
+    <div className="home-body home-center">
+      <PeakWordmark />
+      <Composer value={value} onChange={setValue} onSend={send} sendDisabled={!materials.ready} thinkingDepth={thinkingDepth} onThinkingDepth={(next) => { writeLearningThinking(next); setThinkingDepth(next) }} onPickFiles={files=>void materials.upload(files)} topContent={<MaterialChips model={materials}/>} beforeAttachment={<MaterialScope model={materials}/>}/>
+      <Materials model={materials}/>
       <section className="home-discovery">
         <div className="home-suggestions"><h2>想了解点什么？</h2><div className="suggestion-marquee"><div className="suggestion-track">{[0,1].map((copy)=><div className="suggestion-group" aria-hidden={copy===1} key={copy}>{suggestions.map((x)=><button key={`${copy}-${x}`} tabIndex={copy===1?-1:0} onClick={()=>setValue(x)}>{x}</button>)}</div>)}</div></div></div>
-        <div className="home-recommendations home-libraries"><h2>推荐知识脉络 <small>示例内容</small></h2><div>{exampleKnowledge.map((item)=><button key={item.id} onClick={()=>{openKnowledge(item.id,'home');location.hash='knowledge-detail'}}><span><Icon name="book" size={18}/></span><b>{item.title}</b><small>示例知识脉络 · {item.sources} 个来源</small></button>)}</div></div>
-        <div className="home-recommendations home-routes"><h2>推荐学习路线 <small>示例内容</small></h2><div>{exampleRoutes.map((item)=><button key={item.id} onClick={()=>{openRoute(item.id,'home');location.hash='path-3d'}}><span><Icon name={item.icon} size={18}/></span><b>{item.title}</b><small>示例学习路线 · {item.carriers} 个载体 · {item.concepts} 个最终概念</small></button>)}</div></div>
+        <div className="home-recommendations home-libraries"><h2>推荐知识脉络 <small>示例内容</small></h2><div>{exampleKnowledge.map((item)=><button type="button" className="home-lib" key={item.id} onClick={()=>{openKnowledge(item.id,'home');location.hash='knowledge-detail'}}><span><Icon name="book" size={18}/></span><b>{item.title}</b><small>示例知识脉络 · {item.sources} 个来源</small></button>)}</div></div>
+        <div className="home-recommendations home-routes"><h2>推荐学习路线 <small>示例内容</small></h2><div>{exampleRoutes.map((item)=><button type="button" className="home-route" key={item.id} onClick={()=>{openRoute(item.id,'home');location.hash='path-3d'}}><span><Icon name={item.icon} size={18}/></span><b>{item.title}</b><small>示例学习路线 · {item.carriers} 个载体 · {item.concepts} 个最终概念</small></button>)}</div></div>
       </section>
     </div>
   </main>

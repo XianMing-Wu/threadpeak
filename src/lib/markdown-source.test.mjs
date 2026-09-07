@@ -32,12 +32,12 @@ test('a Chinese period is not left as its own block before a numbered heading', 
 test('bare latex commands and braced subscripts become inline math', () => {
   const { markdown, math } = prepareMarkdown('执行误差），{P_{sa}^{s\'}} 能够描述。· \\gamma\\in[0, 1] 是折扣因子。R:S\\times A\\rightarrow \\mathbb{R} 是奖励函数。')
   assert.deepEqual(math.map((item) => item.tex), [
-    'P_{sa}^{s\'}',
+    '{P_{sa}^{s\'}}',
     '\\gamma\\in[0, 1]',
-    'S\\times A\\rightarrow \\mathbb{R}',
+    'R:S\\times A\\rightarrow \\mathbb{R}',
   ])
   assert.equal(math.every((item) => item.display === false), true)
-  assert.match(markdown, /\$P_\{sa\}\^\{s'\}\$/)
+  assert.match(markdown, /\$\{P_\{sa\}\^\{s'\}\}\$/)
   assert.match(markdown, /\$\\gamma\\in\[0, 1\]\$/)
   assert.doesNotMatch(markdown, /%%TPMATH/)
 })
@@ -101,7 +101,7 @@ test('adjacent bare fragments stay one formula and never emit $$', async () => {
   }
   const glued = prepareMarkdown('{P_{sa}^{s\'}}\\in[0,1]')
   assert.equal(glued.math.length, 1)
-  assert.equal(glued.math[0].tex, 'P_{sa}^{s\'}\\in[0,1]')
+  assert.equal(glued.math[0].tex, '{P_{sa}^{s\'}}\\in[0,1]')
   const gamma = prepareMarkdown('\\gamma\\in\\left[o,1\\right]')
   assert.equal(gamma.math.length, 1)
   assert.match(gamma.math[0].tex, /\\gamma\\in\\left\[o,1\\right\]/)

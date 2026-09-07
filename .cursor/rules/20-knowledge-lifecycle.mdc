@@ -1,112 +1,24 @@
 ---
-description: "约束 L0a/L0b 唯一首轮与根、G1/G2 学习追问、selection、conversation 和知识画布同步。"
-globs: "src/pages/Session.tsx,src/pages/NotFound.tsx,src/pages/KnowledgeCanvas.tsx,src/pages/Collections.tsx,src/learningSession.ts,src/history.ts,src/resolve-history-reopen.ts,src/workspace/nav.ts,src/workspace/store.ts,src/knowledge-canvas/**,src/session/**,src/components/Shell.tsx,src/components/AnnotatedText.tsx,src/components/SelectionToolbar.tsx,src/components/Composer.tsx,src/components/AskAuthorsPrompt.tsx,apps/web/**/concept-learning/**,apps/web/**/knowledge-map/**,apps/web/**/history/**,packages/contracts/knowledge/**,server/knowledge/**,server/first-learning/**,server/follow-up/**"
+description: "约束来源卡片树、L-answer 工具范围、对话和文档编辑同步。"
+globs: "src/pages/Session.tsx,src/learning-v2/**,server/durable/**,packages/contracts/src/learning-v2.ts,src/pages/NotFound.tsx,src/pages/KnowledgeCanvas.tsx,src/pages/Collections.tsx,src/learningSession.ts,src/history.ts,src/resolve-history-reopen.ts,src/workspace/nav.ts,src/workspace/store.ts,src/knowledge-canvas/**,src/session/**,src/components/Shell.tsx,src/components/AnnotatedText.tsx,src/components/SelectionToolbar.tsx,src/components/Composer.tsx,src/components/AskAuthorsPrompt.tsx,apps/web/**/concept-learning/**,apps/web/**/knowledge-map/**,apps/web/**/history/**,packages/contracts/knowledge/**,server/knowledge/**,server/first-learning/**,server/follow-up/**"
 alwaysApply: false
 ---
 
-# 概念学习、对话与知识脉络
+# 学习卡片树生命周期
 
-目标行为以 [as-implemented-logic.md](../../as-implemented-logic.md) 第 2.1–2.5 节和第 4.1 节为准；L0a、L0b、G1、G2 的完整合同以 [agent-specs.md](../../agent-specs.md) 第二、三节为准。
+唯一目标见 [现状清单](../../as-implemented-logic.md) 第 2 节与 [Agent 合同](../../agent-specs.md) 第二、三节；工程运行边界见 [重构记录](../../docs/backend-rebuild-2026-09-06.md)。
 
-旧的“普通回答生成首轮”“首轮成功后另开可失败的建图阶段”“串行分类后回答”“整张图纯文本上下文”和 A1 KnowledgeDraft 管线都不是目标。A1 在当前 Agent 命名中只表示问博主的等价拆问。
+- 首次概念名称消息 → 三路限定概念的搜索 → 收齐筛选 → 文章与根持久保存 → 三角度直答 → L-answer。
+- 概念唯一根，文章及本条路线资料为一级子卡，每段只一个 basisId、每卡只一个父卡，禁止汇合、循环与伪造 ID。路线 3D DAG 不受此限制。
+- 不再运行 G1/G2；模型通过 append_cards(after=C编号) 逐段指定单父卡，每操作恰好一张新卡；read_card_scope 固定本次材料，服务端回查该材料版本中的 evidence、解析编号和父卡，再原子提交回复和卡片。不能将全部段落打包默认挂 C1，也不能为分散编号伪造来源。
+- 选中卡片决定提问材料；无选中默认全部文章及路线资料；资料详情默认选当前资料。用户问题必须非空。
+- 新对话归档旧聊天、当前为空，保留文章、根和所有卡。切换研究/画布/文档不取消任务。
+- 编辑在文档对应位置发生，保存同一卡的用户副本，禁止修改原始文章总结/身份/来源。
+- provider 不完整不产生正式卡；停止与晚到提交由持久事务和 fence 裁决，不能靠前端 mounted 标记代替。
+- 验证重开、并发、ID 绑定、取消、单父卡、归档与编辑版本冲突，测试替身与真实 gate 分开。
 
-## 进入概念
+- 公式共用 MarkdownMath；文档阅读与源文本编辑分开，保存不用渲染 DOM 反推源码。长卡片展开后正文可滚动，工具栏和收起按钮必须保留在卡片内。
 
-1. 正常入口必须先确认 routeId、conceptId 存在且概念属于该路线；缺少合法概念就不打开学习页。用户直接访问非法地址进入独立 404，不显示“无法进入这次学习”产品页。
-2. 示例路线使用预置且明确标记的首轮和根，不调用 L0a/L0b，也不能成为“我的路线”失败时的 fallback。
-3. 我的路线第一次进入概念时才执行：
+- 首页加入的文件与显式导入的收藏资料用于路线生成并继承至每个概念，已有资料可先阅读。PDF 卡用总结，文本卡保留正文；材料与概念不相关时不强行引用，文件不能冒充知乎作者。
 
-~~~text
-读取路线中的 concept title + hasDispute + detailedDescription + attachmentSourceIds
-  → L0a 三路知乎直答（同时在飞最多 2 路；直答不拼串）
-      具体讲解
-      是否争议
-      踩坑点
-  → L0b 把三路整理成唯一首轮 content
-  → 用 concept title + content 确定性创建唯一图和唯一根
-  → 同一个成功状态展示首轮并开放“知识脉络”
-~~~
-
-4. 学习阶段不读取路线附件原件；只使用 detailedDescription 中已经消化的信息和 attachmentSourceIds。
-5. L0b 成功与根创建是一个产品成功结果。根不调用模型，不允许出现“首轮已成功、建根随后失败”或“首轮先显示、知识脉络仍在生成”的独立分支。
-6. L0a 任一路或 L0b 失败时，本次首次学习尚未成功；不得写半个首轮、空根、结构占位或示例根。
-
-## 唯一首轮与根
-
-- 每个已触发的“我的路线 + 概念”只有一份首轮正文、一张图和一个根；根标题固定为概念名，根内容固定为 L0b content。
-- 首轮一旦成功，刷新、服务重启、再次进入、新对话、历史重开、画布重排或提示词/模型变化都不得重新生成、替换或覆盖。
-- 再次进入不重放 L0a/L0b，也不显示“正在生成首次回复”；读取完成后恢复该概念最近一条对话。
-- 新对话仍从同一个根开始，只清出新的对话分支，不重置图，不复制生成另一份首轮。
-- 清空侧栏历史只清历史列表，不删除路线、知识图、首轮或根。
-- 没有已 settle 的 graph/root 时，我的知识脉络列表不出现该路线/概念卡片，学习页不出现「知识脉络」按钮。不得打开独立 bootstrap 失败页。服务端已无图时丢掉本地占位并退回列表。
-- “永久保存”的结果要求固定，但具体数据库、表、事务、并发锁与跨重启实现尚未裁决；不得把旧规则里的某一种 PostgreSQL/CAS/job 方案写成唯一产品合同。
-
-## Selection 与宿主
-
-1. 对话中助手回复和用户以前的问题都可以划选。
-2. 划选助手回复：宿主是该回复对应卡片。
-3. 划选用户问题：宿主是该问题对应的那张 LLM 回复卡。
-4. 一次划选跨两张卡片时不显示工具条。
-5. 失败的用户问题或失败回复不显示划选工具条，失败轮次不改变图。
-6. “添加到对话”只放入引用条，不自动发送。
-7. 必须写下新问题才能发送；只有引用、没有问题不能发。
-8. 有显式引用时宿主由引用决定；没有引用时默认引用最近一次成功 LLM 回复全文，宿主就是该回复卡。
-9. 点击、聚焦、拖动或查看画布节点都不能选择宿主，也不能影响下一张卡挂载位置。
-10. 持久 selection 需要能定位原文及所属消息/节点，但具体锚点 schema 仍由后续合同决定，不能只保存 DOM Range 或数组下标。
-
-## G1 / G2 并发追问
-
-用户在学习页或知识画布提交普通追问后，G1 与 G2 同时开始；不能先完成一条再决定是否发另一条，也不能增加第二次语义复核 Agent。
-
-### G1 结构路
-
-- 上下文是保持结构的 JSON：宿主卡全文、全部并列节点、所有前置/后置节点、这些节点间的边与逻辑、相关正文上的问博主批注、当前问题和引用。
-- 批注明确区分 author_comment 与 liu_kanshan_direct，并保持 authorId/evidenceId 绑定。
-- 总调用达到 500k 时只压各节点里的 LLM 回复正文；nodeId、分组、边、标题、批注身份和 JSON 结构不动。
-- 输出严格为 relation、title、edgeExplanation；relation 只能是 predecessor、successor、parallel。
-- 判断按用户理解的方向：补看懂宿主前的基础为 predecessor；例子/另一种解释/同层对照为 parallel；下一步为 successor。
-- G1 不输出正文、节点 ID、根或另一个宿主。
-
-### G2 对话路
-
-- 上下文只读取该概念当前这一次 conversationId 的全文、对应批注、当前问题和引用；不得读同概念其他历史对话。
-- 不单独搜索知乎。追问直接走知乎直答，不使用“你是刘看山”的普通 Chat 人格，也不自称真实博主。
-- 总调用达到 500k 时从较早完整问答开始压缩，保持时间顺序、role、messageId、批注身份、当前问题和引用。
-- 输出是可流式正文，不输出图关系 JSON。
-
-### 汇合
-
-| G1 | G2 | 对话结果 | 图结果 |
-| --- | --- | --- | --- |
-| 成功 | 成功 | 展示 G2 | 用 G1 结构 + G2 正文提交一张新卡 |
-| 失败 | 成功 | 仍展示 G2 | 不长图 |
-| 成功 | 失败 | 显示直答失败 | 丢弃 G1，不长图 |
-| 失败 | 失败 | 显示失败 | 不长图 |
-
-聊天可以在 G1 未完成时流式展示 G2，但只有两路都成功才提交新卡。
-
-## 问博主批注与知识图
-
-- 问博主只通过划选工具条进入；完整 A1–A3 规则由 30-authors.mdc 负责。
-- 真实作者结果或刘看山直答都锚定为原文批注，只同步批注标记，不调用 G1、不创建并列/前置/后置节点。
-- 根与后续卡上的批注跨新对话保留；批注属于概念图原文位置，不按 conversation 清空。
-- 点击批注标记才在节点右侧显示同等大小卡片；点击卡片外关闭。展示卡不是结构节点。
-
-## 学习页与画布同步
-
-- 学习页和知识画布操作同一概念的同一份最新对话。画布发送、流式输出、引用、划选和问博主实时写回这份记录。
-- 从任何入口进入画布，右上角都有“回到对话”：有用户对话就回最新一条；没有时新建一条，但继续使用原首轮和根。
-- 画布顶栏返回只回该知识的概念列表；学习会话左上角返回 3D。
-- 放大、缩小、重置、拖动画布、拖卡片和重新排列只改视图，不改宿主和知识语义。
-- 边上的数字只打开逻辑说明；布局不得创建、删除或重连语义边。
-- 学习页和画布没有附件入口，也没有图文入口，不能写图去冒充图文。
-
-## 最低验证
-
-- L0a 三路都要跑且同时在飞最多 2 路，L0b 读取三路与 detailedDescription；学习阶段不带附件原件。
-- 首轮成功与唯一根同一终态；不存在独立 graph bootstrap 失败 UI；没有已 settle 的图就不能点进我的知识脉络；重复进入/刷新/重启/新对话均复用首轮。
-- selection 覆盖用户问题、助手回复、跨卡拒绝、失败轮拒绝、空问题拒绝和默认最近回复。
-- 点击节点、拖动和布局不改变宿主。
-- G1/G2 真并发、上下文边界正确、各自 500k 压缩、四种汇合结果正确。
-- 问博主只产生持久批注标记，不产生结构节点；批注跨对话保留。
-- 画布和最新对话实时同步，所有入口都有“回到对话”。
+- 本轮范围继承覆盖默认知乎检索：全网额外收集站外资料；仅收藏夹跳过 L-search-plan/检索，三角度由模型只读资料完成。站外卡无作者身份，不进入作者网络。

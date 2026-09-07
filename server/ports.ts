@@ -1,8 +1,10 @@
+import type { SearchMetadata } from '../packages/contracts/src/search-scope.ts'
 export type HttpRequestInit = {
   method?: 'GET' | 'POST'
   headers?: Record<string, string>
   body?: string
   signal?: AbortSignal
+  timeoutMs?: number
 }
 
 export type HttpResponse = {
@@ -19,7 +21,7 @@ export type ClockPort = {
   unixSeconds(): number
 }
 
-export type EvidenceHit = {
+export type EvidenceHit = SearchMetadata & {
   title: string
   url: string
   excerpt: string

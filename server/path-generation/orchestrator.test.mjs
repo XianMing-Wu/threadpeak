@@ -123,6 +123,11 @@ test('R1/R-S/R2/R3 run in order, searches are two packed parallels, and attachme
   }
   assert.equal(calls.find((item) => item.agentId === 'R3').context.goal, '线性映射入门')
   assert.equal(calls.find((item) => item.agentId === 'R2').context.searchGroups.length, 2)
+  const kinds = view.trace.map((step) => `${step.kind}:${step.title ?? ''}:${step.status}`)
+  assert.ok(kinds.some((item) => item.startsWith('agent:拆成检索问题:done')))
+  assert.ok(kinds.some((item) => item.startsWith('search:检索知乎:done')))
+  assert.equal(view.trace.filter((step) => step.kind === 'search').length, 2)
+  assert.equal(view.trace.some((step) => step.kind === 'think'), false)
 })
 
 test('commit is blocked until the active set is complete; last select auto-publishes without knowledge', async () => {
@@ -152,9 +157,12 @@ test('commit is blocked until the active set is complete; last select auto-publi
   assert.match(early.error.message, /全部答完/)
   const first = await api.select({ runId: started.runId, questionId: 'qq1', optionId: 'o1' })
   assert.equal(first.status, 'awaiting_answers')
+  assert.equal(first.trace.some((step) => step.kind === 'confirm' && step.title === '已确认：定义'), true)
   assert.equal(calls.some((item) => item.agentId === 'R4'), false)
   const published = await api.select({ runId: started.runId, questionId: 'qq2', optionId: 'p1' })
   assert.equal(published.status, 'published')
+  assert.equal(published.trace.filter((step) => step.kind === 'confirm').length, 2)
+  assert.ok(published.trace.some((step) => step.title === '已确认：日常'))
   assert.equal(published.knowledgeCreated, false)
   assert.ok(published.document)
   assert.equal(published.document.protocol, 'learning-path')
@@ -166,7 +174,58 @@ test('commit is blocked until the active set is complete; last select auto-publi
   assert.equal(again.status, 'published')
 })
 
-test('R3b can replace questions until round 3, old sets stay superseded, retry restarts at R1', async () => {
+test('deep R4 provider failure regenerates the route without thinking', async () => {
+  const thinking = []
+  const { api } = orchestrator({
+    ports: {
+      async invokeStructured(agentId, _context, options) {
+        if (agentId === 'R4') thinking.push(options?.thinkingDepth ?? 'fast')
+        if (agentId === 'R4' && thinking.length === 1) {
+          return { kind: 'failed', code: 'PROVIDER_UNAVAILABLE', message: '模型服务不可用。', agentId }
+        }
+        const fixtures = { R1: r1, R2: r2, R3: r3, R4: r4 }
+        return { kind: 'completed', agentId, value: fixtures[agentId], compressed: false }
+      },
+    },
+  })
+  const started = await api.start({ goal: '线性映射入门', thinkingDepth: 'deep' })
+  const published = await api.select({ runId: started.runId, questionId: 'qq1', optionId: 'o1' })
+  assert.equal(published.status, 'published', published.error?.message ?? '')
+  assert.deepEqual(thinking, ['deep', 'fast'])
+})
+
+test('failed R4 retries only generate-route and keeps earlier bars', async () => {
+  let r4Calls = 0
+  const { api, calls } = orchestrator({
+    ports: {
+      async invokeStructured(agentId, context) {
+        calls.push({ agentId, context })
+        if (agentId === 'R4') {
+          r4Calls += 1
+          if (r4Calls <= 2) {
+            return { kind: 'failed', code: 'OUTPUT_INVALID', message: 'R4 失败', agentId }
+          }
+        }
+        const fixtures = { R1: r1, R2: r2, R3: r3, R4: r4 }
+        return { kind: 'completed', agentId, value: fixtures[agentId], compressed: false }
+      },
+    },
+  })
+  const started = await api.start({ goal: '线性映射入门' })
+  const failed = await api.select({ runId: started.runId, questionId: 'qq1', optionId: 'o1' })
+  assert.equal(failed.status, 'failed')
+  assert.equal(failed.trace.find((step) => step.id === 'r1')?.status, 'done')
+  assert.equal(failed.trace.find((step) => step.id === 'r4')?.status, 'failed')
+  const retried = await api.retry(started.runId)
+  assert.equal(retried.status, 'published')
+  assert.equal(calls.filter((item) => item.agentId === 'R1').length, 1)
+  assert.equal(r4Calls, 3)
+  assert.equal(retried.trace.find((step) => step.id === 'r1')?.status, 'done')
+  assert.equal(retried.trace.find((step) => step.id === 'r4')?.status, 'done')
+  assert.ok(retried.trace.some((step) => step.kind === 'confirm'))
+})
+
+test('R3b can replace questions until round 3, old sets stay superseded, retry keeps R1 and regenerates questions', async () => {
   const fixtures = {
     R1: r1,
     R2: r2,
@@ -199,9 +258,8 @@ test('R3b can replace questions until round 3, old sets stay superseded, retry r
 
   const retried = await api.retry(started.runId)
   assert.equal(retried.status, 'awaiting_answers')
-  assert.equal(retried.questionSets.length, 1)
-  assert.equal(retried.questionSets[0].round, 1)
-  assert.ok(calls.filter((item) => item.agentId === 'R1').length >= 2)
+  assert.equal(calls.filter((item) => item.agentId === 'R1').length, 1)
+  assert.ok(calls.filter((item) => item.agentId === 'R3').length >= 2)
 })
 
 test('undisputed exploration skips R3 and still does not write knowledge', async () => {
@@ -232,4 +290,73 @@ test('R5 is only available after publish', async () => {
   assert.equal(published.status, 'published')
   const replied = await api.reply({ runId: started.runId, message: '矩阵和映射什么关系？' })
   assert.equal(replied.reply, '发布后的普通回复')
+})
+
+test('wait:false returns a running snapshot with the R1 agent bar, then GET settles', async () => {
+  const { api } = orchestrator()
+  const view = await api.start({ goal: '线性映射入门', wait: false })
+  assert.equal(view.status, 'running')
+  assert.equal(view.trace[0].kind, 'agent')
+  assert.equal(view.trace[0].title, '拆成检索问题')
+  assert.equal(view.trace[0].status, 'running')
+  const settled = await new Promise((resolve, reject) => {
+    const startedAt = Date.now()
+    const tick = () => {
+      const next = api.get(view.runId)
+      if (!next) {
+        reject(new Error('missing run'))
+        return
+      }
+      if (next.status !== 'running') {
+        resolve(next)
+        return
+      }
+      if (Date.now() - startedAt > 3000) {
+        reject(new Error('still running'))
+        return
+      }
+      setTimeout(tick, 10)
+    }
+    tick()
+  })
+  assert.equal(settled.status, 'awaiting_answers')
+  assert.ok(settled.trace.some((step) => step.kind === 'search' && step.status === 'done'))
+  assert.ok(settled.trace.some((step) => step.kind === 'agent' && step.title === '生成选择题' && step.status === 'done'))
+})
+
+test('deep thinking failure after reasoning keeps the think bar completed', async () => {
+  const { api } = orchestrator({
+    ports: {
+      async invokeStructured(agentId, _context, options) {
+        options?.onReasoning?.(`推理 ${agentId}`)
+        return { kind: 'failed', code: 'PROVIDER_UNAVAILABLE', message: '模型服务返回了空内容。', agentId }
+      },
+    },
+  })
+  const view = await api.start({ goal: '线性映射入门', thinkingDepth: 'deep' })
+  assert.equal(view.status, 'failed')
+  const think = view.trace.filter((step) => step.kind === 'think')
+  assert.equal(think.length, 1)
+  assert.equal(think[0].status, 'done')
+  assert.match(think[0].thought ?? '', /推理/)
+  assert.equal(view.trace.find((step) => step.id === 'r1')?.status, 'failed')
+})
+
+test('deep thinking records a streamed think bar only after reasoning arrives', async () => {
+  const { api } = orchestrator({
+    ports: {
+      async invokeStructured(agentId, _context, options) {
+        options?.onReasoning?.(`推理 ${agentId}`)
+        const fixtures = { R1: r1, R2: r2, R3: r3, R4: r4 }
+        return { kind: 'completed', agentId, value: fixtures[agentId], compressed: false }
+      },
+    },
+  })
+  const view = await api.start({ goal: '线性映射入门', thinkingDepth: 'deep' })
+  const think = view.trace.filter((step) => step.kind === 'think')
+  assert.ok(think.length >= 1)
+  assert.ok(think.every((step) => step.status === 'done'))
+  assert.match(think[0].thought ?? '', /推理/)
+  assert.ok(view.trace.some((step) => step.kind === 'agent' && step.title === '拆成检索问题'))
+  assert.ok(view.trace.some((step) => step.kind === 'search'))
 })

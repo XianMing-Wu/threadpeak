@@ -29,7 +29,7 @@ function loadDotEnv(filePath) {
 }
 
 const http = async (url, init) => {
-  const timeout = AbortSignal.timeout(90_000)
+  const timeout = AbortSignal.timeout(init?.timeoutMs ?? 90_000)
   const signal = init?.signal ? AbortSignal.any([init.signal, timeout]) : timeout
   const response = await fetch(url, {
     method: init?.method ?? 'GET',

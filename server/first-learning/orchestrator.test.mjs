@@ -68,6 +68,54 @@ test('any L0a failure or L0b failure does not settle first answer or root', { ti
   assert.equal(failedB.api.get(concept.routeId, concept.conceptId), undefined)
 })
 
+test('L0b draft text is visible while 组织第一段讲解 is still running', async () => {
+  let peek
+  const { api } = orchestrator({
+    ports: {
+      async invokeStructured(agentId, _context, options) {
+        options?.onText?.('{"content":"向量')
+        options?.onText?.('{"content":"向量与空间变换"}')
+        assert.equal(peek().kind, 'running')
+        assert.equal(peek().draftText, '向量与空间变换')
+        assert.equal(peek().trace.find((step) => step.id === 'l0b')?.status, 'running')
+        await new Promise((resolve) => setTimeout(resolve, 20))
+        return { kind: 'completed', agentId, value: { content: '向量与空间变换' }, compressed: false }
+      },
+    },
+  })
+  peek = () => api.peek(concept.routeId, concept.conceptId)
+  const running = await api.enter({ ...concept, wait: false })
+  assert.equal(running.kind, 'running')
+  const result = await api.enter(concept)
+  assert.equal(result.kind, 'completed')
+  assert.equal(result.answer.text, '向量与空间变换')
+  assert.equal(peek().kind, 'completed')
+  assert.equal(peek().draftText, undefined)
+})
+
+test('L0a status bars appear as each call starts, L0b only after the three answers', async () => {
+  const seen = []
+  let peek
+  const { api } = orchestrator({
+    ports: {
+      async invokeText(_agentId, _context, options) {
+        seen.push(peek().trace.map((step) => step.id))
+        await new Promise((resolve) => setTimeout(resolve, 15))
+        return { kind: 'completed', agentId: 'L0a', text: `${options.angle} 正文`, compressed: false }
+      },
+    },
+  })
+  peek = () => api.peek(concept.routeId, concept.conceptId)
+  const result = await api.enter(concept)
+  assert.equal(result.kind, 'completed')
+  assert.ok(seen[0].every((id) => String(id).startsWith('l0a-')))
+  assert.ok(seen.every((ids) => !ids.includes('l0b')))
+  assert.ok(seen[0].length <= 2)
+  assert.equal(result.trace.filter((step) => step.kind === 'search').length, 3)
+  assert.equal(result.trace.at(-1).title, '组织第一段讲解')
+  assert.ok(result.trace.every((step) => step.status === 'done'))
+})
+
 test('successful L0b settles first answer and unique root in one result', async () => {
   const { api } = orchestrator()
   const first = await api.enter(concept)

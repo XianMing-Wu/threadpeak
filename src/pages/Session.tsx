@@ -1,3 +1,5 @@
+import { ExampleWorkspace } from '../learning-v2/ExampleWorkspace'
+import { LearningWorkspace } from '../learning-v2/Workspace'
 import { useEffect, useRef, useState } from 'react'
 import { AnnotatedMarkdown, AnnotatedText } from '../components/AnnotatedText'
 import { AnnotationPanel } from '../components/AnnotationPanel'
@@ -15,7 +17,8 @@ import { openKnowledgeCanvas } from '../learningSession'
 import { annotationScopeId, readSelectionAnchor, type SelectionAnchor } from '../session/ask-authors'
 import { useAnnotations, type AskAuthorsAnnotation } from '../session/useAnnotations'
 import { AgentStatus } from '../components/AgentStatus'
-import { StatusOrbChip } from '../components/StatusOrb'
+import { ProcessTrace } from '../components/ProcessTrace'
+import { applyReasoning, asProcessSteps, flowSteps, settleTrace, type ProcessStep } from '../process-trace'
 import { MarkdownMath } from '../lib/MarkdownMath'
 import { requestFollowUp } from '../session/request-follow-up'
 import { buildFollowUpMessages, buildFollowUpNeighborhood, followUpQuoteForG2 } from '../session/build-follow-up-context'
@@ -111,6 +114,7 @@ export function SessionPage() {
   })
   if (entry.kind === 'unavailable') return <NotFoundPage/>
   if (!route) return <NotFoundPage/>
+  if(route.owner==='example'&&route.knowledgeId)return <ProductWorkspace active="knowledge" page="session-learning"><ExampleWorkspace knowledgeId={route.knowledgeId} conceptId={entry.conceptId} initialView="research" onBack={()=>{location.hash='path-3d'}}/></ProductWorkspace>
   const cataloged = catalogLesson(entry.routeId, entry.conceptId)
   const firstLesson = resolveFirstLesson({
     routeId: entry.routeId,
@@ -119,7 +123,7 @@ export function SessionPage() {
     ...(cataloged ? { catalogLesson: cataloged } : {}),
   })
   if (route.owner === 'mine') {
-    return <CanonicalSessionGate key={`${entry.routeId}::${entry.conceptId}`} routeId={entry.routeId} conceptId={entry.conceptId}/>
+    return <LearningWorkspace key={`${entry.routeId}::${entry.conceptId}`} routeId={entry.routeId} conceptId={entry.conceptId}/>
   }
   if (firstLesson.kind === 'unavailable') return <SessionUnavailable title={firstLesson.title} message={firstLesson.message}/>
   return <SessionLearning key={`${entry.routeId}::${entry.conceptId}`} routeId={entry.routeId} conceptId={entry.conceptId}/>
@@ -142,13 +146,21 @@ function CanonicalSessionGate({ routeId, conceptId }: { routeId: string; concept
   const title = published.title
   const [lesson, setLesson] = useState<FirstLesson | null>(null)
   const [error, setError] = useState<{ title: string; message: string } | null>(null)
-  const [generating, setGenerating] = useState(false)
+  const [trace, setTrace] = useState<ProcessStep[]>([])
+  const [draft, setDraft] = useState('')
+  const [attempt, setAttempt] = useState(0)
+  const [thinkingDepth, setThinkingDepth] = useState(readLearningThinking)
+  const abortRef = useRef<AbortController | null>(null)
+  useEffect(() => subscribeLearningThinking(() => setThinkingDepth(readLearningThinking())), [])
   useEffect(() => {
     let cancelled = false
+    setDraft('')
+    abortRef.current?.abort()
+    const abort = new AbortController()
+    abortRef.current = abort
     void (async () => {
-      const existing = await requestFirstEntrySnapshot({ routeId, conceptId })
-      if (cancelled) return
-      const apply = (result: { text: string; contentHash: string; title: string; graph: Parameters<typeof ensureMineKnowledgeFromCanonical>[0]['graph'] }) => {
+      const apply = (result: { text: string; contentHash: string; title: string; graph: Parameters<typeof ensureMineKnowledgeFromCanonical>[0]['graph']; trace?: ProcessStep[] }) => {
+        if (result.trace?.length) setTrace(settleTrace(result.trace))
         setLesson(lessonFromCanonical(result.title || title, result.text))
         ensureMineKnowledgeFromCanonical({
           routeId,
@@ -159,11 +171,20 @@ function CanonicalSessionGate({ routeId, conceptId }: { routeId: string; concept
           graph: result.graph,
         })
       }
+      const onDraft = (text: string) => { if (!cancelled) setDraft(text) }
+      const existing = await requestFirstEntrySnapshot({
+        routeId,
+        conceptId,
+        onTrace: (steps) => { if (!cancelled) setTrace(steps) },
+        onDraft,
+        signal: abort.signal,
+      })
+      if (cancelled) return
       if (existing.kind === 'completed') {
         apply(existing)
         return
       }
-      setGenerating(true)
+      if (existing.kind === 'unavailable' && existing.trace.length) setTrace(existing.trace)
       const created = await requestFirstEntry({
         routeId,
         conceptId,
@@ -171,36 +192,53 @@ function CanonicalSessionGate({ routeId, conceptId }: { routeId: string; concept
         hasDispute: published.hasDispute,
         detailedDescription: published.detailedDescription,
         attachmentSourceIds: published.attachmentSourceIds,
+        thinkingDepth,
+        onTrace: (steps) => { if (!cancelled) setTrace(steps) },
+        onDraft,
+        signal: abort.signal,
       })
       if (cancelled) return
+      if (created.kind === 'running') { setTrace(created.trace); return }
       if (created.kind !== 'completed') {
-        setGenerating(false)
+        if (abort.signal.aborted || created.message === '生成已停止。') {
+          setTrace((current) => settleTrace(created.trace.length ? created.trace : current, 'stopped'))
+          return
+        }
+        setTrace((current) => created.trace.length ? created.trace : settleTrace(current, 'failed'))
         setError({ title: created.title, message: created.message })
         return
       }
       apply(created)
-      setGenerating(false)
+      setError(null)
     })()
-    return () => { cancelled = true }
-  }, [conceptId, published.detailedDescription, published.hasDispute, routeId, title])
-  if (error) return <SessionUnavailable title={error.title} message={error.message}/>
-  if (!lesson) {
-    return <ProductWorkspace active="paths" page="session-learning">
-      <main className="learning-session">
-        <section className="lesson-chat">
-          <div className="conversation" role="status" aria-live="polite">
-            <article>
-              <StatusOrbChip label={generating ? '正在准备第一段讲解' : '正在读取第一段讲解'}/>
-            </article>
-          </div>
-        </section>
-      </main>
-    </ProductWorkspace>
-  }
-  return <SessionLearning routeId={routeId} conceptId={conceptId} lesson={lesson} graphReady/>
+    return () => { cancelled = true; abort.abort() }
+  }, [attempt, conceptId, published.detailedDescription, published.hasDispute, routeId, title])
+  if (lesson) return <SessionLearning routeId={routeId} conceptId={conceptId} lesson={lesson} graphReady entryTrace={trace}/>
+  return <ProductWorkspace active="paths" page="session-learning">
+    <main className="learning-session">
+      <section className="lesson-chat">
+        <div className="conversation" role={error ? 'alert' : 'status'} aria-live="polite">
+          {trace.length > 0 && <div className="route-agent-status"><ProcessTrace steps={error ? settleTrace(trace, 'failed') : trace}/></div>}
+          {draft && !error ? <article data-canvas-host="root"><KanshanAvatar /><div>
+            <h2>{title}</h2>
+            <MarkdownMath source={draft}/>
+          </div></article> : null}
+          {!error && (draft || trace.some((step) => step.status === 'running')) ? <button type="button" className="generation-stop" onClick={() => abortRef.current?.abort()}>停止生成</button> : null}
+          {error ? <EmptyStatus
+            kind="error"
+            eyebrow="本次生成未完成"
+            title={error.title}
+            body={error.message}
+            action="重试"
+            onAction={() => { setError(null); setDraft(''); setAttempt((value) => value + 1) }}
+          /> : null}
+        </div>
+      </section>
+    </main>
+  </ProductWorkspace>
 }
 
-function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphReady = false }: { routeId: string; conceptId: string; lesson?: FirstLesson; graphReady?: boolean }) {
+function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphReady = false, entryTrace = [] }: { routeId: string; conceptId: string; lesson?: FirstLesson; graphReady?: boolean; entryTrace?: ProcessStep[] }) {
   const selectRootRef = useRef<HTMLDivElement>(null)
   const blueprint = blueprintOf(routeId)
   const title = conceptTitle(blueprint, conceptId) || conceptId
@@ -217,7 +255,9 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
   const [turns,setTurns] = useState<LearningTurn[]>(seed?.turns ?? [])
   const [awaiting,setAwaiting] = useState(false)
   const [streamText,setStreamText] = useState('')
+  const [trace,setTrace] = useState<ProcessStep[]>([])
   const [thinkingDepth, setThinkingDepth] = useState(readLearningThinking)
+  const followAbort = useRef<AbortController | null>(null)
   useEffect(() => subscribeLearningThinking(() => setThinkingDepth(readLearningThinking())), [])
   const lesson = lessonOverride ?? getLesson(routeId, conceptId) ?? {
     heading: title,
@@ -319,6 +359,10 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
     setValue(''); setQuote(''); setQuoteFromId(''); setMode('')
     setAwaiting(true)
     setStreamText('')
+    setTrace(flowSteps('follow-up'))
+    followAbort.current?.abort()
+    const abort = new AbortController()
+    followAbort.current = abort
     void requestFollowUp({
       routeId,
       conceptId,
@@ -329,10 +373,22 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
       neighborhood,
       messages,
       thinkingDepth,
+      signal: abort.signal,
       onDelta: (text) => { setAwaiting(false); setStreamText(text) },
+      onTrace: (steps) => {
+        const parsed = asProcessSteps(steps)
+        if (parsed) setTrace(parsed)
+      },
+      onReasoning: (id, thought) => setTrace((current) => applyReasoning(current, id, thought)),
     }).then((result) => {
+      if (abort.signal.aborted) {
+        setAwaiting(false)
+        setTrace((current) => settleTrace(current, 'stopped'))
+        return
+      }
       setAwaiting(false)
       setStreamText('')
+      setTrace((current) => settleTrace(current, result.kind === 'completed' ? 'done' : 'failed'))
       if (result.kind !== 'completed') {
         setTurns((old)=>[...old,{role:'assistant',text:result.message,failed:true}])
         return
@@ -402,6 +458,7 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
           </div>
         </header>
         <div className="conversation" ref={selectRootRef} onMouseUp={onSelect}>
+          {entryTrace.length > 0 && <div className="route-agent-status"><ProcessTrace steps={settleTrace(entryTrace)}/></div>}
           <article data-canvas-host="root"><KanshanAvatar /><div>
             <h2>{lesson.heading}</h2>
             <AnnotatedMarkdown
@@ -422,10 +479,12 @@ function SessionLearning({ routeId, conceptId, lesson: lessonOverride, graphRead
               ? <div className="user-turn" key={i} data-canvas-host={turnAllowsSelection(turns, i) ? `user:${i}` : undefined} data-failed={turnAllowsSelection(turns, i) ? undefined : 'true'}>{turn.text}</div>
               : <AssistantAnswer key={i} kind={turn.text} host={turn.failed ? undefined : (turn.nodeId || `turn:${i}`)} failed={turn.failed} annotations={annotations.annotations.filter((item)=>item.nodeId===(turn.nodeId || `turn:${i}`))} activeId={annotations.active?.id} onOpen={annotations.open}/>
           }) }
-          {awaiting && !streamText && <section className="assistant-turn" role="status" aria-live="polite"><KanshanAvatar /><div><AgentStatus items={[{ label: '正在回答这次追问' }]}/></div></section>}
-          {streamText && <section className="assistant-turn" data-canvas-host="pending"><KanshanAvatar /><div><MarkdownMath source={streamText}/></div></section>}
+          {(awaiting || trace.length > 0) && <section className="assistant-turn" role="status" aria-live="polite"><KanshanAvatar /><div>
+            {trace.length > 0 ? <ProcessTrace steps={awaiting && !streamText ? trace : settleTrace(trace)}/> : awaiting && !streamText ? <AgentStatus flow="follow-up"/> : null}
+            {streamText ? <MarkdownMath source={streamText}/> : null}
+          </div></section>}
         </div>
-        <Composer compact value={value} onChange={setValue} onSend={send} quote={quote} onClearQuote={()=>{setQuote('');setQuoteFromId('')}} showAttachment={false} placeholder={placeholder} requireQuestion thinkingDepth={thinkingDepth} onThinkingDepth={(next) => { writeLearningThinking(next); setThinkingDepth(next) }}/>
+        <Composer compact value={value} onChange={setValue} onSend={send} quote={quote} onClearQuote={()=>{setQuote('');setQuoteFromId('')}} showAttachment={false} placeholder={placeholder} requireQuestion thinkingDepth={thinkingDepth} onThinkingDepth={(next) => { writeLearningThinking(next); setThinkingDepth(next) }} busy={awaiting} onStop={() => followAbort.current?.abort()}/>
       </section>
       {annotations.panelOpen && annotations.active && <AnnotationPanel annotation={annotations.active} onClose={annotations.close}/>}
       {!annotations.panelOpen && annotations.annotations.length > 0 && <button type="button" className="annotation-panel-reopen" aria-label="显示侧边面板" onClick={annotations.reopen}>批注</button>}

@@ -8,22 +8,7 @@ import { NAV_EVENT, openLearning, readActiveRouteId } from '../workspace/nav'
 
 import { resolvePath3DView } from './resolved-path-document.ts'
 
-const exampleNodeBadgeIconById: Readonly<Record<string, NodeSemanticBadgeIcon>> = {
-  'route-start': 'start',
-  'carrier-foundation': 'foundation',
-  'vector-space': 'vector',
-  'linear-map': 'transform',
-  'carrier-structure': 'structure',
-  'kernel-image': 'kernel',
-  eigen: 'eigen',
-  'carrier-probability': 'data',
-  variance: 'variance',
-  'covariance-matrix': 'matrix',
-  'carrier-application': 'application',
-  pca: 'pca',
-  projection: 'projection',
-  'goal-understanding': 'goal',
-}
+import { routeBadgeEntries } from './route-badges'
 
 type ContextualCardAction = Readonly<{
   actionId?: string
@@ -59,6 +44,9 @@ export function Path3DStage() {
     const route = routeId ? getRoute(routeId) : undefined
     return resolvePath3DView({ routeId, route })
   }, [routeId, tick])
+  // Stable key prevents unrelated library updates from remounting the WebGL scene.
+  const badgeKey = JSON.stringify(view.kind === 'ready' ? routeBadgeEntries(view.document.structure) : [])
+  const nodeBadges = useMemo(() => Object.fromEntries(JSON.parse(badgeKey)) as Record<string, NodeSemanticBadgeIcon>, [badgeKey])
   const goBack = () => { location.hash = 'paths' }
 
   useEffect(() => {
@@ -109,13 +97,14 @@ export function Path3DStage() {
         <button type="button" className="path3d-back" aria-label="返回上一级" onClick={goBack}><Icon name="back" size={18}/></button>
         <div><small>路线规划</small><strong>{view.title}</strong></div>
       </div>
-      <span>点击绿色载体查看内容，卡片内“走到这”后移动，点击其他位置关闭 · 知乎蓝概念交互不变</span>
+      <span>点击圆台查看 · 黄色光圈是当前位置 · 紫色圆台是上次学习</span>
     </header>
     <LearningPath3DView
       document={view.document}
+      progressScopeId={view.routeId}
       ariaLabel={`${view.title}的 3D 路线`}
       instanceIdPrefix={view.source === 'example' ? 'threadpeak-example' : 'threadpeak-mine'}
-      nodeBadgeIconById={view.source === 'example' ? exampleNodeBadgeIconById : undefined}
+      nodeBadgeIconById={nodeBadges}
       onContextualCardAction={enterLearning}
       onResourceNavigate={onResourceNavigate}
     />

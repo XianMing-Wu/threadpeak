@@ -19,3 +19,16 @@ test('a user-triggered launch payload can still open chat', () => {
   assert.equal(resolution.mode, 'answer')
   assert.equal(resolution.conversationId, 'conv-1')
 })
+
+test('launch payload keeps thinking depth so chat does not fall back to fast', () => {
+  const resolution = resolveChatLaunch({
+    query: '线性代数',
+    mode: 'route',
+    conversationId: 'conv-2',
+    thinkingDepth: 'deep',
+    generate: true,
+  })
+  assert.equal(resolution.kind, 'ready')
+  if (resolution.kind !== 'ready') return
+  assert.equal(resolution.thinkingDepth, 'deep')
+})

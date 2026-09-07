@@ -54,4 +54,6 @@ test('entering a published route uses the stored record and re-reads the active 
   assert.match(stage, /NAV_EVENT/)
   assert.match(panel, /readyRouteId/)
   assert.doesNotMatch(panel, /RouteReadyCard title=\{publishedTitle\} routeId=\{publishedId\}/)
+  assert.match(store, /loadConversationTrace/)
+  assert.match(store, /processTrace/)
 })

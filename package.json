@@ -29,16 +29,21 @@
     "test:authors:live": "node --test --test-concurrency=1 --test-timeout=180000 server/authors/live.gate.mjs",
     "test:ordinary-chat": "node --test server/ordinary-chat/*.test.mjs src/chat/request-ordinary-answer.test.mjs src/chat/build-ordinary-chat-context.test.mjs src/chat/resolve-chat-launch.test.mjs",
     "test:ordinary-chat:live": "node --test --test-concurrency=1 --test-timeout=180000 server/ordinary-chat/live.gate.mjs",
-    "test": "node --test tests/*.test.mjs packages/contracts/tests/*.test.mjs packages/api-client/tests/*.test.mjs packages/runtime-store/tests/*.test.mjs src/path-planning/*.test.mjs src/path-3d/*.test.mjs src/session/*.test.mjs src/chat/*.test.mjs src/knowledge-canvas/*.test.mjs src/workspace/*.test.mjs src/lib/*.test.mjs src/*.test.mjs server/*.test.mjs server/identity/*.test.mjs server/knowledge/*.test.mjs server/agent-runtime/*.test.mjs server/path-generation/*.test.mjs server/first-learning/*.test.mjs server/follow-up/*.test.mjs server/authors/*.test.mjs server/ordinary-chat/*.test.mjs"
+    "test": "node --test tests/*.test.mjs packages/contracts/tests/*.test.mjs packages/api-client/tests/*.test.mjs packages/runtime-store/tests/*.test.mjs src/path-planning/*.test.mjs src/path-3d/*.test.mjs src/session/*.test.mjs src/chat/*.test.mjs src/knowledge-canvas/*.test.mjs src/workspace/*.test.mjs src/lib/*.test.mjs src/materials/*.test.mjs src/learning-v2/*.test.mjs src/*.test.mjs server/*.test.mjs server/identity/*.test.mjs server/knowledge/*.test.mjs server/agent-runtime/*.test.mjs server/path-generation/*.test.mjs server/first-learning/*.test.mjs server/follow-up/*.test.mjs server/authors/*.test.mjs server/ordinary-chat/*.test.mjs server/durable/*.test.mjs",
+    "test:durable": "node --test server/durable/*.test.mjs",
+    "test:postgres": "node --test server/durable/postgres.gate.mjs",
+    "ops:queue": "node --experimental-strip-types server/durable/ops.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.16",
     "@threadpeak/api-client": "0.1.0",
     "@threadpeak/contracts": "0.1.0",
     "@threadpeak/runtime-store": "0.1.0",
-    "drizzle-orm": "^0.44.7",
+    "drizzle-orm": "^0.45.2",
     "fastify": "^5.12.1",
     "katex": "0.16.47",
+    "mdast-util-from-markdown": "2.0.3",
+    "motion": "^13.2.0",
     "postgres": "^3.4.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

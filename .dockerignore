@@ -1,0 +1,9 @@
+.git
+.env
+.env.*
+node_modules
+dist
+server/.data
+.tmp-chrome
+*.tsbuildinfo
+docs/archive

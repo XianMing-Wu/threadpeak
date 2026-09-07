@@ -1,3 +1,4 @@
+import { ensureSession, resetSession } from '../learning-v2/client.ts'
 import { createLiveApiClient, liveMessageOf } from './live-client.ts'
 import type { FetchPort } from '@threadpeak/api-client'
 import { resolveAuthSession, type AuthSessionResolution } from '../resolve-auth-session.ts'
@@ -12,7 +13,7 @@ export type AuthStartResult =
 
 export type AuthSessionView =
   | { kind: 'anonymous' }
-  | { kind: 'authenticated'; provider: 'zhihu' }
+  | { kind: 'authenticated'; provider: 'zhihu' | 'account' }
   | AuthSessionResolution
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
@@ -20,9 +21,11 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value as Record<string, unknown>
 }
 
-function isZhihuAuthorizeUrl(value: string): boolean {
+export function isZhihuAuthorizeUrl(value: string, mode?: unknown, origin?: string): boolean {
   try {
     const url = new URL(value)
+    if(url.username||url.password)return false
+    if(mode==='mock'&&origin){const local=new URL(origin);return ['localhost','127.0.0.1','[::1]'].includes(local.hostname)&&url.origin===local.origin&&url.pathname==='/api/auth/zhihu/callback'&&url.searchParams.get('authorization_code')?.startsWith('tp-demo.')===true}
     return url.protocol === 'https:'
       && url.hostname === 'openapi.zhihu.com'
       && url.pathname === '/authorize'
@@ -40,7 +43,7 @@ export async function requestAuthStart(fetchPort?: FetchPort): Promise<AuthStart
   })
   const body = asRecord(posted.value)
   const authorizeUrl = typeof body?.authorizeUrl === 'string' ? body.authorizeUrl : ''
-  if (posted.ok && body?.kind === 'redirect' && isZhihuAuthorizeUrl(authorizeUrl)) {
+  if (posted.ok && body?.kind === 'redirect' && isZhihuAuthorizeUrl(authorizeUrl,body.mode,typeof window!=='undefined'?window.location.origin:undefined)) {
     return { kind: 'redirect', authorizeUrl }
   }
   return {
@@ -50,20 +53,22 @@ export async function requestAuthStart(fetchPort?: FetchPort): Promise<AuthStart
 }
 
 export async function requestAuthSession(fetchPort?: FetchPort): Promise<AuthSessionView> {
+  if(!fetchPort)try{await ensureSession()}catch{return {kind:'anonymous'}}
   const posted = await createLiveApiClient(fetchPort).requestJson({
     url: AUTH_SESSION_URL,
     method: 'GET',
     traceId: 'auth-session',
   })
   const body = asRecord(posted.value)
-  if (posted.ok && body?.kind === 'authenticated' && body.provider === 'zhihu') {
-    return { kind: 'authenticated', provider: 'zhihu' }
+  if (posted.ok && body?.kind === 'authenticated' && (body.provider === 'zhihu' || body.provider === 'account')) {
+    return { kind: 'authenticated', provider: body.provider }
   }
   if (posted.ok && body?.kind === 'anonymous') return { kind: 'anonymous' }
   return resolveAuthSession()
 }
 
 export async function requestAuthLogout(fetchPort?: FetchPort): Promise<void> {
+  resetSession()
   await createLiveApiClient(fetchPort).requestJson({
     url: AUTH_LOGOUT_URL,
     method: 'POST',

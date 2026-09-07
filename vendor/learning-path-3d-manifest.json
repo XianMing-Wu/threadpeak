@@ -1,0 +1,78 @@
+{
+  ".vite/manifest.json": {
+    "sha256": "0c350c2f60885ac968a557aac071841504663f46fe7184985ca1a054b892893c",
+    "bytes": 1456
+  },
+  "CharacterRig-BpJUYaY6.js": {
+    "sha256": "6e23a61356c4f402ebb2235dcc8fec4aaf332ad919a34dd6d61d92d8b88d11b0",
+    "bytes": 31834
+  },
+  "CharacterRig-BpJUYaY6.js.map": {
+    "sha256": "a3ae64c46f8e974e5a01b17246c32f952d83a55eb1d5477156e0f68929881d93",
+    "bytes": 88371
+  },
+  "LearningPathSession-WoZaqSLh.js": {
+    "sha256": "53747ead99e3915d20b12733a756194903f49b27e4a8bf886bb18d46a210399d",
+    "bytes": 301827
+  },
+  "LearningPathSession-WoZaqSLh.js.map": {
+    "sha256": "d04dfc42db6d11cec6980a4d0ac8e3577c2d1ca54a9f87232c67bd217c3797cb",
+    "bytes": 869606
+  },
+  "assets/liu-kanshan-idle.glb": {
+    "sha256": "004e767bcf5af1722acce85bcbe4ed194a2d1ba01b5751b27c492be6a0d7fd45",
+    "bytes": 44600
+  },
+  "assets/liu-kanshan-run-stop.glb": {
+    "sha256": "320bf528d211bf41d91ab21a276df19d46b005caae8ea2dfcff45868aa0036db",
+    "bytes": 203960
+  },
+  "assets/liu-kanshan-run.glb": {
+    "sha256": "c6abc6d57ac5d48ea10d712aaa41dcd45121e997bbd5ed21ec37364d637e6e8c",
+    "bytes": 908900
+  },
+  "assets/liu-kanshan-turn.glb": {
+    "sha256": "795af0fd8c39136a2fabdb0d94f1029378d68945760abb17343c184f5318f1a7",
+    "bytes": 203988
+  },
+  "index.d.ts": {
+    "sha256": "e5fa64a73df94c0bd59553980b8a0e14529d570e2154dbbde46173c5b6a41996",
+    "bytes": 8795
+  },
+  "index.js": {
+    "sha256": "37bb51bb3d7b467474320cc6d4aaf39fdac227d17f7a931bae467d6b92062807",
+    "bytes": 293913
+  },
+  "index.js.map": {
+    "sha256": "0ca42f41df80beb7af1c82a5e94fc53e94617391d52de7e2f2587502a0d28cd8",
+    "bytes": 794312
+  },
+  "overpassSpec-3Tu8NqTy.js": {
+    "sha256": "20e227f22cdd008885ac24871f76ff1ce747df6bd8342ee76b4e4d0c34e69389",
+    "bytes": 144273
+  },
+  "overpassSpec-3Tu8NqTy.js.map": {
+    "sha256": "5a2ed293c48fb6aa39149edfa841c4d74acfba42e9692f792f1f6bd3c02acdfe",
+    "bytes": 440389
+  },
+  "prepareLearningPathCharacter-Bvm1PXv0.js": {
+    "sha256": "aa8f901d7ab6ce17329892057206ddd1d639912e6c7b6e73352abd0a825bf87b",
+    "bytes": 610
+  },
+  "prepareLearningPathCharacter-Bvm1PXv0.js.map": {
+    "sha256": "41dd4aab81c95b05d9bf79b1cc8e31465cde7c25bc44cd46535a86164b51592b",
+    "bytes": 1937
+  },
+  "styles.css": {
+    "sha256": "414514a10d2e00e69fcb198af1c12fe4cc98e2b4867616e17c71de4ac1cadedf",
+    "bytes": 6390
+  },
+  "three-runtime-CHDI8JSc.js": {
+    "sha256": "11d86d57c430f082dd62072d53b88a4fe1b7049697d37ba5bac8b0ff095deb93",
+    "bytes": 816223
+  },
+  "three-runtime-CHDI8JSc.js.map": {
+    "sha256": "c884a8f00c2cb8310216791e803836ed74e7230aeeea9d85c6dcc3de89d5aeb3",
+    "bytes": 3186931
+  }
+}

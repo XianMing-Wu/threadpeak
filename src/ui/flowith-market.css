@@ -1,0 +1,595 @@
+/* System fonts keep the product usable without third-party font requests. */
+.ux-flowith {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100%;
+  padding: 32px 24px 64px;
+  overflow: auto;
+  background: #f3f4f6;
+  color: #000;
+  font-family: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.ux-flowith *,
+.ux-flowith *::before,
+.ux-flowith *::after {
+  box-sizing: border-box;
+}
+
+.ux-flowith button,
+.ux-flowith input {
+  font-family: inherit;
+}
+
+.ux-flowith ::selection {
+  background: rgba(23, 114, 246, .28);
+  color: #0f1728;
+}
+
+.ux-flowith ::-moz-selection {
+  background: rgba(23, 114, 246, .28);
+  color: #0f1728;
+}
+
+.ux-flowith .hero {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 200px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.ux-flowith .lamp-root {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.ux-flowith .grid-fade {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: .05;
+}
+
+.ux-flowith .grid-fade > div {
+  width: 100%;
+  height: 100%;
+  background-image:
+    linear-gradient(to right, #8080800a 1px, transparent 1px),
+    linear-gradient(to bottom, #8080800a 1px, transparent 1px);
+  background-size: 14px 24px;
+}
+
+.ux-flowith .lamp-shaft {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 33.333%;
+  height: 120%;
+  background: linear-gradient(to bottom, rgba(23, 114, 246, .2), transparent, transparent);
+  filter: blur(40px);
+  transform: translateX(-50%);
+}
+
+.ux-flowith .lamp-stage {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+  width: 100%;
+  padding-top: 112px;
+  transform: scaleY(1.25);
+}
+
+.ux-flowith .conic {
+  position: absolute;
+  inset: auto;
+  width: 15rem;
+  height: 192px;
+  overflow: visible;
+  opacity: .5;
+  transition: width .8s ease-in-out .3s, opacity .8s ease-in-out .3s;
+}
+
+.ux-flowith .hero.in-view .conic {
+  width: 30rem;
+  opacity: 1;
+}
+
+.ux-flowith .conic-l {
+  right: 50%;
+  background-image: conic-gradient(from 70deg at center top, rgb(23, 114, 246), transparent, transparent);
+}
+
+.ux-flowith .conic-r {
+  left: 50%;
+  background-image: conic-gradient(from 290deg at center top, transparent, transparent, rgb(23, 114, 246));
+}
+
+.ux-flowith .mask-b,
+.ux-flowith .mask-br {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  width: 100%;
+  height: 160px;
+  background: #fafafa;
+  mask-image: linear-gradient(to top, #000, transparent);
+}
+
+.ux-flowith .mask-l {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  width: 160px;
+  height: 100%;
+  background: #fafafa;
+  mask-image: linear-gradient(to right, #fff, transparent);
+}
+
+.ux-flowith .mask-r {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  width: 160px;
+  height: 100%;
+  background: #fafafa;
+  mask-image: linear-gradient(to left, #000, transparent);
+}
+
+.ux-flowith .lamp-blur {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  height: 160px;
+  background: #fafafa;
+  filter: blur(40px);
+  transform: scaleX(1.5) translateY(48px);
+}
+
+.ux-flowith .lamp-glass {
+  position: absolute;
+  top: 50%;
+  z-index: 50;
+  width: 100%;
+  height: 160px;
+  background: transparent;
+  opacity: .1;
+  backdrop-filter: blur(12px);
+}
+
+.ux-flowith .lamp-orb {
+  position: absolute;
+  inset: auto;
+  z-index: 50;
+  width: 384px;
+  height: 128px;
+  border-radius: 999px;
+  background: rgba(23, 114, 246, .2);
+  opacity: .5;
+  filter: blur(64px);
+  transform: translateY(-64px);
+}
+
+.ux-flowith .hero-copy {
+  position: relative;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .7s ease .15s, transform .7s ease .15s;
+}
+
+.ux-flowith .hero.in-view .hero-copy {
+  opacity: 1;
+  transform: none;
+}
+
+.ux-flowith .hero h1.ux-flowith-heading {
+  position: relative;
+  margin: 0 0 16px !important;
+  color: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+  letter-spacing: inherit !important;
+  text-align: center;
+}
+
+.ux-flowith .hero-title {
+  display: block;
+  background-image: linear-gradient(to bottom right, #fff, rgba(245, 245, 245, .8));
+  background-clip: text;
+  color: transparent !important;
+  font-size: 30px !important;
+  font-weight: 700 !important;
+  letter-spacing: -.75px !important;
+  line-height: 36px !important;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ux-flowith .hero-sub {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, .8) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", sans-serif;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  line-height: 24px !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, .8);
+}
+
+.ux-flowith .hero-rule {
+  position: absolute;
+  right: 0;
+  bottom: -8px;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #1772f6, transparent);
+  opacity: 0;
+  transition: opacity .8s ease .45s;
+}
+
+.ux-flowith .hero.in-view .hero-rule {
+  opacity: 1;
+}
+
+.ux-flowith .tabs-wrap {
+  width: 100%;
+  max-width: none;
+  margin: 32px 0 0;
+}
+
+.ux-flowith .tabs {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  width: 100%;
+  height: 48px;
+  padding: 0;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+}
+
+.ux-flowith .tab {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 8px;
+  overflow: visible !important;
+  border: 0;
+  background: transparent;
+  color: #000 !important;
+  font-size: 14px !important;
+  letter-spacing: normal;
+  line-height: 20px !important;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color .2s;
+}
+
+.ux-flowith .tab:first-child {
+  padding-left: 0;
+}
+
+.ux-flowith .tab-inner-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+}
+
+.ux-flowith .tab:first-child .tab-inner-wrap {
+  padding-left: 0;
+}
+
+.ux-flowith .tab .inner {
+  position: relative;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+}
+
+.ux-flowith .tab svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: currentColor;
+}
+
+.ux-flowith .tab.active {
+  color: #1772f6 !important;
+}
+
+.ux-flowith .tab.active .inner,
+.ux-flowith .tab.active .inner > span {
+  font-weight: 500;
+}
+
+.ux-flowith .tab.active .tab-inner-wrap::before {
+  display: none;
+}
+
+.ux-flowith .tab.active::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 12;
+  display: block;
+  width: 100%;
+  height: 2px;
+  border-radius: 0;
+  background: #1772f6;
+  pointer-events: none;
+  content: "";
+}
+
+.ux-flowith .panel {
+  padding: 16px 0 0;
+}
+
+.ux-flowith .sec h3 {
+  margin: 0 0 4px;
+  color: #000 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", sans-serif;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  line-height: 28px !important;
+}
+
+.ux-flowith .sec-sub {
+  color: #6b7280 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", sans-serif;
+  font-size: 14px !important;
+  line-height: 20px !important;
+}
+
+.ux-flowith .search-row {
+  margin: 12px 0 16px;
+}
+
+.ux-flowith .search {
+  position: relative;
+  max-width: 28rem;
+}
+
+.ux-flowith .search svg {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  color: #9ca3af;
+  transform: translateY(-50%);
+}
+
+.ux-flowith .search input {
+  width: 100%;
+  height: 36px;
+  padding: 0 16px 0 40px;
+  border: 0;
+  border-radius: 8px;
+  background: #f9fafb;
+  font-size: 14px !important;
+  outline: none;
+}
+
+.ux-flowith .search input:focus {
+  box-shadow: 0 0 0 1px #1772f6;
+}
+
+.ux-flowith .grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ux-dict-stage .ux-flowith .grid,
+.ux-dict-pv .ux-flowith .grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ux-flowith .grid .ux-flowith-empty {
+  grid-column: 1 / -1;
+}
+
+.ux-flowith-card {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding: 0;
+  border: 1px solid #f5f5f5;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 0 0 0 transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: box-shadow .3s cubic-bezier(.4, 0, .2, 1);
+}
+
+.ux-flowith-card:hover {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / .1), 0 4px 6px -4px rgb(0 0 0 / .1);
+}
+
+.ux-flowith-card .cover {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 3 / 2;
+  background: #f5f5f5;
+}
+
+.ux-flowith-card .cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .3s;
+}
+
+.ux-flowith-card:hover .cover img {
+  transform: scale(1.05);
+}
+
+.ux-flowith-card .cover-fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, .3), transparent, transparent);
+  pointer-events: none;
+}
+
+.ux-flowith-card .body {
+  padding: 8px;
+}
+
+.ux-flowith-card .body h4 {
+  margin: 0 0 2px;
+  overflow: hidden;
+  color: #111827 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  letter-spacing: -.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ux-flowith-card .desc {
+  display: -webkit-box;
+  min-height: 32px;
+  margin: 0;
+  overflow: hidden;
+  color: #6b7280 !important;
+  font-size: 11px !important;
+  font-weight: 400;
+  letter-spacing: -.01em;
+  line-height: 1.45 !important;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.ux-flowith-card .foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.ux-flowith-card .author {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ux-flowith-card .author .kanshan-avatar,
+.ux-flowith-card .author .ava {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  overflow: hidden;
+  border-radius: 999px;
+  background-color: #e5e7eb;
+  color: #525252;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.ux-flowith-card .author .kanshan-avatar {
+  background: #e5e7eb url(/kanshan-avatar.png) 50% 12% / 175% auto no-repeat;
+  color: transparent;
+  font-size: 0;
+}
+
+.ux-flowith-card .author .kanshan-avatar > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 12%;
+  transform: scale(1.72);
+  transform-origin: 50% 16%;
+}
+
+.ux-flowith-card .author span {
+  font-size: 11px !important;
+  font-weight: 500;
+}
+
+.ux-flowith-card .price {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border: 1px solid rgba(229, 229, 229, .5);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .5);
+  font-size: 11px !important;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+}
+
+.ux-flowith-card .price.free {
+  border-color: rgba(229, 229, 229, .5);
+  background-image: linear-gradient(to right, #059669, #0d9488);
+  color: transparent !important;
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+@media (max-width: 1100px) {
+  .ux-flowith .hero-title { font-size: 24px !important; }
+}
+
+.ux-flowith-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  max-width: none;
+}
+
+.ux-module-stage > .ux-flowith,
+.ux-module-stage .ux-flowith:not(main) {
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.ux-module-stage .ux-flowith-grid {
+  max-width: none;
+}
+
+.ux-dict-pv .ux-flowith-grid {
+  max-width: 100%;
+}

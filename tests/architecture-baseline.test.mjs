@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
+import { readFile, readdir } from 'node:fs/promises'
+import path from 'node:path'
 import test from 'node:test'
+import { fileURLToPath } from 'node:url'
 
 import { checkArchitecture } from '../scripts/check-architecture.mjs'
 
@@ -10,14 +13,20 @@ test('import graph stays inside this repository and never uses sibling paths', a
   assert.ok(summary.edges > 10, 'architecture scan must resolve local import edges')
 })
 
-test('vendored runtime assets keep documented digests', async () => {
+test('vendored runtime assets match the complete recorded build manifest', async () => {
   const source = await readFile(new URL('../vendor/SOURCE.md', import.meta.url), 'utf8')
-  for (const digest of [
-    'ea4dc55c621c7f484b7e25351a685409d1fb92ddc0f486fcc5a4b64517d1c794',
-    'bb4edffa2481be66bd11b9e8b7091243bd5904147388c058115463558ffffdc0',
-    '004e767bcf5af1722acce85bcbe4ed194a2d1ba01b5751b27c492be6a0d7fd45',
-  ]) {
-    assert.match(source, new RegExp(digest))
+  const root = new URL('../src/vendor/learning-path-3d/', import.meta.url)
+  const manifest = JSON.parse(await readFile(new URL('../vendor/learning-path-3d-manifest.json', import.meta.url), 'utf8'))
+  const files = await readdir(root, { recursive: true, withFileTypes: true })
+  const actual = files.filter(file => file.isFile()).map(file =>
+    path.relative(fileURLToPath(root), path.join(file.parentPath, file.name)).split(path.sep).join('/'),
+  )
+  assert.deepEqual(actual.sort(), Object.keys(manifest).sort(), 'no missing or stale vendor chunks')
+  for (const [name, expected] of Object.entries(manifest)) {
+    const bytes = await readFile(new URL(name, root))
+    assert.equal(bytes.length, expected.bytes, `${name}: byte length`)
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), expected.sha256, `${name}: digest`)
   }
+  assert.match(source, /learning-path-3d-manifest\.json/)
   assert.match(source, /禁止再通过/)
 })
