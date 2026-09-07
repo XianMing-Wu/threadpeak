@@ -16,6 +16,6 @@ test('route progress retains each named step and exposes parallel searches',()=>
 })
 test('published route records confirmed preferences, compilation and publication separately',()=>{
   const trace=pathTrace([{id:'build',kind:'path.answer',status:'completed',checkpoints:{'R4-plan':checkpoint({})}}],{status:'published',questionSets:[{status:'active',selectedOptionIds:{q:'a'},questions:[{id:'q'}]}]})
-  assert.deepEqual(trace.map(s=>s.title),['已确认学习偏好','已安排顺序与并列阶段','学习路线已生成'])
+  assert.deepEqual(trace.map(s=>s.title),['已记下你的想法','已安排顺序与并列阶段','学习路线已生成'])
   assert.ok(trace.every(s=>s.status==='done'))
 })

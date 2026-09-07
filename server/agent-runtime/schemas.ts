@@ -1,3 +1,4 @@
+import { LearningGoalSchema, ConceptAlignmentSchema } from '../../packages/contracts/src/learning-goal.ts'
 import { z } from 'zod'
 import { isLiuKanshanName } from '../ports.ts'
 import type { AgentId, AuthorCandidate, L0aAngle } from './types.ts'
@@ -109,6 +110,7 @@ function refineQuestionIds(
 export const R3OutputSchema = z
   .object({
     round: z.literal(1),
+    message: NonEmptyText.optional(),
     status: z.literal('active'),
     questions: QuestionArraySchema,
   })
@@ -151,6 +153,7 @@ const ConceptSchema = z
     hasDispute: z.boolean(),
     detailedDescription: NonEmptyText,
     attachmentSourceIds: z.array(IdSchema),
+    goalAlignment: ConceptAlignmentSchema.optional(),
   })
 
 const CarrierEdgeSchema = z
@@ -173,6 +176,7 @@ export const R4OutputSchema = z
   .object({
     version: z.literal('1.0'),
     routeId: IdSchema,
+    learningGoal: LearningGoalSchema.optional(),
     title: NonEmptyText,
     carriers: z.array(CarrierSchema).min(1),
     concepts: z.array(ConceptSchema).min(1),

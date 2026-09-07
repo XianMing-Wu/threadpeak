@@ -37,20 +37,11 @@ test('non-attachment below 300k compresses attachments once and does not overwri
   assert.deepEqual(context, original)
 })
 
-test('non-attachment at or above 300k compresses non-attachment and leaves attachments', async () => {
-  const hugeGoal = '测'.repeat(520_000)
-  const attachment = '附件原文保持不动'
-  const context = {
-    goal: hugeGoal,
-    attachments: [{ sourceId: 'att-keep', fileName: 'keep.txt', mimeType: 'text/plain', content: attachment }],
-  }
-  const original = structuredClone(context)
-  const prepared = await prepareAgentCall({ agentId: 'R1', context, summarizer })
-  assert.equal(prepared.compressed, true)
-  assert.ok(prepared.estimatedTokens < TOKEN_BUDGET)
-  assert.equal(prepared.context.attachments[0].content, attachment)
-  assert.notEqual(prepared.context.goal, hugeGoal)
-  assert.deepEqual(context, original)
+test('oversized user intent requires partition rather than rewriting the goal', async () => {
+  const context={goal:'测'.repeat(520_000),attachments:[]}
+  const original=structuredClone(context)
+  await assert.rejects(prepareAgentCall({agentId:'R1',context,summarizer}),/CONTEXT_REQUIRES_PARTITION/)
+  assert.deepEqual(context,original)
 })
 
 test('G1 only compresses node content and keeps neighborhood grouping', async () => {

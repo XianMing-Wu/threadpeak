@@ -1,3 +1,4 @@
+import {summaryPurpose} from './goal-policy.ts'
 import { AGENT_CHANNELS, DEFAULT_LIMITS, DEFAULT_MAX_OUTPUT_TOKENS, JSON_AGENT_IDS } from './constants.ts'
 import { createLlmSummarizer } from './summarizer.ts'
 import { prepareAgentCall } from './prepare.ts'
@@ -51,7 +52,7 @@ async function runPrepared(ports: InvokePorts, input: {
   context: unknown
   options: InvokeOptions
 }) {
-  const summarizer = ports.summarizer ?? createLlmSummarizer({llm:ports.llm,thinkingDepth:input.options.thinkingDepth})
+  const summarizer = ports.summarizer ?? createLlmSummarizer({llm:ports.llm,thinkingDepth:input.options.thinkingDepth,purpose:summaryPurpose(input.context),window:input.options.limits?.totalTokens})
   return prepareAgentCall({
     agentId: input.agentId,
     context: input.context,

@@ -1,3 +1,5 @@
+import { pathGoalContext } from './learning-goal.ts'
+import type { GoalExploration } from '../path-generation/goal-exploration.ts'
 import type {SearchScope} from '../../packages/contracts/src/search-scope.ts'
 import {presentSource} from './source-presentation.ts'
 import { inheritedArticles } from './materials.ts'
@@ -20,15 +22,15 @@ import type { ProductTools } from './tools.ts'
 
 export type PathState = {
   searchScope?:SearchScope; goal:string; attachments:any[]; depth:'fast'|'deep'; status:'running'|'awaiting_answers'|'published';
-  questionSets:(Omit<R3Output,'round'> & {round:number; selectedOptionIds:Record<string,string>})[];
-  conversation:any[]; exploration?:R2Output; route?:R4Output; document?:any; conceptIdByWireId?:Record<string,string>;
+  questionSets:(Omit<R3Output,'round'> & {round:number; selectedOptionIds:Record<string,string>; customAnswers?:Record<string,string>})[];
+  conversation:any[]; exploration?:GoalExploration; route?:R4Output; document?:any; conceptIdByWireId?:Record<string,string>;
 }
 const activeSet=(path:PathState)=>path.questionSets.find(s=>s.status==='active')
-const allAnswered=(path:PathState)=>{const s=activeSet(path);return !!s&&s.questions.every(q=>!!s.selectedOptionIds[q.id])}
+const allAnswered=(path:PathState)=>{const s=activeSet(path);return !!s&&s.questions.every(q=>!!s.selectedOptionIds[q.id]||!!s.customAnswers?.[q.id])}
 export function appendQuestionSet(path:PathState,set:Omit<R3Output,'round'> & {round:number}){
   // IDs are scoped to an immutable round, so identical model IDs cannot collide across rounds.
   const questions=set.questions.map((q,i)=>({...q,id:`r${set.round}-q${i+1}`,options:q.options.map((o,j)=>({...o,id:`r${set.round}-q${i+1}-o${j+1}`}))}))
-  path.questionSets.push({...set,questions,selectedOptionIds:{}})
+  path.questionSets.push({...set,questions,selectedOptionIds:{},customAnswers:{}})
   path.conversation.push({messageId:`questions-${set.round}`,role:'system_event',kind:'question_set',content:{...set,questions}})
   path.status='awaiting_answers'
 }
@@ -37,9 +39,20 @@ export function selectPathOption(resource:Resource, questionId:string,optionId:s
   if(resource.kind!=='path'||path.status!=='awaiting_answers'||!set)throw new CommandError('QUESTION_NOT_ACTIVE')
   const question=set.questions.find(q=>q.id===questionId)
   if(!question?.options.some(o=>o.id===optionId))throw new CommandError('OPTION_NOT_FOUND')
+  if(set.customAnswers?.[questionId])throw new CommandError('ANSWER_ALREADY_SAVED')
   if(set.selectedOptionIds[questionId] && set.selectedOptionIds[questionId]!==optionId)throw new CommandError('ANSWER_ALREADY_SAVED')
   set.selectedOptionIds[questionId]=optionId
   if(!path.conversation.some(m=>m.messageId===`choice-${questionId}`))path.conversation.push({messageId:`choice-${questionId}`,role:'user',kind:'text',content:{questionId,optionId,label:question.options.find(o=>o.id===optionId)!.label}})
+  return path
+}
+export function selectPathCustomAnswer(resource:Resource,questionId:string,customAnswer:string){
+  const path=resource.body as PathState,set=activeSet(path)
+  if(resource.kind!=='path'||path.status!=='awaiting_answers'||!set)throw new CommandError('QUESTION_NOT_ACTIVE')
+  if(!set.questions.some(q=>q.id===questionId))throw new CommandError('QUESTION_NOT_FOUND')
+  if(!customAnswer.trim()||customAnswer.length>4000)throw new CommandError('INVALID_ANSWER',400)
+  if(set.selectedOptionIds[questionId]||set.customAnswers?.[questionId]&&set.customAnswers[questionId]!==customAnswer)throw new CommandError('ANSWER_ALREADY_SAVED')
+  ;(set.customAnswers??={})[questionId]=customAnswer
+  if(!path.conversation.some(m=>m.messageId===`choice-${questionId}`))path.conversation.push({messageId:`choice-${questionId}`,role:'user',kind:'text',content:{questionId,customAnswer}})
   return path
 }
 function uniqueEvidence(groups:SearchEvidence[][]):SearchEvidence[]{
@@ -58,7 +71,7 @@ export function replyInput(state:LearningState,question:string,ids:string[],conv
   const conversation=state.conversations.find(c=>c.id===conversationId)
   if(!conversation)throw new CommandError('CONVERSATION_NOT_FOUND')
   const cards=selectedCards(state,ids)
-  return {searchScope:state.searchScope??{kind:'zhihu'},concept:{id:state.conceptId,title:state.title,description:state.description},currentQuestion:question,
+  return {goalContext:state.goalContext,searchScope:state.searchScope??{kind:'zhihu'},concept:{id:state.conceptId,title:state.title,description:state.description},currentQuestion:question,
     conversation:conversation.messages.map(m=>({messageId:m.id,role:m.role,content:m.text??m.paragraphs?.map(p=>`${p.title}\n${p.text}`).join('\n\n')??''})),
     allowedCards:cards.map(c=>({id:c.id,title:c.title,content:c.text})),cards}
 }
@@ -73,24 +86,25 @@ function answerContext(input: ReturnType<typeof replyInput>) {
 export function createFlows(tools:ProductTools,api?:ZhihuDataClient,login?:ZhihuLogin){
   async function path(ctx:TaskContext,resource:Resource<PathState>){
     const state=structuredClone(resource.body),kind=ctx.job.kind,searchScope=state.searchScope??{kind:'zhihu'}
-    const attachments=state.attachments.map(({sourceId,fileName,mimeType,content})=>({sourceId,fileName,mimeType,content}))
+    const attachments=state.attachments.map(({sourceId,fileName,mimeType,content,contentBasis},i)=>({ref:`F${i+1}`,sourceId,fileName,mimeType,content,contentBasis}))
+    const goalContext=pathGoalContext(state)
     if(kind==='path.start'){
       await ctx.progress('正在理解学习目标')
-      const r1=await tools.legacy<R1Output>(ctx,'R1',{goal:state.goal,searchScope,attachments})
+      const r1=await tools.legacy<R1Output>(ctx,'R1',{goalContext,goal:state.goal,searchScope,attachments})
       await ctx.progress(searchScope.kind==='collections'?'正在读取所选收藏夹':'正在查找学习资料')
       const packed=packZhihuSearchQueries(r1.queries)
       const groups=searchScope.kind==='collections'
         ? [{queryId:'route-materials',query:state.goal,results:await ctx.step('R-materials',{sourceIds:state.attachments.map(a=>a.sourceId)},async()=>inheritedArticles(state.attachments).filter(a=>a.url).map(a=>({evidenceId:a.id,title:a.title,summary:a.summary,url:a.url!,authorId:a.authorId,authorName:a.author,sourceKind:'zhihu' as const})))}]
         : await settledParallel(packed.map(async(q,index)=>({queryId:`route-search-${index}`,query:q.query,results:await tools.search(ctx,`R-S:${index}`,q.query,searchScope)})))
       await ctx.progress('正在整理适合你的方向')
-      state.exploration=await tools.legacy<R2Output>(ctx,'R2',{goal:state.goal,searchScope,searchGroups:groups,attachments})
+      state.exploration=await tools.legacy<GoalExploration>(ctx,'R2',{goalContext,goal:state.goal,searchScope,searchGroups:groups,attachments})
       await ctx.progress('正在准备几个简单问题')
-      const r3=await tools.legacy<R3Output>(ctx,'R3',{goal:state.goal,searchScope,exploration:state.exploration,attachments})
+      const r3=await tools.legacy<R3Output>(ctx,'R3',{goalContext,goal:state.goal,searchScope,exploration:state.exploration,attachments})
       appendQuestionSet(state,r3)
     }else if(kind==='path.clarify'){
       const active=activeSet(state)
       if(!active||state.status!=='awaiting_answers')throw new CommandError('QUESTION_NOT_ACTIVE')
-      const answer=await tools.legacy<R3bOutput>(ctx,'R3b',{goal:state.goal,searchScope,followUpMessage:ctx.job.input.question,activeRound:active.round,questionSets:state.questionSets,attachments},{activeRound:active.round})
+      const answer=await tools.legacy<R3bOutput>(ctx,'R3b',{goalContext,goal:state.goal,searchScope,exploration:state.exploration,followUpMessage:ctx.job.input.question,activeRound:active.round,questionSets:state.questionSets,attachments},{activeRound:active.round})
       state.conversation.push({messageId:ctx.job.id,role:'assistant',kind:'text',content:answer.message})
       if(answer.kind==='replace_questions'){
         // The retired set is retained with all selections; it never disappears.
@@ -98,12 +112,12 @@ export function createFlows(tools:ProductTools,api?:ZhihuDataClient,login?:Zhihu
         appendQuestionSet(state,answer)
       }
     }else if(kind==='path.chat'){
-      const text=await tools.chat(ctx,{currentMessage:ctx.job.input.question,searchScope,conversation:state.conversation,attachments})
+      const text=await tools.chat(ctx,{goalContext,currentMessage:ctx.job.input.question,searchScope,conversation:state.conversation,attachments})
       state.conversation.push({messageId:ctx.job.id,role:'assistant',kind:'text',content:text})
     }else if(kind==='path.answer'&&allAnswered(state)){
       await ctx.progress('正在生成学习路线')
       const questionSets=state.questionSets.map(set=>({...set,selectedOptions:set.questions.flatMap(q=>q.options.filter(o=>o.id===set.selectedOptionIds[q.id]).map(o=>({questionId:q.id,optionId:o.id,label:o.label,routeEffect:o.routeEffect}))),selectedOptionIds:Object.values(set.selectedOptionIds)}))
-      state.route=await tools.routePlan(ctx,{goal:state.goal,searchScope,exploration:state.exploration,questionSets,newerRoundPreferred:true,attachments},resource.id,state.attachments.map(a=>a.sourceId))
+      state.route=await tools.routePlan(ctx,{goalContext,goal:state.goal,searchScope,exploration:state.exploration,questionSets,newerRoundPreferred:true,attachments},resource.id,state.attachments.map(a=>a.sourceId))
       const projected=projectRouteToDocument(state.route)
       if(!projected.ok)throw new ToolError('ROUTE_NOT_SETTLED',false)
       state.document=projected.value.document;state.conceptIdByWireId=projected.value.conceptIdByWireId;state.status='published'
@@ -133,10 +147,10 @@ export function createFlows(tools:ProductTools,api?:ZhihuDataClient,login?:Zhihu
       if(state.initialized){await ctx.store.commit(ctx.job,r=>r.body);return}
       const searchScope=state.searchScope??{kind:'zhihu'}
       await ctx.progress(searchScope.kind==='collections'?'正在阅读本路线资料':'正在寻找概念相关内容')
-      const plan=searchScope.kind==='collections'?{queries:[]}:await tools.learning(ctx,'L-search-plan',{searchScope,concept:{id:state.conceptId,title:state.title,description:state.description},materials:state.articles.filter(a=>a.materialId).map(a=>({id:a.id,title:a.title,content:a.summary}))},v=>{if(new Set(v.queries).size!==3)throw new Error('三个问法必须不同')})
+      const plan=searchScope.kind==='collections'?{queries:[]}:await tools.learning(ctx,'L-search-plan',{goalContext:state.goalContext,searchScope,concept:{id:state.conceptId,title:state.title,description:state.description},materials:state.articles.filter(a=>a.materialId).map(a=>({id:a.id,title:a.title,content:a.summary}))},v=>{if(new Set(v.queries).size!==3)throw new Error('三个问法必须不同')})
       const groups=await settledParallel(plan.queries.map((q,i)=>tools.search(ctx,`L-search:${i}`,q,searchScope)))
       const evidence=uniqueEvidence(groups)
-      const selection=evidence.length?await tools.learning(ctx,'L-source-select',{concept:{id:state.conceptId,title:state.title},candidates:evidence},v=>{
+      const selection=evidence.length?await tools.learning(ctx,'L-source-select',{goalContext:state.goalContext,concept:{id:state.conceptId,title:state.title,description:state.description},candidates:evidence},v=>{
         if(new Set(v.evidenceIds).size!==v.evidenceIds.length||v.evidenceIds.some((id:string)=>!evidence.some(e=>e.evidenceId===id)))throw new Error('只能选择本次真实证据 ID，不能重复')
       }):{evidenceIds:[]}
       const articles=[...state.articles.filter(a=>a.materialId),...selection.evidenceIds.map(id=>articleOf(evidence.find(e=>e.evidenceId===id)!))]
@@ -151,7 +165,7 @@ export function createFlows(tools:ProductTools,api?:ZhihuDataClient,login?:Zhihu
       state=(await ctx.store.resource<LearningState>(ctx.job.owner_id,resource.id)).body
       const angles=['concrete_explanation','dispute','pitfalls'] as const
       // All three routes run; a separate provider concurrency limiter can queue them.
-      const directAnswers=await settledParallel(angles.map(async angle=>({angle,content:await tools.direct(ctx,`L-direct:${angle}`,'L0a',{concept:{conceptId:state.conceptId,title:state.title,hasDispute:state.hasDispute,detailedDescription:state.description},angle,searchScope,materials:state.articles.filter(a=>a.materialId).map(a=>({id:a.id,title:a.title,content:a.summary}))},angle,searchScope.kind==='collections')})))
+      const directAnswers=await settledParallel(angles.map(async angle=>({angle,content:await tools.direct(ctx,`L-direct:${angle}`,'L0a',{goalContext:state.goalContext,concept:{conceptId:state.conceptId,title:state.title,hasDispute:state.hasDispute,detailedDescription:state.description},angle,searchScope,materials:state.articles.filter(a=>a.materialId).map(a=>({id:a.id,title:a.title,content:a.summary}))},angle,searchScope.kind==='collections')})))
       await ctx.progress('正在整理第一段讲解','',r=>({...r.body,phase:'organizing'}))
       const input=replyInput(state,state.title,[],ctx.job.input.conversationId)
       const output=await tools.answerCards(ctx,{...answerContext(input),directAnswers})
@@ -162,7 +176,7 @@ export function createFlows(tools:ProductTools,api?:ZhihuDataClient,login?:Zhihu
       const evidence=ctx.job.input.evidence as SearchEvidence
       const exists=state.articles.some(a=>a.id===evidence.evidenceId)
       await ctx.progress('核对这篇材料与当前概念的关系')
-      const selection=exists?{evidenceIds:[evidence.evidenceId]}:await tools.learning(ctx,'L-source-select',{concept:{id:state.conceptId,title:state.title},candidates:[evidence]},v=>{if(v.evidenceIds.length>1||v.evidenceIds.some((id:string)=>id!==evidence.evidenceId))throw new Error('只能选择当前证据')},'L-source-select:import')
+      const selection=exists?{evidenceIds:[evidence.evidenceId]}:await tools.learning(ctx,'L-source-select',{goalContext:state.goalContext,concept:{id:state.conceptId,title:state.title,description:state.description},candidates:[evidence]},v=>{if(v.evidenceIds.length>1||v.evidenceIds.some((id:string)=>id!==evidence.evidenceId))throw new Error('只能选择当前证据')},'L-source-select:import')
       await ctx.flush();await ctx.store.commit(ctx.job,r=>{
         const s=r.body as LearningState,status=s.articles.some(a=>a.id===evidence.evidenceId)?'already-present':selection.evidenceIds.length?'added':'unrelated'
         if(status==='added'){const a=articleOf(evidence);s.articles.push(a);s.nodes.push({id:a.id,type:'article',title:a.title,text:a.summary,sources:[a.id],parents:['root']});const root=s.nodes.find(n=>n.type==='root')!;root.sources.push(a.id);validateTree(s.nodes)}
@@ -179,18 +193,18 @@ export function createFlows(tools:ProductTools,api?:ZhihuDataClient,login?:Zhihu
       if(input.cards.length!==1)throw new CommandError('ONE_AUTHOR_HOST_REQUIRED')
       const host=input.cards[0]!,excluded=ctx.job.input.excludedAuthorIds as string[]
       await ctx.progress('正在换几种问法寻找博主')
-      const plan=await tools.learning(ctx,'A-card-plan',{concept:input.concept,host:input.allowedCards[0],question:input.currentQuestion})
+      const plan=await tools.learning(ctx,'A-card-plan',{goalContext:input.goalContext,concept:input.concept,host:input.allowedCards[0],question:input.currentQuestion})
       const queries=plan.queries.length===3?[plan.queries[0]!,`${plan.queries[1]} ${plan.queries[2]}`]:plan.queries
       const evidence=uniqueEvidence(await settledParallel(queries.map((q,i)=>tools.search(ctx,`A-search:${i}`,q)))).filter(e=>e.authorId&&e.authorName&&!excluded.includes(e.authorId)&&!(ctx.job.input.excludedAuthorNames??[]).includes(e.authorName))
       await ctx.progress('正在阅读相关博主的解读')
-      const selection=evidence.length?await tools.learning(ctx,'A-card-select',{question:input.currentQuestion,host:input.allowedCards[0],candidates:evidence,excludedAuthorIds:excluded},v=>{
+      const selection=evidence.length?await tools.learning(ctx,'A-card-select',{goalContext:input.goalContext,concept:input.concept,question:input.currentQuestion,host:input.allowedCards[0],candidates:evidence,excludedAuthorIds:excluded},v=>{
         const ids=v.selections.map((s:any)=>evidence.find(e=>e.evidenceId===s.evidenceId)?.authorId)
         const names=v.selections.map((s:any)=>evidence.find(e=>e.evidenceId===s.evidenceId)?.authorName)
         if(ids.some((id:any)=>!id)||new Set(ids).size!==ids.length||new Set(names).size!==names.length)throw new Error('每项必须选择本次真实证据，作者不能重复')
       }):{normalizedQuestion:input.currentQuestion,selections:[]}
       const selected=selection.selections.map(s=>evidence.find(e=>e.evidenceId===s.evidenceId)!)
       if(!selected.length){
-        const text=await tools.direct(ctx,'A3','A3',{question:input.currentQuestion,selection:host.text,selectionSummary:null})
+        const text=await tools.direct(ctx,'A3','A3',{goalContext:input.goalContext,concept:input.concept,question:input.currentQuestion,selection:host.text,selectionSummary:null})
         await settleLearning(ctx,[{id:`direct-${ctx.job.id}`,title:'刘看山来解释',text,sources:[],parents:[host.id],basisId:host.id,origin:'direct'}]);return
       }
       const paragraphs:Paragraph[]=selected.map((e,i)=>({id:`author-${ctx.job.id}-${i}`,title:e.title,text:e.summary,parents:[host.id],basisId:host.id,sources:[],origin:'author',author:{id:e.authorId!,name:e.authorName!,avatar:e.avatar,badge:e.badge,expertise:'公开文章观点',evidenceId:e.evidenceId,url:e.url,authorUrl:e.authorUrl}}))

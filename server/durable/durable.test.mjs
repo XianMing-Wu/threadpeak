@@ -290,7 +290,7 @@ test('same-agent repairs wrong evidence before chat/tree commit and never reuses
   assert.equal(answer.paragraphs[0].basisId,'history');assert.equal(calls.length,2)
   assert.match(calls[1].messages.at(-1).content,/C1 的 evidence 不在该卡片材料中/)
   assert.equal(calls[0].messages[0].content,calls[1].messages[0].content);assert.equal(calls[1].thinkingDepth,'deep')
-  assert.equal(job.checkpoints['L-answer:cards-v2'].value.operations[0].after,'C2')
+  assert.equal(job.checkpoints['L-answer:cards-v2@goal-v1'].value.operations[0].after,'C2')
   assert.deepEqual((await s.snapshot('owner',r.id)).data,{})
 })
 test('citation evidence uses the delivered compressed material version without relabelling it as original',async t=>{
@@ -305,8 +305,8 @@ test('citation evidence uses the delivered compressed material version without r
   const original='变量用于表示未知的数量。'.repeat(6000)
   const result=await new ProductTools(llm,{},32000).answerCards(ctx,{allowedCards:[{id:'long-article',title:'变量',content:original}]})
   assert.equal(result.paragraphs[0].basisId,'long-article');assert.match(modelView.cards[0].content,/上下文摘要/)
-  assert.equal(job.checkpoints['L-answer:cards-v2'].value.materials[0].summarized,true)
-  assert.ok(job.checkpoints['L-answer:cards-v2'].value.materials[0].contentHash)
+  assert.equal(job.checkpoints['L-answer:cards-v2@goal-v1'].value.materials[0].summarized,true)
+  assert.ok(job.checkpoints['L-answer:cards-v2@goal-v1'].value.materials[0].contentHash)
 })
 
 test('first entry repairs citation batching and mismatched evidence before publishing chat and the single-parent tree',async t=>{

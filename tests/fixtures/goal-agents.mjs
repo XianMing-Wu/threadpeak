@@ -1,0 +1,5 @@
+// Synthetic contract data for tests only. Never imported by application code.
+export const goal = (outcome='读懂收藏中的坐标') => ({outcome,motivation:'',successCriteria:['能用自己的例子说明'],startingPoint:'',constraints:[],nonGoals:[],assumptions:[],openQuestions:[]})
+export const exploration = () => ({goalHypothesis:goal(),perspectives:[],candidates:[{carrier:'线性代数',concept:'坐标',purpose:'读懂收藏',necessity:'direct',materialRefs:['F1'],perspectiveRefs:[],dispute:{exists:false,reason:'材料没有实质争议'}}],decisionPoints:[]})
+export const interview = () => ({round:1,message:'我们就从你想怎样使用收藏里的内容聊起。',status:'active',questions:[{id:'q',prompt:'学完后你更想做成什么？',options:[{id:'a',label:'自己举例说明',routeEffect:'理解概念'},{id:'b',label:'解决一道实际问题',routeEffect:'应用概念'},{id:'c',label:'推清楚数学关系',routeEffect:'理解推导'}]}]})
+export const plan = () => ({title:'收藏学习路线',learningGoal:goal(),stages:[[{title:'线性代数',description:'根据收藏理解坐标',concepts:[{title:'坐标',description:'解释二维坐标，读懂收藏中坐标在基下的含义',hasDispute:false,attachmentRefs:['F1'],goalAlignment:{purpose:'读懂收藏中的例子',depth:'能用二维例子说明，不展开高维证明',successCheck:'给出一个基及其下的坐标',materialAnchors:[{ref:'F1',quote:'坐标表示基下的分量。',role:'direct',connection:'本概念直接讲解这句材料'}]}}]}]]})

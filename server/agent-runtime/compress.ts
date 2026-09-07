@@ -1,3 +1,4 @@
+import {semanticChunks} from './semantic-chunks.ts'
 import { estimateTokens } from './tokens.ts'
 import type {
   AgentId,
@@ -64,37 +65,7 @@ export function chunkByTokens(
   maxTokens: number,
   estimator: TokenEstimator = estimateTokens,
 ): string[] {
-  if (estimator(text) <= maxTokens) return [text]
-  const paragraphs = text.split(/\n{2,}/)
-  const chunks: string[] = []
-  let buffer = ''
-  const pushLong = (piece: string) => {
-    if (estimator(piece) <= maxTokens) {
-      chunks.push(piece)
-      return
-    }
-    const chars = Math.max(1, Math.floor(piece.length * (maxTokens / Math.max(1, estimator(piece)))))
-    for (let index = 0; index < piece.length; index += chars) {
-      chunks.push(piece.slice(index, index + chars))
-    }
-  }
-  for (const paragraph of paragraphs) {
-    const next = buffer ? `${buffer}\n\n${paragraph}` : paragraph
-    if (!buffer || estimator(next) <= maxTokens) {
-      if (estimator(paragraph) > maxTokens) {
-        if (buffer) chunks.push(buffer)
-        buffer = ''
-        pushLong(paragraph)
-        continue
-      }
-      buffer = next
-      continue
-    }
-    chunks.push(buffer)
-    buffer = paragraph
-  }
-  if (buffer) chunks.push(buffer)
-  return chunks.length > 0 ? chunks : [text]
+  return semanticChunks(text,maxTokens,estimator)
 }
 
 export async function summarizeChunked(
@@ -104,25 +75,19 @@ export async function summarizeChunked(
 ): Promise<string> {
   const { sourceId, text, targetTokens } = input
   if (estimator(text) <= targetTokens) return text
-  const chunkBudget = Math.max(256, Math.min(16_000, Math.max(2_000, Math.floor(targetTokens / 4))))
-  const chunks = chunkByTokens(text, chunkBudget, estimator)
-  const perChunk = Math.max(24, Math.floor(targetTokens / Math.max(1, chunks.length)))
-  const parts: string[] = []
-  for (const [index, chunk] of chunks.entries()) {
-    const summarized = await summarizer({
-      sourceId: chunks.length === 1 ? sourceId : `${sourceId}#${index}`,
-      text: chunk,
-      targetTokens: perChunk,
-    })
-    parts.push(summarized)
+  const tagBudget=estimator(taggedSummary(sourceId,''))+8
+  if(targetTokens<tagBudget+24)throw new Error('CONTEXT_REQUIRES_PARTITION')
+  let candidate=text
+  for(let pass=0;pass<6;pass++){
+    const chunks=chunkByTokens(candidate,16000,estimator)
+    const perChunk=Math.max(24,Math.floor((targetTokens-tagBudget)/Math.max(1,chunks.length)))
+    const parts:string[]=[]
+    for(const [index,chunk] of chunks.entries())parts.push(await summarizer({sourceId:`${sourceId}#${index+1}/${chunks.length}`,text:chunk,targetTokens:perChunk}))
+    candidate=parts.join('\n')
+    const result=taggedSummary(sourceId,candidate)
+    if(estimator(result)<=targetTokens)return result
   }
-  const merged = parts.join('\n')
-  const tagged = taggedSummary(sourceId, merged)
-  if (estimator(tagged) <= targetTokens) return tagged
-  const tightened = await summarizer({ sourceId, text: merged, targetTokens: Math.max(24, targetTokens - 12) })
-  const again = taggedSummary(sourceId, tightened)
-  if (estimator(again) <= targetTokens) return again
-  return taggedSummary(sourceId, sliceToTokens(tightened, Math.max(8, targetTokens - 12), estimator))
+  throw new Error('SUMMARY_NOT_REDUCED')
 }
 
 function attachmentsOf(context: unknown): AttachmentContext[] {
@@ -184,23 +149,8 @@ export function listCompressibleFields(agentId: AgentId, context: unknown): Comp
   const root = asMut(context)
   fields.push(...listAttachmentFields(context))
 
-  if (typeof root.goal === 'string') {
-    fields.push(stringField('goal', 'goal', 'non_attachment', () => String(root.goal), (next) => {
-      root.goal = next
-    }))
-  }
-
   for (const [groupIndex, group] of searchGroupsOf(context).entries()) {
     for (const [resultIndex, result] of group.results.entries()) {
-      fields.push(stringField(
-        `searchGroups.${groupIndex}.results.${resultIndex}.title`,
-        result.evidenceId,
-        'non_attachment',
-        () => result.title,
-        (next) => {
-          result.title = next
-        },
-      ))
       fields.push(stringField(
         `searchGroups.${groupIndex}.results.${resultIndex}.summary`,
         result.evidenceId,
@@ -252,7 +202,7 @@ export function listCompressibleFields(agentId: AgentId, context: unknown): Comp
 
   if (agentId === 'R5' || agentId === 'G2') {
     for (const [index, message] of conversationOf(context).entries()) {
-      if (typeof message.content !== 'string') continue
+      if (typeof message.content !== 'string'||message.role==='user') continue
       const kind = message.kind ?? 'text'
       if (kind !== 'text') continue
       fields.push(stringField(
@@ -262,21 +212,6 @@ export function listCompressibleFields(agentId: AgentId, context: unknown): Comp
         () => String(message.content),
         (next) => {
           message.content = next
-        },
-      ))
-    }
-  }
-
-  if (agentId === 'L0a') {
-    const concept = asMut(root.concept)
-    if (typeof concept.detailedDescription === 'string') {
-      fields.push(stringField(
-        'concept.detailedDescription',
-        String(concept.conceptId ?? 'concept'),
-        'non_attachment',
-        () => String(concept.detailedDescription),
-        (next) => {
-          concept.detailedDescription = next
         },
       ))
     }
@@ -343,13 +278,6 @@ export function listCompressibleFields(agentId: AgentId, context: unknown): Comp
     }
   }
 
-  if (agentId === 'N1' && typeof root.question === 'string') {
-    fields.push(stringField('question', 'question', 'non_attachment', () => String(root.question), (next) => {
-      root.question = originalExcerptTag(next)
-      root.questionSummary = originalExcerptTag(next)
-    }))
-  }
-
   if (agentId === 'R3' || agentId === 'R3b' || agentId === 'R4') {
     const exploration = root.exploration
     if (typeof exploration === 'string') {
@@ -374,69 +302,14 @@ function dedupeEvidence(groups: SearchGroup[]): void {
   }
 }
 
-function mergeEvidenceByAuthor(context: unknown): boolean {
-  const groups = searchGroupsOf(context)
-  const candidates = candidatesOf(context)
-  let changed = false
-  const mergeList = (items: Array<{ authorId: string | null; evidenceId: string; url: string; summary: string }>) => {
-    const byAuthor = new Map<string, typeof items>()
-    for (const item of items) {
-      const key = item.authorId ?? item.evidenceId
-      const list = byAuthor.get(key) ?? []
-      list.push(item)
-      byAuthor.set(key, list)
-    }
-    for (const list of byAuthor.values()) {
-      if (list.length < 2) continue
-      const merged = list.map((item) => item.summary).join('；')
-      list[0].summary = taggedSummary(list[0].evidenceId, merged)
-      for (const extra of list.slice(1)) {
-        extra.summary = `[见同作者摘要 evidenceId=${extra.evidenceId} url=${extra.url}]`
-      }
-      changed = true
-    }
-  }
-  for (const group of groups) mergeList(group.results)
-  for (const candidate of candidates) {
-    mergeList(candidate.evidence.map((item) => ({
-      authorId: candidate.authorId,
-      evidenceId: item.evidenceId,
-      url: item.url,
-      summary: item.summary,
-    })))
-  }
-  return changed
-}
-
-function mergeEarliestConversation(context: unknown, protectIds: Set<string>): boolean {
-  const messages = conversationOf(context)
-  const compressible = messages
-    .map((message, index) => ({ message, index }))
-    .filter(({ message }) => (
-      typeof message.content === 'string'
-      && (message.kind ?? 'text') === 'text'
-      && !protectIds.has(message.messageId)
-    ))
-  if (compressible.length < 2) return false
-  const first = compressible[0]
-  const second = compressible[1]
-  const startId = first.message.messageId
-  const endId = second.message.messageId
-  first.message.content = `[对话摘要 ${startId}..${endId}]\n${String(first.message.content)}\n${String(second.message.content)}`
-  second.message.content = `[已并入对话摘要 ${startId}..${endId}]`
-  return true
-}
-
 export async function compressFields(
   fields: CompressibleField[],
   targetTokens: number,
   summarizer: Summarizer,
   estimator: TokenEstimator = estimateTokens,
 ): Promise<void> {
-  if (fields.length === 0 || targetTokens <= 0) {
-    for (const field of fields) field.apply(sliceToTokens(field.text, 8, estimator))
-    return
-  }
+  if(fields.length===0)return
+  if(targetTokens<=0)throw new Error('CONTEXT_REQUIRES_PARTITION')
   const current = fields.reduce((sum, field) => sum + estimator(field.text), 0)
   if (current <= targetTokens) return
   const ordered = [...fields].sort((a, b) => b.rank - a.rank)
@@ -478,34 +351,9 @@ export async function compressNonAttachment(
   }
   const protectedSet = new Set(protectIds)
   const collect = () => listCompressibleFields(agentId, context).filter((field) => field.phase === 'non_attachment')
-  const remainingOf = (fields: CompressibleField[]) => fields.reduce((sum, field) => sum + estimator(field.text), 0)
-  let fields = collect()
-  const primary = fields.filter((field) => !protectedSet.has(field.sourceId))
-  await compressFields(primary, targetTokens, summarizer, estimator)
-  fields = collect()
-  if (remainingOf(fields) > targetTokens && (agentId === 'R2' || agentId === 'A2' || agentId === 'N2')) {
-    mergeEvidenceByAuthor(context)
-    fields = collect()
-    await compressFields(fields.filter((field) => !protectedSet.has(field.sourceId)), targetTokens, summarizer, estimator)
-  }
-  if (remainingOf(collect()) > targetTokens && (agentId === 'R5' || agentId === 'G2')) {
-    mergeEarliestConversation(context, protectedSet)
-    await compressFields(collect().filter((field) => !protectedSet.has(field.sourceId)), targetTokens, summarizer, estimator)
-  }
-  fields = collect()
-  if (remainingOf(fields) > targetTokens) {
-    const lastResort = fields.filter((field) => protectedSet.has(field.sourceId))
-    await compressFields(lastResort, Math.max(8, targetTokens), summarizer, estimator)
-  }
-  fields = collect()
-  if (remainingOf(fields) > targetTokens) {
-    for (const field of [...fields].sort((a, b) => estimator(b.text) - estimator(a.text))) {
-      if (remainingOf(collect()) <= targetTokens) break
-      const next = taggedSummary(field.sourceId, sliceToTokens(field.text, Math.max(8, Math.floor(estimator(field.text) / 2)), estimator))
-      field.apply(next)
-      field.text = next
-    }
-  }
+  const fields=collect()
+  const protectedSize=fields.filter(f=>protectedSet.has(f.sourceId)).reduce((n,f)=>n+estimator(f.text),0)
+  await compressFields(fields.filter(f=>!protectedSet.has(f.sourceId)),targetTokens-protectedSize,summarizer,estimator)
 }
 
 export function protectedSourceIds(agentId: AgentId, context: unknown): string[] {

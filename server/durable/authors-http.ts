@@ -1,3 +1,5 @@
+import { hydrateLearningGoal } from './learning-goal.ts'
+import type { GoalContext } from '../../packages/contracts/src/learning-goal.ts'
 import type { FastifyInstance, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { AuthorBriefSchema, AuthorFeedbackSchema } from '../../packages/contracts/src/authors.ts'
@@ -16,17 +18,19 @@ export function registerAuthorRoutes(app:FastifyInstance,store:DurableStore,work
       if(previous.kind!=='authors.search'||digest(previous.input.intent)!==digest(input))throw new CommandError('COMMAND_CONFLICT')
       return store.snapshot(own,previous.resource_id)
     }
+    let goalContext:GoalContext|undefined
     let selectedContext:{id:string;title:string;content:string}[]=[],conceptTitle:string|undefined
     if(input.learningId){
-      const learning=await store.resource<LearningState>(own,input.learningId)
+      const learning=await hydrateLearningGoal(store,own,input.learningId)
       if(learning.kind!=='learning')throw new CommandError('NOT_FOUND',404)
       const cards=input.selected.map(id=>learning.body.nodes.find(n=>n.id===id))
       if(cards.some(n=>!n))throw new CommandError('MATERIAL_NOT_FOUND',400)
+      goalContext=learning.body.goalContext
       selectedContext=cards.map(n=>({id:n!.id,title:n!.title,content:n!.text}));conceptTitle=learning.body.title
     }else if(input.selected.length)throw new CommandError('LEARNING_REQUIRED',400)
     const resource=await store.create(own,'authors',commandKey,{version:3,brief:input,question:input.question,topic:'',topicId:'',needs:[],candidates:[],results:[],unresolved:'',discoveredAt:0})
     // Same key must freeze the original context, even if its cards were edited after acceptance.
-    await store.enqueue(own,resource.id,'authors.search',commandKey,{...input,intent:input,selectedContext,conceptTitle});worker.wake();return store.snapshot(own,resource.id)
+    await store.enqueue(own,resource.id,'authors.search',commandKey,{...input,intent:input,selectedContext,conceptTitle,goalContext});worker.wake();return store.snapshot(own,resource.id)
   })
   async function mutate(request:FastifyRequest,input:unknown,action:(tx:DurableStore['db'])=>Promise<void>){
     const own=owner(request),commandKey=key(request),hash=digest(input)
@@ -56,7 +60,7 @@ export function registerAuthorRoutes(app:FastifyInstance,store:DurableStore,work
       if(previous.kind!=='learning.import'||previous.resource_id!==id||previous.input.evidence.authorId!==input.authorId||previous.input.evidence.evidenceId!==input.evidenceId||previous.input.depth!==input.depth)throw new CommandError('COMMAND_CONFLICT')
       return store.snapshot(own,id)
     }
-    const resource=await store.resource<LearningState>(own,id)
+    const resource=await hydrateLearningGoal(store,own,id)
     if(resource.kind!=='learning'||!resource.body.nodes.length)throw new CommandError('MATERIAL_NOT_READY',400)
     const network=await readAuthorNetwork(store.db,own),raw=network.authors.find(a=>a.id===input.authorId)?.evidence.find(e=>e.evidenceId===input.evidenceId)
     if(!raw)throw new CommandError('EVIDENCE_NOT_FOUND',404)

@@ -15,6 +15,8 @@ export type PathAttachment = {
 
 export type PathQuestionSet = {
   round: number
+  message?: string
+  customAnswers?: Record<string, string>
   status: 'active' | 'superseded'
   questions: {
     id: string
@@ -123,7 +125,11 @@ export async function startPathRun(
 }
 
 export async function selectPathAnswer(runId: string, questionId: string, optionId: string, watch?: PathRunWatch) {
-  return watchPathRun(await post(`/api/path-runs/${runId}/select`, { questionId, optionId }, watch?.signal), watch)
+  return watchPathRun(await post(`/api/path-runs/${runId}/select`, { questionId, optionId }, watch?.signal, `path-answer:${runId}:${questionId}`), watch)
+}
+
+export async function submitCustomPathAnswer(runId: string, questionId: string, customAnswer: string, watch?: PathRunWatch) {
+  return watchPathRun(await post(`/api/path-runs/${runId}/select`, { questionId, customAnswer }, watch?.signal, `path-answer:${runId}:${questionId}`), watch)
 }
 
 export async function commitPathAnswers(runId: string, watch?: PathRunWatch) {

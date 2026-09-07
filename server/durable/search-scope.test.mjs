@@ -1,3 +1,4 @@
+import {plan as goalPlan, exploration as goalExploration, interview as goalInterview} from '../../tests/fixtures/goal-agents.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {globalSearchUrl,parseZhihuSearchPayload} from '../zhihu.adapter.ts'
@@ -43,9 +44,9 @@ test('collection-only route and concept inherit owned scope with zero external s
     const c=JSON.parse(args.messages[1].content);inputs.push(c)
     if(c.read_card_scope){return {kind:'completed',text:JSON.stringify({sourceReview:c.read_card_scope.cards.map(x=>({ref:x.ref,contribution:'解释坐标'})),operations:[{tool:'append_cards',after:'C1',evidence:[c.read_card_scope.cards[0].content],title:'理解坐标',text:'坐标表示基下的分量。'}]})}}
     if(c.angle)return {kind:'completed',text:'根据所选收藏，坐标表示基下的分量。'}
-    if(c.newerRoundPreferred)return {kind:'completed',text:JSON.stringify({title:'收藏学习路线',stages:[[{title:'线性代数',description:'根据收藏学习',concepts:[{title:'坐标',description:'解释二维坐标',hasDispute:false,attachmentRefs:['F1']}]}]]})}
-    if(c.exploration)return {kind:'completed',text:JSON.stringify({round:1,status:'active',questions:[{id:'q',prompt:'希望怎样学？',options:[{id:'o1',label:'先看例子',routeEffect:'例子优先'},{id:'o2',label:'先看定义',routeEffect:'定义优先'}]}]})}
-    if(c.searchGroups)return {kind:'completed',text:JSON.stringify({'线性代数':{'坐标':{'争议':false}}})}
+    if(c.newerRoundPreferred)return {kind:'completed',text:JSON.stringify(goalPlan())}
+    if(c.exploration)return {kind:'completed',text:JSON.stringify(goalInterview())}
+    if(c.searchGroups)return {kind:'completed',text:JSON.stringify(goalExploration())}
     return {kind:'completed',text:JSON.stringify({queries:[0,1,2,3].map(i=>({id:String(i),text:`坐标学习${i}`,angle:i<2?'normal_learning':'pitfall_or_dispute'}))})}
   }}
   const noExternal={search:async()=>{throw new Error('unexpected external search')},globalSearch:async()=>{throw new Error('unexpected global search')},direct:async()=>{throw new Error('unexpected Zhihu direct')}}
@@ -62,6 +63,8 @@ test('collection-only route and concept inherit owned scope with zero external s
   const q=snapshot.data.questionSets[0].questions[0]
   await app.inject({method:'POST',url:`/api/path-runs/${id}/select`,headers:{cookie},payload:{questionId:q.id,optionId:q.options[0].id}})
   snapshot=await finish(id);assert.equal(snapshot.data.status,'published',JSON.stringify(snapshot.job))
+  assert.equal(inputs.find(c=>c.newerRoundPreferred).attachments[0].contentBasis,'source_summary')
+  assert.equal(snapshot.data.route.concepts[0].goalAlignment.materialAnchors[0].evidenceKind,'context_summary')
   const enter=await app.inject({method:'POST',url:'/api/v2/learning/enter',headers:{cookie},payload:{routeId:snapshot.data.document.id,conceptId:snapshot.data.route.concepts[0].id}})
   assert.equal(enter.statusCode,200,enter.body);const learning=await finish(enter.json().id);assert.equal(learning.job.status,'completed',JSON.stringify(learning.job));assert.deepEqual(learning.data.searchScope,body.searchScope);assert.equal(learning.data.articles.length,1);assert.equal(inputs.filter(c=>c.angle).length,3)
   assert.ok(inputs.every(c=>JSON.stringify(c).includes('坐标')))

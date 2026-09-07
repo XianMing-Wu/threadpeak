@@ -16,6 +16,7 @@ import {
   replyPathRun,
   retryPathRun,
   selectPathAnswer,
+  submitCustomPathAnswer,
   startPathRun,
   watchPathRun,
   type PathRunView,
@@ -23,6 +24,7 @@ import {
 } from './path-run-client.ts'
 import { MarkdownMath } from '../lib/MarkdownMath'
 
+const CUSTOM_ANSWER = '__custom__'
 const optionLetters = ['A', 'B', 'C', 'D'] as const
 
 function publicPathErrorMessage(message: string | undefined): string {
@@ -69,6 +71,7 @@ export function ChatRoutePanel(props: {
   const [replies, setReplies] = useState<{ user: string; assistant: string }[]>([])
   const [readyRouteId, setReadyRouteId] = useState(existing?.id ?? '')
   const [drafts, setDrafts] = useState<Record<string, string>>({})
+  const [customDrafts, setCustomDrafts] = useState<Record<string, string>>({})
   const storedTrace = loadConversationTrace(props.conversationId, props.existingRouteId)
   const [keptTrace, setKeptTrace] = useState<ProcessStep[]>(storedTrace)
   const keptRef = useRef(storedTrace)
@@ -277,10 +280,13 @@ export function ChatRoutePanel(props: {
   return <article className="route-clarification">
     {beforeAnswers.length > 0 ? <AgentStatus steps={beforeAnswers} /> : null}
     {(view?.questionSets ?? []).map((set) => (
-      <div key={`set-${set.round}`} className="clarification-stack" role="group" aria-label={set.status === 'active' ? '选择题' : `第 ${set.round} 轮已确认`}>
-        {set.questions.map((question) => {
+      <div key={`set-${set.round}`} className="clarification-stack" role="group" aria-label={set.status === 'active' ? '聊聊你的学习目标' : `第 ${set.round} 轮已确认`}>
+        {set.message && <div className="clarification-intro"><MarkdownMath source={set.message}/></div>}
+        {set.questions.map((question, questionIndex) => {
           const submitted = set.selectedOptionIds[question.id] || confirmed[question.id]
-          if (submitted || set.status !== 'active') return <ConfirmedQuestion key={question.id} question={question.prompt} answer={submitted ? question.options.find(option => option.id === submitted)?.label : undefined} />
+          const customAnswer = set.customAnswers?.[question.id]
+          if (submitted || customAnswer || set.status !== 'active') return <ConfirmedQuestion key={question.id} question={question.prompt} answer={customAnswer ?? (submitted ? question.options.find(option => option.id === submitted)?.label : undefined)} />
+          if (set.questions.slice(0, questionIndex).some(q => !set.selectedOptionIds[q.id] && !set.customAnswers?.[q.id])) return null
           const selectedId = drafts[question.id]
           return (
             <section key={question.id} className="clarification-card" data-question={question.id}>
@@ -288,9 +294,8 @@ export function ChatRoutePanel(props: {
                 <div className="clarification-card__main">
                   <div className="clarification-card__copy">
                     <h5 className="clarification-card__question">{question.prompt}</h5>
-                    <p className="clarification-card__description">第 {set.round} 轮 · 最多 3 轮</p>
+                    <p className="clarification-card__description">选一个贴近你的，也可以用自己的话说</p>
                   </div>
-                  <span className="clarification-card__meta">必答</span>
                 </div>
               </div>
               <div className="clarification-options">
@@ -299,25 +304,38 @@ export function ChatRoutePanel(props: {
                     key={option.id}
                     type="button"
                     className={selectedId === option.id ? 'is-selected' : ''}
-                    disabled={pending}
+                    disabled={pending || view?.status !== 'awaiting_answers'}
+                    aria-pressed={selectedId === option.id}
                     onClick={() => setDrafts((currentDrafts) => ({ ...currentDrafts, [question.id]: option.id }))}
                   >
                     <span className="option-letter">{optionLetters[index]}</span>
                     <strong>{option.label}</strong>
                   </button>
                 ))}
+                <button type="button" className={selectedId === CUSTOM_ANSWER ? 'is-selected' : ''}
+                  aria-pressed={selectedId === CUSTOM_ANSWER} aria-controls={`custom-${question.id}`}
+                  disabled={pending || view?.status !== 'awaiting_answers'}
+                  onClick={() => setDrafts(current => ({...current, [question.id]: CUSTOM_ANSWER}))}>
+                  <span className="option-letter"><Icon name="edit" size={14}/></span><strong>我想自己说</strong>
+                </button>
+                {selectedId === CUSTOM_ANSWER && <textarea id={`custom-${question.id}`} className="clarification-custom-input"
+                  autoFocus aria-label="用自己的话回答" rows={3} maxLength={4000} placeholder="说说你真正想做到的事，或者补充这些选项没有说到的情况…"
+                  value={customDrafts[question.id] ?? ''} disabled={pending}
+                  onChange={event => setCustomDrafts(current => ({...current, [question.id]: event.target.value}))}/>}
               </div>
               <div className="clarification-card__footer">
                 <button
                   type="button"
                   className="clarification-submit"
-                  disabled={pending || !selectedId}
+                  disabled={pending || view?.status !== 'awaiting_answers' || !selectedId || selectedId === CUSTOM_ANSWER && !customDrafts[question.id]?.trim()}
                   onClick={() => {
                     if (!selectedId) return
-                    void run((watch) => selectPathAnswer(view!.runId, question.id, selectedId, watch))
+                    void run((watch) => selectedId === CUSTOM_ANSWER
+                      ? submitCustomPathAnswer(view!.runId, question.id, customDrafts[question.id]!, watch)
+                      : selectPathAnswer(view!.runId, question.id, selectedId, watch))
                   }}
                 >
-                  提交
+                  继续
                 </button>
               </div>
             </section>
@@ -325,7 +343,7 @@ export function ChatRoutePanel(props: {
         })}
       </div>
     ))}
-    {view?.followUpMessage && view.status === 'awaiting_answers' && <article className="chat-answer"><MarkdownMath source={view.followUpMessage}/></article>}
+    {view?.followUpMessage && !view.questionSets.some(s=>s.message===view.followUpMessage) && view.status === 'awaiting_answers' && <article className="chat-answer"><MarkdownMath source={view.followUpMessage}/></article>}
     {afterAnswers.length > 0 ? <AgentStatus steps={afterAnswers} /> : null}
     {view?.status === 'failed' && <section className="route-ready-card" role="alert">
       <EmptyStatus

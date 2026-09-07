@@ -1,3 +1,4 @@
+import { pathGoalContext, hydrateLearningGoal } from './learning-goal.ts'
 import { SearchScopeSchema } from '../../packages/contracts/src/search-scope.ts'
 import {registerSourcePresentation} from './source-presentation.ts'
 import { registerAuthorRoutes } from './authors-http.ts'
@@ -9,10 +10,10 @@ import { mergeNodeEdits, NodeEditConflict } from '../../packages/contracts/src/n
 import { createIdentity, type IdentityConfig } from './auth.ts'
 import { CommandError, digest, type DurableStore, type Resource } from './store.ts'
 import type { DurableWorker } from './worker.ts'
-import { replyInput, selectPathOption, type PathState } from './flows.ts'
+import { replyInput, selectPathOption, selectPathCustomAnswer, type PathState } from './flows.ts'
 import { pathTrace } from './path-trace.ts'
 import { registerMaterialRoutes } from './materials-http.ts'
-import { inheritedArticles } from './materials.ts'
+import { inheritedArticles, planningMaterial } from './materials.ts'
 import type { ZhihuDataClient } from './zhihu-data.ts'
 import type { ZhihuLogin } from './zhihu-oauth.ts'
 
@@ -73,7 +74,7 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
       const resource=await ports.store.resource(own,item.sourceId)
       if(resource.kind!=='attachment')throw new CommandError('ATTACHMENT_NOT_FOUND',404)
       if(resource.body.status==='processing')throw new CommandError('MATERIAL_PROCESSING',409)
-      return {...resource.body,rawContent:undefined,sourceId:resource.id}
+      return planningMaterial(resource as Resource<import('./materials.ts').Material>)
     }))
   }
   app.get('/api/auth/session',request=>({kind:owner(request).startsWith('account:')?'authenticated':'anonymous',provider:owner(request).startsWith('account:zhihu:')?'zhihu':'account'}))
@@ -92,6 +93,7 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
       if(!current)throw new CommandError('NOT_FOUND',404)
       if(current.revision===revision)return {unchanged:true,revision}
     }
+    await hydrateLearningGoal(ports.store,owner(request),resourceId(request))
     return ports.store.snapshot(owner(request),resourceId(request))
   })
   app.get('/api/v2/resources/:id/events',request=>{
@@ -142,7 +144,7 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     if(snapshot.kind!=='path')throw new CommandError('NOT_FOUND',404)
     const busy=snapshot.job&&['queued','running'].includes(snapshot.job.status),waiting=snapshot.job?.status==='waiting'||snapshot.job?.status==='cancelled'
     return {runId:id,searchScope:path.searchScope??{kind:'zhihu'},goal:path.goal,status:busy?'running':waiting?'failed':path.status,stage:snapshot.job?.phase??'',questionSets:path.questionSets,document:path.document,route:path.route,
-      reply:path.conversation.filter((m:any)=>m.role==='assistant').at(-1)?.content,conversation:path.conversation,knowledgeCreated:false,revision:snapshot.revision,
+      reply:path.conversation.filter((m:any)=>m.role==='assistant').at(-1)?.content,followUpMessage:path.conversation.filter((m:any)=>m.role==='assistant').at(-1)?.content,conversation:path.conversation,knowledgeCreated:false,revision:snapshot.revision,
       trace:pathTrace(await ports.store.db.query<any>('SELECT id,kind,status,checkpoints FROM tp_jobs WHERE owner_id=$1 AND resource_id=$2 ORDER BY created_at,id',[own,id]),path),
       ...(waiting?{error:{code:'RECOVERABLE',message:'这次还没完成，已收集的资料和选择都已保留。'}}:{})}
   }
@@ -161,9 +163,9 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
   })
   app.get('/api/path-runs/:id',request=>pathView(owner(request),resourceId(request)))
   app.post('/api/path-runs/:id/select',async request=>{
-    const {questionId,optionId}=z.object({questionId:Id,optionId:Id}).parse(bodyOf(request)),own=owner(request),id=resourceId(request)
+    const answer=z.union([z.object({questionId:Id,optionId:Id}).strict(),z.object({questionId:Id,customAnswer:z.string().max(4000).refine(s=>!!s.trim())}).strict()]).parse(bodyOf(request)),own=owner(request),id=resourceId(request)
     const state=(await ports.store.resource<PathState>(own,id)).body
-    await ports.store.enqueue(own,id,'path.answer',requestKey(request),{questionId,optionId,depth:state.depth},r=>selectPathOption(r,questionId,optionId))
+    await ports.store.enqueue(own,id,'path.answer',requestKey(request),{...answer,depth:state.depth},r=>'customAnswer' in answer?selectPathCustomAnswer(r,answer.questionId,answer.customAnswer):selectPathOption(r,answer.questionId,answer.optionId))
     ports.worker.wake();return pathView(own,id)
   })
   for(const action of ['follow-up','reply'] as const)app.post(`/api/path-runs/:id/${action}`,async request=>{
@@ -183,12 +185,13 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     if(!concept)throw new CommandError('NOT_FOUND',404)
     const conversationId=randomUUID(),materials=inheritedArticles(path.body.attachments??[])
     const materialNodes=materials.length?[{id:'root',type:'root' as const,title:concept.title,text:'',sources:materials.map(a=>a.id),parents:[]},...materials.map(a=>({id:a.id,type:'article' as const,title:a.title,text:a.summary,sources:[a.id],parents:['root']}))]:[]
-    const state:LearningState={searchScope:path.body.searchScope??{kind:'zhihu'},version:2,routeId:path.body.document.id,conceptId,title:concept.title,description:concept.detailedDescription,hasDispute:concept.hasDispute,
+    const state:LearningState={goalContext:pathGoalContext(path.body,conceptId),searchScope:path.body.searchScope??{kind:'zhihu'},version:2,routeId:path.body.document.id,conceptId,title:concept.title,description:concept.detailedDescription,hasDispute:concept.hasDispute,
       articles:materials,nodes:materialNodes,initialized:false,phase:'searching',active:conversationId,conversations:[{id:conversationId,title:concept.title,date:new Date().toISOString(),messages:[{id:'concept-question',role:'user',text:concept.title}]}]}
     const resource=await ports.store.create(own,'learning',`${path.id}:${conceptId}`,state)
     const missing=materials.filter(a=>!resource.body.articles.some((old:any)=>old.id===a.id))
-    if(missing.length)await ports.store.edit(own,resource.id,undefined,r=>{
+    if(missing.length||state.goalContext&&!resource.body.goalContext)await ports.store.edit(own,resource.id,undefined,r=>{
       const body=r.body as LearningState
+      body.goalContext??=state.goalContext
       if(!body.nodes.length)body.nodes.push({id:'root',type:'root',title:body.title,text:'',sources:[],parents:[]})
       for(const a of missing)if(!body.articles.some(old=>old.id===a.id)){body.articles.push(a);body.nodes.push({id:a.id,type:'article',title:a.title,text:a.summary,sources:[a.id],parents:['root']})}
       body.nodes.find(n=>n.type==='root')!.sources=body.articles.map(a=>a.id);return body
@@ -201,6 +204,7 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
   })
   app.post('/api/v2/learning/:id/commands',async request=>{
     const input=commandSchema.parse(bodyOf(request)),own=owner(request),id=resourceId(request)
+    await hydrateLearningGoal(ports.store,own,id)
     if(input.kind==='new-conversation'||input.kind==='activate-conversation'){
       const existing=await ports.store.resource<LearningState>(own,id)
       if(input.kind==='new-conversation'&&existing.body.conversations.some(c=>c.id===input.conversationId))return ports.store.snapshot(own,id)

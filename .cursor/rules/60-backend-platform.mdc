@@ -21,3 +21,5 @@ alwaysApply: false
 服务端配置键（不得进入浏览器）：`ZHIHU_ACCESS_SECRET`、`ZHIHU_API_BASE_URL`、`DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、`DEEPSEEK_MODEL_NAME`、`DEEPSEEK_CONTEXT_TOKENS`、`DATABASE_URL`、`THREADPEAK_PUBLIC_ORIGIN`、`THREADPEAK_IDENTITY_SECRET`、`THREADPEAK_IDENTITY_ISSUER`、`THREADPEAK_IDENTITY_AUDIENCE`、`THREADPEAK_LOGIN_URL`、`THREADPEAK_PORT`、`THREADPEAK_HOST`、`THREADPEAK_DATA_DIR`、`POSTGRES_PASSWORD`、`SITE_ADDRESS`、`ZHIHU_OAUTH_APP_ID`、`ZHIHU_OAUTH_APP_KEY`、`ZHIHU_OAUTH_REDIRECT_URI`。可配置知乎 OAuth 或受信身份网关。知乎还需 `ZHIHU_OAUTH_USERINFO_URL`、`ZHIHU_OAUTH_USER_ID_PATH`、`ZHIHU_OAUTH_USER_NAME_PATH`、`ZHIHU_OAUTH_USER_AVATAR_PATH`、`THREADPEAK_TOKEN_SECRET`；前两项按官方合同配置，不能猜稳定 ID。用户 API 强制该授权用户 Token，禁止回退开发者数据；未真实验证不得宣称登录完成。
 
 - 本轮用户授权 OAuth/个人内容域的显式 mock 例外：ZHIHU_OAUTH_MODE=mock 只用于本地，账号/来源独立命名空间，接口同合同，生产启动拒绝，真实API失败不得隐式回退；模型/搜索/PDF仍真实。
+
+- goal-v1：原始目标、真实回答、用户消息、当前问题/概念和来源绑定不压缩；来源按段落/公式/代码边界全量分块，逐来源独立摘要，缓存包含 owner、用途、深度、窗口、预算和版本；不合并同作者文章，不用截文本兜底。新 R4 要求逐概念资料锚点，并回查模型实际收到的材料版本。

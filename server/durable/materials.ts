@@ -25,11 +25,17 @@ export function textUpload(fileName:string,bytes:Buffer):Material{
   return {fileName,mimeType:ext==='txt'?'text/plain':'text/markdown',content,rawContent:content,status:'ready',origin:'upload',bytes:bytes.length,hash:digest(bytes.toString('base64'))}
 }
 export function materialView(record:Resource<Material>){const b=record.body;return {sourceId:record.id,fileName:b.fileName,mimeType:b.mimeType,content:b.status!=='processing'?b.content:'',status:b.status??'ready',origin:b.origin??'upload',count:b.entries?.length,bytes:b.bytes,folderId:b.folderId,recent:b.recent}}
+/** Plan against parsed PDF text, then compress for the actual goal, never a generic upload summary. */
+export function planningMaterial(record:Resource<Material>){
+  const b=record.body,parsed=b.mimeType==='application/pdf'&&!!b.rawContent?.trim()
+  return {...b,sourceId:record.id,rawContent:undefined,content:parsed?b.rawContent!:b.content,
+    contentBasis:parsed?'parsed_document':b.mimeType==='application/pdf'||b.origin!=='upload'?'source_summary':'source_text'}
+}
 export function inheritedArticles(attachments:any[]):Article[]{
   const articles:Article[]=[]
   for(const a of attachments){
     if(a.entries?.length){for(const entry of a.entries as MaterialEntry[])articles.push({id:`material-${digest({sourceId:a.sourceId,url:entry.url}).slice(0,32)}`,title:entry.title,summary:entry.summary||'该收藏内容未提供摘要，可阅读原文。',author:entry.authorName??'知乎收藏',authorId:entry.authorId,authorUrl:entry.authorUrl,likes:entry.likes,url:entry.url,topic:a.fileName,sourceKind:a.origin==='creation'?'creation':'collection',materialId:a.sourceId})}
-    else articles.push({id:`material-${a.sourceId}`,title:a.fileName,summary:a.content,author:'我的资料',authorId:null,likes:null,topic:a.mimeType==='application/pdf'?'PDF 总结':'上传文件',sourceKind:'upload',materialId:a.sourceId})
+    else articles.push({id:`material-${a.sourceId}`,title:a.fileName,summary:a.content,author:'我的资料',authorId:null,likes:null,topic:a.mimeType==='application/pdf'?(a.contentBasis==='parsed_document'?'PDF 正文':'PDF 总结'):'上传文件',sourceKind:'upload',materialId:a.sourceId})
   }
   return articles
 }

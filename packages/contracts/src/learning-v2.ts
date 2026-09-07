@@ -1,3 +1,4 @@
+import { GoalContextSchema } from './learning-goal.ts'
 import { z } from 'zod'
 import {SearchScopeSchema} from './search-scope.ts'
 
@@ -11,7 +12,8 @@ export const NodeSchema = z.object({ id: Id, type: z.enum(['root','article','ans
   author: AuthorEvidenceSchema.optional(), origin: z.enum(['articles','direct','author']).optional(), basisId: Id.optional(), edited: z.boolean().optional() })
 export const MessageSchema = z.object({ id: Id, role: z.enum(['user','assistant']), text: Text.optional(), paragraphs: z.array(ParagraphSchema).optional(), selected: z.array(Id).optional(), kind: z.literal('author').optional(), incomplete: z.boolean().optional() })
 export const ConversationSchema = z.object({ id: Id, title: z.string(), messages: z.array(MessageSchema), date: z.string() })
-export const LearningSchema = z.object({ searchScope:SearchScopeSchema.optional(), version: z.literal(2), routeId: Id, conceptId: Id, title: z.string(), description: z.string(), hasDispute: z.boolean(),
+export const LearningSchema = z.object({
+  goalContext:GoalContextSchema.optional(), searchScope:SearchScopeSchema.optional(), version: z.literal(2), routeId: Id, conceptId: Id, title: z.string(), description: z.string(), hasDispute: z.boolean(),
   articles: z.array(ArticleSchema), nodes: z.array(NodeSchema), conversations: z.array(ConversationSchema), active: Id,
   initialized: z.boolean(), phase: z.enum(['searching','direct','organizing','ready','empty']), importResult:z.object({jobId:Id,status:z.enum(['added','already-present','unrelated']),title:z.string()}).optional(), initialAnswer: z.array(ParagraphSchema).optional() })
 export type Article = z.infer<typeof ArticleSchema>
