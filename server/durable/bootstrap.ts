@@ -7,7 +7,7 @@ import { resolveProviderConfig } from '../config.ts'
 import { createAgentLlmProvider } from '../agent-runtime/llm-provider.ts'
 import { createAgentZhihuProvider } from '../agent-runtime/zhihu-provider.ts'
 import type { HttpPort } from '../ports.ts'
-import type { LlmProvider, ZhihuProvider } from '../agent-runtime/types.ts'
+import type { LlmProvider } from '../agent-runtime/types.ts'
 import { openDatabase,migrate,type Sql } from './database.ts'
 import { DurableStore } from './store.ts'
 import { DurableWorker, ToolError,type TaskHandler } from './worker.ts'
@@ -16,6 +16,7 @@ import { ProductTools } from './tools.ts'
 import { createFlows } from './flows.ts'
 import { createProductApp } from './http.ts'
 import { withPermit } from './limits.ts'
+import { createZhihuGate,limitZhihuProvider,type ZhihuGate } from './zhihu-gate.ts'
 
 export function serverEnvironment():NodeJS.ProcessEnv{
   const env={...process.env}
@@ -28,14 +29,14 @@ export function serverEnvironment():NodeJS.ProcessEnv{
 export const http:HttpPort=async(url,init)=>{
   const timeout=AbortSignal.timeout(init?.timeoutMs??90_000),signal=init?.signal?AbortSignal.any([timeout,init.signal]):timeout
   const response=await fetch(url,{method:init?.method??'GET',headers:init?.headers,body:init?.body,signal,redirect:'error'})
-  return {ok:response.ok,status:response.status,body:response.body,text:()=>response.text()}
+  return {ok:response.ok,status:response.status,headers:response.headers,body:response.body,text:()=>response.text()}
 }
-export function createZhihuUserServices(db:Sql,env:Record<string,string|undefined>){
+export function createZhihuUserServices(db:Sql,env:Record<string,string|undefined>,gate:ZhihuGate=createZhihuGate(db)){
   let oauth=loginConfig(env)
   if(oauth?.mode==='mock'&&!env.THREADPEAK_TOKEN_SECRET?.trim())oauth={...oauth,tokenSecret:readOrCreateMockSecret(env.THREADPEAK_DATA_DIR??resolve('server/.data/product-v2'))}
-  const zhihuLogin=oauth?new ZhihuLogin(db,oauth):undefined
+  const zhihuLogin=oauth?new ZhihuLogin(db,oauth,fetch,gate):undefined
   // Only the user API sub-adapter is mocked. PDF/data requests still need the real Access Secret.
-  const zhihuData=env.ZHIHU_ACCESS_SECRET||zhihuLogin?.mock?new ZhihuDataClient(env.ZHIHU_ACCESS_SECRET??'',fetch,'https://developer.zhihu.com',zhihuLogin?.mock):undefined
+  const zhihuData=env.ZHIHU_ACCESS_SECRET||zhihuLogin?.mock?new ZhihuDataClient(env.ZHIHU_ACCESS_SECRET??'',fetch,'https://developer.zhihu.com',zhihuLogin?.mock,gate):undefined
   return {zhihuLogin,zhihuData}
 }
 export async function startProductServer(env=serverEnvironment()){
@@ -49,7 +50,7 @@ export async function startProductServer(env=serverEnvironment()){
   if(env.THREADPEAK_LOGIN_URL&&new URL(env.THREADPEAK_LOGIN_URL).protocol!=='https:')throw new Error('LOGIN_URL_MUST_BE_HTTPS')
   const db=await openDatabase({url:env.DATABASE_URL,directory:env.THREADPEAK_DATA_DIR??resolve('server/.data/product-v2')});
   for(let attempt=0;;attempt++){try{await migrate(db);break}catch(error){const code=(error as {code?:string}).code??'';if(attempt>=9||!['ECONNREFUSED','ECONNRESET','CONNECTION_CLOSED','CONNECTION_ENDED','CONNECT_TIMEOUT','57P03','57P01'].includes(code)){await db.close();throw new Error('DATABASE_START_FAILED')}process.stdout.write(JSON.stringify({event:'server.waiting_for_database',attempt:attempt+1})+'\n');await new Promise(resolve=>setTimeout(resolve,Math.min(5000,1000*2**attempt)))}}
-  const store=new DurableStore(db),config=resolveProviderConfig(env),{zhihuData,zhihuLogin}=createZhihuUserServices(db,env)
+  const gate=createZhihuGate(db),store=new DurableStore(db),config=resolveProviderConfig(env),{zhihuData,zhihuLogin}=createZhihuUserServices(db,env,gate)
   // Switching to real (including production) cannot retain a usable demo workspace cookie.
   if(zhihuLogin?.config.mode!=='mock')await db.query('DELETE FROM tp_sessions WHERE owner_id LIKE $1',[`${MOCK_ZHIHU_OWNER_PREFIX}%`])
   let handler:TaskHandler=async ctx=>{
@@ -57,9 +58,9 @@ export async function startProductServer(env=serverEnvironment()){
     throw new ToolError('PROVIDER_CONFIG_REQUIRED',false)
   }
   if(config.ok){
-    const rawLlm=createAgentLlmProvider({config:config.config,http}),rawZhihu=createAgentZhihuProvider({config:config.config,http,clock:{now:()=>new Date(),unixSeconds:()=>Math.floor(Date.now()/1000)}})
+    const rawLlm=createAgentLlmProvider({config:config.config,http}),rawZhihu=createAgentZhihuProvider({config:config.config,http:async(url,init)=>{const response=await http(url,init);await gate.observe(response);return response},clock:{now:()=>new Date(),unixSeconds:()=>Math.floor(Date.now()/1000)}})
     const llm:LlmProvider={complete:input=>withPermit(db,'llm',4,input.signal,signal=>rawLlm.complete({...input,signal}))}
-    const zhihu:ZhihuProvider={search:(q,count,signal)=>withPermit(db,'zhihu',3,signal,next=>rawZhihu.search(q,count,next)),...(rawZhihu.globalSearch?{globalSearch:(q:string,count:number,signal?:AbortSignal)=>withPermit(db,'zhihu',3,signal,next=>rawZhihu.globalSearch!(q,count,next))}:{}),direct:input=>withPermit(db,'direct',2,input.signal,next=>withPermit(db,'zhihu',3,next,signal=>rawZhihu.direct({...input,signal})))}
+    const zhihu=limitZhihuProvider(rawZhihu,gate)
     handler=createFlows(new ProductTools(llm,zhihu,window),zhihuData,zhihuLogin)
   }
   const worker=new DurableWorker(store,handler),app=await createProductApp({store,worker,providersReady:config.ok,zhihuData,zhihuLogin,identity:{production,origin:env.THREADPEAK_PUBLIC_ORIGIN,jwtSecret:env.THREADPEAK_IDENTITY_SECRET,issuer:env.THREADPEAK_IDENTITY_ISSUER,audience:env.THREADPEAK_IDENTITY_AUDIENCE,loginUrl:env.THREADPEAK_LOGIN_URL}})

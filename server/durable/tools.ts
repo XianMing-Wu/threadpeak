@@ -1,8 +1,9 @@
+import { CompositionSchema,ANSWER_COMPLETENESS,COMPOSE_PROMPT,COMPOSE_OUTPUT,ATTACH_PROMPT,ATTACH_OUTPUT,validateComposition,citationCatalog,attachComposition } from '../knowledge/answer-composition.ts'
 import { GOAL_POLICY, AGENT_CONTRACT_VERSION } from '../agent-runtime/goal-policy.ts'
 import { validateGoalExploration, GOAL_EXPLORATION_PROMPT, GOAL_EXPLORATION_OUTPUT } from '../path-generation/goal-exploration.ts'
 import type {SearchScope} from '../../packages/contracts/src/search-scope.ts'
 import {validateAnswerMath} from './math-output.ts'
-import {CardScopeSchema,CardOperationsSchema,CARD_ANSWER_PROMPT,CARD_ANSWER_OUTPUT,GOAL_ANSWER_FOCUS,readCardScope,resolveCardOperations,type CardMaterial} from '../knowledge/card-tools.ts'
+import {CardScopeSchema,GOAL_ANSWER_FOCUS,readCardScope,type CardMaterial} from '../knowledge/card-tools.ts'
 import {digest} from './store.ts'
 import { z } from 'zod'
 import { AGENT_PROMPTS, OUTPUT_STRUCTURE_TEXT, systemPromptFor } from '../agent-runtime/prompts.ts'
@@ -28,7 +29,7 @@ export const LEARNING_TOOL_SPECS = {
     output:'{"evidenceIds":["输入中的证据ID"]}',
     schema:z.object({evidenceIds:z.array(z.string())}),
   },
-  'L-answer': {prompt:CARD_ANSWER_PROMPT,output:CARD_ANSWER_OUTPUT,schema:CardOperationsSchema},
+  'L-answer': {prompt:COMPOSE_PROMPT,output:COMPOSE_OUTPUT,schema:CompositionSchema},
   'A-card-plan': {
     prompt:'将用户针对当前卡片的问题改写成 2–3 条等价知乎检索问法，寻找能解答该问题的新博主。每条不超过 90 字。保持概念和真正疑问，不自行回答、不指定输入没有的人名。只输出 JSON。',
     output:'{"queries":["等价问法一","等价问法二"]}',
@@ -44,12 +45,15 @@ export type LearningTool = keyof typeof LEARNING_TOOL_SPECS
 export class ProductTools {
   llm: LlmProvider; zhihu: ZhihuProvider; window: number
   constructor(llm:LlmProvider, zhihu:ZhihuProvider, window=64_000) { this.llm=llm; this.zhihu=zhihu; this.window=window }
-  async structured<T>(ctx:TaskContext, name:string, system:string, input:unknown, validate:(value:unknown,prepared:unknown)=>T, output=8192):Promise<T> {
+  async structured<T>(ctx:TaskContext, name:string, system:string, input:unknown, validate:(value:unknown,prepared:unknown)=>T, output=8192, options:{stream?:boolean;prepare?:(input:any)=>unknown}={}):Promise<T> {
     return ctx.step(`${name}@${AGENT_CONTRACT_VERSION}`, {input,system,window:this.window}, async()=>{
+      const label=({'L-search-plan':'拆解检索方向','L-source-select':'筛选相关资料','A-card-plan':'理解请教问题','A-card-select':'筛选相关博主'} as Record<string,string>)[name]
+      if(label)await ctx.activity(name,'read',label)
       const depth:ThinkingDepth=ctx.job.input.depth??'fast'
       const window=effectiveWindow(this.window)
       const reserve=Math.min(Math.floor(window*.35), output+(depth==='deep'?8192:0))
-      const base=await packContext(this.llm,ctx,system,input,depth,{window:this.window,output:reserve,margin:2048})
+      const base=await packContext(this.llm,ctx,system,input,depth,{window:this.window,output:reserve,margin:options.prepare?Math.max(4096,Math.ceil(window*.08)):2048})
+      if(options.prepare)base[1]!.content=JSON.stringify(options.prepare(JSON.parse(base[1]!.content)))
       let previous='',reason=''
       for(let attempt=0;attempt<3;attempt++){
         let messages=base
@@ -65,10 +69,13 @@ export class ProductTools {
         }
         if(messages.reduce((s,m)=>s+tokenBound(m.content)+64,0)+reserve+512>window)throw new ToolError('CONTEXT_REQUIRES_PARTITION',false)
         const result=await this.llm.complete({messages,json:true,thinkingDepth:depth,maxTokens:reserve,signal:ctx.signal,
-          ...(name.startsWith('L-answer')?{onText:(raw:string)=>ctx.draft('正在整理回答',paragraphDraft(raw))}:{})})
+          ...(options.stream&&attempt===0&&!ctx.job.draft?{onText:(raw:string)=>{const text=paragraphDraft(raw,true);if(text.trim())ctx.draft('正在撰写讲解',text)}}:{})})
         if(result.kind==='failed')throw new ToolError(result.code??'MODEL_UNAVAILABLE',result.retryable??true)
         previous=result.text
-        try{return validate(JSON.parse(previous.replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,'')),JSON.parse(base[1]!.content))}catch(error){reason=error instanceof Error?error.message:'输出不完整';await ctx.store.checkpoint(ctx.job,`diagnostic:${name}:${attempt}`,digest(previous),{reason})}
+        let validated:T
+        try{validated=validate(JSON.parse(previous.replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,'')),JSON.parse(base[1]!.content))}catch(error){reason=error instanceof Error?error.message:'输出不完整';await ctx.store.checkpoint(ctx.job,`diagnostic:${name}:${attempt}`,digest(previous),{reason});continue}
+        if(label)await ctx.activity(name,'read',label,'done')
+        return validated
       }
       throw new ToolError('STRUCTURE_NOT_SETTLED',false)
     })
@@ -81,20 +88,42 @@ export class ProductTools {
   }
   async answerCards(ctx:TaskContext,input:{allowedCards:CardMaterial[];[key:string]:unknown}){
     const {allowedCards,...context}=input,scope=readCardScope(allowedCards)
-    // Validate against the exact view sent to the model, including explicitly labelled
-    // summaries. A summary quote is not misrepresented as a verbatim article quote.
-    const answerBounds={maxCards:Array.isArray(context.directAnswers)?8:12}
-    const output=await this.structured(ctx,'L-answer:cards-v2',`${SHARED_SYSTEM_PREFIX}\n${GOAL_POLICY}\n${CARD_ANSWER_PROMPT}\n${GOAL_ANSWER_FOCUS}\n输出 JSON（示例编号不代表默认来源，只能使用实际范围中的编号）：${CARD_ANSWER_OUTPUT}`,{...context,answerBounds,read_card_scope:scope.view},(value,prepared)=>{
+    const first=Array.isArray(context.directAnswers),answerBounds={maxCards:first?8:12}
+    const outputShape=first?COMPOSE_OUTPUT:'{"sections":[{"after":"C1","title":"本段教学要点","text":"承接前文，围绕同一例子推进"}]}'
+    const modeRule=first?'这是首次学习，先审阅所有来源贡献，再组织适合目标的首次讲解。':'这是后续追问：用户要的是当前问题的直接答案。省略 sourceReview，不重播首次定义课；只补理解当前例子必需的基础。'
+    await ctx.activity('answer:write','write','撰写讲解')
+    const composed=await this.structured(ctx,'L-answer:compose-v3',`${SHARED_SYSTEM_PREFIX}\n${GOAL_POLICY}\n${COMPOSE_PROMPT}\n${GOAL_ANSWER_FOCUS}\n${ANSWER_COMPLETENESS}\n${modeRule}\n输出 JSON：${outputShape}`,{...context,mode:first?'first_learning':'follow_up',answerBounds,read_card_scope:scope.view},(value,prepared)=>{
       const view=CardScopeSchema.parse((prepared as {read_card_scope:unknown}).read_card_scope)
       if(view.cards.length!==scope.ids.length||view.cards.some((card,i)=>card.ref!==scope.view.cards[i]!.ref||card.title!==scope.view.cards[i]!.title))throw new Error('压缩不能改变卡片引用范围或绑定')
-      const operations=CardOperationsSchema.parse(value)
-      if(operations.operations.length>answerBounds.maxCards)throw new Error(`本次正文最多 ${answerBounds.maxCards} 段；请按当前概念与目标合并重复讲解，删除逐篇复述和无关拓展。sourceReview 仍须覆盖全部材料。`)
-      const paragraphs=resolveCardOperations({...scope,view},operations,Array.isArray(context.directAnswers))
-      for(const card of paragraphs)validateAnswerMath(card.text)
-      return {...operations,paragraphs,materials:view.cards.map((card,i)=>({ref:card.ref,contentHash:digest({title:card.title,content:card.content}),summarized:card.content!==scope.view.cards[i]!.content}))}
-    },16_384)
+      const answer=validateComposition(value,view,answerBounds.maxCards,first)
+      for(const section of answer.sections)validateAnswerMath(section.text)
+      return {answer,view}
+    },16_384,{stream:true})
+    await ctx.progress('讲解已整理',composed.answer.sections.map(s=>`### ${s.title}\n\n${s.text}`).join('\n\n'))
+    await ctx.activity('answer:write','write','撰写讲解','done')
+    await ctx.activity('answer:attach','edit','关联知识卡','running',`${composed.answer.sections.length} 段讲解 · 核对资料依据`)
+    const output=await this.structured(ctx,'L-answer:attach-v3',`${SHARED_SYSTEM_PREFIX}\n${GOAL_POLICY}\n${ATTACH_PROMPT}\n输出 JSON：${ATTACH_OUTPUT}`,{
+      goalContext:context.goalContext,currentQuestion:context.currentQuestion,
+      answerSections:composed.answer.sections.map((s,i)=>({ref:`P${i+1}`,...s})),
+      read_card_scope:{cards:composed.view.cards},
+    },(value,prepared)=>{
+      const catalog=(prepared as {citationCatalog:ReturnType<typeof citationCatalog>}).citationCatalog
+      const view={cards:composed.view.cards.map(card=>{
+        const actual=catalog.find(c=>c.ref===card.ref)
+        return actual?{...card,content:actual.excerpts.slice(1).map(e=>e.text).join('')}:card
+      })}
+      return {paragraphs:attachComposition({...scope,view},composed.answer,catalog,value),catalog}
+    },4096,{prepare:input=>{
+      const {read_card_scope,...rest}=input
+      const view=CardScopeSchema.parse(read_card_scope)
+      const expected=composed.view.cards
+      if(view.cards.length!==expected.length||view.cards.some((c,i)=>c.ref!==expected[i]!.ref||c.title!==expected[i]!.title))throw new Error('引用材料绑定不能改变')
+      return {...rest,citationCatalog:citationCatalog(view)}
+    }})
+    await ctx.activity('answer:attach','edit','关联知识卡','done',`${output.paragraphs.length} 段讲解已关联`)
     return {paragraphs:output.paragraphs}
   }
+
   async legacy<T>(ctx:TaskContext,agent:AgentId,input:unknown,parseInput:ParseAgentOutputInput={},checkpoint:string=agent):Promise<T>{
     if(agent==='R2')return this.structured(ctx,checkpoint,`${SHARED_SYSTEM_PREFIX}\n${GOAL_POLICY}\n${GOAL_EXPLORATION_PROMPT}\n输出 JSON：${GOAL_EXPLORATION_OUTPUT}`,input,validateGoalExploration,16384) as Promise<T>
     const searchRule=['R1','N1','A1'].includes(agent)?'每条搜索问法尽量控制在 45 字内；所有问法按角度分成两组后，每组合并长度必须不超过 200 字，不能丢掉任何角度。':''
@@ -135,13 +164,17 @@ export class ProductTools {
       return items
     })
     return ctx.step(`${name}@${AGENT_CONTRACT_VERSION}`,{query,count:10},async()=>{
+      await ctx.activity(name,'search','搜索知乎','running',query)
       const result=await this.zhihu.search(query,10,ctx.signal)
       if(result.kind==='failed')throw new ToolError(result.code??'SEARCH_UNAVAILABLE', result.retryable??!/鉴权/.test(result.message))
+      await ctx.activity(name,'search','搜索知乎','done',`${result.kind==='hits'?result.items.length:0} 条检索结果`)
       return result.kind==='hits'?[...result.items]:[]
     })
   }
   async direct(ctx:TaskContext,name:string,agent:'L0a'|'A3',input:unknown,angle?:L0aAngle,materialsOnly=false):Promise<string>{
     return ctx.step(`${name}@${AGENT_CONTRACT_VERSION}`,{input,materialsOnly},async()=>{
+      const label=angle?({concrete_explanation:'理解具体用法',dispute:'辨别观点差异',pitfalls:'梳理容易误解的地方'} as const)[angle]:'整理直接讲解'
+      await ctx.activity(name,'read',label)
       const depth=ctx.job.input.depth??'fast'
       const messages=await packContext(this.llm,ctx,`${SHARED_SYSTEM_PREFIX}\n${systemPromptFor(agent,angle)}\n如果提供 materials，使用其中与当前概念有关的例子、符号和学习侧重点，不能将整份文件扩展成当前概念之外的讲解。`,input,depth,{window:this.window,output:8192,margin:2048})
       const result=materialsOnly
@@ -149,6 +182,7 @@ export class ProductTools {
         : await this.zhihu.direct({messages,thinkingDepth:depth,signal:ctx.signal})
       if(result.kind==='failed')throw new ToolError(result.code??'DIRECT_UNAVAILABLE',result.retryable??!/鉴权/.test(result.message))
       if(!result.text.trim())throw new ToolError('DIRECT_EMPTY')
+      await ctx.activity(name,'read',label,'done')
       return result.text
     })
   }

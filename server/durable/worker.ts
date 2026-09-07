@@ -1,3 +1,4 @@
+import type {TaskActivity} from '../../packages/contracts/src/task-activity.ts'
 import { CommandError, digest, type DurableStore, type Job, type Resource } from './store.ts'
 
 export class ToolError extends Error {
@@ -15,6 +16,7 @@ export class TaskContext {
   private pending = new Map<string, Promise<unknown>>()
   private progressChain: Promise<void> = Promise.resolve()
   private lastDraft = 0
+  private pendingDraft?: {phase:string;text:string}
   store: DurableStore; job: Job; signal: AbortSignal
   constructor(store: DurableStore, job: Job, signal: AbortSignal) { this.store=store; this.job=job; this.signal=signal }
   async step<T>(name: string, input: unknown, work: () => Promise<T>): Promise<T> {
@@ -31,20 +33,40 @@ export class TaskContext {
       return value
     })()
     this.pending.set(name, task)
-    try { return await task } finally { this.pending.delete(name) }
+    try { return await task } catch(error) {
+      const id=name.startsWith('L-answer:attach')?'answer:attach':name.startsWith('L-answer:compose')?'answer:write':name.startsWith('memory:')?`context:summary:${name.slice('memory:'.length)}`:name.split('@')[0]
+      const activity=this.job.activities?.find(a=>a.id===id)
+      if(activity&&!this.signal.aborted&&error instanceof ToolError){
+        const detail=/(?:^|_)HTTP_429$/.test(error.code)?'服务暂时繁忙，等待重试':error.code==='STRUCTURE_NOT_SETTLED'?'这一步尚未完成，已保留正文与前面进度':'服务暂时未响应，已保留前面进度'
+        await this.activity(activity.id,activity.kind,activity.title,'waiting',detail)
+      }
+      throw error
+    } finally { this.pending.delete(name) }
   }
-  async progress(phase: string, draft = '', update?: (resource: Resource) => unknown) {
+  async progress(phase: string, draft?: string, update?: (resource: Resource) => unknown) {
     this.signal.throwIfAborted()
+    if(draft!==undefined)this.pendingDraft=undefined
     this.progressChain = this.progressChain.then(() => this.store.progress(this.job, phase, draft, update))
     return this.progressChain
   }
+  async activity(id:string,kind:TaskActivity['kind'],title:string,status:TaskActivity['status']='running',detail?:string) {
+    this.signal.throwIfAborted()
+    this.progressChain=this.progressChain.then(()=>this.store.activity(this.job,{id,kind,title,status,detail}))
+    return this.progressChain
+  }
   draft(phase: string, text: string) {
-    if (Date.now()-this.lastDraft < 250) return
+    if(!text.trim())return
+    this.pendingDraft={phase,text}
+    if (Date.now()-this.lastDraft < 150) return
     this.lastDraft = Date.now()
     // Keep an awaited chain: a background draft cannot overwrite a completed task.
     void this.progress(phase, text).catch(() => {})
   }
-  async flush() { await this.progressChain }
+  async flush() {
+    const pending=this.pendingDraft
+    if(pending)await this.progress(pending.phase,pending.text)
+    await this.progressChain
+  }
 }
 export type TaskHandler = (ctx: TaskContext) => Promise<void>
 export class DurableWorker {

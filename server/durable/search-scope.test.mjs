@@ -1,3 +1,4 @@
+import {placeAnswer} from '../../tests/fixtures/card-answer.mjs'
 import {plan as goalPlan, exploration as goalExploration, interview as goalInterview} from '../../tests/fixtures/goal-agents.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
@@ -31,7 +32,7 @@ test('real provider adapter keeps global origin, platform headers and no CSDN au
   const result=await provider.globalSearch('矩阵',20);assert.equal(result.kind,'hits');assert.equal(result.items[0].authorId,null);assert.equal(result.items[0].sourceKind,'web');assert.equal(result.items[0].summary.length,5000)
 })
 test('web branch retains successful provider checkpoint across rate limiting and prefers Zhihu on duplicate URLs',async()=>{
-  let zcalls=0,wcalls=0;const saved=new Map();const ctx={signal:new AbortController().signal,step:async(name,input,fn)=>{if(saved.has(name))return saved.get(name);const value=await fn();saved.set(name,value);return value}}
+  let zcalls=0,wcalls=0;const saved=new Map();const ctx={activity:async()=>{},signal:new AbortController().signal,step:async(name,input,fn)=>{if(saved.has(name))return saved.get(name);const value=await fn();saved.set(name,value);return value}}
   const z={evidenceId:'z',authorId:'author-z',authorName:'知乎作者',title:'概念',summary:'知乎摘要',url:'https://www.zhihu.com/answer/12?utm_source=z',sourceKind:'zhihu'}
   const tools=new ProductTools({}, {search:async()=>{zcalls++;return {kind:'hits',items:[z]}},globalSearch:async()=>{wcalls++;return wcalls===1?{kind:'failed',code:'HTTP_429',retryable:true,message:'限流'}:{kind:'hits',items:[{...z,evidenceId:'other',url:'https://www.zhihu.com/answer/12?utm_source=web'},{...z,evidenceId:'csdn',url:'https://blog.csdn.net/example/article/details/13'}]}}})
   await assert.rejects(tools.search(ctx,'R-S:0','概念',{kind:'web'}),e=>e.code==='HTTP_429')
@@ -42,7 +43,8 @@ test('collection-only route and concept inherit owned scope with zero external s
   const db=await openDatabase();await migrate(db);const store=new DurableStore(db),inputs=[]
   const llm={complete:async args=>{
     const c=JSON.parse(args.messages[1].content);inputs.push(c)
-    if(c.read_card_scope){return {kind:'completed',text:JSON.stringify({sourceReview:c.read_card_scope.cards.map(x=>({ref:x.ref,contribution:'解释坐标'})),operations:[{tool:'append_cards',after:'C1',evidence:[c.read_card_scope.cards[0].content],title:'理解坐标',text:'坐标表示基下的分量。'}]})}}
+    if(c.citationCatalog)return {kind:'completed',text:JSON.stringify(placeAnswer(c))}
+    if(c.read_card_scope){return {kind:'completed',text:JSON.stringify({sourceReview:c.read_card_scope.cards.map(x=>({ref:x.ref,contribution:'解释坐标'})),sections:[{after:'C1',title:'理解坐标',text:'坐标表示基下的分量。'}]})}}
     if(c.angle)return {kind:'completed',text:'根据所选收藏，坐标表示基下的分量。'}
     if(c.newerRoundPreferred)return {kind:'completed',text:JSON.stringify(goalPlan())}
     if(c.exploration)return {kind:'completed',text:JSON.stringify(goalInterview())}

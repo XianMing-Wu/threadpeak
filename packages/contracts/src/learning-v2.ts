@@ -1,3 +1,4 @@
+import {TaskActivitySchema} from './task-activity.ts'
 import { GoalContextSchema } from './learning-goal.ts'
 import { z } from 'zod'
 import {SearchScopeSchema} from './search-scope.ts'
@@ -10,7 +11,7 @@ export const ParagraphSchema = z.object({ id: Id, title: z.string(), text: Text,
 export const NodeSchema = z.object({ id: Id, type: z.enum(['root','article','answer','author','custom']), title: z.string().max(1000), text: Text,
   sources: z.array(Id), parents: z.array(Id).max(1), color: z.string().regex(/^#[0-9a-f]{6}$/i).optional(), stroke: z.number().int().min(1).max(3).optional(),
   author: AuthorEvidenceSchema.optional(), origin: z.enum(['articles','direct','author']).optional(), basisId: Id.optional(), edited: z.boolean().optional() })
-export const MessageSchema = z.object({ id: Id, role: z.enum(['user','assistant']), text: Text.optional(), paragraphs: z.array(ParagraphSchema).optional(), selected: z.array(Id).optional(), kind: z.literal('author').optional(), incomplete: z.boolean().optional() })
+export const MessageSchema = z.object({ activities:z.array(TaskActivitySchema).optional(), id: Id, role: z.enum(['user','assistant']), text: Text.optional(), paragraphs: z.array(ParagraphSchema).optional(), selected: z.array(Id).optional(), kind: z.literal('author').optional(), incomplete: z.boolean().optional() })
 export const ConversationSchema = z.object({ id: Id, title: z.string(), messages: z.array(MessageSchema), date: z.string() })
 export const LearningSchema = z.object({
   goalContext:GoalContextSchema.optional(), searchScope:SearchScopeSchema.optional(), version: z.literal(2), routeId: Id, conceptId: Id, title: z.string(), description: z.string(), hasDispute: z.boolean(),

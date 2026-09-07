@@ -127,6 +127,7 @@ export function createFlows(tools:ProductTools,api?:ZhihuDataClient,login?:Zhihu
   }
   async function settleLearning(ctx:TaskContext,paragraphs:Paragraph[],first=false,network:SearchEvidence[]=[],normalizedQuestion=''){
     await ctx.flush()
+    await ctx.activity('answer:save','edit','编辑知识脉络','running',`创建 ${paragraphs.length} 张卡片`)
     await ctx.store.commit(ctx.job,async(resource,tx)=>{
       const state=resource.body as LearningState
       for(const p of paragraphs)if(!state.nodes.some(n=>n.id===p.parents[0]))throw new CommandError('MATERIAL_REMOVED')
@@ -134,7 +135,7 @@ export function createFlows(tools:ProductTools,api?:ZhihuDataClient,login?:Zhihu
       if(!conversation)throw new CommandError('CONVERSATION_NOT_FOUND')
       const existing=new Set(state.nodes.map(n=>n.id))
       state.nodes.push(...paragraphs.filter(p=>!existing.has(p.id)).map(paragraphNode));validateTree(state.nodes)
-      conversation.messages.push({id:ctx.job.id,role:'assistant',paragraphs,...(paragraphs.some(p=>p.author)?{kind:'author' as const}:{})})
+      conversation.messages.push({id:ctx.job.id,role:'assistant',paragraphs,activities:(ctx.job.activities??[]).map(a=>a.status==='running'?{...a,status:'done' as const,finishedAt:Date.now()}:a),...(paragraphs.some(p=>p.author)?{kind:'author' as const}:{})})
       if(first){state.initialized=true;state.initialAnswer=paragraphs;state.phase='ready'}
       for(const evidence of network)await tx.query(`INSERT INTO tp_author_network(owner_id,author_id,evidence_id,weight,body) VALUES($1,$2,$3,'high',$4::jsonb) ON CONFLICT DO NOTHING`,[ctx.job.owner_id,evidence.authorId,evidence.evidenceId,JSON.stringify({evidence,question:normalizedQuestion,routeId:state.routeId,conceptId:state.conceptId,conceptTitle:state.title})])
       if(!first&&ctx.job.kind==='learning.reply')await recordAuthorUse(tx,ctx.job.owner_id,resource.id,ctx.job.id,state,ctx.job.input.selected??[],paragraphs)
@@ -155,7 +156,7 @@ export function createFlows(tools:ProductTools,api?:ZhihuDataClient,login?:Zhihu
       }):{evidenceIds:[]}
       const articles=[...state.articles.filter(a=>a.materialId),...selection.evidenceIds.map(id=>articleOf(evidence.find(e=>e.evidenceId===id)!))]
       if(!articles.length){await ctx.store.commit(ctx.job,r=>({...r.body,phase:'empty'}));return}
-      await ctx.progress('从不同角度理解概念','',r=>{
+      await ctx.progress('从不同角度理解概念',undefined,r=>{
         const s=r.body as LearningState;s.articles=articles
         if(!s.nodes.length)s.nodes=[{id:'root',type:'root',title:s.title,text:'',sources:articles.map(a=>a.id),parents:[]},...articles.map(a=>({id:a.id,type:'article' as const,title:a.title,text:a.summary,sources:[a.id],parents:['root']}))]
         for(const a of articles)if(!s.nodes.some(n=>n.id===a.id))s.nodes.push({id:a.id,type:'article',title:a.title,text:a.summary,sources:[a.id],parents:['root']})
@@ -166,7 +167,7 @@ export function createFlows(tools:ProductTools,api?:ZhihuDataClient,login?:Zhihu
       const angles=['concrete_explanation','dispute','pitfalls'] as const
       // All three routes run; a separate provider concurrency limiter can queue them.
       const directAnswers=await settledParallel(angles.map(async angle=>({angle,content:await tools.direct(ctx,`L-direct:${angle}`,'L0a',{goalContext:state.goalContext,concept:{conceptId:state.conceptId,title:state.title,hasDispute:state.hasDispute,detailedDescription:state.description},angle,searchScope,materials:state.articles.filter(a=>a.materialId).map(a=>({id:a.id,title:a.title,content:a.summary}))},angle,searchScope.kind==='collections')})))
-      await ctx.progress('正在整理第一段讲解','',r=>({...r.body,phase:'organizing'}))
+      await ctx.progress('正在整理第一段讲解',undefined,r=>({...r.body,phase:'organizing'}))
       const input=replyInput(state,state.title,[],ctx.job.input.conversationId)
       const output=await tools.answerCards(ctx,{...answerContext(input),directAnswers})
       await settleLearning(ctx,buildParagraphs(ctx,input.cards,output.paragraphs),true)

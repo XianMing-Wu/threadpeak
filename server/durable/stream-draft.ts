@@ -1,5 +1,5 @@
 /** Presentation only. It never constructs cards or supplies values to validation. */
-export function paragraphDraft(raw: string): string {
+export function paragraphDraft(raw: string, headings=false): string {
   const strings: { value: string; end: number; start: number; closed: boolean }[] = []
   for (let i=0; i<raw.length; i++) {
     if (raw[i] !== '"') continue
@@ -19,9 +19,12 @@ export function paragraphDraft(raw: string): string {
     strings.push({value,start,end:i+1,closed})
   }
   const parts:string[]=[]
+  let title=''
   for(let i=0;i<strings.length-1;i++){
     const key=strings[i]!, value=strings[i+1]!
-    if(key.closed&&key.value==='text'&&raw.slice(key.end,value.start).trim()===':')parts.push(value.value)
+    if(!key.closed||raw.slice(key.end,value.start).trim()!==':')continue
+    if(key.value==='title'&&value.closed)title=value.value
+    if(key.value==='text'){parts.push(`${headings&&title?`### ${title}\n\n`:''}${value.value}`);title=''}
   }
   return parts.join('\n\n')
 }

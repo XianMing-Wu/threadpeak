@@ -1,4 +1,5 @@
-import { Children, isValidElement, useMemo, useState, type ReactNode } from 'react'
+import { Children, isValidElement, memo, useMemo, useState, type ReactNode } from 'react'
+import { streamingMarkdown } from '../../packages/contracts/src/streaming-markdown.ts'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
@@ -46,8 +47,8 @@ function mathComponents(): Components {
   }
 }
 
-export function MarkdownMath({ source, className, passive=false, sourceExcerpt=false }: { source: string; className?: string; passive?:boolean; sourceExcerpt?:boolean }) {
-  const prepared = useMemo(() => prepareReading(source, sourceExcerpt), [source, sourceExcerpt])
+export const MarkdownMath=memo(function MarkdownMath({ source, className, passive=false, sourceExcerpt=false, streaming=false }: { source: string; className?: string; passive?:boolean; sourceExcerpt?:boolean; streaming?:boolean }) {
+  const prepared = useMemo(() => prepareReading(streaming?streamingMarkdown(source):source, sourceExcerpt), [source, sourceExcerpt, streaming])
 
   const components = useMemo(() => ({...mathComponents(),...(passive?{a:({children}:{children?:ReactNode})=><span>{children}</span>}:{}),
     img: ({src,alt,title}:{src?:string;alt?:string;title?:string;children?:ReactNode}) => <SourceImageView key={`${src}:${alt}`} src={src} alt={alt} title={title} />,
@@ -61,7 +62,7 @@ export function MarkdownMath({ source, className, passive=false, sourceExcerpt=f
 
     </div>
   )
-}
+})
 
 export function maybeMarkdown(source: string): boolean {
   return /\$\$|\\\[|\\\(|^#{1,6}\s|^\s*[-*+]\s|^\s*\d+\.\s|`{1,3}|\*\*|__|\[.+\]\(/m.test(source)

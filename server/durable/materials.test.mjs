@@ -1,3 +1,4 @@
+import {placeAnswer} from '../../tests/fixtures/card-answer.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { openDatabase,migrate } from './database.ts'
@@ -93,7 +94,8 @@ test('collections import follows pagination with end-user token and groups one a
 test('all route materials appear in every concept, guide first-learning prompts, and survive a new conversation',async t=>{
   const contexts=[];const llm={complete:async({messages})=>{const input=JSON.parse(messages[1].content);contexts.push(input);let out
     if(input.concept&&input.materials)out={queries:['基是什么','基的解释','基的应用']}
-    else if(input.read_card_scope)out={sourceReview:input.read_card_scope.cards.map(c=>({ref:c.ref,contribution:'相关资料'})),operations:[{tool:'append_cards',after:'C1',evidence:['二维具体例子'],title:'基的直观解释',text:'用二维具体例子理解坐标。'}]}
+    else if(input.citationCatalog)out=placeAnswer(input)
+    else if(input.read_card_scope)out={sourceReview:input.read_card_scope.cards.map(c=>({ref:c.ref,contribution:'相关资料'})),sections:[{after:'C1',title:'基的直观解释',text:'用二维具体例子理解坐标。'}]}
     else throw new Error('unexpected input')
     return {kind:'completed',text:JSON.stringify(out)}
   }}

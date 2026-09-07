@@ -1,3 +1,4 @@
+import {placeAnswer} from '../../tests/fixtures/card-answer.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {openDatabase,migrate} from './database.ts'
@@ -72,12 +73,12 @@ test('first teaching reviews every source without turning every source into anot
   const store=await fixture(t),ctx=await context(store),calls=[]
   const allowedCards=Array.from({length:10},(_,i)=>({id:`source-${i}`,title:`资料 ${i}`,content:`材料 ${i} 的同一个定义。`}))
   const tools=new ProductTools({complete:async call=>{
-    calls.push(call);const input=JSON.parse(call.messages[1].content),cards=input.read_card_scope.cards
+    calls.push(call);const input=JSON.parse(call.messages[1].content);if(input.citationCatalog)return {kind:'completed',text:JSON.stringify(placeAnswer(input))};const cards=input.read_card_scope.cards
     assert.equal(cards.length,10);assert.equal(input.answerBounds.maxCards,8)
-    return {kind:'completed',text:JSON.stringify({sourceReview:cards.map(c=>({ref:c.ref,contribution:'重复定义，只选择其中的清晰例子讲解'})),operations:cards.slice(0,calls.length===1?10:2).map(c=>({tool:'append_cards',after:c.ref,evidence:[c.content],title:'当前概念的解释',text:'围绕当前问题说明一个要点。'}))})}
+    return {kind:'completed',text:JSON.stringify({sourceReview:cards.map(c=>({ref:c.ref,contribution:'重复定义，只选择其中的清晰例子讲解'})),sections:cards.slice(0,calls.length===1?10:2).map(c=>({after:c.ref,title:'当前概念的解释',text:'围绕当前问题说明一个要点。'}))})}
   }},{})
   const output=await tools.answerCards(ctx,{allowedCards,directAnswers:[],concept:{title:'当前概念'},currentQuestion:'这个概念怎样用于目标？'})
-  assert.equal(calls.length,2);assert.equal(output.paragraphs.length,2)
+  assert.equal(calls.length,3);assert.equal(output.paragraphs.length,2)
   assert.equal(calls[0].messages[0].content,calls[1].messages[0].content)
 })
 test('compression preserves complete intent and user negatives, and purpose isolates cached summaries',async t=>{

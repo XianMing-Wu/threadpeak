@@ -247,7 +247,7 @@ function prepareText(text: string) {
 }
 
 export function prepareMarkdown(source: string): PreparedMarkdown {
-  const normalized=mathFencesToDelimiters(fenceUnfencedCode(prepareSourceImages(source)))
+  const normalized=mathFencesToDelimiters(fenceUnfencedCode(prepareSourceImages(fenceUnfencedCode(source))))
   // Long snake_case names in prose are identifiers. Short x_i remains math;
   // explicit mathematical delimiters and TeX groups retain their authority.
   const identifiers = splitFences(normalized).map(block => block.code ? block.text : block.text.split(/(\$\$[\s\S]*?\$\$|(?<!\\)\$[^$\n]+\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/g).map((part,i) => i%2 || /\\[A-Za-z]+/.test(part) ? part : part.replace(/(?<![A-Za-z0-9_])[A-Za-z]{2,}_[A-Za-z][A-Za-z0-9_]+(?![A-Za-z0-9_])/g, name => '`'+name+'`')).join('')).join('')

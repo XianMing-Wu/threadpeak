@@ -312,16 +312,18 @@ export function ChatRoutePanel(props: {
                     <strong>{option.label}</strong>
                   </button>
                 ))}
-                <button type="button" className={selectedId === CUSTOM_ANSWER ? 'is-selected' : ''}
-                  aria-pressed={selectedId === CUSTOM_ANSWER} aria-controls={`custom-${question.id}`}
-                  disabled={pending || view?.status !== 'awaiting_answers'}
-                  onClick={() => setDrafts(current => ({...current, [question.id]: CUSTOM_ANSWER}))}>
-                  <span className="option-letter"><Icon name="edit" size={14}/></span><strong>我想自己说</strong>
-                </button>
-                {selectedId === CUSTOM_ANSWER && <textarea id={`custom-${question.id}`} className="clarification-custom-input"
-                  autoFocus aria-label="用自己的话回答" rows={3} maxLength={4000} placeholder="说说你真正想做到的事，或者补充这些选项没有说到的情况…"
-                  value={customDrafts[question.id] ?? ''} disabled={pending}
-                  onChange={event => setCustomDrafts(current => ({...current, [question.id]: event.target.value}))}/>}
+                <label className={`clarification-custom-row ${selectedId === CUSTOM_ANSWER ? 'is-selected' : ''}`}>
+                  <span className="option-letter"><Icon name="edit" size={14}/></span>
+                  <textarea id={`custom-${question.id}`} className="clarification-custom-input"
+                    aria-label="用自己的话回答" rows={1} maxLength={4000} placeholder="用自己的话说…"
+                    value={customDrafts[question.id] ?? ''} disabled={pending || view?.status !== 'awaiting_answers'}
+                    onFocus={() => setDrafts(current => ({...current, [question.id]: CUSTOM_ANSWER}))}
+                    onChange={event => {
+                      setDrafts(current => ({...current, [question.id]: CUSTOM_ANSWER}))
+                      setCustomDrafts(current => ({...current, [question.id]: event.target.value}))
+                      event.target.style.height='auto';event.target.style.height=`${Math.min(160,event.target.scrollHeight)}px`
+                    }}/>
+                </label>
               </div>
               <div className="clarification-card__footer">
                 <button

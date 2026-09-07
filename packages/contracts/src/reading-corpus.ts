@@ -3,6 +3,10 @@
  */
 export type ReadingCase = {id:string; label:string; source:string; math?:number; code?:string; incomplete?:boolean; unresolved?:boolean}
 export const readingCorpus: ReadingCase[] = [
+  {id:'cpp-sse',label:'C++ SIMD 类型和下划线函数保留为完整代码',source:'// SSE 向量点积\n__m128 dot_product_sse(const float* a, const float* b, int n) {\n    __m128 sum = _mm_setzero_ps();\n    for (int i = 0; i < n; i += 4) {\n        __m128 va = _mm_load_ps(&a[i]);\n        sum = _mm_add_ps(sum, va);\n    }\n    return sum;\n}',math:0,code:'__m128 sum = _mm_setzero_ps();'},
+  {id:'cpp-brace-next-line',label:'C++ 花括号另起一行',source:'float length_squared(float x, float y)\n{\n    return x * x + y * y;\n}',math:0,code:'    return x * x + y * y;'},
+  {id:'cpp-std',label:'模板类型与循环不是 LaTeX',source:'std::vector<float> values = {1, 2, 3};\nfor (int i = 0; i < 3; ++i) {\n    values[i] *= 2;\n}',math:0,code:'values[i] *= 2;'},
+  {id:'cpp-math-prose',label:'C++ 之后的数学与正文独立阅读',source:'float square(float x) {\n    return x * x;\n}\n\n对应公式 $f(x)=x^2$，这里继续解释。',math:1,code:'return x * x;'},
   {id:'python-flat',label:'无围栏：同层列表推导',source:'flat = [[x, y] for x in range(5) for y in range(5)]',math:0,code:'flat = [[x, y] for x in range(5) for y in range(5)]'},
   {id:'python-multiline',label:'多行推导式起始括号',source:'zero = [\n    [0 for _ in range(3)]\n    for _ in range(3)\n]',math:0,code:'zero = [\n    [0 for _ in range(3)]\n    for _ in range(3)\n]'},
   {id:'program-name',label:'正文中程序名不变成数学下标',source:'用 simple_pca 处理 scores_by_month；短数学下标 x_i 仍保留。',math:1},

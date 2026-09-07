@@ -1,3 +1,4 @@
+import type {TaskActivity} from '../../packages/contracts/src/task-activity.ts'
 import { createHash, randomUUID } from 'node:crypto'
 import type { Sql } from './database.ts'
 
@@ -12,15 +13,15 @@ export class CommandError extends Error {
 export type Resource<T = any> = { id: string; owner_id: string; kind: string; scope: string; revision: number; body: T; created_at: number; updated_at: number }
 export type Job = {
   id: string; owner_id: string; resource_id: string; kind: string; input: any; status: 'queued'|'running'|'waiting'|'completed'|'cancelled';
-  command_key: string; input_hash: string; phase: string; draft: string; checkpoints: Record<string, { hash: string; value: unknown }>;
+  activities:TaskActivity[]; command_key: string; input_hash: string; phase: string; draft: string; checkpoints: Record<string, { hash: string; value: unknown }>;
   attempts: number; fence: number; lease_until: number; next_at: number; error_code: string|null; created_at: number; updated_at: number;
 }
 export type Event = { resource_id: string; sequence: number; kind: string; payload: unknown; created_at: number }
-export type JobView = Pick<Job, 'id'|'kind'|'status'|'phase'|'draft'|'attempts'|'updated_at'> & { recoverable: boolean; basisIds:string[]; conversationId?:string }
+export type JobView = Pick<Job, 'id'|'kind'|'status'|'phase'|'draft'|'attempts'|'updated_at'|'activities'> & { recoverable: boolean; basisIds:string[]; conversationId?:string }
 export function jobView(job?: Job): JobView|null {
   if (!job) return null
   const { id, kind, status, phase, draft, attempts, updated_at } = job
-  return { id, kind, status, phase, draft, attempts, updated_at, recoverable: status === 'waiting'||status==='cancelled', basisIds:job.input.context?.allowedCards?.map((c:any)=>c.id)??[], conversationId:job.input.conversationId }
+  return { id, kind, status, phase, draft, attempts, updated_at, activities:job.activities??[], recoverable: status === 'waiting'||status==='cancelled', basisIds:job.input.context?.allowedCards?.map((c:any)=>c.id)??[], conversationId:job.input.conversationId }
 }
 
 export class DurableStore {
@@ -47,10 +48,11 @@ export class DurableStore {
     if (!row) throw new CommandError('NOT_FOUND', 404)
     return row
   }
-  async event(tx: Sql, resource: Resource, kind: string, payload: unknown, body = resource.body) {
+  async event(tx: Sql, resource: Resource, kind: string, payload: unknown, body = resource.body, persistBody=true) {
     resource.revision++
     resource.body = body
-    await tx.query('UPDATE tp_resources SET revision=$2,body=$3::jsonb,updated_at=$4 WHERE id=$1', [resource.id, resource.revision, JSON.stringify(body), this.now()])
+    if(persistBody)await tx.query('UPDATE tp_resources SET revision=$2,body=$3::jsonb,updated_at=$4 WHERE id=$1', [resource.id, resource.revision, JSON.stringify(body), this.now()])
+    else await tx.query('UPDATE tp_resources SET revision=$2,updated_at=$3 WHERE id=$1',[resource.id,resource.revision,this.now()])
     await tx.query('INSERT INTO tp_events(resource_id,sequence,kind,payload,created_at) VALUES($1,$2,$3,$4::jsonb,$5)', [resource.id, resource.revision, kind, JSON.stringify(payload), this.now()])
   }
   async create(owner: string, kind: string, scope: string, body: unknown) {
@@ -111,19 +113,37 @@ export class DurableStore {
     })
     job.checkpoints[name] = { hash, value }
   }
-  async progress(job: Job, phase: string, draft = '', update?: (resource: Resource) => unknown) {
+  async progress(job: Job, phase: string, draft?: string, update?: (resource: Resource) => unknown) {
     await this.db.transaction(async tx => {
       const resource = await this.lockResource(tx, job.owner_id, job.resource_id)
-      await this.ownedJob(tx, job)
-      await tx.query('UPDATE tp_jobs SET phase=$2,draft=$3,updated_at=$4 WHERE id=$1', [job.id, phase, draft, this.now()])
-      await this.event(tx, resource, 'job.progress', { jobId: job.id, phase, draft }, update ? update(resource) : resource.body)
+      const live=await this.ownedJob(tx, job)
+      const text=draft??live.draft
+      await tx.query('UPDATE tp_jobs SET phase=$2,draft=$3,updated_at=$4 WHERE id=$1', [job.id, phase, text, this.now()])
+      job.draft=text
+      await this.event(tx, resource, 'job.progress', { jobId: job.id, phase, draft:text }, update ? update(resource) : resource.body,!!update)
+    })
+  }
+  async activity(job:Job, input:Pick<TaskActivity,'id'|'kind'|'title'|'status'|'detail'>) {
+    await this.db.transaction(async tx=>{
+      const resource=await this.lockResource(tx,job.owner_id,job.resource_id),live=await this.ownedJob(tx,job)
+      const activities=live.activities??[],old=activities.find(a=>a.id===input.id)
+      // Completed checkpoints keep their original completed status on recovery.
+      if(old?.status==='done'&&(input.status==='running'||old.title===input.title&&old.detail===input.detail))return
+      const now=this.now(),activity={...old,...input,startedAt:old?.startedAt??now,updatedAt:now,...(input.status==='done'?{finishedAt:now}:{})}
+      if(old)activities[activities.indexOf(old)]=activity;else activities.push(activity)
+      const phase=input.status==='running'?input.title:live.phase
+      await tx.query('UPDATE tp_jobs SET activities=$2::jsonb,phase=$3,updated_at=$4 WHERE id=$1',[job.id,JSON.stringify(activities),phase,now])
+      job.activities=activities
+      await this.event(tx,resource,'job.activity',{jobId:job.id,activity},resource.body,false)
     })
   }
   async commit(job: Job, update: (resource: Resource, tx: Sql) => unknown|Promise<unknown>) {
     await this.db.transaction(async tx => {
       const resource = await this.lockResource(tx, job.owner_id, job.resource_id)
-      await this.ownedJob(tx, job)
+      const live=await this.ownedJob(tx, job)
       const body = await update(resource, tx)
+      const activities=(live.activities??[]).map(a=>a.status==='running'?{...a,status:'done',finishedAt:this.now(),updatedAt:this.now()}:a)
+      await tx.query('UPDATE tp_jobs SET activities=$2::jsonb WHERE id=$1',[job.id,JSON.stringify(activities)])
       await tx.query("UPDATE tp_jobs SET status='completed',phase='已完成',draft='',lease_until=0,error_code=NULL,updated_at=$2 WHERE id=$1", [job.id, this.now()])
       await this.event(tx, resource, 'job.completed', { jobId: job.id }, body)
     })
@@ -133,7 +153,8 @@ export class DurableStore {
       const resource = await this.lockResource(tx, job.owner_id, job.resource_id)
       await this.ownedJob(tx, job)
       const retry = retryable && job.attempts < 4
-      await tx.query('UPDATE tp_jobs SET status=$2,phase=$3,error_code=$4,next_at=$5,lease_until=0,updated_at=$6 WHERE id=$1', [job.id, retry?'queued':'waiting', retry?'连接暂时不稳定，正在继续':'暂时还没完成，内容已保留', code, this.now()+Math.min(30_000, 1000*2**job.attempts), this.now()])
+      const phase=retry?(/(?:^|_)HTTP_429$/.test(code)?'服务暂时繁忙，正在等待重试':'服务暂时未响应，正在重试'):'暂时还没完成，内容已保留'
+      await tx.query('UPDATE tp_jobs SET status=$2,phase=$3,error_code=$4,next_at=$5,lease_until=0,updated_at=$6 WHERE id=$1', [job.id, retry?'queued':'waiting', phase, code, this.now()+Math.min(30_000, 1000*2**job.attempts), this.now()])
       await this.event(tx, resource, retry?'job.recovering':'job.waiting', { jobId: job.id })
     })
   }

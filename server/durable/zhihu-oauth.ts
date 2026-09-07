@@ -1,6 +1,7 @@
 import { createCipheriv,createDecipheriv,createHash,randomBytes } from 'node:crypto'
 import type { Sql } from './database.ts'
 import { CommandError,digest } from './store.ts'
+import type { ZhihuGate } from './zhihu-gate.ts'
 import type { Fetcher } from './zhihu-data.ts'
 import { ZhihuOAuthMock, isMockZhihuOwner, MOCK_ZHIHU_OWNER_PREFIX } from './zhihu-oauth-mock.ts'
 
@@ -42,8 +43,9 @@ export function sealToken(value:string,secret:string){
 export function unsealToken(value:string,secret:string){try{const [iv,data,tag]=value.split('.'),cipher=createDecipheriv('aes-256-gcm',createHash('sha256').update(secret).digest(),Buffer.from(iv!,'base64url'));cipher.setAuthTag(Buffer.from(tag!,'base64url'));return Buffer.concat([cipher.update(Buffer.from(data!,'base64url')),cipher.final()]).toString('utf8')}catch{throw new CommandError('ZHIHU_REAUTHORIZE',401)}}
 export class ZhihuLogin {
   readonly db:Sql;readonly config:ZhihuLoginConfig;readonly fetcher:Fetcher
+  readonly gate?:ZhihuGate
   readonly mock?:ZhihuOAuthMock
-  constructor(db:Sql,config:ZhihuLoginConfig,fetcher:Fetcher=fetch){this.db=db;this.config={...config,mode:config.mode??'real'};this.fetcher=fetcher;if(config.mode==='mock')this.mock=new ZhihuOAuthMock(config.tokenSecret,config.production)}
+  constructor(db:Sql,config:ZhihuLoginConfig,fetcher:Fetcher=fetch,gate?:ZhihuGate){this.gate=gate;this.db=db;this.config={...config,mode:config.mode??'real'};this.fetcher=fetcher;if(config.mode==='mock')this.mock=new ZhihuOAuthMock(config.tokenSecret,config.production)}
   async start(existingOwner?:string){
     // existingOwner is supplied only by the HTTP identity resolver, never query/body input.
     let subject:string|undefined
@@ -81,16 +83,21 @@ export class ZhihuLogin {
   private async exchangeRealCode(code:string){
     // Never exchange a local demo token/code with a real provider after a mode change.
     if(code.startsWith('tp-demo.'))throw new CommandError('OAUTH_STATE_INVALID',400)
-    const result=await this.fetcher('https://openapi.zhihu.com/access_token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({app_id:this.config.appId,app_key:this.config.appKey,grant_type:'authorization_code',redirect_uri:this.config.redirectUri,code}),redirect:'error',signal:AbortSignal.timeout(20000)})
-    if(!result.ok)throw new CommandError('OAUTH_EXCHANGE_FAILED',502)
-    const token=await result.json() as any
+    const token=await this.requestJson('https://openapi.zhihu.com/access_token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({app_id:this.config.appId,app_key:this.config.appKey,grant_type:'authorization_code',redirect_uri:this.config.redirectUri,code}),redirect:'error',signal:AbortSignal.timeout(20000)},'OAUTH_EXCHANGE_FAILED')
     if(typeof token.access_token!=='string'||!token.access_token||!Number.isFinite(token.expires_in)||token.expires_in<=0)throw new CommandError('OAUTH_EXCHANGE_FAILED',502)
     return token as {access_token:string;expires_in:number}
   }
   private async realProfile(token:string){
-    const info=await this.fetcher(this.config.userInfoUrl,{headers:{Authorization:`Bearer ${token}`},redirect:'error',signal:AbortSignal.timeout(20000)})
-    if(!info.ok)throw new CommandError('OAUTH_PROFILE_FAILED',502)
-    return info.json()
+    return this.requestJson(this.config.userInfoUrl,{headers:{Authorization:`Bearer ${token}`},redirect:'error',signal:AbortSignal.timeout(20000)},'OAUTH_PROFILE_FAILED')
+  }
+  private async requestJson(url:string,init:RequestInit,code:string){
+    const work=async(signal:AbortSignal)=>{
+      const response=await this.fetcher(url,{...init,signal})
+      await this.gate?.observe(response)
+      if(!response.ok){await response.body?.cancel();throw new CommandError(code,response.status===429?429:502)}
+      return response.json() as Promise<any>
+    }
+    return this.gate?this.gate.run(init.signal??undefined,work):work(init.signal??new AbortController().signal)
   }
   async userToken(owner:string){
     if(owner.startsWith('local:'))throw new CommandError('ZHIHU_LOGIN_REQUIRED',401)

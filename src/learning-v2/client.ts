@@ -1,5 +1,6 @@
+import type {TaskActivity} from '../../packages/contracts/src/task-activity.ts'
 import { LearningSchema, type LearningState } from '../../packages/contracts/src/learning-v2.ts'
-export type TaskView={id:string;kind:string;status:'queued'|'running'|'waiting'|'completed'|'cancelled';phase:string;draft:string;recoverable:boolean;basisIds:string[];conversationId?:string}
+export type TaskView={activities?:TaskActivity[];id:string;kind:string;status:'queued'|'running'|'waiting'|'completed'|'cancelled';phase:string;draft:string;recoverable:boolean;basisIds:string[];conversationId?:string}
 export type LearningSnapshot={id:string;kind:'learning';revision:number;data:LearningState;job:TaskView|null}
 let session:Promise<void>|undefined
 export function resetSession(){session=undefined}

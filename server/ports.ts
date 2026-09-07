@@ -10,6 +10,7 @@ export type HttpRequestInit = {
 export type HttpResponse = {
   ok: boolean
   status: number
+  headers?: { get(name:string):string|null }
   text(): Promise<string>
   body?: ReadableStream<Uint8Array> | null
 }

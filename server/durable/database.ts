@@ -55,6 +55,7 @@ export async function migrate(db: Sql) {
     await tx.query(`CREATE UNIQUE INDEX IF NOT EXISTS tp_one_active_job ON tp_jobs(resource_id)
       WHERE status IN ('queued','running','waiting')`)
     await tx.query(`CREATE INDEX IF NOT EXISTS tp_jobs_queue ON tp_jobs(status,next_at,lease_until)`)
+    await tx.query("ALTER TABLE tp_jobs ADD COLUMN IF NOT EXISTS activities jsonb NOT NULL DEFAULT '[]'")
     await tx.query(`CREATE TABLE IF NOT EXISTS tp_events (
       resource_id text NOT NULL REFERENCES tp_resources(id), sequence integer NOT NULL,
       kind text NOT NULL, payload jsonb NOT NULL, created_at bigint NOT NULL,
@@ -67,6 +68,7 @@ export async function migrate(db: Sql) {
     await tx.query(`CREATE TABLE IF NOT EXISTS tp_memories (
       owner_id text NOT NULL, source_hash text NOT NULL, summary text NOT NULL,
       created_at bigint NOT NULL, PRIMARY KEY(owner_id,source_hash))`)
+    await tx.query(`CREATE TABLE IF NOT EXISTS tp_provider_cooldowns (pool text PRIMARY KEY, until_at bigint NOT NULL)` )
     await tx.query(`CREATE TABLE IF NOT EXISTS tp_provider_slots (
       pool text NOT NULL, slot integer NOT NULL, token text, lease_until bigint NOT NULL,
       PRIMARY KEY(pool,slot))`)

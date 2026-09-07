@@ -1,3 +1,4 @@
+import {placeAnswer} from '../../tests/fixtures/card-answer.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdtemp,rm } from 'node:fs/promises'
@@ -73,9 +74,10 @@ function modelForLearning(calls){return {async complete(input){
   let result
   if(system.includes('恰好三条'))result={queries:['线性映射解释','线性映射应用','线性映射误区']}
   else if(system.includes('逐条阅读'))result={evidenceIds:context.candidates.map(e=>e.evidenceId)}
-  else if(system.includes('每个段落只能'))result={operations:[{tool:'append_cards',after:context.read_card_scope.cards[0].ref,evidence:[context.read_card_scope.cards[0].content.slice(0,30)],title:'解释',text:'基于这张卡的完整回答。'}]}
+  else if(context.citationCatalog)result=placeAnswer(context)
+  else if(context.read_card_scope)result={sections:[{after:context.read_card_scope.cards[0].ref,title:'解释',text:'基于这张卡的完整回答。'}]}
   else throw new Error('Unexpected model task')
-  if(context.directAnswers&&result.operations)result.sourceReview=context.read_card_scope.cards.map((c,i)=>({ref:c.ref,contribution:i===0?'用于讲解':'内容重复'}))
+  if(context.directAnswers&&result.sections)result.sourceReview=context.read_card_scope.cards.map((c,i)=>({ref:c.ref,contribution:i===0?'用于讲解':'内容重复'}))
   return {kind:'completed',text:JSON.stringify(result)}
 }}}
 test('real HTTP composition with isolated providers: three searches, persisted tree, new chat, node editing',async t=>{
@@ -154,10 +156,10 @@ test('summary provider failure does not produce a prefix or alter the original',
 test('same-agent structure repair validates single-card references; drafts are presentation only',async t=>{
   const s=await fixture(t),r=await s.create('owner','test','repair',{})
   await s.enqueue('owner',r.id,'test','repair-command',{depth:'deep'});const job=await s.claim(),ctx=new TaskContext(s,job,new AbortController().signal),calls=[]
-  const llm={complete:async input=>{calls.push(input);const raw=JSON.stringify({operations:[{tool:'append_cards',after:calls.length===1?'C9':'C1',evidence:['资料'],title:'解释',text:'引用这一张卡。'}]});input.onText?.(raw);return {kind:'completed',text:raw}}}
+  const llm={complete:async input=>{calls.push(input);const context=JSON.parse(input.messages[1].content);const raw=JSON.stringify(context.citationCatalog?placeAnswer(context):{sections:[{after:calls.length===1?'C9':'C1',title:'解释',text:'引用这一张卡。'}]});input.onText?.(raw);return {kind:'completed',text:raw}}}
   const tools=new ProductTools(llm,{})
   const result=await tools.answerCards(ctx,{allowedCards:[{id:'allowed',title:'卡片',content:'资料'}]})
-  await ctx.flush();assert.equal(result.paragraphs[0].basisId,'allowed');assert.equal(calls.length,2)
+  await ctx.flush();assert.equal(result.paragraphs[0].basisId,'allowed');assert.equal(calls.length,3)
   assert.equal(calls[0].messages[0].content,calls[1].messages[0].content);assert.equal(calls[1].thinkingDepth,'deep')
   assert.equal((await s.snapshot('owner',r.id)).job.status,'running');assert.deepEqual((await s.snapshot('owner',r.id)).data,{})
   assert.equal(paragraphDraft('{"paragraphs":[{"basisId":"secret-id","text":"一句\\n话"},{"text":"第二段'), '一句\n话\n\n第二段')
@@ -231,7 +233,7 @@ test('route selection survives refresh and R4 recovery publishes exactly once wi
 test('learning command replay, author fallback, undo provenance and active-history switch are transactional',async t=>{
   const s=await fixture(t),seen=[]
   const zhihu={search:async()=>({kind:'empty'}),direct:async()=>({kind:'completed',text:'刘看山补充解释。'})}
-  const llm={complete:async input=>{const system=input.messages[0].content,context=JSON.parse(input.messages[1].content);seen.push(context);return {kind:'completed',text:JSON.stringify(system.includes('等价知乎检索')?{queries:['测试问题的解释','测试问题的误区']}:{operations:[{tool:'append_cards',after:'C1',evidence:[context.read_card_scope.cards[0].title],title:'回答',text:'依据卡片的回答。'}]})}}}
+  const llm={complete:async input=>{const system=input.messages[0].content,context=JSON.parse(input.messages[1].content);seen.push(context);return {kind:'completed',text:JSON.stringify(system.includes('等价知乎检索')?{queries:['测试问题的解释','测试问题的误区']}:context.citationCatalog?placeAnswer(context):{sections:[{after:'C1',title:'回答',text:'依据卡片的回答。'}]})}}}
   const worker=new DurableWorker(s,createFlows(new ProductTools(llm,zhihu)),1,quiet),app=await createProductApp({store:s,worker,providersReady:true,identity:{production:false}});t.after(()=>app.close())
   const cookie=(await app.inject({url:'/api/v2/session'})).headers['set-cookie'].split(';')[0],owner=(await s.db.query('SELECT owner_id FROM tp_sessions'))[0].owner_id,headers={cookie}
   const article={id:'a',title:'测试文章',summary:'全部资料',author:'测试作者',authorId:'author-a',likes:null,url:'https://www.zhihu.com/question/1',topic:'测试'}
@@ -242,7 +244,7 @@ test('learning command replay, author fallback, undo provenance and active-histo
   assert.equal((await app.inject({method:'POST',url:`/api/v2/learning/${id}/commands`,headers:key,payload})).statusCode,200)
   let snapshot=await settled(s,owner,id)
   assert.equal((await app.inject({method:'POST',url:`/api/v2/learning/${id}/commands`,headers:key,payload})).statusCode,200)
-  assert.equal(seen.length,1);assert.equal(seen[0].conversation.length,0);assert.equal(snapshot.data.conversations[1].messages.length,2)
+  assert.equal(seen.length,2);assert.equal(seen[0].conversation.length,0);assert.equal(snapshot.data.conversations[1].messages.length,2)
   const originalNodes=snapshot.data.nodes
   let response=await app.inject({method:'PATCH',url:`/api/v2/learning/${id}/nodes`,headers,payload:{revision:snapshot.revision,nodes:originalNodes.slice(0,2)}});assert.equal(response.statusCode,200)
   response=await app.inject({method:'PATCH',url:`/api/v2/learning/${id}/nodes`,headers,payload:{revision:response.json().revision,nodes:originalNodes}});assert.equal(response.statusCode,200)
@@ -285,12 +287,15 @@ test('same-agent repairs wrong evidence before chat/tree commit and never reuses
   const s=await fixture(t),r=await s.create('owner','test','citation-repair',{})
   await s.enqueue('owner',r.id,'test','citation-command',{depth:'deep'});const job=await s.claim(),ctx=new TaskContext(s,job,new AbortController().signal),calls=[]
   job.checkpoints['L-answer:cards-v1']={hash:'old-contract',value:{operations:[{tool:'append_cards',after:'C1',cards:[{title:'错引',text:'词源'}]}]}}
-  const llm={complete:async input=>{calls.push(input);return {kind:'completed',text:JSON.stringify({operations:[{tool:'append_cards',after:calls.length===1?'C1':'C2',evidence:['al-jabr 表示还原。'],title:'词源',text:'代数一词来自 al-jabr，表示还原。'}]})}}}
+  const llm={complete:async input=>{
+    calls.push(input);const context=JSON.parse(input.messages[1].content)
+    return {kind:'completed',text:JSON.stringify(context.citationCatalog?{placements:[{section:'P1',after:'C2',evidenceRefs:[calls.length===2?'C1.E2':'C2.E2']}]}:{sections:[{after:'C2',title:'词源',text:'代数一词来自 al-jabr，表示还原。'}]})}
+  }}
   const answer=await new ProductTools(llm,{}).answerCards(ctx,{allowedCards:[{id:'school',title:'课本',content:'包括代数和几何。'},{id:'history',title:'词源',content:'al-jabr 表示还原。'}]})
-  assert.equal(answer.paragraphs[0].basisId,'history');assert.equal(calls.length,2)
-  assert.match(calls[1].messages.at(-1).content,/C1 的 evidence 不在该卡片材料中/)
-  assert.equal(calls[0].messages[0].content,calls[1].messages[0].content);assert.equal(calls[1].thinkingDepth,'deep')
-  assert.equal(job.checkpoints['L-answer:cards-v2@goal-v1'].value.operations[0].after,'C2')
+  assert.equal(answer.paragraphs[0].basisId,'history');assert.equal(calls.length,3)
+  assert.match(calls[2].messages.at(-1).content,/不在 C2/)
+  assert.equal(calls[1].messages[0].content,calls[2].messages[0].content);assert.equal(calls[1].thinkingDepth,'deep')
+  assert.equal(job.checkpoints['L-answer:compose-v3@goal-v1'].value.answer.sections[0].after,'C2')
   assert.deepEqual((await s.snapshot('owner',r.id)).data,{})
 })
 test('citation evidence uses the delivered compressed material version without relabelling it as original',async t=>{
@@ -299,14 +304,16 @@ test('citation evidence uses the delivered compressed material version without r
   let modelView
   const llm={complete:async input=>{
     if(!input.json)return {kind:'completed',text:'这份压缩摘要说明变量表示未知数量。'}
-    modelView=JSON.parse(input.messages[1].content).read_card_scope
-    return {kind:'completed',text:JSON.stringify({operations:[{tool:'append_cards',after:'C1',evidence:['这份压缩摘要说明变量表示未知数量。'],title:'变量',text:'变量表示未知数量。'}]})}
+    const context=JSON.parse(input.messages[1].content)
+    if(context.citationCatalog)return {kind:'completed',text:JSON.stringify(placeAnswer(context))}
+    modelView=context.read_card_scope
+    return {kind:'completed',text:JSON.stringify({sections:[{after:'C1',title:'变量',text:'变量表示未知数量。'}]})}
   }}
   const original='变量用于表示未知的数量。'.repeat(6000)
   const result=await new ProductTools(llm,{},32000).answerCards(ctx,{allowedCards:[{id:'long-article',title:'变量',content:original}]})
   assert.equal(result.paragraphs[0].basisId,'long-article');assert.match(modelView.cards[0].content,/上下文摘要/)
-  assert.equal(job.checkpoints['L-answer:cards-v2@goal-v1'].value.materials[0].summarized,true)
-  assert.ok(job.checkpoints['L-answer:cards-v2@goal-v1'].value.materials[0].contentHash)
+  assert.match(job.checkpoints['L-answer:compose-v3@goal-v1'].value.view.cards[0].content,/上下文摘要/)
+  assert.match(job.checkpoints['L-answer:attach-v3@goal-v1'].value.catalog[0].excerpts[1].text,/上下文摘要/)
 })
 
 test('first entry repairs citation batching and mismatched evidence before publishing chat and the single-parent tree',async t=>{
@@ -319,7 +326,7 @@ test('first entry repairs citation batching and mismatched evidence before publi
   const resource=await s.create('owner','learning','citation-first-entry',initial)
   await s.enqueue('owner',resource.id,'learning.enter','citation-first-command',{conversationId:'first',depth:'fast'})
   let answerCalls=0,searches=0
-  const history={evidence:['al-jabr 表示还原。'],title:'词源',text:'al-jabr 的含义是还原。'},equation={evidence:['初等代数的中心内容是解方程。'],title:'方程',text:'初等代数围绕解方程展开。'}
+  const history={title:'词源',text:'al-jabr 的含义是还原。'},equation={title:'方程',text:'初等代数围绕解方程展开。'}
   const llm={complete:async input=>{
     const context=JSON.parse(input.messages[1].content),system=input.messages[0].content
     let value
@@ -327,22 +334,20 @@ test('first entry repairs citation batching and mismatched evidence before publi
     else if(system.includes('逐条阅读'))value={evidenceIds:articles.map(a=>a.evidenceId)}
     else{
       answerCalls++
-      assert.deepEqual(context.read_card_scope.cards.map(c=>c.content),articles.map(a=>a.summary))
+      if(context.read_card_scope)assert.deepEqual(context.read_card_scope.cards.map(c=>c.content),articles.map(a=>a.summary))
       const during=(await s.snapshot('owner',resource.id)).data
       assert.equal(during.articles.length,3);assert.equal(during.nodes.length,4);assert.equal(during.conversations[0].messages.length,1)
-      value={operations:answerCalls===1?[{tool:'append_cards',after:'C1',cards:[history,equation]}]:[
-        {tool:'append_cards',after:answerCalls===2?'C1':'C2',...history},
-        {tool:'append_cards',after:'C3',...equation},
-      ]}
+      value=context.citationCatalog?(answerCalls===3?{placements:[{section:'P1',after:'C2',evidenceRefs:['C1.E2']},{section:'P2',after:'C3',evidenceRefs:['C3.E2']}]}:placeAnswer(context)):
+        {sections:answerCalls===1?[{after:'C1',cards:[history,equation]}]:[{after:'C2',...history},{after:'C3',...equation}]}
     }
-    if(value.operations)value.sourceReview=context.read_card_scope.cards.map((c,i)=>({ref:c.ref,contribution:['课本分类不属于本次讲解重点','代数词源','方程的核心地位'][i]}))
+    if(value.sections)value.sourceReview=context.read_card_scope.cards.map((c,i)=>({ref:c.ref,contribution:['课本分类不属于本次讲解重点','代数词源','方程的核心地位'][i]}))
     return {kind:'completed',text:JSON.stringify(value)}
   }}
   const zhihu={search:async()=>{searches++;return {kind:'hits',items:articles}},direct:async()=>({kind:'completed',text:'组织讲解的参考角度，不能冒充文章依据。'})}
   const worker=new DurableWorker(s,createFlows(new ProductTools(llm,zhihu)),1,quiet)
   await worker.execute(await s.claim())
   const snapshot=await s.snapshot('owner',resource.id)
-  assert.equal(snapshot.job.status,'completed');assert.equal(searches,3);assert.equal(answerCalls,3)
+  assert.equal(snapshot.job.status,'completed');assert.equal(searches,3);assert.equal(answerCalls,4)
   assert.deepEqual(snapshot.data.initialAnswer.map(p=>p.basisId),['history-id','equation-id'])
   const response=snapshot.data.conversations[0].messages[1]
   assert.deepEqual(response.paragraphs,snapshot.data.initialAnswer)

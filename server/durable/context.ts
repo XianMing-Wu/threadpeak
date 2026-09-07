@@ -9,7 +9,7 @@ export const tokenBound = (s: string) => Buffer.byteLength(s, 'utf8')
 export type ContextPolicy = { window: number; output: number; margin: number }
 export const effectiveWindow = (configured: number) => Math.min(500_000, configured)
 const contentKeys = new Set(['content','summary','text','description','detailedDescription'])
-const protectedKeys = new Set(['goalContext','goal','rawGoal','questionSets','concept','currentQuestion','currentMessage','followUpMessage','question','background','attempted','desiredOutcome','goalHypothesis','learningGoal','goalAlignment','selectedOptions'])
+const protectedKeys = new Set(['goalContext','goal','rawGoal','questionSets','concept','currentQuestion','currentMessage','followUpMessage','question','background','attempted','desiredOutcome','goalHypothesis','learningGoal','goalAlignment','selectedOptions','answerSections','citationCatalog'])
 type Field = { object: Record<string, any>; key: string; path: string; length: number }
 function contextJson(value:unknown){
   if(!value||typeof value!=='object'||Array.isArray(value))return JSON.stringify(value)
@@ -41,6 +41,7 @@ export async function boundedSummary(llm:LlmProvider,ctx:TaskContext,text:string
     const output=Math.min(16384,Math.max(1024,Math.min(budget,8192))+reasoning,Math.floor((window-overhead)*.4))
     const chunkBudget=Math.min(48000,Math.floor((window-overhead-output)/2))
     if(chunkBudget<512||output<reasoning+512)throw new ToolError('CONTEXT_REQUIRES_PARTITION',false)
+    await ctx.activity(`context:summary:${key}`,'read','整理长资料','running','按原始来源保留与目标有关的内容')
     let candidate=text
     for(let pass=0;pass<8;pass++){
       const parts=semanticChunks(candidate,chunkBudget,tokenBound),summaries:string[]=[]
@@ -60,6 +61,7 @@ export async function boundedSummary(llm:LlmProvider,ctx:TaskContext,text:string
       candidate=summaries.join('\n')
       if(tokenBound(candidate)<=budget){
         await ctx.store.db.query('INSERT INTO tp_memories(owner_id,source_hash,summary,created_at) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING',[ctx.job.owner_id,key,candidate,Date.now()])
+        await ctx.activity(`context:summary:${key}`,'read','整理长资料','done')
         return candidate
       }
     }

@@ -15,6 +15,8 @@ export async function withPermit<T>(db:Sql,pool:string,limit:number,signal:Abort
   while(slot===undefined){
     combined.throwIfAborted()
     slot=await db.transaction(async tx=>{
+      const [cooldown]=await tx.query<{until_at:number}>('SELECT until_at FROM tp_provider_cooldowns WHERE pool=$1',[pool])
+      if(cooldown&&Number(cooldown.until_at)>Date.now())return
       for(let i=0;i<limit;i++)await tx.query('INSERT INTO tp_provider_slots(pool,slot,lease_until) VALUES($1,$2,0) ON CONFLICT DO NOTHING',[pool,i])
       const [row]=await tx.query<{slot:number}>('SELECT slot FROM tp_provider_slots WHERE pool=$1 AND slot<$2 AND lease_until<$3 ORDER BY slot FOR UPDATE SKIP LOCKED LIMIT 1',[pool,limit,Date.now()])
       if(!row)return
