@@ -1,0 +1,1151 @@
+{
+  "version": 1,
+  "reviewMethod": "逐条审阅真实搜索返回的摘要，显式指定选择位置；不代表逐篇核验原文全文或作者认可本产品。",
+  "conceptCount": 22,
+  "entries": [
+    {
+      "conceptId": "attention-shapes",
+      "query": "Transformer Attention Q K V 矩阵 维度 理解",
+      "queryId": "attention-shapes",
+      "requestedAt": "2026-09-07T10:32:25.043Z",
+      "provider": "zhihu-search",
+      "responseSha256": "a41cd8df7a0ae47350fbcdb2226736cd89b6f5a72f98be1b2bdd0d3feb822b0b",
+      "selected": [
+        {
+          "id": "zhihu-aead0522d960c8fccad1e86b1d76cec0",
+          "title": "transformer的细节到底是怎么样的? - 知乎",
+          "url": "https://www.zhihu.com/question/362131975/answer/2182682685",
+          "author": "跟我学机器学习",
+          "summarySha256": "f9cf56a434ebfb197e02da1eb6f7c241f010fba8201e7390f448961a0ad73b1a",
+          "why": "代码明确给出模型维度与头维度关系，适合用尺寸检查阅读论文。",
+          "caveat": "只取维度与投影的解释；代码摘录不是可独立运行的完整实现。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "fce66b3147b766b2f375c8e308e4f018",
+          "title": "Transformer原理及Pytorch代码实现 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/604592800",
+          "selected": false
+        },
+        {
+          "id": "41af34a370dfbef49c3e8f1fc572464e",
+          "title": "如何理解attention中的Q,K,V? - 知乎",
+          "url": "https://www.zhihu.com/question/298810062/answer/2051228521394189378",
+          "selected": false
+        },
+        {
+          "id": "aead0522d960c8fccad1e86b1d76cec0",
+          "title": "transformer的细节到底是怎么样的? - 知乎",
+          "url": "https://www.zhihu.com/question/362131975/answer/2182682685",
+          "selected": true
+        },
+        {
+          "id": "d793d1668546cbd008c77eba50e717be",
+          "title": "如何理解attention中的Q,K,V? - 知乎",
+          "url": "https://www.zhihu.com/question/298810062/answer/2041184627159814333",
+          "selected": false
+        },
+        {
+          "id": "7e3a21523e9c5ab5ccd6c258ab446785",
+          "title": "万字硬核解构 LLM :从Transformer到访存优化 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2049890896620041323",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "排除把 softmax([80,40]) 说成约 98%/2% 的错误算例；其他候选以比喻或推理优化为主。"
+    },
+    {
+      "conceptId": "attention-dot",
+      "query": "Attention 点积 查询 键 相似度 为什么",
+      "queryId": "attention-dot",
+      "requestedAt": "2026-09-07T10:32:25.055Z",
+      "provider": "zhihu-search",
+      "responseSha256": "f58e0c0a4bd464b4da3ca8703218a84ad8b67667557228a97b401aed806ae1a3",
+      "selected": [
+        {
+          "id": "zhihu-eadc710fccd7c8e2eaa5459ee0bff4d5",
+          "title": "Transformer 论文精读与完整代码复现【Attention Is All You Need】 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/4792859557",
+          "author": "揣着梦想",
+          "summarySha256": "d587845c852c130e468040b0fbdb773d7a1886a64643970dab7d26a809de99f9",
+          "why": "按点积、缩放、归一化、加权求和拆解论文，可把直觉回到运算。",
+          "caveat": "接口摘要缺少部分公式；本例的完整公式另按论文核对，不声称恢复了作者原式。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "35427148d924d28750b08fe8351f20bf",
+          "title": "Transformer & Bert 相关问题复盘及总结 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/667752628",
+          "selected": false
+        },
+        {
+          "id": "eadc710fccd7c8e2eaa5459ee0bff4d5",
+          "title": "Transformer 论文精读与完整代码复现【Attention Is All You Need】 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/4792859557",
+          "selected": true
+        },
+        {
+          "id": "7ad15669fa050b54adf858c7613d23cb",
+          "title": "Transformer 架构理解:从论文到大模型推理 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2068805274329261312",
+          "selected": false
+        },
+        {
+          "id": "ba147d4f8cad2e7dc1e041984438b4d8",
+          "title": "03 LLM 必备线性代数:从向量空间、矩阵乘法到 Embedding、Linear、LoRA - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2080341146103034074",
+          "selected": false
+        },
+        {
+          "id": "05c0a4dff60188238f37da35f3aa7036",
+          "title": "深度学习笔记(一):MLP、注意力机制 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2072752029370525561",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "其余候选偏完整课程、范围更宽或重复解释；保留最直接服务本概念的这篇，不按点赞或认证替代内容判断。"
+    },
+    {
+      "conceptId": "attention-scale",
+      "query": "Attention 为什么 除以 根号 dk 方差",
+      "queryId": "attention-scale",
+      "requestedAt": "2026-09-07T10:32:25.754Z",
+      "provider": "zhihu-search",
+      "responseSha256": "d4dd124e25d2c5348f48a2dbb810a49aa8e755f6cce3052cec24a4c94beb096f",
+      "selected": [
+        {
+          "id": "zhihu-c96fd0999e9e64747e300bb7a1f1057e",
+          "title": "注意力机制中 √dₖ 缩放因子的数学原理(翻译) - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2035645890195669149",
+          "author": "sonald",
+          "summarySha256": "0c0b85dbd5b6951317996f5211792f0c9b590fc1cb81b12145fa6cb0163e3d6a",
+          "why": "给出常数缩放时方差除以常数平方的解释，直接对应平方根难点。",
+          "caveat": "方差推导必须补写独立、零均值和单位方差前提；缩放不保证均匀权重，也不保证训练稳定。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "342b2eda386921674b38ac2147c5745b",
+          "title": "大模型面试118题(一): Transformer 的核心原理 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2057117954958006140",
+          "selected": false
+        },
+        {
+          "id": "fce66b3147b766b2f375c8e308e4f018",
+          "title": "Transformer原理及Pytorch代码实现 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/604592800",
+          "selected": false
+        },
+        {
+          "id": "c96fd0999e9e64747e300bb7a1f1057e",
+          "title": "注意力机制中 √dₖ 缩放因子的数学原理(翻译) - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2035645890195669149",
+          "selected": true
+        },
+        {
+          "id": "663c3d23a6749b9e1ac264bfea8414ab",
+          "title": "Transformer 模型为何如此深刻地改变深度学习? - 知乎",
+          "url": "https://www.zhihu.com/question/2046917078884553707/answer/2050945137602213786",
+          "selected": false
+        },
+        {
+          "id": "028b02662a573d765762aed9b970fbb5",
+          "title": "transformer中的attention为什么scaled? - 知乎",
+          "url": "https://www.zhihu.com/question/339723385/answer/1986860055333713149",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "排除能量守恒类比与“保证熵合理”的过强结论；通用面试长文不如缩放专文聚焦。"
+    },
+    {
+      "conceptId": "attention-softmax",
+      "query": "Attention softmax 权重 加权求和 V",
+      "queryId": "attention-softmax",
+      "requestedAt": "2026-09-07T10:32:25.788Z",
+      "provider": "zhihu-search",
+      "responseSha256": "e58249158aaed53b7cfb02f9a7e119a48e4683a8516304db2ba972d4a32d9ff8",
+      "selected": [
+        {
+          "id": "zhihu-40002d5f6bbd4d76f9c2f53b87983712",
+          "title": "为什么Self-Attention要通过线性变换计算Q K V,背后的原理或直观解释是什么? - 知乎",
+          "url": "https://www.zhihu.com/question/592626839/answer/3304714001",
+          "author": "7号床",
+          "summarySha256": "fd169278ed857765506461ab6321bb2f6315aeeb618e166abd4d7bf1c964cf2c",
+          "why": "说明每个查询的归一化权重如何作用于值向量。",
+          "caveat": "权重不是答案置信度，语义关系只是直觉；数字维度按论文公式核对。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "eadc710fccd7c8e2eaa5459ee0bff4d5",
+          "title": "Transformer 论文精读与完整代码复现【Attention Is All You Need】 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/4792859557",
+          "selected": false
+        },
+        {
+          "id": "aa00a049fa5d7b0dcdc5ae591db76eca",
+          "title": "Transformer 原理详解 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2049826827527575402",
+          "selected": false
+        },
+        {
+          "id": "342b2eda386921674b38ac2147c5745b",
+          "title": "大模型面试118题(一): Transformer 的核心原理 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2057117954958006140",
+          "selected": false
+        },
+        {
+          "id": "40002d5f6bbd4d76f9c2f53b87983712",
+          "title": "为什么Self-Attention要通过线性变换计算Q K V,背后的原理或直观解释是什么? - 知乎",
+          "url": "https://www.zhihu.com/question/592626839/answer/3304714001",
+          "selected": true
+        },
+        {
+          "id": "cf77ed2bc1134ac51206b33018a4edeb",
+          "title": "非常详细!万字长文带你了解Attention,从MHA到DeepSeek MLA,含大量图解! - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/26911261250",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "其余候选偏完整课程、范围更宽或重复解释；保留最直接服务本概念的这篇，不按点赞或认证替代内容判断。"
+    },
+    {
+      "conceptId": "attention-heads",
+      "query": "多头注意力 拼接 线性变换 单头 区别",
+      "queryId": "attention-heads",
+      "requestedAt": "2026-09-07T10:32:26.473Z",
+      "provider": "zhihu-search",
+      "responseSha256": "d416f101c5b6ca942f138af170a49fd1a1baba0f25f13a36807f40b45a85c046",
+      "selected": [
+        {
+          "id": "zhihu-99a35ad0fe7b1601357b0d67b25a32bb",
+          "title": "为什么Transformer 需要进行 Multi-head Attention? - 知乎",
+          "url": "https://www.zhihu.com/question/341222779/answer/2076761714759054280",
+          "author": "源势AI",
+          "summarySha256": "e1cbabb15883b636469040fe1231fca2129234e5fbdf40c940aa46f700a2f3d6",
+          "why": "区分独立投影、并行计算与拼接，并指出头数并非越多越好。",
+          "caveat": "不把每个头的分工当成预定标签，不把计算量近似说成零额外成本。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "eadc710fccd7c8e2eaa5459ee0bff4d5",
+          "title": "Transformer 论文精读与完整代码复现【Attention Is All You Need】 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/4792859557",
+          "selected": false
+        },
+        {
+          "id": "aead0522d960c8fccad1e86b1d76cec0",
+          "title": "transformer的细节到底是怎么样的? - 知乎",
+          "url": "https://www.zhihu.com/question/362131975/answer/2182682685",
+          "selected": false
+        },
+        {
+          "id": "99a35ad0fe7b1601357b0d67b25a32bb",
+          "title": "为什么Transformer 需要进行 Multi-head Attention? - 知乎",
+          "url": "https://www.zhihu.com/question/341222779/answer/2076761714759054280",
+          "selected": true
+        },
+        {
+          "id": "9c6e13532ae8a75179252dbf76aedd90",
+          "title": "AI知识Attention篇:第 7 课-Multi-Head Attention——多个子空间,各看各的 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2079186613565919582",
+          "selected": false
+        },
+        {
+          "id": "aa64e9040123a303c1a3204e3a53df3e",
+          "title": "【InternVLA】算法注意力机制 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2076795424334205725",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "排除“几乎零额外成本”的无条件描述；完整模型实现与当前公式阅读范围不符。"
+    },
+    {
+      "conceptId": "scene-camera",
+      "query": "Three.js 入门 场景 相机 渲染器",
+      "queryId": "scene-camera",
+      "requestedAt": "2026-09-07T10:32:26.392Z",
+      "provider": "zhihu-search",
+      "responseSha256": "e9d2a8b0afd8d36933b9f42c0bf7597f4d9fddc82f58c72ac47128028713540a",
+      "selected": [
+        {
+          "id": "zhihu-c8f643a8a13bfe8f8dddd27b4cf8842c",
+          "title": "ThreeJs如何使用? - 知乎",
+          "url": "https://www.zhihu.com/question/427762007/answer/2000153747221940068",
+          "author": "千千",
+          "summarySha256": "51566a252ea07588e6a6eafe0e04b5fc22c7eecae390633746faeace9f53aaea",
+          "why": "摄影棚类比能帮助首次接触 Three.js 的人理解三种对象职责。",
+          "caveat": "Scene 不必是黑色；Mesh 不是全部对象类型。示例代码统一采用同一依赖的模块导入。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "c8f643a8a13bfe8f8dddd27b4cf8842c",
+          "title": "ThreeJs如何使用? - 知乎",
+          "url": "https://www.zhihu.com/question/427762007/answer/2000153747221940068",
+          "selected": true
+        },
+        {
+          "id": "668da401a9cf52e5c4942025080403bc",
+          "title": "Threejs的学习-入门 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/20159962337",
+          "selected": false
+        },
+        {
+          "id": "c9fce9af136841394827f2fb43fac136",
+          "title": "Three.js项目实战:从零搭建小米SU7三维汽车|场景搭建,实现三维效果 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/1911067880595886489",
+          "selected": false
+        },
+        {
+          "id": "88f22c040c1141c1ba5fbe9e6ac87247",
+          "title": "如何系统的学习three.js? - 知乎",
+          "url": "https://www.zhihu.com/question/36367846/answer/501346840",
+          "selected": false
+        },
+        {
+          "id": "1727e908f42220f0655f0816c6b8a87e",
+          "title": "《Three.JS零基础入门教程》第二篇:起步案例 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/695289625",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "排除旧全局脚本入口、整车项目，以及“一场景只能一台相机”的错误概括。"
+    },
+    {
+      "conceptId": "geometry-material",
+      "query": "Three.js 立方体 BoxGeometry Mesh 材质",
+      "queryId": "geometry-material",
+      "requestedAt": "2026-09-07T10:32:29.418Z",
+      "provider": "zhihu-search",
+      "responseSha256": "a0aa274c6351f1b3db66fae2aefd15f6af1b92c063ac9ad6a23dbdf9b0ec7154",
+      "selected": [
+        {
+          "id": "zhihu-e2f99b27df49da0ff1070ababe35aaa6",
+          "title": "Three.js入门-常见几何体 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/10005205070",
+          "author": "三木",
+          "summarySha256": "4bce57d051fb57601f6920458ff3584e524a66c24afe4b126aacd5e3caa0b9bd",
+          "why": "直接说明 BoxGeometry 与材质如何组成 Mesh，适合当前立方体目标。",
+          "caveat": "只取立方体部分；本例改用无需灯光的 Normal 材质，其他几何体参数不作为当前课程。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "e3a04a9121a024598fddaa605cf1d9f3",
+          "title": "用 Three.js 画一个哆啦A梦的时光机 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/645217841",
+          "selected": false
+        },
+        {
+          "id": "e2f99b27df49da0ff1070ababe35aaa6",
+          "title": "Three.js入门-常见几何体 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/10005205070",
+          "selected": true
+        },
+        {
+          "id": "c8f643a8a13bfe8f8dddd27b4cf8842c",
+          "title": "ThreeJs如何使用? - 知乎",
+          "url": "https://www.zhihu.com/question/427762007/answer/2000153747221940068",
+          "selected": false
+        },
+        {
+          "id": "bd7df566eb7cd2e2fe4397f121adf5f6",
+          "title": "3D 图形:threejs 初识之渲染个立方体 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/1965484745744941194",
+          "selected": false
+        },
+        {
+          "id": "894d3174013632b7b261b4d476144b28",
+          "title": "Three.JS教程5 threejs中的材质 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/682434886",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "其余候选偏完整课程、范围更宽或重复解释；保留最直接服务本概念的这篇，不按点赞或认证替代内容判断。"
+    },
+    {
+      "conceptId": "object-transform",
+      "query": "Three.js 物体 旋转 坐标系 动画",
+      "queryId": "object-transform",
+      "requestedAt": "2026-09-07T10:32:29.533Z",
+      "provider": "zhihu-search",
+      "responseSha256": "2a257f73f019dd59f8e954a7850116f404e6c4696e872ea3aca1f4ae49e342fd",
+      "selected": [
+        {
+          "id": "zhihu-6853ec37d8f11e32dfa2ae4c42c73dfb",
+          "title": "Threejs的三维坐标系 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/9222957354",
+          "author": "三木",
+          "summarySha256": "bb4f312d2aa30e6dc325f2898f85338bc2a018815e9f50ee2b248a4cf302a916",
+          "why": "同时解释世界、局部坐标和对象变换，能区分改物体与改观察位置。",
+          "caveat": "position 与 rotation 相对于父对象；不能把嵌套场景的局部值直接视为世界值。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "ba403c1c75672b9b4535941df14d4fde",
+          "title": "从零开始学习时空数据可视化 - three.js 入门 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/61350952",
+          "selected": false
+        },
+        {
+          "id": "3c2bd1a6ab4632ab4b14f9ded483205d",
+          "title": "threejs结合vue3实现一个自动旋转的正方体-几何体及uv坐标 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/702681457",
+          "selected": false
+        },
+        {
+          "id": "b036c71106f352bcce3ace6abecfeed2",
+          "title": "three.js实现围绕某物体旋转 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/25826826",
+          "selected": false
+        },
+        {
+          "id": "6853ec37d8f11e32dfa2ae4c42c73dfb",
+          "title": "Threejs的三维坐标系 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/9222957354",
+          "selected": true
+        },
+        {
+          "id": "f987adf657b1ff86b4008a3b27ccf54d",
+          "title": "【Three.JS零基础入门教程】第四篇:基础变换 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/714673809",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "其余候选偏完整课程、范围更宽或重复解释；保留最直接服务本概念的这篇，不按点赞或认证替代内容判断。"
+    },
+    {
+      "conceptId": "orbit-controls",
+      "query": "Three.js OrbitControls 鼠标 旋转 相机 自适应",
+      "queryId": "orbit-controls",
+      "requestedAt": "2026-09-07T10:32:32.595Z",
+      "provider": "zhihu-search",
+      "responseSha256": "d2747e7ca3d033d41134cfe84f8fe692e570929417ba4294d53265727dbfc290",
+      "selected": [
+        {
+          "id": "zhihu-9dab53930e715141035f2ec3705ce36a",
+          "title": "Three.js搭建小米SU7三维汽车实战(3)轨道控制器 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/1921568552537789863",
+          "author": "司马云课堂",
+          "summarySha256": "14660a16d8dde86e93dcb8b6fe3ffc8a3cf2e162608585e4ca28d7609441105d",
+          "why": "使用 three/addons 模块入口和 controls.update，适合接入当前作品。",
+          "caveat": "汽车建模不属于目标；只读轨道控制器部分，窗口适配用同版本 API 补齐。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "3a79263338ec37efb862dcda0d81ff6c",
+          "title": "基于threejs实现一个模型查看器 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/19307606371",
+          "selected": false
+        },
+        {
+          "id": "339540655f8e7a374da932a164af427d",
+          "title": "学习Three.js–光源Light+轨道控制器OrbitControls - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2002390270378021259",
+          "selected": false
+        },
+        {
+          "id": "3e49981435e6c0756ce4d33ea989b793",
+          "title": "零基础也能做!用 AI 提示词一键生成 Three.js 3D 中国地图 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2052346812800013356",
+          "selected": false
+        },
+        {
+          "id": "9dab53930e715141035f2ec3705ce36a",
+          "title": "Three.js搭建小米SU7三维汽车实战(3)轨道控制器 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/1921568552537789863",
+          "selected": true
+        },
+        {
+          "id": "bf1fd60e9e5a9859de84eaf739e48665",
+          "title": "机器臂基础(一)坐标系变换 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2079940317403469800",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "排除机器人坐标变换、地图与完整模型查看器；只保留控制器的直接例子。"
+    },
+    {
+      "conceptId": "array-shape",
+      "query": "NumPy 数组 shape axis 数据分析 入门",
+      "queryId": "array-shape",
+      "requestedAt": "2026-09-07T10:32:32.721Z",
+      "provider": "zhihu-search",
+      "responseSha256": "46e7b83ce9ff70d9f9457e48d6dd74dfbc69f51f1e580f2480610fc8d5de506d",
+      "selected": [
+        {
+          "id": "zhihu-175025e0406dc5316439266d2b46544f",
+          "title": "NumPy 入门第一课——为什么数据科学离不开它 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2073415173059233106",
+          "author": "赤羽尾风",
+          "summarySha256": "03bbd31fb2cc9cb100b1f02441e0b0a1f69ecbf311cf6cfaf88d8a40b6d368f1",
+          "why": "使用成绩表解释 shape 与 axis，可作为四篇选集共同的学习入口。",
+          "caveat": "文章未返回完整成绩代码；这里另写一组固定练习数据，不冒充作者原例。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "63731c96246edadef5bccb59dd963219",
+          "title": "NumPy 第1至6天核心知识点学习指南 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2070146808999850877",
+          "selected": false
+        },
+        {
+          "id": "7e594fbcfc43ff24142b8342da0fc352",
+          "title": "深入理解 NumPy 中的 axis:维度、形状与操作的逻辑 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/1941063257977763243",
+          "selected": false
+        },
+        {
+          "id": "175025e0406dc5316439266d2b46544f",
+          "title": "NumPy 入门第一课——为什么数据科学离不开它 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2073415173059233106",
+          "selected": true
+        },
+        {
+          "id": "8ab53f55013998335c3887aacaf055d3",
+          "title": "Numpy:对Axis的理解 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/31275071",
+          "selected": false
+        },
+        {
+          "id": "08d11935f5a8270c839db835c6fbeab3",
+          "title": "NumPy中axis参数的记忆方法 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/1963276489362502943",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "排除把数组维数、矩阵秩与方阵大小混淆的解释；其他候选与聚合篇重复较多。"
+    },
+    {
+      "conceptId": "array-index",
+      "query": "NumPy 布尔索引 缺失值 筛选 数据",
+      "queryId": "array-index",
+      "requestedAt": "2026-09-07T10:32:33.392Z",
+      "provider": "zhihu-search",
+      "responseSha256": "4007ad417cb782f80d0d21775af208ee305856efcfb19954f7727bac41347c06",
+      "selected": [
+        {
+          "id": "zhihu-218127fef1d9d26ff1b6692226edcc5b",
+          "title": "Python NumPy 数据清洗:高效处理数据异常与缺失 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/1009022132",
+          "author": "敲代码不忘补水",
+          "summarySha256": "34bddfe4d014dcfeaf32aa79d430e81c8de68bf6b631bb34dfc42c46a3d7d1d8",
+          "why": "列出缺失、异常与不同处理方法，并提醒结合业务判断。",
+          "caveat": "不采纳一律删除或填补；本练习明确只分析两科均有效的行，保留原数组。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "218127fef1d9d26ff1b6692226edcc5b",
+          "title": "Python NumPy 数据清洗:高效处理数据异常与缺失 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/1009022132",
+          "selected": true
+        },
+        {
+          "id": "7786f23f8efddafd5e5b9e42f5b64a95",
+          "title": "numpy库的使用 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/695890015",
+          "selected": false
+        },
+        {
+          "id": "8b47df3fe6e82822a43df9cd011be780",
+          "title": "Day09:NumPy 进阶:索引、切片、随机、统计——建模的数据底座 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2080247098428100913",
+          "selected": false
+        },
+        {
+          "id": "3df67c6013464c4632070def78798ea0",
+          "title": "NumPy 魔术秀:一招搞定多维数据! - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/1904638846894867451",
+          "selected": false
+        },
+        {
+          "id": "48d5fe5d8204c164a2dacadde78c2b2b",
+          "title": "Python 科学计算二:Pandas—— 数据处理与分析实战 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2068750248843940545",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "排除 Pandas 多表合并与当前 NumPy 任务不符的结果。"
+    },
+    {
+      "conceptId": "array-broadcast",
+      "query": "NumPy 广播 向量化 循环",
+      "queryId": "array-broadcast",
+      "requestedAt": "2026-09-07T10:32:33.420Z",
+      "provider": "zhihu-search",
+      "responseSha256": "b0cf5fe17b504f34ff54fd41007a02ff7f6996f1241179d09b6e099b66082595",
+      "selected": [
+        {
+          "id": "zhihu-8a8098fab6c4081a80dd4a8428a67e70",
+          "title": "NumPy 进阶指南:第 7 - 9 天(矩阵运算与广播) - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2070149177640751491",
+          "author": "费米子父",
+          "summarySha256": "ae9d641afdc727ef2b7d933b5abc1c195faa916367c0cd89221d4581dc78a81a",
+          "why": "给出末轴对齐与长度兼容规则，恰好解释逐列调整。",
+          "caveat": "“拉伸”是概念模型，不一定实际复制内存；移除与本例无关的药物研发内容。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "832b90ed5ebc3e4d6404f535545cdc3e",
+          "title": "从零搭建你的 A 股量化系统(十四):NumPy 核心——向量化思维是量化的第一性原理 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2072058640371132046",
+          "selected": false
+        },
+        {
+          "id": "8a8098fab6c4081a80dd4a8428a67e70",
+          "title": "NumPy 进阶指南:第 7 - 9 天(矩阵运算与广播) - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2070149177640751491",
+          "selected": true
+        },
+        {
+          "id": "5ee649395b60146da87bdb14eff1063a",
+          "title": "考勤/工时/合同计费扣除特定日期,一个向量化函数搞定(附源码) - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2047475623166267726",
+          "selected": false
+        },
+        {
+          "id": "4a378345e59d8b69d2cb223bf346f7d7",
+          "title": "【Python 数据分析工具系列】NumPy 全面入门与实战手册(小白友好版) - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/1926693791865247743",
+          "selected": false
+        },
+        {
+          "id": "23993ff271d65d5a2b698d749f482251",
+          "title": "Day 3:NumPy高效数值计算 — AI工程师的底层基石 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2067945206431978859",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "排除量化交易与考勤源码，其业务范围超出本例；不把“全面底层基石”列为必要前置。"
+    },
+    {
+      "conceptId": "array-aggregate",
+      "query": "NumPy axis mean sum 统计 数据分析",
+      "queryId": "array-aggregate",
+      "requestedAt": "2026-09-07T10:32:36.519Z",
+      "provider": "zhihu-search",
+      "responseSha256": "fd670e5a0f44abadc28776ca950935c17a9a62cc1da73771a9d4e1d39201c41c",
+      "selected": [
+        {
+          "id": "zhihu-98057fd4efd4cdf8b65a49cad57843f7",
+          "title": "NumPy中的各种“轴“是如何运作的? - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/475574886",
+          "author": "玉来愈宏",
+          "summarySha256": "1c952b17bfbee4ec2a46c652809d162e4ba5ae2f327c7ae751497fe1a8932d92",
+          "why": "用数组形状与具体结果解释求和方向，可核对聚合输出。",
+          "caveat": "原摘要 a.sum(1) 后的“垂直”注释有误；它沿 axis=1 规约。本例用输出形状验证。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "7fc062093be3e7ab1fd51f3862e3f214",
+          "title": "【翻译】《利用Python进行数据分析·第2版》第4章(下)NumPy基础:数组和矢量计算 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/35487716",
+          "selected": false
+        },
+        {
+          "id": "adc5364755694d48c55aaf77a899c2d9",
+          "title": "利用python进行数据分析之numpy基础(三) - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/25770302",
+          "selected": false
+        },
+        {
+          "id": "98057fd4efd4cdf8b65a49cad57843f7",
+          "title": "NumPy中的各种“轴“是如何运作的? - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/475574886",
+          "selected": true
+        },
+        {
+          "id": "d922d488c6af21e4ae84d8c0cf96d269",
+          "title": "Python数据分析之Numpy基础-3 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/530894630",
+          "selected": false
+        },
+        {
+          "id": "1cae5845bf11e48cb2fb18114a3daf52",
+          "title": "11.科学计算库NumPy:数组运算、矩阵操作与向量化思想 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2068711285458460703",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "其余候选偏完整课程、范围更宽或重复解释；保留最直接服务本概念的这篇，不按点赞或认证替代内容判断。"
+    },
+    {
+      "conceptId": "money-cashflow",
+      "query": "家庭 理财 现金流 预算 记账",
+      "queryId": "money-cashflow",
+      "requestedAt": "2026-09-07T10:32:36.513Z",
+      "provider": "zhihu-search",
+      "responseSha256": "bf9ffe86a8cf72f1b60b2f53f0510011a00602022ab56b44ac31a3d468b35c58",
+      "selected": [
+        {
+          "id": "zhihu-9181eab5eda16fa21101b294769b5d01",
+          "title": "你的钱都花去哪了?记账让你一目了然 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2073329711174963818",
+          "author": "广财有道",
+          "summarySha256": "4fbb787b2b7d7c59222f8771ac05cd0a4e4a7fce54652b0bab6d21d0029e8e2a",
+          "why": "从收入、必需与非必需支出组织预算，符合先理解收支的目标。",
+          "caveat": "把学生零用钱场景迁为家庭练习，不给统一储蓄比例，不把内部转账记成收入。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "f371dfa9a844b65a5baeb8866d00f027",
+          "title": "个人家庭财务管理 改善财务状况 摸清家底 资产配置 个人日常记账 家庭财务管理体系 资产负债表 现金流量 表收支平衡表的编制 家庭理财规划投资组合 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/324636402",
+          "selected": false
+        },
+        {
+          "id": "9181eab5eda16fa21101b294769b5d01",
+          "title": "你的钱都花去哪了?记账让你一目了然 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2073329711174963818",
+          "selected": true
+        },
+        {
+          "id": "ae7521134802ea7b12489b486db40656",
+          "title": "分享我2026年高效简洁的家庭记账理财办法 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/1991135141444215606",
+          "selected": false
+        },
+        {
+          "id": "b074c2e3311f38c7b14094bb33218f6f",
+          "title": "记账软件让家底一天比一天筛得精 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2075535877661537422",
+          "selected": false
+        },
+        {
+          "id": "d227f0c332638230f0cb908580834113",
+          "title": "记账是通往财务清明的必经关口 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2073335020819894688",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "排除固定储蓄比例、理财产品延伸与期权对冲内容；先选较窄的预算入门。"
+    },
+    {
+      "conceptId": "money-liquidity",
+      "query": "家庭 应急金 流动性 理财 期限",
+      "queryId": "money-liquidity",
+      "requestedAt": "2026-09-07T10:32:39.561Z",
+      "provider": "zhihu-search",
+      "responseSha256": "0a67dd8158b347fb64be21916d9af851ebd78f53c2552d4dcbbf2fa907767b67",
+      "selected": [
+        {
+          "id": "zhihu-fe5217369e165874c910a62e21bdfc8d",
+          "title": "搭建财务安全垫:3-6个月应急金到底怎么存? - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2014455796956676739",
+          "author": "通往自由的峡谷",
+          "summarySha256": "dfe522e95de482f1f4616c3b075e71d63f9393faa0cc43df66340e18df88699b",
+          "why": "解释收入中断与意外支出为何需要可用储备，适合讨论资金用途。",
+          "caveat": "文中的 3–6 个月与储蓄率不是人人必须遵守的标准；按情况估算，另外核对实际到账条款。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "b5ed18e485e10ba8d36b0db9133c6792",
+          "title": "提问各位大神:一般都买哪个银行的理财产品嘞~? - 知乎",
+          "url": "https://www.zhihu.com/question/353424895/answer/2076328365376681041",
+          "selected": false
+        },
+        {
+          "id": "3d46008fa49de4c7bd64a42fd1999fc2",
+          "title": "2026医保双目录调整背后,普通人财富启示:风险兜底才是家庭资产底线 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2072682361813218938",
+          "selected": false
+        },
+        {
+          "id": "92015c8ed10838ee248a6f345b62fe66",
+          "title": "家里的钱怎么分?把这三笔钱分清楚,才谈得上资产配置 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2078584942188148055",
+          "selected": false
+        },
+        {
+          "id": "fe5217369e165874c910a62e21bdfc8d",
+          "title": "搭建财务安全垫:3-6个月应急金到底怎么存? - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2014455796956676739",
+          "selected": true
+        },
+        {
+          "id": "5a8c2ea283521d3b71621a8364d9a887",
+          "title": "通华财富:应急钱计算公式,存对不闲置 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/1978763695946478643",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "排除把 R1 等同于立即到账的产品配置建议与推广性收益描述。"
+    },
+    {
+      "conceptId": "money-risk",
+      "query": "最大回撤 历史 不代表 未来 风险",
+      "queryId": "money-drawdown",
+      "requestedAt": "2026-09-07T10:33:59.388Z",
+      "provider": "zhihu-search",
+      "responseSha256": "54963791c60d1fe9e548e6f145a61d840bf1d35e4c7261ae59d8f5ad3203453e",
+      "selected": [
+        {
+          "id": "zhihu-9846ec7a77776355269d87a9e303086f",
+          "title": "为什么基金一跌就慌?有可能是你没搞懂这个指标! - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2022713825099618195",
+          "author": "私募排排网",
+          "summarySha256": "cac5db4a42df4df9e639c1de592d399f7b5e6f65678dee2ad39afea6af0ade37",
+          "why": "明确区分已观察到的回撤与未来潜在风险，避免把历史当上限。",
+          "caveat": "不采纳基金经理能择时保护本金的暗示；本例只教授指标边界与风险核对。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "c707f3fc26965776b27181ed38d69dc4",
+          "title": "《厚尾效应》读完,我开始重新理解“投资风险” - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2079699428177339889",
+          "selected": false
+        },
+        {
+          "id": "9846ec7a77776355269d87a9e303086f",
+          "title": "为什么基金一跌就慌?有可能是你没搞懂这个指标! - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2022713825099618195",
+          "selected": true
+        },
+        {
+          "id": "d394091fe32272fdd7ed597613319276",
+          "title": "【择时研究】量化投资中的回撤择时:分析与优化 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2029623598747272030",
+          "selected": false
+        },
+        {
+          "id": "9b1c6b8cb08481af8ead08f6c466ef93",
+          "title": "说说基金理财的坑,牢记这3个指标! - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/1961361013266952622",
+          "selected": false
+        },
+        {
+          "id": "5ec6f5fddb08f54837cc8cc401da8e25",
+          "title": "从夏普到卡玛,再到五维雷达:如何量化评估投资组合 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2019457256417144873",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "排除个人择时、固定买入比例和以过往回撤筛选未来损失的建议；保留历史与未来的明确区别。"
+    },
+    {
+      "conceptId": "money-compare",
+      "query": "如何读懂 理财产品说明书 费用 风险 流动性",
+      "queryId": "money-compare",
+      "requestedAt": "2026-09-07T10:33:59.379Z",
+      "provider": "zhihu-search",
+      "responseSha256": "5d14d5cd836dee6fe4f00a549dce965e7e3ff29373483bc48a796b6d3bd671b6",
+      "selected": [
+        {
+          "id": "zhihu-9208ac59de6153b06ebcb34e702f4761",
+          "title": "PDF2X实战案例:理财说明书解析器,把40页PDF翻译成人话 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2048346510820226493",
+          "author": "文因互联",
+          "summarySha256": "8af89527c207037227f3373f67068ff5460184f45ab638630c482a51234ea84a",
+          "why": "列出说明书中费用、赎回、投向与风险字段，可编成条款核对清单。",
+          "caveat": "这是厂商应用案例；不推荐其服务，也不采信 AI 评分或“适合谁买”的自动结论。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "5dad0267ef6000d8de700c5c35e8bff9",
+          "title": "银行推荐的理财,到底该怎么买? - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2076328242231906894",
+          "selected": false
+        },
+        {
+          "id": "9208ac59de6153b06ebcb34e702f4761",
+          "title": "PDF2X实战案例:理财说明书解析器,把40页PDF翻译成人话 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2048346510820226493",
+          "selected": true
+        },
+        {
+          "id": "923e3444534877f37171269a12cacfb3",
+          "title": "如何选购银行的理财产品? - 知乎",
+          "url": "https://www.zhihu.com/question/20803106/answer/2078583748615058006",
+          "selected": false
+        },
+        {
+          "id": "721b2e123aebefb23ce54b0f11b37bbe",
+          "title": "除了本职工作外,你最该学会的技能是理财 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2024200109324289707",
+          "selected": false
+        },
+        {
+          "id": "88e6b69639d44bd4663186d41023d2c4",
+          "title": "1分钟看懂银行理财产品说明书 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/200732882",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "排除具体利率、分配比例与过时产品案例；仅取说明书字段，不推荐厂商工具。"
+    },
+    {
+      "conceptId": "llm-contract",
+      "query": "大模型 API 结构化输出 JSON schema 应用开发",
+      "queryId": "llm-contract",
+      "requestedAt": "2026-09-07T10:32:40.259Z",
+      "provider": "zhihu-search",
+      "responseSha256": "acdd161da2798116303c038d0176020a32c10faab92c07c605dfc070a9e09ac5",
+      "selected": [
+        {
+          "id": "zhihu-9a498b90e025c6ff4a3ee4a7bc6bdadb",
+          "title": "LLM 学习第 9 课:结构化输出——JSON 模式、Schema 与解析重试 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2075632400139285006",
+          "author": "咸菜",
+          "summarySha256": "20316b16222720f665f13f45f92614af0fee7f6191542582ff77126914e11fc2",
+          "why": "区分解析、校验和有限重试，并明确格式正确不等于事实正确。",
+          "caveat": "不照搬日志保存原始敏感输出的做法；作品只记录必要的脱敏信息。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "987ff7c08d29aed7e95e062096025c62",
+          "title": "Spring AI结构化输出实战:Prompt约束、Bean映射与JSON Schema怎么选?|Java转AI第6课 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2076031633052979273",
+          "selected": false
+        },
+        {
+          "id": "9a498b90e025c6ff4a3ee4a7bc6bdadb",
+          "title": "LLM 学习第 9 课:结构化输出——JSON 模式、Schema 与解析重试 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2075632400139285006",
+          "selected": true
+        },
+        {
+          "id": "200ef460fda0e057544d7c1ee3be779d",
+          "title": "如何让大语言模型输出JSON格式? - 知乎",
+          "url": "https://www.zhihu.com/question/656512469/answer/2048937215280125268",
+          "selected": false
+        },
+        {
+          "id": "1bb219531ccb07256ad3835408e25b63",
+          "title": "18.LangChain 1.0+ 第六篇:结构化输出——让模型吐出程序能用的数据 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2074254614485006182",
+          "selected": false
+        },
+        {
+          "id": "152a4acc3e4db9d5b2ea255963efae78",
+          "title": "LangChain4j AiService 实战:会话记忆与结构化输出 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2076671977364926992",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "排除框架接口清单与受限解码保证绝对正确的表述。"
+    },
+    {
+      "conceptId": "rag-evidence",
+      "query": "RAG 文档 切分 检索 引用 来源",
+      "queryId": "rag-evidence",
+      "requestedAt": "2026-09-07T10:32:41.075Z",
+      "provider": "zhihu-search",
+      "responseSha256": "d85cd20f547396cdf6d80831b883bc0e672758b5c7d7e2f3c745cd3c31537ed8",
+      "selected": [
+        {
+          "id": "zhihu-0d8b6be96bf541f3e467f0bfaef13afd",
+          "title": "RAG 核心技术实战:文档解析、分块策略与检索 Pipeline - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2068993917324989493",
+          "author": "Simple",
+          "summarySha256": "a4cf69467d2a2a36680dbe79c579d3339fba27ea92a6bdc3ad140f6731ff66cc",
+          "why": "有解析、切分、检索与引用的具体故障场景，便于建立作品基线。",
+          "caveat": "作者样本分数不外推；低 temperature 与提示词不保证消除幻觉，另做引用与评测。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "1f6e5e54b671190283d0aace580d1e0b",
+          "title": "RAG系列3-分块策略大全 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2075972683058226294",
+          "selected": false
+        },
+        {
+          "id": "0d8b6be96bf541f3e467f0bfaef13afd",
+          "title": "RAG 核心技术实战:文档解析、分块策略与检索 Pipeline - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2068993917324989493",
+          "selected": true
+        },
+        {
+          "id": "de248df4e6239ca52d27c808ab6c5a84",
+          "title": "Agent 开发第一课——核心概念体系 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2072062611139696592",
+          "selected": false
+        },
+        {
+          "id": "135144e29c1d52c3aeb30d3079b7f31c",
+          "title": "从 Token 到 Harness Engineering:一文搞懂 AI 应用开发的核心概念 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2076389708330971825",
+          "selected": false
+        },
+        {
+          "id": "b15ee64d9371c49bbdaf302237ee09ff",
+          "title": "GraphRAG 到底解决了普通 RAG 的什么问题:从“切片检索“到“结构化知识“ - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2077906966966432661",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "排除 GraphRAG、通用 Agent 概念堆叠；先完成可回查的普通 RAG。"
+    },
+    {
+      "conceptId": "rag-evaluation",
+      "query": "RAG 评估 检索 召回率 回答 忠实性",
+      "queryId": "rag-evaluation",
+      "requestedAt": "2026-09-07T10:32:41.814Z",
+      "provider": "zhihu-search",
+      "responseSha256": "375e46f3c7819c0ae19fb132c964aef344a30d0009886c8e1339cf5c50a819f3",
+      "selected": [
+        {
+          "id": "zhihu-6cf61d9bac25551e4d2b2941cad07ea8",
+          "title": "21 RAG 质量怎样量化:Golden Set、Recall@K 和坏案例 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2072321523281572120",
+          "author": "好好用AI",
+          "summarySha256": "fb3201e1a9566c8596ea6b7715bc430b77db0f42035352fdf5b5b8d145f24ba4",
+          "why": "分层检查检索、引用、拒答和成本，说明不能用一个平均分代替发布判断。",
+          "caveat": "指标依赖标注、数据集和样本量；本文示例分数不是我们产品的实测结果。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "9bdf02af61b35b9fd57a85fd596f952e",
+          "title": "基于大模型检索增强生成(RAG)系统有哪些好用的评估方案? - 知乎",
+          "url": "https://www.zhihu.com/question/649128048/answer/2078524938890240033",
+          "selected": false
+        },
+        {
+          "id": "87d6ed6e15a3c94290a50cb9392d6f95",
+          "title": "Llamaindex基础知识(六)结构化输出&评估 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2077973239238758562",
+          "selected": false
+        },
+        {
+          "id": "8a251afc48f9adcc48cfe54038c00d47",
+          "title": "RAG 全套高频面试题(基础→原理→工程落地→调优→故障排查→架构设计,后端 / AI 应用架构师面试专用) - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2078499540001350129",
+          "selected": false
+        },
+        {
+          "id": "6cf61d9bac25551e4d2b2941cad07ea8",
+          "title": "21 RAG 质量怎样量化:Golden Set、Recall@K 和坏案例 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2072321523281572120",
+          "selected": true
+        },
+        {
+          "id": "c24ec40d612d88573bc9a72b9909e144",
+          "title": "all in rag 笔记 (5、6章) - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2076632946199488168",
+          "selected": false
+        }
+      ],
+      "rejectionReason": "排除混淆指标数量的面试题与单纯 LLM 打分方案，保留可复验的分层判断。"
+    },
+    {
+      "conceptId": "tool-boundary",
+      "query": "大模型 Agent Function Calling 工具调用 权限",
+      "queryId": "tool-boundary",
+      "requestedAt": "2026-09-07T10:32:42.557Z",
+      "provider": "zhihu-search",
+      "responseSha256": "6ac613d4455a71cc7bb9949b2893a3e1cc416cdc7965140926535fb593e0ac11",
+      "selected": [
+        {
+          "id": "zhihu-9d5965d9a12eaf9144a1121bee3f4b8e",
+          "title": "一次 LLM Function Calling 到底发生了什么:从输入协议、模型输出到函数真正执行 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2077399495650840736",
+          "author": "Ghost apple",
+          "summarySha256": "f327a04b5f99914559b86d328f9cb5e5e7cba099950d7f0b9c6d75204ea1e45c",
+          "why": "清楚区分模型的结构化请求与应用实际执行，适合展示权限边界。",
+          "caveat": "本例仅使用只读工具；不声称模型可以绕过宿主直接执行外部动作。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "7833987fd8ecff6abed9443984ef5d66",
+          "title": "理解 LLM 以及Agent 基本机制及技术原理:(七)Tool Use:Agent 怎么调用外部工具? - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2076692104798127039",
+          "selected": false
+        },
+        {
+          "id": "89d604a9548dc6534f99da44e3061f08",
+          "title": "光会聊天远远不够,Function‑Calling让智能体拥有动手能力 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2077363632216749699",
+          "selected": false
+        },
+        {
+          "id": "ca308fc68f9fcd80c2ea73b65043ccdf",
+          "title": "2026-09-03-functioncalling设计取舍 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2078968208816609113",
+          "selected": false
+        },
+        {
+          "id": "3f905d62784a3dbe7cc636796d496f97",
+          "title": "Code Agent 解剖(05):模型怎么知道有哪些工具可以用?Function Calling 如何实现? - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2074243595121513711",
+          "selected": false
+        },
+        {
+          "id": "9d5965d9a12eaf9144a1121bee3f4b8e",
+          "title": "一次 LLM Function Calling 到底发生了什么:从输入协议、模型输出到函数真正执行 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2077399495650840736",
+          "selected": true
+        }
+      ],
+      "rejectionReason": "排除“能精准回答所有问题”的过度描述与依赖特定工程内部规则的内容。"
+    },
+    {
+      "conceptId": "llm-delivery",
+      "query": "大模型 应用 部署 监控 成本 延迟 评估",
+      "queryId": "llm-delivery",
+      "requestedAt": "2026-09-07T10:32:43.353Z",
+      "provider": "zhihu-search",
+      "responseSha256": "cec5010d00be7d83770f8a9015ba8f1f285aac690d960d4997a021ae0f47dbcd",
+      "selected": [
+        {
+          "id": "zhihu-4e8d7562560d1b5b9587beb55cd7be90",
+          "title": "一文了解:大模型「推理基准测试」及其「核心评估指标」 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/1918838032745882209",
+          "author": "AINLPer",
+          "summarySha256": "f53ef8d4a7abc3ef4649012c3d2d928c11b8cbd180aaec22eae388c79d81696a",
+          "why": "区分负载测试、延迟和吞吐，为作品交付建立可观察指标。",
+          "caveat": "不采用固定汉字与 token 比例，也不把小样本演示视作生产负载验收。"
+        }
+      ],
+      "candidates": [
+        {
+          "id": "548c0ae7734da72d6e54ba3546071eac",
+          "title": "15.LangChain 1.0+ 第三篇:LangSmith——给 AI 应用装上监控台.发布清单 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2073891770828579187",
+          "selected": false
+        },
+        {
+          "id": "3c1137d69efefb463c96ddc2067d8777",
+          "title": "Agent 一上生产就失控?可观测性怎么搭,这篇讲透了 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2070795223886837064",
+          "selected": false
+        },
+        {
+          "id": "79d92615b397d714ea0d5b6ad03da421",
+          "title": "Langfuse:LLMOps时代的可观测性革命 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/1963597057790027686",
+          "selected": false
+        },
+        {
+          "id": "ef04da0c2c7e8540a2d7f49c66cb1249",
+          "title": "DigitalOcean 推出大模型自动化评测功能,上线前精准避坑 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/2056055388206785366",
+          "selected": false
+        },
+        {
+          "id": "4e8d7562560d1b5b9587beb55cd7be90",
+          "title": "一文了解:大模型「推理基准测试」及其「核心评估指标」 - 知乎",
+          "url": "https://zhuanlan.zhihu.com/p/1918838032745882209",
+          "selected": true
+        }
+      ],
+      "rejectionReason": "排除供应商选型与产品推广，先掌握可观测的指标及交付边界。"
+    }
+  ]
+}

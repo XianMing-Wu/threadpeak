@@ -1,0 +1,184 @@
+{
+  "url": "http://127.0.0.1:4304/",
+  "version": "2026-09-07.1",
+  "date": "2026-09-07T11:21:46.868Z",
+  "concepts": [
+    {
+      "route": "attention-paper",
+      "concept": "attention-shapes",
+      "nodes": 8,
+      "articles": 2,
+      "sourceHref": "https://www.zhihu.com/question/362131975/answer/2182682685"
+    },
+    {
+      "route": "attention-paper",
+      "concept": "attention-dot",
+      "nodes": 8,
+      "articles": 2,
+      "sourceHref": "https://zhuanlan.zhihu.com/p/4792859557"
+    },
+    {
+      "route": "attention-paper",
+      "concept": "attention-scale",
+      "nodes": 8,
+      "articles": 2,
+      "sourceHref": "https://zhuanlan.zhihu.com/p/2035645890195669149"
+    },
+    {
+      "route": "attention-paper",
+      "concept": "attention-softmax",
+      "nodes": 8,
+      "articles": 2,
+      "sourceHref": "https://www.zhihu.com/question/592626839/answer/3304714001"
+    },
+    {
+      "route": "attention-paper",
+      "concept": "attention-heads",
+      "nodes": 8,
+      "articles": 2,
+      "sourceHref": "https://www.zhihu.com/question/341222779/answer/2076761714759054280"
+    },
+    {
+      "route": "interactive-cube",
+      "concept": "scene-camera",
+      "nodes": 7,
+      "articles": 1,
+      "sourceHref": "https://www.zhihu.com/question/427762007/answer/2000153747221940068"
+    },
+    {
+      "route": "interactive-cube",
+      "concept": "geometry-material",
+      "nodes": 7,
+      "articles": 1,
+      "sourceHref": "https://zhuanlan.zhihu.com/p/10005205070"
+    },
+    {
+      "route": "interactive-cube",
+      "concept": "object-transform",
+      "nodes": 7,
+      "articles": 1,
+      "sourceHref": "https://zhuanlan.zhihu.com/p/9222957354"
+    },
+    {
+      "route": "interactive-cube",
+      "concept": "orbit-controls",
+      "nodes": 7,
+      "articles": 1,
+      "sourceHref": "https://zhuanlan.zhihu.com/p/1921568552537789863"
+    },
+    {
+      "route": "numpy-collection",
+      "concept": "array-shape",
+      "nodes": 10,
+      "articles": 4,
+      "sourceHref": "https://zhuanlan.zhihu.com/p/2073415173059233106"
+    },
+    {
+      "route": "numpy-collection",
+      "concept": "array-index",
+      "nodes": 10,
+      "articles": 4,
+      "sourceHref": "https://zhuanlan.zhihu.com/p/2073415173059233106"
+    },
+    {
+      "route": "numpy-collection",
+      "concept": "array-broadcast",
+      "nodes": 10,
+      "articles": 4,
+      "sourceHref": "https://zhuanlan.zhihu.com/p/2073415173059233106"
+    },
+    {
+      "route": "numpy-collection",
+      "concept": "array-aggregate",
+      "nodes": 10,
+      "articles": 4,
+      "sourceHref": "https://zhuanlan.zhihu.com/p/2073415173059233106"
+    },
+    {
+      "route": "financial-decisions",
+      "concept": "money-cashflow",
+      "nodes": 7,
+      "articles": 1,
+      "sourceHref": "https://zhuanlan.zhihu.com/p/2073329711174963818"
+    },
+    {
+      "route": "financial-decisions",
+      "concept": "money-liquidity",
+      "nodes": 7,
+      "articles": 1,
+      "sourceHref": "https://zhuanlan.zhihu.com/p/2014455796956676739"
+    },
+    {
+      "route": "financial-decisions",
+      "concept": "money-risk",
+      "nodes": 7,
+      "articles": 1,
+      "sourceHref": "https://zhuanlan.zhihu.com/p/2022713825099618195"
+    },
+    {
+      "route": "financial-decisions",
+      "concept": "money-compare",
+      "nodes": 7,
+      "articles": 1,
+      "sourceHref": "https://zhuanlan.zhihu.com/p/2048346510820226493"
+    },
+    {
+      "route": "llm-application",
+      "concept": "llm-contract",
+      "nodes": 7,
+      "articles": 1,
+      "sourceHref": "https://zhuanlan.zhihu.com/p/2075632400139285006"
+    },
+    {
+      "route": "llm-application",
+      "concept": "rag-evidence",
+      "nodes": 7,
+      "articles": 1,
+      "sourceHref": "https://zhuanlan.zhihu.com/p/2068993917324989493"
+    },
+    {
+      "route": "llm-application",
+      "concept": "tool-boundary",
+      "nodes": 7,
+      "articles": 1,
+      "sourceHref": "https://zhuanlan.zhihu.com/p/2077399495650840736"
+    },
+    {
+      "route": "llm-application",
+      "concept": "rag-evaluation",
+      "nodes": 7,
+      "articles": 1,
+      "sourceHref": "https://zhuanlan.zhihu.com/p/2072321523281572120"
+    },
+    {
+      "route": "llm-application",
+      "concept": "llm-delivery",
+      "nodes": 7,
+      "articles": 1,
+      "sourceHref": "https://zhuanlan.zhihu.com/p/1918838032745882209"
+    }
+  ],
+  "screenshots": [
+    "home",
+    "attention-paper",
+    "interactive-cube",
+    "numpy-collection",
+    "financial-decisions",
+    "llm-application",
+    "parallel-route",
+    "mobile-home",
+    "mobile-learning"
+  ],
+  "errors": [],
+  "checks": [
+    "suggestions animate, pause on hover, prefill and focus without sending",
+    "document edits survive reload without changing source summary; new conversation keeps tree, articles and goal",
+    "WebGL route loaded: attention-paper",
+    "WebGL route loaded: interactive-cube",
+    "WebGL route loaded: numpy-collection",
+    "WebGL route loaded: financial-decisions",
+    "WebGL route loaded: llm-application",
+    "390px home and learning have no document horizontal overflow"
+  ],
+  "passed": true
+}

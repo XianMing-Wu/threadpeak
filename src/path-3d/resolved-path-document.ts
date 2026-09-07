@@ -35,7 +35,7 @@ export function isLearningPathDocument(value: unknown): value is LearningPathDoc
 }
 
 export function isExampleFixtureDocumentId(id: string): boolean {
-  return EXAMPLE_FIXTURE_DOCUMENT_IDS.has(id)
+  return EXAMPLE_FIXTURE_DOCUMENT_IDS.has(id) || id.startsWith('threadpeak-showcase-')
 }
 
 export function isRenderableMineRoute(route: { owner: 'mine' | 'example'; document: unknown }): boolean {

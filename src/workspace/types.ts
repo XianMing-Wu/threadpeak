@@ -29,6 +29,7 @@ export type RouteBlueprint = {
   goalSummary: string
   startSummary: string
   carriers: PathCarrierSpec[]
+  stages?: string[][]
 }
 
 export type FirstLesson = {
@@ -138,6 +139,7 @@ export type RouteCard = {
 }
 
 export type KnowledgeCard = {
+  conceptId?: string
   id: string
   routeId: string
   owner: Owner

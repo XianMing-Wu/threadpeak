@@ -1,5 +1,6 @@
 import {
   listKnowledge,
+  listConceptCards,
   listRoutes,
 } from '../workspace/store'
 import type { KnowledgeCard, Owner, RouteCard } from '../workspace/types'
@@ -23,7 +24,7 @@ export function projectLibraryReadModel(): LibraryReadModel {
   return {
     knowledge,
     routes,
-    recommendedKnowledge: knowledge.example.slice(0, 2),
+    recommendedKnowledge: knowledge.example.filter(k=>['knowledge-attention-paper','knowledge-numpy-collection'].includes(k.id)).map(k=>{const c=listConceptCards(k.id).find(c=>['attention-scale','array-broadcast'].includes(c.id))!;return {...k,title:c.title,description:c.description,conceptId:c.id}}),
     recommendedRoutes: routes.example.slice(0, 2),
   }
 }

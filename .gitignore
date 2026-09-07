@@ -11,3 +11,4 @@ server/.data/
 
 # Local provider evaluation payloads; reviewed summaries live beside this directory.
 qa/goal-agents-2026-09-07/raw/
+qa/showcase-2026-09-07/raw/

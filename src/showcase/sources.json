@@ -1,0 +1,540 @@
+{
+  "attention-shapes": [
+    {
+      "id": "zhihu-aead0522d960c8fccad1e86b1d76cec0",
+      "title": "transformer的细节到底是怎么样的? - 知乎",
+      "summary": "class MyMultiheadAttention(nn.Module):\n    def __init__(self, embed_dim, num_heads, dropout=0., bias=True):\n        super(MyMultiheadAttention, self).__init__()\n        \"\"\"\n        :param embed_dim:   词嵌入的维度，也就是前面的d_model参数，论文中的默认值为512\n        :param num_heads:   多头注意力机制中多头的数量，也就是前面的nhead参数， 论文默认值为 8\n        :param bias:        最后对多头的注意力（组合）输出进行线性变换时，是否使用偏置\n        \"\"\"\n        self.embed_dim = embed_dim  # 前面的d_model参数\n        self.head_dim = embed_dim // num_heads  # head_dim 指的就是d_k,d_v\n        self.kdim = self.head_dim\n        self.vdim = self.head_dim\n        self.num_heads = num_heads  # 多头个数\n        self.dropout = dropout\n        assert self.head_dim * num_heads == self.embed_dim, \"embed_dim 除以 num_heads必须为整数\"\n        # 上面的限制条件就是论文中的  d_k = d_v = d_model/n_head 条件\n        self.q_proj_weight = Parameter(torch.Tensor(embed_dim, embed_dim))  \n        # embed_dim = kdim * num_heads\n        # 这里第二个维度之所以是embed_dim，实际上这里是同时初始化了num_heads个W_q堆叠起来的, 也就是num_heads个头\n        self.k_proj_weight = Parameter(torch.Tensor(embed_dim, embed_dim))",
+      "author": "跟我学机器学习",
+      "authorId": "author-ev-aead0522d960c8fccad1e86b1d76cec0",
+      "authorUrl": null,
+      "url": "https://www.zhihu.com/question/362131975/answer/2182682685",
+      "likes": 4320,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "代码明确给出模型维度与头维度关系，适合用尺寸检查阅读论文。",
+        "readingGuide": "代码明确给出模型维度与头维度关系，适合用尺寸检查阅读论文。",
+        "caveat": "只取维度与投影的解释；代码摘录不是可独立运行的完整实现。",
+        "reviewedAt": "2026-09-07T10:32:25.043Z"
+      },
+      "avatar": "https://picx.zhimg.com/50/v2-63fd29c94f331bef98f712e20d2c8948_l.jpg?source=bbf6831d",
+      "editedAt": 1787228331,
+      "contentType": "Answer"
+    }
+  ],
+  "attention-dot": [
+    {
+      "id": "zhihu-eadc710fccd7c8e2eaa5459ee0bff4d5",
+      "title": "Transformer 论文精读与完整代码复现【Attention Is All You Need】 - 知乎",
+      "summary": "给定查询矩阵 、键矩阵  和值矩阵 , 其注意力输出的数学表达式如下：\n・（Query）: 用于查询的向量矩阵。\n・（Key）: 表示键的向量矩阵，用于与查询匹配。\n・（Value）: 值矩阵，注意力权重最终会作用在该矩阵上。\n・: 键或查询向量的维度。\n理解 Q、K、V 的关键在于代码，它们实际上是通过线性变换从输入序列生成的，“故事”的延伸更多是锦上添花。\n公式解释\n1.点积计算（Dot Produce）将查询矩阵  与键矩阵的转置  做点积，计算每个查询向量与所有键向量之间的相似度：- 每一行表示某个查询与所有键之间的相似度（匹配分数）。- 每一列表示某个键与所有查询之间的相似度（匹配分数）。\n2.缩放（Scaling）We suspect that for large values of , the dot products grow large in magnitude, pushing the softmax function into regions where it has extremely small gradients. To counteract this effect, we scale the dot products by  .当  较大时，点积的数值可能会过大，导致 Softmax 过后的梯度变得极小，因此除以  缩放点积结果的数值范围：缩放后（Scaled Dot-Product）也称为注意力分数（attention scores）。\n3.Softmax 归一化使用 Softmax 函数将缩放后的分数转换为概率分布：注意：Softmax 是在每一行上进行的，这意味着每个查询的匹配分数将归一化为概率，总和为 1。\n4.加权求和（Weighted Sum）最后，使用归一化后的注意力权重对值矩阵  进行加权求和，得到每个查询位置的最终输出：\n代码实现\n解释\n1.缩放点积计算使用 torch.matmul(Q, K.transpose(-2, -1)) 计算查询与键之间的点积相似度，然后结果除以 进行缩放。\n2.掩码处理（Masked Attention）如果提供了掩码矩阵（mask），则将掩码为 0 的位置的分数设为 （-inf）。这样在 Softmax 归一化时，这些位置的概率会变为 0，不参与输出计算：if mask is not None:         scores = scores.masked_fill(mask == 0, float('-inf'))Softmax 函数的数学定义为：当某个分数为  时, , 因此该位置的权重为 0。\n3.Softmax 归一化Softmax 将缩放后的分数转换为概率分布（对行），表示每个查询向量与键向量之间的匹配程度：attention_weights = F.softmax(scores, dim=-1)\n4.加权求和（Weighted Sum）使用注意力权重对值矩阵  进行加权求和，生成最终的输出：output = torch.matmul(attention_weights, V)",
+      "author": "揣着梦想",
+      "authorId": "author-ev-eadc710fccd7c8e2eaa5459ee0bff4d5",
+      "authorUrl": null,
+      "url": "https://zhuanlan.zhihu.com/p/4792859557",
+      "likes": 157,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "按点积、缩放、归一化、加权求和拆解论文，可把直觉回到运算。",
+        "readingGuide": "按点积、缩放、归一化、加权求和拆解论文，可把直觉回到运算。",
+        "caveat": "接口摘要缺少部分公式；本例的完整公式另按论文核对，不声称恢复了作者原式。",
+        "reviewedAt": "2026-09-07T10:32:25.055Z"
+      },
+      "avatar": "https://picx.zhimg.com/50/v2-d56007d3ca40d0a043b201cccda8b9e1_l.jpg?source=bbf6831d",
+      "editedAt": 1786447369,
+      "contentType": "Article"
+    }
+  ],
+  "attention-scale": [
+    {
+      "id": "zhihu-c96fd0999e9e64747e300bb7a1f1057e",
+      "title": "注意力机制中 √dₖ 缩放因子的数学原理(翻译) - 知乎",
+      "summary": "e^5   = 148.4\ne^1   = 2.718\ne^0.5 = 1.649\n\nSum = 152.780\n\nsoftmax = [148.4/152.780, 2.718/152.780, 1.649/152.780]\n        = [0.971, 0.018, 0.011]\n可以看到，即使分数较小，第一个值仍然获得了最多的注意力。但其他值并非完全为零，模型仍然可以从所有位置学习。\n这就是问题所在。当 d_k 很大且不做缩放时，点积分数会大到让 softmax 输出几乎变成 one-hot 编码（独热编码，即一个值为 1.0，其余为 0.0）。模型表现得好像只有一个词重要，完全忽略了其他所有词。梯度消失了，学习也就停止了。\n为什么 √dₖ 是正确的缩放因子\n现在我们理解了问题，解决方案就变得清晰了。我们需要把点积值控制在足够小的范围内，使 softmax 能够产生分布均匀的注意力权重。\n我们需要将点积的方差恢复到 1，无论 d_k 有多大。\n我们知道：\nVariance(dot_product) = d_k\n如果我们用某个常数 c 去除点积，方差变为：\nVariance(dot_product / c) = d_k / c^2\n注意： 当我们用常数 c 去除一个随机变量时，方差会除以 c²（而不是 c）。这是统计学中的标准规则。让我们理解一下为什么。\n方差衡量的是数值相对于均值的离散程度。它是用与均值的平方差来计算的。所以，当我们把所有值都除以 c 时，每个值与均值的差也会除以 c。但由于方差会对这些差值求平方，除以 c 就变成了除以 c²。\n让我们用一个简单的例子来看。假设我们有三个值：[2, 4, 6]。\nMean = (2 + 4 + 6) / 3 = 4\n\nDifferences from mean: [2-4, 4-4, 6-4] = [-2, 0, 2]\n\nSquared differences: [4, 0, 4]\n\nVariance = (4 + 0 + 4) / 3 = 2.67\n现在，用 c = 2 去除所有值，新值为 [1, 2, 3]。\nNew Mean = (1 + 2 + 3) / 3 = 2\n\nDifferences from mean: [1-2, 2-2, 3-2] = [-1, 0, 1]\n\nSquared differences: [1, 0, 1]",
+      "author": "sonald",
+      "authorId": "author-ev-c96fd0999e9e64747e300bb7a1f1057e",
+      "authorUrl": null,
+      "url": "https://zhuanlan.zhihu.com/p/2035645890195669149",
+      "likes": 13,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "给出常数缩放时方差除以常数平方的解释，直接对应平方根难点。",
+        "readingGuide": "给出常数缩放时方差除以常数平方的解释，直接对应平方根难点。",
+        "caveat": "方差推导必须补写独立、零均值和单位方差前提；缩放不保证均匀权重，也不保证训练稳定。",
+        "reviewedAt": "2026-09-07T10:32:25.754Z"
+      },
+      "avatar": "https://picx.zhimg.com/50/9be035f20cc93b5d7357fc9cd00da81f_l.jpg?source=bbf6831d",
+      "badge": "软件开发行业 研发总监",
+      "badgeIcon": "https://pic1.zhimg.com/v2-2ddc5cc683982648f6f123616fb4ec09_l.png?source=32738c0c",
+      "editedAt": 1778116106,
+      "contentType": "Article",
+      "comments": [
+        "通俗易懂。点积的方差等于 dₖ这个我还要严格证明一下。这种写作方式值得赞。",
+        "不明白，我感觉乘以一个常数，没有也行。"
+      ]
+    }
+  ],
+  "attention-softmax": [
+    {
+      "id": "zhihu-40002d5f6bbd4d76f9c2f53b87983712",
+      "title": "为什么Self-Attention要通过线性变换计算Q K V,背后的原理或直观解释是什么? - 知乎",
+      "summary": "3. “Multi-Head Attention 多头注意力机制”的运算方式\n3.1 先看看单头的“Attention 注意力机制”的运算方式\n针对每一个 token，单头的 Attention 机制运算如下：\n1.我们将一个输入序列中其中一个 token 的 Embedding 向量线性变换出来的 Q_{i} 向量（下图图例中为 Q_{2}）与同一序列中其他所有 token 的 Embedding 向量线性变换出来的 K_{i} 向量进行比较，计算两者之间的语义关联度得分（即原始论文中所说的点积相似度）；\n2.将这些语义关联度得分转换为权重值，权重数值的大小在 0~1 之间，数值接近 1 代表权重高，即语义逻辑很紧密，比如猫和树。数值接近 0 代表权重低，比如兔子和树。所有权重数值的总和为 1，即 Softmax 归一化；\n3.然后，把 Softmax 后的权重值与每个 token 的 Embedding 向量线性变换出来的 V_{i} 做加权和，最终生成结果 Z_{i}（图例中为 Z_{2}）。\n如图，在 n  个 token 组成的文本序列  X_{i} 中（黄色部分），做 Q_{i} 中第二个向量 Q_{2} （青色部分）的 Attention。首先用 Q_{2} 向量与 K_{i}（上图中 Keys 紫色部分） 中的每一个向量点乘得到紫色部分，然后再被 Softmax ，获取 0~1 之间取值范围的权重值向量，然后再和 V_{i} 做矩阵乘法（图中 Values 蓝色部分）。所以相当于是给 V_{i} 矩阵的每个向量做了一次加权和，得到 Z_{2} （橙色部分）。 Z_{2} 为 Attention 后，含有上下文语义权重的新 X_{2} ，也就是说 Z_{2} 是 X_{2} 的变体。原论文中对此运算用公式表达为：\nAttention\\left( Q,K,V \\right)=softmax\\left( \\frac{QK^{T}}{\\sqrt{d_{k}}} \\right)V \n（注：Q_{i} 与  K_{i} 点乘后的结果除以 \\sqrt{d_{k}} ，是为了缓和并稳定“梯度”的作用。“梯度”则为“梯度下降法”中的“梯度”，为神经网络在训练过程中损失函数计算中的术语，以后会单独介绍。 d_{k} 为 K 矩阵的维度， Q 与 K 使用同样的维度，在这里：d_{k}=d_{model}/h = 64， d_{model} 为整个 Transformer 模型中所有子层和 Embedding 层的统一的输出维度，d_{model} 为 512。 h 为 head 数，h 默认为 8。）",
+      "author": "7号床",
+      "authorId": "author-ev-40002d5f6bbd4d76f9c2f53b87983712",
+      "authorUrl": null,
+      "url": "https://www.zhihu.com/question/592626839/answer/3304714001",
+      "likes": 692,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "说明每个查询的归一化权重如何作用于值向量。",
+        "readingGuide": "说明每个查询的归一化权重如何作用于值向量。",
+        "caveat": "权重不是答案置信度，语义关系只是直觉；数字维度按论文公式核对。",
+        "reviewedAt": "2026-09-07T10:32:25.788Z"
+      },
+      "avatar": "https://picx.zhimg.com/50/bd29cde802e7d3ce6caa4d1ffc4dcad7_l.jpg?source=bbf6831d",
+      "editedAt": 1739575214,
+      "contentType": "Answer",
+      "comments": [
+        "写得很好，如果继续按思路写下去，解释下为什么这些参数能学到语法，语义信息就更好了！",
+        "写的很通俗易懂。能用这么简明扼要方式写出来。这种认知感觉已达到很高了。看了感觉自己对transformer有了进一步认知，感谢。",
+        "其实，就是一条，这么做，简单。线理化模型是最简单的建模操作，能用线性搞定的就不必要玩非线性。毕竟自然界的作用力也是线性操作。"
+      ]
+    }
+  ],
+  "attention-heads": [
+    {
+      "id": "zhihu-99a35ad0fe7b1601357b0d67b25a32bb",
+      "title": "为什么Transformer 需要进行 Multi-head Attention? - 知乎",
+      "summary": "多头注意力是在不显著增加计算量的前提下，让模型同时从多个子空间看输入，从而增强表达能力的工程设计；但它不是越多越好，经验研究显示多数头冗余、可以剪掉。\n动机在原论文中说得很清楚：把 Q、K、V 投影到多个低维子空间，并行做注意力，再拼回去，让模型能同时关注不同位置、不同层面的关系 [1]。单头只使用一组投影矩阵，只能学一种混合的注意力分配；多头让每组投影独立学习不同子空间的语义关系，还能让模型同时关注不同位置的信息 [1]。\n实现上，多头用 h 组独立可学习的线性投影，把 Q、K、V 分别映射到 h 个低维子空间并行计算注意力，拼接后过一次线性变换。因为总投影维度与单头一致，拆分后总计算量基本不变，换来更多样的注意力分配 [1]。\n原论文的消融实验说明，头不是越多越好。base 模型上 8 或 16 头效果最好，1 头最差，但 4 头和 32 头差距不大 [1]。\n后续实证研究给出了更冷静的图景。\nMichel 等人 2019 年在 NeurIPS 发现，测试时删掉大部分注意力头，翻译模型性能几乎不掉，某些层甚至能减到单头 [2]。\nVoita 等人同年发现，头是有分工的：有的关注位置、有的关注语法、有的关注罕见词 [3]，真正干活的是一小部分，其余更像冗余或噪声 [2][3]。",
+      "author": "源势AI",
+      "authorId": "author-ev-99a35ad0fe7b1601357b0d67b25a32bb",
+      "authorUrl": null,
+      "url": "https://www.zhihu.com/question/341222779/answer/2076761714759054280",
+      "likes": 7,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "区分独立投影、并行计算与拼接，并指出头数并非越多越好。",
+        "readingGuide": "区分独立投影、并行计算与拼接，并指出头数并非越多越好。",
+        "caveat": "不把每个头的分工当成预定标签，不把计算量近似说成零额外成本。",
+        "reviewedAt": "2026-09-07T10:32:26.473Z"
+      },
+      "avatar": "https://picx.zhimg.com/50/v2-f80cebba83c02c9fcf553f987770d676_l.jpg?source=bbf6831d",
+      "badge": "已认证机构号",
+      "badgeIcon": "https://pica.zhimg.com/v2-2ddc5cc683982648f6f123616fb4ec09_l.png?source=32738c0c",
+      "editedAt": 1787918577,
+      "contentType": "Answer"
+    }
+  ],
+  "scene-camera": [
+    {
+      "id": "zhihu-c8f643a8a13bfe8f8dddd27b4cf8842c",
+      "title": "ThreeJs如何使用? - 知乎",
+      "summary": "很多刚接触 Three.js 的朋友，很可能被那一大堆名称搞得晕头转向，什么 Scene、Camera、Renderer、Geometry、Material……看起来高大上，其实背后的逻辑和你平时用手机拍视频是一模一样的。\n今天我就用“搭建一个虚拟摄影棚”的例子，一点点开始搭建我们的3D页面。\n我们先达成一个共识：Three.js 本质上就是一个在网页里跑的 3D 摄影棚。\n你想让用户看到一个 3D 画面，必须凑齐三个核心要素：\n场景 Scene：你可以把场景理解为一个巨大的、黑色的、无限延伸的空房间，这就好比你的摄影棚，演员和道具都得放这儿。\n相机 Camera：有了房间，我们还需要一双眼睛去观察这个房间，这就是相机，决定了用户从哪个角度看。\n渲染器 Renderer：场景有了，相机也架好了，最后需要一个设备把相机拍到的画面冲印出来，显示在屏幕上。这就是渲染器。\n第一步：搭建摄影棚（基本三件套）\n在写代码之前，请确保你引入了 three.js 的文件。\n// 1. 创建场景（场地）\nconst scene = new THREE.Scene();\n\n// 2. 创建相机（摄像机）\n// 这里的参数很有讲究，后面再具体细说，先照抄\nconst camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);\n// 把相机往后拉一点，不然怼到脸上了\ncamera.position.z = 5;\n\n// 3. 创建渲染器（把相机拍到的画面冲印出来，显示在屏幕上）\nconst renderer = new THREE.WebGLRenderer();\n// 设定渲染出来的画面大小，一般就是占满全屏\nrenderer.setSize(window.innerWidth, window.innerHeight);\n// 把渲染器生成的 canvas 元素加到网页里\ndocument.body.appendChild(renderer.domElement);\n写到这里，你的网页应该是一片漆黑。别慌，那是因为我们只搭了棚子，还没请演员进场，也没打灯光。\n第二步：请演员进场（Geometry 和 Material）\n在 Three.js 里，所有的物体都叫 Mesh（网格）。",
+      "author": "千千",
+      "authorId": "author-ev-c8f643a8a13bfe8f8dddd27b4cf8842c",
+      "authorUrl": null,
+      "url": "https://www.zhihu.com/question/427762007/answer/2000153747221940068",
+      "likes": 7,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "摄影棚类比能帮助首次接触 Three.js 的人理解三种对象职责。",
+        "readingGuide": "摄影棚类比能帮助首次接触 Three.js 的人理解三种对象职责。",
+        "caveat": "Scene 不必是黑色；Mesh 不是全部对象类型。示例代码统一采用同一依赖的模块导入。",
+        "reviewedAt": "2026-09-07T10:32:26.392Z"
+      },
+      "avatar": "https://picx.zhimg.com/50/v2-d4ba8eac2c6ea0667270cdced49a65dc_l.jpg?source=bbf6831d",
+      "editedAt": 1769653814,
+      "contentType": "Answer"
+    }
+  ],
+  "geometry-material": [
+    {
+      "id": "zhihu-e2f99b27df49da0ff1070ababe35aaa6",
+      "title": "Three.js入门-常见几何体 - 知乎",
+      "summary": "在 Three.js 中，几何体是由顶点、面、法线等数据组成的，通过材质（Material）的渲染，可以将几何体显示在屏幕上。不同的几何体有不同的属性和用途，可以根据需求选择合适的几何体来构建 3D 场景。\n1. BoxGeometry（立方体几何体）\n函数：\nTHREE.BoxGeometry(\n  width,\n  height,\n  depth,\n  widthSegments,\n  heightSegments,\n  depthSegments\n);\n参数：\n・width：立方体的宽度（默认为 1）。\n・height：立方体的高度（默认为 1）。\n・depth：立方体的深度（默认为 1）。\n・widthSegments：水平分段数（默认为 1）。\n・heightSegments：垂直分段数（默认为 1）。\n・depthSegments：深度分段数（默认为 1）。\nconst geometry = new THREE.BoxGeometry(5, 5, 5); // 创建一个宽为5、高为5、深为5的立方体\nconst material = new THREE.MeshStandardMaterial({ color: 0x00ff00 }); // 创建支持灯光的绿色材质\nconst cube = new THREE.Mesh(geometry, material); // 将几何体和材质组合成网格物体\nscene.add(cube); // 将立方体添加到场景中\n2. SphereGeometry（球体几何体）\n・函数：\nTHREE.SphereGeometry(\n  radius,\n  widthSegments,\n  heightSegments,\n  phiStart,\n  phiLength,\n  thetaStart,\n  thetaLength\n);\n・参数：\n ・radius：球体的半径（默认值为 1）。\n ・widthSegments：球体的经度分段数，越大越平滑（默认值为 8）。\n ・heightSegments：球体的纬度分段数，越大越平滑（默认值为 6）。\n ・phiStart：开始的经度角度（默认为 0）。\n ・phiLength：经度的弧长（默认为 Math.PI * 2）。\n ・thetaStart：开始的纬度角度（默认为 0）。\n ・thetaLength：纬度的弧长（默认为 Math.PI）。",
+      "author": "三木",
+      "authorId": "author-ev-e2f99b27df49da0ff1070ababe35aaa6",
+      "authorUrl": null,
+      "url": "https://zhuanlan.zhihu.com/p/10005205070",
+      "likes": 0,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "直接说明 BoxGeometry 与材质如何组成 Mesh，适合当前立方体目标。",
+        "readingGuide": "直接说明 BoxGeometry 与材质如何组成 Mesh，适合当前立方体目标。",
+        "caveat": "只取立方体部分；本例改用无需灯光的 Normal 材质，其他几何体参数不作为当前课程。",
+        "reviewedAt": "2026-09-07T10:32:29.418Z"
+      },
+      "avatar": "https://picx.zhimg.com/50/0ebfc291e_l.jpg?source=bbf6831d",
+      "editedAt": 1732978202,
+      "contentType": "Article"
+    }
+  ],
+  "object-transform": [
+    {
+      "id": "zhihu-6853ec37d8f11e32dfa2ae4c42c73dfb",
+      "title": "Threejs的三维坐标系 - 知乎",
+      "summary": "特点\n・固定原点：世界坐标系的原点 (0, 0, 0) 是整个场景的基准点。\n・统一参照系：无论物体如何移动、旋转或缩放，世界坐标系始终不变。\n・绝对性：物体的世界坐标描述的是它在整个场景中的绝对位置和状态。\n用途\n・描述物体在场景中的绝对位置。\n・用于相机、灯光等全局性的设置。\n・渲染引擎根据物体的世界坐标来决定最终的显示效果。\n・创建一个物体并设置其位置：\nconst cube = new THREE.Mesh(\n  new THREE.BoxGeometry(1, 1, 1),\n  new THREE.MeshBasicMaterial({ color: 0xff0000 })\n);\ncube.position.set(5, 3, -2); // 设置物体在世界坐标系中的位置 scene.add(cube);`;\n在这个例子中，立方体 cube 的位置为 (5, 3, -2)，这表示它相对于场景的原点 (0, 0, 0) 在 X 方向移动了 5，Y 方向移动了 3，Z 方向移动了 -2。\n局部坐标系\n局部坐标系（Local Coordinate System）是物体自身的坐标系统，每个物体都有自己的局部坐标系，用于描述其内部的坐标参照。局部坐标系的原点通常位于物体的中心（除非模型本身定义了不同的原点）。\n特点\n・动态原点：物体的局部坐标系原点始终跟随物体的位置和旋转。\n・相对性：局部坐标系中的变换是相对于物体本身的，而不是世界坐标系。\n・层级关系：局部坐标系会受到父物体坐标系的影响。\n用途\n・用于物体的自定义变换（如局部旋转或局部平移）。\n・在复杂的层级场景中，子物体相对于父物体的位置和方向可以通过局部坐标系来定义。\n・在动画和交互中，对物体的局部坐标系进行操作更灵活。\n・在局部坐标系中，旋转物体：const cube = new THREE.Mesh(\nnew THREE.BoxGeometry(1, 1, 1),\nnew THREE.MeshBasicMaterial({ color: 0x00ff00 })\n);\ncube.rotation.set(Math.PI / 4, 0, 0); // 绕局部 X 轴旋转 45 度\nscene.add(cube);\n在这里，立方体 cube 绕自身的局部 X 轴旋转，而不是绕场景的世界 X 轴旋转。\n物体变换：位置、旋转与缩放\nThree.js 中的物体变换通常由三个基本操作构成：位置、旋转和缩放。",
+      "author": "三木",
+      "authorId": "author-ev-6853ec37d8f11e32dfa2ae4c42c73dfb",
+      "authorUrl": null,
+      "url": "https://zhuanlan.zhihu.com/p/9222957354",
+      "likes": 1,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "同时解释世界、局部坐标和对象变换，能区分改物体与改观察位置。",
+        "readingGuide": "同时解释世界、局部坐标和对象变换，能区分改物体与改观察位置。",
+        "caveat": "position 与 rotation 相对于父对象；不能把嵌套场景的局部值直接视为世界值。",
+        "reviewedAt": "2026-09-07T10:32:29.533Z"
+      },
+      "avatar": "https://picx.zhimg.com/50/0ebfc291e_l.jpg?source=bbf6831d",
+      "editedAt": 1732632962,
+      "contentType": "Article"
+    }
+  ],
+  "orbit-controls": [
+    {
+      "id": "zhihu-9dab53930e715141035f2ec3705ce36a",
+      "title": "Three.js搭建小米SU7三维汽车实战(3)轨道控制器 - 知乎",
+      "summary": "// 4. 动态渲染\nfunction animation() {\n  controls.update()\n  renderer.render(scene, camera)\n\n  requestAnimationFrame(animation)\n}\nanimation()\n 完整示例 \n// 导入threejs\nimport * as THREE from 'three'\n// 导入轨道控制器\nimport { OrbitControls } from 'three/addons/controls/OrbitControls.js'\n\n// 1. 创建场景\nconst scene = new THREE.Scene()\n// 2. 创建相机\nconst camera = new THREE.PerspectiveCamera(\n  45,\n  window.innerWidth / window.innerHeight,\n  1,\n  1000\n)\n\ncamera.position.z = 50\n\n// 5. 创建立方体(几何+材质)\nconst cubeGeometry = new THREE.BoxGeometry(1, 1, 1)\nconst cubeMaterial = new THREE.MeshNormalMaterial()\nconst cube = new THREE.Mesh(cubeGeometry, cubeMaterial)\n// 添加到场景\nscene.add(cube)\n\n// 6. 显示坐标轴(x轴: 红色; y轴: 绿色; z轴: 蓝色 rgb)\n// x轴水平方向(右正); y轴垂直方向(上正); z轴垂直xy平面即屏幕(外正)\nconst axesHelper = new THREE.AxesHelper(10)\nscene.add(axesHelper)\n\n// 3. 创建渲染器\nconst renderer = new THREE.WebGLRenderer({ antialias: true })\nrenderer.setPixelRatio(window.devicePixelRatio)\nrenderer.setSize(window.innerWidth, window.innerHeight)\ndocument.body.appendChild(renderer.domElement)",
+      "author": "司马云课堂",
+      "authorId": "author-ev-9dab53930e715141035f2ec3705ce36a",
+      "authorUrl": null,
+      "url": "https://zhuanlan.zhihu.com/p/1921568552537789863",
+      "likes": 1,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "使用 three/addons 模块入口和 controls.update，适合接入当前作品。",
+        "readingGuide": "使用 three/addons 模块入口和 controls.update，适合接入当前作品。",
+        "caveat": "汽车建模不属于目标；只读轨道控制器部分，窗口适配用同版本 API 补齐。",
+        "reviewedAt": "2026-09-07T10:32:32.595Z"
+      },
+      "avatar": "https://pic1.zhimg.com/50/v2-766e6d9e8a4d35ed797303d357cdf746_l.jpg?source=bbf6831d",
+      "editedAt": 1750917749,
+      "contentType": "Article"
+    }
+  ],
+  "array-shape": [
+    {
+      "id": "zhihu-175025e0406dc5316439266d2b46544f",
+      "title": "NumPy 入门第一课——为什么数据科学离不开它 - 知乎",
+      "summary": "・shape 是一个元组，从左到右分别表示”第 0 轴长度、第 1 轴长度……”，二维数组就是”行数、列数”；\n・size 永远等于 shape 各元素相乘：3 × 4 = 12；\n・dtype 常见的值有 int64（64 位整数）、float64（64 位浮点数）等，创建数组时可以用 dtype 参数指定。\n9. 实战彩蛋：一学期成绩表（shape 与 axis 的实战）\n纸上得来终觉浅。我们用一个真实的场景把上面所有概念串起来。\n场景：你是一所中学的班主任，班里 5 名同学，期末考了语文、数学、英语三科。你想快速回答三个问题：\n1.这张成绩表是什么形状、一共多少个成绩？\n2.每位同学的总分是多少？\n3.每门课的平均分是多少？\n代码：\n输出：\n解读：\n1.shape = (5, 3)：5 行代表 5 位同学，3 列代表 3 门课。看到这个元组，你就能立刻说出数据组织的逻辑,这正是 shape 的意义：它告诉你怎么”读”这张表。\n2.size = 15：5 × 3 = 15，正好是成绩总数，和 shape 的乘积对上了。\n3.scores.sum(axis=1)：axis=1 沿列方向加，得到 5 个值，即每位同学的三科总分（第 2 位同学 58 分的数学把总分拉低了，一眼可见）；\n4.scores.mean(axis=0)：axis=0 沿行方向求平均，得到 3 个值，即每门课的平均分——数学 74.8 是全班最弱科，后续可以针对性补课。\n这个例子虽然小，但已经完整演示了数据科学中最常见的操作模式：用 shape 理解数据结构 → 用 axis 控制聚合方向 → 用一行代码得到统计结果。\n 自己动手：试着把 axis=0 和 axis=1 换过来运行，看看输出变成了什么，并想想为什么。想通了，axis 就再也难不倒你了。\n10. 总结与预告\n本篇你学会了什么？\n・NumPy 是 Python 数据科学的地基，提供了 N 维数组（ndarray）与高效运算函数；\n・一维像队列、二维像表格、三维像一叠表格；\n・相比 Python 列表，NumPy 在速度、内存、语法三方面全面胜出；\n・数组的三个特点：同质、大小固定、形状矩形——限制换来性能；\n・数组支持 0 索引、可变、切片，但切片返回的是视图；\n・axis=0 沿行方向、axis=1 沿列方向，聚合结果长度分别为列数与行数；\n・四个核心属性：ndim（维度数）、shape（形状）、size（元素总数）、dtype（数据类型）。",
+      "author": "赤羽尾风",
+      "authorId": "author-ev-175025e0406dc5316439266d2b46544f",
+      "authorUrl": null,
+      "url": "https://zhuanlan.zhihu.com/p/2073415173059233106",
+      "likes": 1,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "使用成绩表解释 shape 与 axis，可作为四篇选集共同的学习入口。",
+        "readingGuide": "使用成绩表解释 shape 与 axis，可作为四篇选集共同的学习入口。",
+        "caveat": "文章未返回完整成绩代码；这里另写一组固定练习数据，不冒充作者原例。",
+        "reviewedAt": "2026-09-07T10:32:32.721Z"
+      },
+      "avatar": "https://pic1.zhimg.com/50/v2-4a32fafe46a01764f79a31bf33deb059_l.jpg?source=bbf6831d",
+      "editedAt": 1787121249,
+      "contentType": "Article"
+    }
+  ],
+  "array-index": [
+    {
+      "id": "zhihu-218127fef1d9d26ff1b6692226edcc5b",
+      "title": "Python NumPy 数据清洗:高效处理数据异常与缺失 - 知乎",
+      "summary": "本文展示了如何利用 Python 的 NumPy 库高效地进行数据清洗，特别是对复杂数据的异常处理与缺失值填补。文章详细介绍了数据清洗中的常见问题，包括数据值缺失、异常值、格式错误及非独立数据，并提供了对应的解决方案。通过具体的学期学生成绩数据示例，演示了如何识别重复学号、处理缺失年龄值、剔除异常分数、填补缺失成绩等。借助 np.unique、np.isnan、np.clip 等 NumPy 方法，实现了对数据的精细化处理。最终，经过数据清洗，所有数据均符合预期格式和规则，为后续的数据分析和建模奠定了坚实基础。\n一 数据预处理的常见问题\n数据值缺失、数据值异常大或小、格式错误、非独立数据错误。以下是数据预处理中常见问题及其描述、原因和解决方法的表格：\n问题类型\t描述\t产生原因\t解决方法\n数据值缺失\t数据集中有些值为空或不存在，通常用 NaN、null 或空字符串表示。\t数据收集过程中的遗漏、传感器故障、数据传输问题。\t删除缺失值、填充缺失值（平均值、中位数等）、标记缺失值。\n数据值异常大或小\t数据集中某些值与其他数据显著不同，通常为极端值或不合理的值。\t测量或录入错误、正态分布中的极端情况、数据采集设备问题。\t剔除异常值、替换异常值（中位数、分位数等）、使用算法检测异常值。\n格式错误\t数据格式不符合预期，如字符串中混有数字、日期格式不一致、分类标签混乱等。\t数据来源不一致、录入错误、缺乏格式规范。\t统一格式、清理数据（删除或更正错误格式）、转换数据类型。\n非独立数据错误\t数据点之间存在依赖关系，如重复数据、同一对象的多次测量导致数据非独立性。\t同一对象多次采样、数据重复、对象间存在依赖关系。\t删除重复数据、聚合处理（取平均、最大值等）、标记数据依赖性。\n注：在项目中，应结合业务背景和实际情况综合判断哪些数据属于异常。\n二 待处理的数据\n假设手上有一学期的小学生上课成绩数据。\nraw_data = [\n    [\"Name\", \"StudentID\", \"Age\", \"AttendClass\", \"Score\"],\n    [\"小明\", 20131, 10, 1, 67],\n    [\"小花\", 20132, 11, 1, 88],\n    [\"小菜\", 20133, None, 1, \"98\"],\n    [\"小七\", 20134, 8, 1, 110],\n    [\"花菜\", 20134, 98, 0, None],",
+      "author": "敲代码不忘补水",
+      "authorId": "author-ev-218127fef1d9d26ff1b6692226edcc5b",
+      "authorUrl": null,
+      "url": "https://zhuanlan.zhihu.com/p/1009022132",
+      "likes": 2,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "列出缺失、异常与不同处理方法，并提醒结合业务判断。",
+        "readingGuide": "列出缺失、异常与不同处理方法，并提醒结合业务判断。",
+        "caveat": "不采纳一律删除或填补；本练习明确只分析两科均有效的行，保留原数组。",
+        "reviewedAt": "2026-09-07T10:32:33.392Z"
+      },
+      "avatar": "https://picx.zhimg.com/50/v2-314ff483ff08a9ebc9de4e231456143e_l.jpg?source=bbf6831d",
+      "badge": "互联网行业 从业人员",
+      "badgeIcon": "https://pic1.zhimg.com/v2-2ddc5cc683982648f6f123616fb4ec09_l.png?source=32738c0c",
+      "editedAt": 1728871021,
+      "contentType": "Article"
+    }
+  ],
+  "array-broadcast": [
+    {
+      "id": "zhihu-8a8098fab6c4081a80dd4a8428a67e70",
+      "title": "NumPy 进阶指南:第 7 - 9 天(矩阵运算与广播) - 知乎",
+      "summary": "第 7 天：向量化操作与通用函数 (Vectorization & Ufuncs)\nNumPy 的强大在于其底层是通过 C 语言优化的。当我们对整个数组执行数学运算时，NumPy 会在底层同时对所有元素进行操作，这被称为“向量化”。\n・标量与矩阵运算: 可以直接将数组与单一数值（标量）进行加减乘除。\n・通用函数 (Ufuncs): NumPy 提供的快速数学函数（如 np.log10, np.exp, np.sqrt），它们直接作用于数组的每一个元素。\n・研发实战场景: 在分析高通量筛选结果时，通常需要将 （半数抑制浓度）转换为 （负对数），以获得更符合线性关系的评价指标。\n第 8 天：广播机制 (Broadcasting) - 核心难点\n广播机制是 NumPy 的“魔法”。它定义了当形状 (shape) 不完全相同的数组进行数学运算时，NumPy 如何自动“拉伸”较小的数组，使其形状与较大的数组匹配，从而完成向量化计算。\n广播的核心规则 (从右向左对齐):\n比较两个数组的维度，从最右边的轴（尾部维度）开始向左对比：\n・如果维度相等，则匹配。\n・如果其中一个维度为 1，NumPy 会沿着该维度“复制/拉伸”数据以匹配另一个数组。\n・如果维度既不相等也不为 1，则抛出 ValueError。\n研发实战场景:\n假设您有一个 (5, 8) 的对接分数矩阵（5 个靶点，8 个化合物），您需要对每个靶点的数据进行均值中心化（Mean Centering），即将每行的数值减去该行的平均值。",
+      "author": "费米子父",
+      "authorId": "author-ev-8a8098fab6c4081a80dd4a8428a67e70",
+      "authorUrl": null,
+      "url": "https://zhuanlan.zhihu.com/p/2070149177640751491",
+      "likes": 0,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "给出末轴对齐与长度兼容规则，恰好解释逐列调整。",
+        "readingGuide": "给出末轴对齐与长度兼容规则，恰好解释逐列调整。",
+        "caveat": "“拉伸”是概念模型，不一定实际复制内存；移除与本例无关的药物研发内容。",
+        "reviewedAt": "2026-09-07T10:32:33.420Z"
+      },
+      "avatar": "https://pic1.zhimg.com/50/v2-2d9d09c908243ece5ef0d59a0a3129bd_l.jpg?source=bbf6831d",
+      "badge": "Gachon University 药物学博士",
+      "badgeIcon": "https://picx.zhimg.com/v2-2ddc5cc683982648f6f123616fb4ec09_l.png?source=32738c0c",
+      "editedAt": 1786342413,
+      "contentType": "Article"
+    }
+  ],
+  "array-aggregate": [
+    {
+      "id": "zhihu-98057fd4efd4cdf8b65a49cad57843f7",
+      "title": "NumPy中的各种“轴“是如何运作的? - 知乎",
+      "summary": "轴的编号是从0开始的，因此“第一轴”实际上是“axis 0”。“第二轴”是“axis 1”，依此类推。在可视化观感上，“axis 0”就是向下的行方向轴，“axis 1”是沿着水平方向的列轴，如图1-12所示。\n1.8.2 基于轴的“规约”操作\n在NumPy的多维数组中，常有“约减”（Reduce，亦有文献译作“规约”）的提法。它表示将众多数据按照某种规则合并成一个或几个数据。“约减”之后，数据的个数在总量是减少的。\n在这里，“约减”的“减”，并非减法之意，而是向量元素的减少。比如说，数组的加法操作，实际上就是一种“约减”操作，因为它对张量中的众多元素按照加法指令实施操作，最后合并为少数的一个或几个值。示例代码如下。\n In [1]:import numpy as np \n In [2]: a = np.ones((2,3))  #创建形状为2×3，元素值均为1的矩阵\n In [3]: a  #显示该矩阵\n Out[3]: \n array([[1., 1., 1.],\n  [1., 1., 1.]])\n In [4]: a.sum() #将6个矩阵元素求和后变成一个元素\n Out[4]: 6.0\n \n知道了“约减”的含义之后，我们可以推而广之，求N维数组的均值（mean）、最大值（max）和最小值（min）等，这些操作都属于约减操作。\n但有时，我们会有这样的需求，对指定维度方向的值进行统计，如统计某一行（或列）的和、均值、最大值、最小值等。这个时候，就需要给“约减”指令指定方向。\n那么该如何指定呢？事实上，诸如sum（求和）、min（最小值）、max（最大值），mean（均值）、median（中位数）等统计函数，它们都有一个名为操作轴（axis）的参数，其默认值为None，也就是不指定约减方向，它将所有数据都“约减”为一个元素。\n如果axis的值为0，可简单地理解为从垂直轴方向进行“约减”。如果axis的值为1，则可以简单理解为从水平轴方向进行“约减”，如图1-13所示。\n以np.sum为例，指定约减方向的示例代码如下。\n In [5]: a.sum(axis = 0) #垂直方向约减\n Out[5]: array([2., 2., 2.])\n In [6]: a.sum(1) #垂直方向约减\n Out[6]: array([3., 3.])\n \n在In [5]处，我们使用关键字参数axis = 0，显式给出了约减轴的方向为垂直方向，而在In [6]处，仅仅给出整数值1，它等同于axis = 1，即在水平方向约减，“axis=”做了省略。",
+      "author": "玉来愈宏",
+      "authorId": "author-ev-98057fd4efd4cdf8b65a49cad57843f7",
+      "authorUrl": null,
+      "url": "https://zhuanlan.zhihu.com/p/475574886",
+      "likes": 28,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "用数组形状与具体结果解释求和方向，可核对聚合输出。",
+        "readingGuide": "用数组形状与具体结果解释求和方向，可核对聚合输出。",
+        "caveat": "原摘要 a.sum(1) 后的“垂直”注释有误；它沿 axis=1 规约。本例用输出形状验证。",
+        "reviewedAt": "2026-09-07T10:32:36.519Z"
+      },
+      "avatar": "https://picx.zhimg.com/50/14468a6be8589cb167ad54765ca5e513_l.jpg?source=bbf6831d",
+      "badge": "电子科技大学 信息与通信工程博士",
+      "badgeIcon": "https://pic1.zhimg.com/v2-2ddc5cc683982648f6f123616fb4ec09_l.png?source=32738c0c",
+      "editedAt": 1676363584,
+      "contentType": "Article",
+      "comments": [
+        "讲解很清晰，终于把轴弄懂了",
+        "谢谢，学习很多。",
+        "讲的太好了，这世界需要这种聪明又会解释的人来教我们这些笨人，遇到高维度的也不害怕了，作者我爱你[感谢][感谢]kisskiss[抱抱][抱抱]"
+      ]
+    }
+  ],
+  "money-cashflow": [
+    {
+      "id": "zhihu-9181eab5eda16fa21101b294769b5d01",
+      "title": "你的钱都花去哪了?记账让你一目了然 - 知乎",
+      "summary": "一、开支预算：5步搞定你的钱袋子\n做预算是控制现金流的最佳方案，根据收入多少来设定开支的限度。跟着这5步走：\n第一步｜填收入：把每周的收入填上去，比如零用钱、做家务赚的报酬。\n第二步｜填\"需要\"：列出每周必须花的钱，比如吃饭、交通。\n第三步｜填\"想要\"：写下那些非必需但很想买的东西，比如奶茶、新文具。\n第四步｜填储蓄：设定你这周想存下的金额。\n第五步｜分配剩余：用收入减去\"需要\"的支出，把剩下的钱分配到\"想要\"和储蓄里。\n二、为什么一定要记账？\n记账可不是随便写写而已，它能帮你：\n✅ 了解自己的收支状况和结余金额\n✅ 检视消费行为，看看钱都花去哪了\n✅ 督促自己学会节制，养成不乱花钱的好习惯\n✅ 助力达成储蓄目标，离想买的东西越来越近\n✅ 事后复盘花费是否适当，及时调整\n三、两种超实用的记录方法\n方法①｜本子记账法\n准备一个小本子，按衣服、食物、交通、娱乐等分类。\n每花一笔就记一笔，周末或月末汇总一次，就能清楚看到一段时间的开支情况。",
+      "author": "广财有道",
+      "authorId": "author-ev-9181eab5eda16fa21101b294769b5d01",
+      "authorUrl": null,
+      "url": "https://zhuanlan.zhihu.com/p/2073329711174963818",
+      "likes": 0,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "从收入、必需与非必需支出组织预算，符合先理解收支的目标。",
+        "readingGuide": "从收入、必需与非必需支出组织预算，符合先理解收支的目标。",
+        "caveat": "把学生零用钱场景迁为家庭练习，不给统一储蓄比例，不把内部转账记成收入。",
+        "reviewedAt": "2026-09-07T10:32:36.513Z"
+      },
+      "avatar": "https://pic1.zhimg.com/50/v2-125ba13f8f8967101aad3db5068f731c_l.jpg?source=bbf6831d",
+      "editedAt": 1787100324,
+      "contentType": "Article"
+    }
+  ],
+  "money-liquidity": [
+    {
+      "id": "zhihu-fe5217369e165874c910a62e21bdfc8d",
+      "title": "搭建财务安全垫:3-6个月应急金到底怎么存? - 知乎",
+      "summary": "为什么说没管好现金流，所有投资都是空中楼阁？\n在上篇文章中，我们聊透了“富人思维”的核心——在收入和消费之间，建立能下金蛋的“资产池”。\n但很多朋友会说：“道理懂了，可我每月的收入都不够花，哪来的钱去建资产池？”\n这正是问题的关键：资产池的建立，需要源源不断的“弹药”注入，而弹药就来自你每月稳定结余的正向现金流。\n现金流，相当于财务体系的血液。血液断流，再宏伟的财富蓝图也不可能实现。\n今天这篇纯干货，将给你一套完整的现金流管理“组合拳”，从记账、应急金到债务管理，手把手教你打造个人正向现金流，稳扎稳打积累起理财的第一桶金。\n财务体检第一步：让每一分钱都看得见（记账与分析）\n理财的第一步，并不是投资，而是清晰洞察。没有这份洞察，任何规划都是空谈。\n你必须知道钱从哪里来，到哪里去。记账，就是你的财务“CT扫描”。\n核心心法：记账的目的不是记流水账，而是通过【收入支出表】进行分析和决策。\n实操三步法：\n1.选择工具：无需复杂。现在的微信账单就用基础的统计和分类功能，非常方便。\n2. 坚持记录：初期坚持1-3个月，事无巨细。重点在于分类，将支出分为：生活必需（食、住、行）、生活品质（娱乐、购物）、投资自我（学习、健康）、财务支出（利息、保费）等。\n3. 分析优化：月底进行复盘。计算结余率（结余/税后收入），目标应努力达到20%-30%。\n重点揪出“拿铁因子”——那些看似不起眼、但累积起来惊人的非必要开销（如每天一杯30元的奶茶、自动充值的APP等）。削减它们，是增加结余最直接的方式。\n重中之重：立即建立你的“财务安全垫”（应急金规划）\n这是现金流管理中最关键、最不能跳过的一步。没有安全垫，你的财务规划、投资项目就是空中楼阁。\n为什么必须是3-6个月生活费？\n这是理财规划中“现金保障优先”的核心原则，它主要应对两种风险：\n1. 收入中断风险：失业、跳槽空窗期、突发生病导致无法工作等。\n2. 意外支出风险：家人生病、换车换房等计划外大额开支。\n这笔钱能让你在风险来临时，不必被迫卖出投资资产（如割肉卖出股票基金等），保住你的财富根基。\n如何计算与存放？\n1. 计算额度：根据你的记账数据，算出你家庭每月必需的总支出（房贷/房租、伙食、交通、水电气等）。",
+      "author": "通往自由的峡谷",
+      "authorId": "author-ev-fe5217369e165874c910a62e21bdfc8d",
+      "authorUrl": null,
+      "url": "https://zhuanlan.zhihu.com/p/2014455796956676739",
+      "likes": 0,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "解释收入中断与意外支出为何需要可用储备，适合讨论资金用途。",
+        "readingGuide": "解释收入中断与意外支出为何需要可用储备，适合讨论资金用途。",
+        "caveat": "文中的 3–6 个月与储蓄率不是人人必须遵守的标准；按情况估算，另外核对实际到账条款。",
+        "reviewedAt": "2026-09-07T10:32:39.561Z"
+      },
+      "avatar": "https://pic1.zhimg.com/50/v2-a0889c3d0d48adb4fab3bd5477239a15_l.jpg?source=bbf6831d",
+      "editedAt": 1773063689,
+      "contentType": "Article"
+    }
+  ],
+  "money-risk": [
+    {
+      "id": "zhihu-9846ec7a77776355269d87a9e303086f",
+      "title": "为什么基金一跌就慌?有可能是你没搞懂这个指标! - 知乎",
+      "summary": "傍晚的小区健身区格外热闹，老王慢悠悠晃到长椅旁，一眼就瞧见了正在遛弯的老李，赶紧凑了过去。\n这阵子市场回调，老王手里的基金亏了不少，看着账户绿油油的数字愁眉苦脸：“老李，我真是搞不懂，买的时候看收益都挺好，怎么一跌起来就没个底？有的基金跌一点就稳住了，我这只一直往下跌，亏得我觉都睡不好！”\n老李笑着指了指他的手机：“你呀，光盯着赚多少，从来没看这回事。大部分投资者亏钱，都不是输在没赶上上涨行情，而是没关注下跌的风险，等跌透了才反应过来，那就晚了。”\n老王一脸懵：“下行风险？这不就是基金回撤吗？我之前看最大回撤也没这么吓人啊。”\n“这俩可不是一回事，好多人都搞混了。”老李摆了摆手，慢慢给老王讲起了其中的门道，也给所有和老王一样的普通投资者，好好科普一下这个关键知识点。\n先分清：下行风险≠最大回撤\n很多人会把下行风险和最大回撤混为一谈，其实两者视角完全不同。\n最大回撤：是已经发生的历史数据，记录基金从高点到低点的最大跌幅，是“事后成绩单”，只能说明过去跌过多少。（附动态回撤原文：）\n：更偏向未来潜在的下跌概率与幅度，是基金在不利市场环境下，净值向下偏离预期的可能性，属于“事前风险画像”，预判的是未来可能跌多狠。\n简单理解：\n回撤是“过去跌了多少”。\n下行风险是“未来可能跌多狠”。\n老王这才恍然大悟：“合着我之前只看了历史跌多少，没考虑它以后可能还会这么跌，甚至跌得更狠，难怪踩坑了！”\n下行风险从哪来？看懂这三点\n一只基金下行风险高还是低，不是随机波动，而是由底层逻辑决定的，老李结合老王的持仓，一一给他分析清楚。\n1、资产与行业集中度\n老王买的基金，全仓押在了当时热门的成长赛道，行业集中度较高，一旦板块进入调整周期，没有其他资产能对冲下跌，导致下行风险较高。\n相比之下，分散在多行业、多风格，同时搭配债券、现金等防御性资产的基金，通常拥有更强的“抗跌缓冲”，有助于降低下行风险。\n2、基金经理的风控思路\n有些基金经理侧重进攻，常年高仓位运作，偏爱高弹性标的，上涨时势头迅猛，但市场下跌时也毫无遮挡，跌得格外凶。\n而偏向成熟的基金经理会侧重防守，市场高位时主动降仓位、规避高估值泡沫、配置防御板块，在市场走弱时能有效压低下行风险，力争做到跌得有底线。\n3、市场环境与产品结构\n牛市末期、市场估值处于高位、投资者情绪过热时，大部分权益基金的下行风险通常会随之抬升，这是市场大环境决定的；\n除此之外，采用杠杆策略等，也会在下跌阶段放大亏损幅度，进一步推高整体下行风险。",
+      "author": "私募排排网",
+      "authorId": "author-ev-9846ec7a77776355269d87a9e303086f",
+      "authorUrl": null,
+      "url": "https://zhuanlan.zhihu.com/p/2022713825099618195",
+      "likes": 1,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "明确区分已观察到的回撤与未来潜在风险，避免把历史当上限。",
+        "readingGuide": "明确区分已观察到的回撤与未来潜在风险，避免把历史当上限。",
+        "caveat": "不采纳基金经理能择时保护本金的暗示；本例只教授指标边界与风险核对。",
+        "reviewedAt": "2026-09-07T10:33:59.388Z"
+      },
+      "avatar": "https://picx.zhimg.com/50/v2-a8acf302ef4a5b51da19792049cf71f1_l.jpg?source=bbf6831d",
+      "badge": "深圳市前海排排网基金销售有限责任公司 员工",
+      "badgeIcon": "https://picx.zhimg.com/v2-2ddc5cc683982648f6f123616fb4ec09_l.png?source=32738c0c",
+      "editedAt": 1775032557,
+      "contentType": "Article"
+    }
+  ],
+  "money-compare": [
+    {
+      "id": "zhihu-9208ac59de6153b06ebcb34e702f4761",
+      "title": "PDF2X实战案例:理财说明书解析器,把40页PDF翻译成人话 - 知乎",
+      "summary": "PDF2X官网： pdf2x.cn/\n理财产品说明书翻译器： finance-translator.onrender.com\n小助手vx：black156983\n很多人买理财产品时，最该读的其实是产品说明书里的细节。宣传页上的“稳健”“精选”“年化参考”，只能看个大概。\n问题是，理财产品说明书往往有几十页。里面充满“业绩比较基准”“开放式净值型”“风险等级 R2”“投资范围”“赎回安排”“销售服务费”“浮动管理费”等表述。\n普通投资者很难判断：\n・这个产品到底投向哪里？\n・本金有没有可能亏？\n・收益只是参考，还是有保障？\n・提前赎回有没有限制？\n・管理费、托管费、销售服务费会扣多少？\n・哪些条款需要重点留意？\n为了解决这个问题，一位PDF2X用户做了这个应用：理财产品说明翻译器。\n上传一份理财说明书 PDF，系统自动读取文档内容，把晦涩的大段条款整理成一份更容易看懂的分析报告：风险评分、收益情况、资金投向、费用明细、期限与流动性、起购金额、适合什么人买，以及最重要的避坑提醒。\n在这个应用里，PDF2X 承担的是第一层能力：先把理财说明书 PDF 解析成后续 AI 可以稳定读取、抽取和总结的内容。\n一、理财说明书为什么适合做“人话翻译”\n理财说明书有一个很典型的矛盾：它明明是给购买者看的，但写法却更像合规文件。\n它必须把产品类型、投资范围、风险等级、费用、赎回规则、信息披露、税费、争议处理等内容都写完整。结果就是，一份本该帮助购买者理解产品的文件，变成了几十页密密麻麻的专业文本。\n对普通投资者来说，最关心的问题往往很直接：\n这东西安全吗？\n我的钱投到哪里去了？\n什么时候能取出来？\n到手收益会不会被费用吃掉？\n如果市场不好，我最多可能遇到什么风险？\n理财说明书解析器要做的，就是把这些问题从 PDF 里找出来，再用更清楚的语言解释出来。\n但这里的前提是：系统必须先读懂 PDF。\n二、解析前：AI 面对的是一份复杂金融 PDF\n很多人以为，这类应用就是把 PDF 直接丢给大模型，让它总结一下。\n如果只是偶尔看一份文件，这样可能也能得到一段摘要。但要做成一个稳定可用的理财说明书解析器，直接丢给大模型很快会遇到问题。\n理财说明书比普通长文更麻烦。它通常有复杂目录、表格、条款编号、多级标题、脚注、产品要素表、风险揭示书和大段投资范围说明。\n比如一段“投资范围”可能连续列出国债、地方政府债、企业债、金融债、中央银行票据、短期融资券、中期票据、资产支持证券、可转债、资管计划、公募基金等多个类别。",
+      "author": "文因互联",
+      "authorId": "author-ev-9208ac59de6153b06ebcb34e702f4761",
+      "authorUrl": null,
+      "url": "https://zhuanlan.zhihu.com/p/2048346510820226493",
+      "likes": 0,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "列出说明书中费用、赎回、投向与风险字段，可编成条款核对清单。",
+        "readingGuide": "列出说明书中费用、赎回、投向与风险字段，可编成条款核对清单。",
+        "caveat": "这是厂商应用案例；不推荐其服务，也不采信 AI 评分或“适合谁买”的自动结论。",
+        "reviewedAt": "2026-09-07T10:33:59.379Z"
+      },
+      "avatar": "https://picx.zhimg.com/50/v2-53cd40d0ec8b8488fa918178022ee933_l.jpg?source=bbf6831d",
+      "badge": "已认证机构号",
+      "badgeIcon": "https://picx.zhimg.com/v2-2ddc5cc683982648f6f123616fb4ec09_l.png?source=32738c0c",
+      "editedAt": 1781144257,
+      "contentType": "Article"
+    }
+  ],
+  "llm-contract": [
+    {
+      "id": "zhihu-9a498b90e025c6ff4a3ee4a7bc6bdadb",
+      "title": "LLM 学习第 9 课:结构化输出——JSON 模式、Schema 与解析重试 - 知乎",
+      "summary": "Prompt 要点（承接第 8 课）：\n・角色：电商评论分析器\n・指令：只输出符合 schema 的 JSON\n・少样本：给 1 条评论 + 期望 JSON\n输入评论：「物流很快，但颜色和图片不太一样，勉强能用。」\n期望输出：\n若 topics 在 schema 里是 array of string 且 maxItems: 5，模型就不应输出整段散文。若模型返回 sentiment: \"一般\"，schema 校验失败 → 触发修复 Prompt 重试。\n常见坑\n1.Schema 过大：一次要求 30 个字段，失败率飙升；拆步或分层 schema。\n2.Prompt 与 Schema 打架：Prompt 说「详细解释原因」，schema 却未定义 reason 字段，模型可能塞进错误键名。\n3.只 parse 不 validate：JSON.parse 成功但 score: \"高\" 类型错误，下游仍出错。\n4.忽视 Unicode 与转义：中文内容、换行符未正确转义导致 parse 失败；记录 raw 输出排查。\n5.无重试上限：失败循环调用，成本与延迟失控。\n6.把结构化输出当真理：格式对了不代表内容对了（第 7 课幻觉）；金融、医疗等场景必须二次校验。\n权威参考\n・OpenAI 文档：Structured outputs — JSON Schema 约束与 API 用法。\n・JSON Schema 官网：Understanding JSON Schema — 类型、必填、枚举等规范直觉。\n・Anthropic 文档：Increase output consistency — 含结构化输出与一致性的工程建议。\n思考题\n1.同一个「订单信息抽取」任务，你会把哪些字段设为 required？哪些宁可缺失也不要模型猜测填写？\n2.若模型连续两次返回带 Markdown 代码块的 JSON，你的剥离逻辑与重试 Prompt 应如何调整？\n3.对比「Prompt 里贴 JSON 示例」与「API 级 JSON Schema 约束」，各自适合什么模型/部署环境？\n小结\n・结构化输出让 LLM 从「给人看」变为「给程序用」，是应用落地的标配能力。\n・JSON Mode / Structured Outputs 在支持的 API 上应优先于纯 Prompt 格式约定。\n・Schema 设计 要简单、枚举清晰、必填克制；与下游代码字段命名一致。\n・工程上必须 解析 → 校验 → 有限重试 → 降级，不能假设格式永远正确。\n・格式正确 ≠ 内容正确；幻觉与事实性校验仍是第 7 课问题的延伸。",
+      "author": "咸菜",
+      "authorId": "author-ev-9a498b90e025c6ff4a3ee4a7bc6bdadb",
+      "authorUrl": null,
+      "url": "https://zhuanlan.zhihu.com/p/2075632400139285006",
+      "likes": 0,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "区分解析、校验和有限重试，并明确格式正确不等于事实正确。",
+        "readingGuide": "区分解析、校验和有限重试，并明确格式正确不等于事实正确。",
+        "caveat": "不照搬日志保存原始敏感输出的做法；作品只记录必要的脱敏信息。",
+        "reviewedAt": "2026-09-07T10:32:40.259Z"
+      },
+      "avatar": "https://picx.zhimg.com/50/v2-abed1a8c04700ba7d72b45195223e0ff_l.jpg?source=bbf6831d",
+      "editedAt": 1787649342,
+      "contentType": "Article"
+    }
+  ],
+  "rag-evidence": [
+    {
+      "id": "zhihu-0d8b6be96bf541f3e467f0bfaef13afd",
+      "title": "RAG 核心技术实战:文档解析、分块策略与检索 Pipeline - 知乎",
+      "summary": "改成 RecursiveCharacterTextSplitter 并加上中文标点分隔符后问题缓解。但更好的方案是 Document-based Chunking，直接按条款切分，保证每条条款的完整性。\n坑 3：Embedding 模型不支持中文\n最初用了一个在 MTEB 排行榜上分数很高的英文模型，结果中文文档检索效果极差。\"劳动合同解除\"和\"离职赔偿\"这两个在中文里语义相关的概念，在这个模型的向量空间里距离很远。\n排查后发现问题出在模型的训练数据：主要英文语料，中文语料占比很低。换成 BGE-M3 后，同样用本文的 50 条测试问题评估，Recall@5 从 0.45 提升到 0.78。选 Embedding 模型一定要在自己的中文文档上测试，不能只看 benchmark。\n坑 4：批量写入向量库超时\n2000 份文档，每份解析+Embedding 大概 15 秒，如果同步串行处理，理论耗时超过 8 小时。实际运行时中间还会遇到网络波动导致 Milvus 写入超时，失败了一批数据。\n解决方案是 Celery 异步任务队列，10 个 Worker 并行处理。每份文档独立处理，失败了自动重试 3 次。写入 Milvus 时分批，每批 100 条，避免单批过大超时。2000 份文档 25 分钟搞定。\n还有一个隐藏问题：Milvus 的 flush() 操作很重，会触发段合并。不要每插入一批就 flush，攒够了再 flush，或者用后台自动 flush。\n坑 5：生成答案的幻觉问题\n检索到了正确的文档片段，但 LLM 还是编了一个错误的答案。原因是 prompt 没写好，LLM 在文档片段和自身训练数据之间\"自由发挥\"。\n解决方案是在 prompt 里加硬约束：\"只根据上面的文档内容回答，不要编造。如果文档中没有相关信息，直接说’根据现有文档无法回答’。\"同时把 temperature 降到 0.1，减少生成的随机性。\n另外，在答案后面标注引用来源（出自哪份文档的第几页/第几条），既方便用户核对原文，也能减少 LLM \"一本正经胡说八道\"的概率–当它知道答案要标来源时，会更倾向于忠实于检索到的内容。\n最后说一句\nRAG 系统的质量，大部分由数据预处理决定。\n文档解析错了，后面全白费。\n分块策略错了，检索精度上限就被锁死。\nEmbedding 模型选错了，中文检索效果会受到严重影响。\nLLM 只是最后一棒，它能做的是把检索到的信息组织好，而不是无中生有。",
+      "author": "Simple",
+      "authorId": "author-ev-0d8b6be96bf541f3e467f0bfaef13afd",
+      "authorUrl": null,
+      "url": "https://zhuanlan.zhihu.com/p/2068993917324989493",
+      "likes": 4,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "有解析、切分、检索与引用的具体故障场景，便于建立作品基线。",
+        "readingGuide": "有解析、切分、检索与引用的具体故障场景，便于建立作品基线。",
+        "caveat": "作者样本分数不外推；低 temperature 与提示词不保证消除幻觉，另做引用与评测。",
+        "reviewedAt": "2026-09-07T10:32:41.075Z"
+      },
+      "avatar": "https://pic1.zhimg.com/50/v2-abed1a8c04700ba7d72b45195223e0ff_l.jpg?source=bbf6831d",
+      "editedAt": 1786153641,
+      "contentType": "Article"
+    }
+  ],
+  "rag-evaluation": [
+    {
+      "id": "zhihu-6cf61d9bac25551e4d2b2941cad07ea8",
+      "title": "21 RAG 质量怎样量化:Golden Set、Recall@K 和坏案例 - 知乎",
+      "summary": "检索增强生成（RAG）准备上线时，评审会上常听到一句话：“大家试了十几个问题，回答看起来还不错。”可一旦有人把 Chunk 长度从 500 调到 800，或者替换了 Embedding 模型，团队很难说清效果到底变好还是变坏。\n只看最终文字也定位不了问题。答案错误，可能是知识缺失、切分破坏语义、检索漏召回、重排阶段排错位置，也可能是模型没有使用已经找到的证据；答案正确，也可能只是模型碰巧知道。\n这就需要分层评测：先看正确证据有没有进入 TopK、排在什么位置，再检查引用与结论、拒答行为以及延迟和 Token。把这些样例整理成固定评测集（Golden Set）后，模型、Prompt 或检索策略的每次变化才有可比较的基线。\n配套代码实现了这套评测流程。版本化 Golden Set 保存问题与期望 Chunk。独立评测程序 Eval Runner 使用带 knowledge:eval 权限的短期 Token 调用内部评测接口。它根据实际召回顺序计算 Recall@K、HitRate@K、平均倒数排名（Mean Reciprocal Rank，MRR）、重复率和 p95 延迟。回答忠实度、拒答和线上反馈仍要单独评估，不能用检索分数代替。\n先把质量问题拆到每一层\n一个 RAG 请求至少经过知识准备、检索、上下文组装、模型生成和业务校验。最终答案错误，只说明链路某处出了问题；最终答案正确，也不代表链路可靠。模型可能没有使用检索证据，只是凭参数记忆碰巧答对；也可能引用了错误文档，却写出了符合常识的结果。\n质量指标要与系统边界一一对应：\n质量层\t需要回答的问题\t常用指标\n检索覆盖\t正确证据是否进入候选集\tRecall@K、HitRate@K\n检索排序\t正确证据是否足够靠前\tMRR、nDCG@K（同时考虑多条证据相关度和位置）\n引用与忠实度\t回答里的结论是否由引用支持\t引用命中率、声明支持率\n拒答边界\t证据不足时是否拒答，可回答时是否过度拒答\t拒答精准率、拒答召回率\n系统效率\t质量收益是否值得链路成本\tp50/p95 延迟、Token、调用成本\n这些指标不能简单加权成一个“RAG 总分”。\n跨租户泄露一次，不应该被十条措辞良好的回答抵消；Recall@5 从 0.82 提高到 0.85，如果 p95 延迟翻倍，也未必值得上线。\n发布判断需要硬性安全条件、分层质量阈值与运行预算，而不是一个看起来完整的百分比。",
+      "author": "好好用AI",
+      "authorId": "author-ev-6cf61d9bac25551e4d2b2941cad07ea8",
+      "authorUrl": null,
+      "url": "https://zhuanlan.zhihu.com/p/2072321523281572120",
+      "likes": 0,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "分层检查检索、引用、拒答和成本，说明不能用一个平均分代替发布判断。",
+        "readingGuide": "分层检查检索、引用、拒答和成本，说明不能用一个平均分代替发布判断。",
+        "caveat": "指标依赖标注、数据集和样本量；本文示例分数不是我们产品的实测结果。",
+        "reviewedAt": "2026-09-07T10:32:41.814Z"
+      },
+      "avatar": "https://picx.zhimg.com/50/v2-cbfdfafdec5e7ca8b294972ddf77d7fe_l.jpg?source=bbf6831d",
+      "badge": "互联网行业 从业人员",
+      "badgeIcon": "https://picx.zhimg.com/v2-2ddc5cc683982648f6f123616fb4ec09_l.png?source=32738c0c",
+      "editedAt": 1787376563,
+      "contentType": "Article"
+    }
+  ],
+  "tool-boundary": [
+    {
+      "id": "zhihu-9d5965d9a12eaf9144a1121bee3f4b8e",
+      "title": "一次 LLM Function Calling 到底发生了什么:从输入协议、模型输出到函数真正执行 - 知乎",
+      "summary": "这段体验很容易制造一个误解：LLM 收到问题后，像普通程序一样进入了某个 Python 函数，等函数返回，再继续往下运行。\n一次客户端工具调用通常包含两次模型请求，中间夹着一次由宿主应用完成的真实函数执行。模型产生的是一份“请调用哪个工具、参数是什么”的结构化意图；决定是否执行、怎样执行、把结果交给谁的，是模型外面的应用。\n把这个边界看清，Function Calling 的输入、输出、协议字段和安全问题就都能连起来。\n先跑完一次最小调用\n假设应用向模型开放一个工具：\n用户问：“东京现在多少度？”一次完整交互可以拆成八条消息。\n第一轮，应用把用户问题和 get_weather 的说明一起发给模型。模型没有直接回答温度，而是返回：想使用 get_weather，地点是东京，单位是摄氏度。\n应用收到这份调用请求后，检查工具名和参数，调用自己的天气服务，拿到 8°C。随后，应用把这个结果连同原调用的标识符再次交给模型。模型读到真实结果，才生成给用户看的自然语言答案。\n用状态表示，就是：\n第二次请求也不保证一定结束。模型可能发现还缺少信息，再请求另一个工具。因此，Function Calling 在工程上通常是一个循环，而不是固定的两次请求：\n当模型返回普通文本、且没有新的工具调用时，循环才结束。OpenAI 的官方文档把客户端工具流程概括为五步：携带工具发起请求、接收调用、应用执行、回传结果、取得最终回答或更多调用。 OpenAI Function calling\n到底有几位参与者\n日常说“模型调用函数”没有问题，但实现时最好把参与者拆开。至少有五个：用户、宿主应用、模型 API 或推理服务、LLM、真实函数或外部系统。\n用户只提出意图。LLM 根据输入生成自然语言或工具调用意图。模型 API 负责接收公开协议、把它序列化成模型能理解的格式，再把模型输出解析成类型化响应。宿主应用维护会话、选择可用工具、检查权限、执行代码、处理超时和错误。真实函数则产生外部事实或副作用，例如查数据库、发邮件、退款、创建工单。\n图中刻意没有画 LLM 到真实函数的连线：LLM 与真实函数之间没有直接执行通道。\n以用户自定义的客户端工具为例，OpenAI、Anthropic 和 Gemini 的官方说明都把执行责任放在应用侧。\nAnthropic 还特意区分了 client tools 与 server tools：前者由你的程序执行，后者才可能由厂商基础设施代为执行。",
+      "author": "Ghost apple",
+      "authorId": "author-ev-9d5965d9a12eaf9144a1121bee3f4b8e",
+      "authorUrl": null,
+      "url": "https://zhuanlan.zhihu.com/p/2077399495650840736",
+      "likes": 1,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "清楚区分模型的结构化请求与应用实际执行，适合展示权限边界。",
+        "readingGuide": "清楚区分模型的结构化请求与应用实际执行，适合展示权限边界。",
+        "caveat": "本例仅使用只读工具；不声称模型可以绕过宿主直接执行外部动作。",
+        "reviewedAt": "2026-09-07T10:32:42.557Z"
+      },
+      "avatar": "https://picx.zhimg.com/50/v2-3d245b3bd3fdb2d7a0f8410741eeb3fa_l.jpg?source=bbf6831d",
+      "badge": "北京理工大学 信息与通信工程硕士",
+      "badgeIcon": "https://picx.zhimg.com/v2-2ddc5cc683982648f6f123616fb4ec09_l.png?source=32738c0c",
+      "editedAt": 1788079699,
+      "contentType": "Article"
+    }
+  ],
+  "llm-delivery": [
+    {
+      "id": "zhihu-4e8d7562560d1b5b9587beb55cd7be90",
+      "title": "一文了解:大模型「推理基准测试」及其「核心评估指标」 - 知乎",
+      "summary": "更多干货，第一时间送达\n引言\n随着生成式AI和大型语言模型（LLM）的应用的普及。企业纷纷部署基于LLM的应用，如何评估不同AI服务应用的效率是一项特别重要的需求。「LLM应用部署的成本取决于其每秒能处理的请求量，同时还需满足终端用户的响应速度并保证回答的准确性」。\n本文将详细介绍LLM应用成本评估核心指标：吞吐量和响应延迟，旨在澄清常见指标，解析不同流行测试工具对这些指标的定义与测量差异，并讨论基准测试的关键参数。本文目录安排如下：\n1. 负载测试与性能基准测试\n负载测试与性能基准测试是评估LLM部署的两种不同方法。负载测试通过模拟高并发请求来检验模型处理大流量的能力，重点关注服务器容量、自动扩展策略、网络延迟和资源利用率等问题。\n而性能基准测试专注于测量模型本身的性能，如吞吐量、延迟和词元级指标，用于识别模型效率、优化和配置相关问题。\n总的来说，「负载测试是确保模型能应对高流量，而性能基准测试则关注请求处理效率」。结合两者可全面评估LLM部署能力并定位改进方向。\n2. LLM推理基本原理\n这里在介绍基准测试指标之前，首先带大家回顾一下LLM推理的工作原理及相关术语。生产实际应用的时候，LLM推理生成通常会经历以下几个阶段：\n・「提示（Prompt）」：用户提交查询\n・「排队（Queuing）」：查询进入处理队列\n・「预填充（Prefill）」：模型处理提示（prompt）\n・「生成（Generation）」：模型逐词元（Token）输出响应\n「词元」（Token，又称标记）是自然语言模型（当然包括大模型）特有的概念，它是模型处理自然语言的最小语言单位，所有词元的集合称为词表。每个LLM有自己的分词器，用于高效表示输入文本。粗略估算，多数主流LLM中1个Token≈0.75个英文单词，对于汉字来说，1个Token≈1.8个汉字，这个具体也因模型而异。\n「序列长度」数列的长度。输入序列长度（ISL）是模型接收的Token数，包含用户请求、系统提示（如模型指令）、历史对话记录、思维链（CoT）推理及检索增强生成（RAG）的文档。输出序列长度（OSL）是模型生成的Token数。上下文长度是模型每一步生成时使用的总Token数（含输入和已生成的输出），每个LLM有最大上下文长度限制。\n「流式传输」（Streaming）允许将部分输出以增量词元块形式实时返回用户，这对需要快速初始响应的聊天应用尤为重要。",
+      "author": "AINLPer",
+      "authorId": "author-ev-4e8d7562560d1b5b9587beb55cd7be90",
+      "authorUrl": null,
+      "url": "https://zhuanlan.zhihu.com/p/1918838032745882209",
+      "likes": 6,
+      "topic": "知乎文章",
+      "sourceKind": "zhihu",
+      "curation": {
+        "why": "区分负载测试、延迟和吞吐，为作品交付建立可观察指标。",
+        "readingGuide": "区分负载测试、延迟和吞吐，为作品交付建立可观察指标。",
+        "caveat": "不采用固定汉字与 token 比例，也不把小样本演示视作生产负载验收。",
+        "reviewedAt": "2026-09-07T10:32:43.353Z"
+      },
+      "avatar": "https://picx.zhimg.com/50/v2-43767bd57ff5c481d0c4ddc91b7f3796_l.jpg?source=bbf6831d",
+      "editedAt": 1750266724,
+      "contentType": "Article"
+    }
+  ]
+}

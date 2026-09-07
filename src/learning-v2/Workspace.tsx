@@ -1,3 +1,4 @@
+import {SHOWCASE_VERSION} from '../showcase/content'
 import { useEffect, useRef, useState } from 'react'
 import { ArticlePanel } from './Articles'
 import { ChatPanel } from './Chat'
@@ -24,7 +25,7 @@ export function LearningWorkspace({routeId,conceptId,initialView='research',reso
     const abort=new AbortController();mounted.current=true;let timer:ReturnType<typeof setTimeout>
     if(example){
       let data=example
-      try{const saved=sessionStorage.getItem(`tp-example-learning-v2:${routeId}:${conceptId}`);if(saved){const parsed=LearningSchema.parse(JSON.parse(saved));validateTree(parsed.nodes);if(parsed.routeId===routeId&&parsed.conceptId===conceptId)data=parsed}}catch{/* A damaged preview does not affect a personal workspace. */}
+      try{const saved=sessionStorage.getItem(`tp-example-learning-v2:${SHOWCASE_VERSION}:${routeId}:${conceptId}`);if(saved){const parsed=LearningSchema.parse(JSON.parse(saved));validateTree(parsed.nodes);if(parsed.routeId===routeId&&parsed.conceptId===conceptId)data=parsed}}catch{/* A damaged preview does not affect a personal workspace. */}
       accept({id:`example:${routeId}:${conceptId}`,kind:'learning',revision:1,data,job:null})
       return()=>{mounted.current=false}
     }
@@ -64,7 +65,7 @@ export function LearningWorkspace({routeId,conceptId,initialView='research',reso
     validateTree(data.nodes)
     const s=live.current;if(!s)return
     accept({...s,data,revision:s.revision+1})
-    try{sessionStorage.setItem(`tp-example-learning-v2:${routeId}:${conceptId}`,JSON.stringify(data))}catch{setNotice('当前窗口无法保存示例编辑，请复制需要保留的内容。')}
+    try{sessionStorage.setItem(`tp-example-learning-v2:${SHOWCASE_VERSION}:${routeId}:${conceptId}`,JSON.stringify(data))}catch{setNotice('当前窗口无法保存示例编辑，请复制需要保留的内容。')}
   }
   async function command(kind:string,question?:string,ids=selected){
     if(!live.current||sendingRef.current)return false
@@ -108,11 +109,11 @@ export function LearningWorkspace({routeId,conceptId,initialView='research',reso
   if(!state||!conversation)return <div className="lp-workspace"><div className="lp-empty-state">{notice?<><p>{notice}</p><button onClick={()=>location.hash='paths'}>返回路线</button></>:<StatusPill busy>正在读取学习内容</StatusPill>}</div></div>
   return <LearningData.Provider value={{articles:state.articles,concept:state.title,example:!!example}}><div className="lp-workspace">
     <LearningHeader eyebrow={example?'示例学习':'刘看山陪你学'} backLabel={example?'返回上一级':resourceId?'返回知识脉络':'返回3D路线'} view={view} graphReady={nodes.length>0} historyOpen={history} onChange={setView} onBack={onBack??(()=>{location.hash=resourceId?'knowledge':'path-3d'})} onFindPerson={example?undefined:()=>findPerson()} onHistory={()=>setHistory(!history)} onNew={()=>void command('new-conversation')}/>
-    {example&&<div className="lp-example-note"><span>示例资料 · 可添加卡片、改色和编辑文档</span><a href="#home">开始我的学习 <Glyph name="chevron" size={13}/></a></div>}
+    {example&&<div className="lp-example-note"><span>编选示例 · 真实知乎来源，讲解与对话为展示设计</span><a href="#home">开始我的学习 <Glyph name="chevron" size={13}/></a></div>}
     {(offline||notice||job?.status==='waiting')&&<div className="lp-runtime-notice" role="status"><span>{notice|| (offline?'正在重新连接，内容仍然保留。':job?.phase)}</span>{job?.status==='waiting'&&<><button onClick={()=>void taskAction('resume')}>继续完成</button><button onClick={()=>void taskAction('cancel')}>停止本次任务</button></>}{unsaved.current&&<><button onClick={()=>{const next=unsaved.current!;unsaved.current=null;saveNodes(next)}}>保留当前版本</button><button onClick={()=>{unsaved.current=null;setEditingNodes(null);setNotice('')}}>使用已保存版本</button></>}{notice&&<button onClick={()=>setNotice('')} aria-label="关闭提示">×</button>}</div>}
     <div className="lp-phone-tabs"><button aria-pressed={phonePane==='material'} onClick={()=>setPhonePane('material')}>{view==='research'?'文章':'知识脉络'}</button><button aria-pressed={phonePane==='chat'} onClick={()=>setPhonePane('chat')}>对话</button></div>
     <main className="lp-body" ref={body} style={{'--lp-split':`${split}%`} as React.CSSProperties} data-phone-pane={phonePane}>
-      <section className="lp-material-pane"><div className="lp-material-view" hidden={view!=='research'}><ArticlePanel onAuthor={id=>findPerson(id)} phase={phase} detail={detail} selected={selected} onOpen={openArticle} onBack={()=>setDetail(null)} onToggle={id=>selectNode(id,true)} onRetry={()=>void taskAction('resume')}/></div>
+      <section className="lp-material-pane"><div className="lp-material-view" hidden={view!=='research'}><ArticlePanel onAuthor={example?undefined:id=>findPerson(id)} phase={phase} detail={detail} selected={selected} onOpen={openArticle} onBack={()=>setDetail(null)} onToggle={id=>selectNode(id,true)} onRetry={()=>void taskAction('resume')}/></div>
         {!!nodes.length&&<div className="lp-material-view" hidden={view!=='graph'}><KnowledgeGraph active={view==='graph'} nodes={nodes} selected={selected} onSelect={selectNode} onSelection={setSelected} onPromptSubmit={(q,mode,ids)=>busy?Promise.resolve(false):command(mode==='author'?'author':'reply',q,ids)} pending={pending} onChange={changeGraph} onUndo={undo} onRedo={redo} canUndo={!!past.length} canRedo={!!future.length} onStop={()=>void taskAction('cancel')} depth={depth} onDepth={setDepth} busy={busy} onCopy={copy} onSource={openArticle} focusId={focusNode}/></div>}
       </section><PaneDivider split={split} onChange={setSplit} container={body}/>
       <ChatPanel quote={quote} onClearQuote={()=>setQuote('')} onQuote={(id,text)=>{setQuote(text);setSelected(nodes.some(n=>n.id===id)?[id]:[])}} paused={job?.status==='waiting'||(running&&job?.conversationId!==state.active)} conversation={conversation} selected={selected} nodes={nodes} depth={depth} onDepth={setDepth} onRemove={id=>setSelected(s=>s.filter(n=>n!==id))} onClear={()=>setSelected([])} onSend={async q=>{const accepted=await command('reply',quote?`针对这段话：\n${quote}\n\n${q}`:q);if(accepted)setQuote('');return accepted}} onStop={()=>void taskAction('cancel')} mode="ai" onMode={()=>{}} focusToken={0} phase={running?phase:phase==='empty'?'empty':'ready'} draft={job?.conversationId===state.active?job?.draft??'':''} busy={sending||(running&&job?.conversationId===state.active&&(job?.kind!=='learning.enter'||!!job?.draft))} authorBusy={job?.kind==='learning.author'&&running} onSource={openArticle} onNode={id=>{setView('graph');setFocusNode(id);setSelected([id]);setPhonePane('material')}} onCopy={copy} onRetry={()=>void taskAction('resume')}/>

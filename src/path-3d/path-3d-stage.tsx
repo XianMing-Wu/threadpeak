@@ -47,7 +47,7 @@ export function Path3DStage() {
   // Stable key prevents unrelated library updates from remounting the WebGL scene.
   const badgeKey = JSON.stringify(view.kind === 'ready' ? routeBadgeEntries(view.document.structure) : [])
   const nodeBadges = useMemo(() => Object.fromEntries(JSON.parse(badgeKey)) as Record<string, NodeSemanticBadgeIcon>, [badgeKey])
-  const goBack = () => { location.hash = 'paths' }
+  const goBack = () => { location.hash = view.kind==='ready'&&view.source==='example'?'paths?tab=example':'paths' }
 
   useEffect(() => {
     if (view.kind !== 'ready' || view.source !== 'mine') return

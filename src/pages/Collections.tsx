@@ -17,11 +17,13 @@ import { FlowithMarket } from '../ui/FlowithMarket'
 import { coverForId } from '../ui/covers'
 
 export function KnowledgePage() {
-  const [section, setSection] = useState<'mine' | 'example'>('mine')
+  const [section, setSection] = useState<'mine' | 'example'>(()=>new URLSearchParams(location.hash.split('?')[1]??'').get('tab')==='example'?'example':'mine')
   const {data,error,reload}=useProductLibrary()
   const mineReady=!!data
   const items = useLibrarySelector(selectKnowledgeCards(section))
-  const shown = section === 'mine' ? (data?.knowledge??[]).map(k=>({id:k.id,title:k.title,description:'围绕这个概念积累的文章与知识卡片',owner:'mine' as const})) : items
+  const shown = section === 'mine'
+    ? (data?.knowledge??[]).map(k=>({id:k.id,title:k.title,description:'围绕这个概念积累的文章与知识卡片',owner:'mine' as const,onOpen:()=>{location.hash=`knowledge-detail?resource=${encodeURIComponent(k.id)}`}}))
+    : items.flatMap(k=>listConceptCards(k.id).map(c=>({id:c.id,title:c.title,description:c.description,owner:'example' as const,onOpen:()=>openConceptKnowledge(k.id,c.id)})))
   return <ProductWorkspace active="knowledge" page="knowledge">
     <FlowithMarket
       kind="collections"
@@ -35,7 +37,7 @@ export function KnowledgePage() {
         desc: item.description,
         author: item.owner === 'mine' ? '我' : '问山',
         badge: item.owner === 'mine' ? '我的' : '示例',
-        onOpen: () => { if(section==='mine')location.hash=`knowledge-detail?resource=${encodeURIComponent(item.id)}`;else openKnowledge(item.id) },
+        onOpen:item.onOpen,
       }))}
       total={shown.length}
       loading={section === 'mine' && !mineReady}
@@ -47,7 +49,7 @@ export function KnowledgePage() {
 
 export function PathsPage() {
   const {data,error,reload}=useProductLibrary()
-  const [tab, setTab] = useState<'mine' | 'example'>('mine')
+  const [tab, setTab] = useState<'mine' | 'example'>(()=>new URLSearchParams(location.hash.split('?')[1]??'').get('tab')==='example'?'example':'mine')
   const shown = useLibrarySelector(selectRouteCards(tab))
   return <ProductWorkspace active="paths" page="paths">
     <FlowithMarket
@@ -61,7 +63,7 @@ export function PathsPage() {
         cover: coverForId(route.id),
         title: route.title,
         author: route.owner === 'mine' ? '我' : '问山',
-        desc: `${route.summary} · ${route.carriers} 个载体 · ${route.concepts} 个最终概念 · ${route.duration}`,
+        desc: `${route.summary} · ${route.concepts} 个必要概念`,
         badge: route.owner === 'mine' ? '我的' : '示例',
         onOpen: () => { openRoute(route.id, 'paths'); location.hash='path-3d' },
       }))}
@@ -86,15 +88,15 @@ export function KnowledgeConceptsPage() {
       tab={knowledge?.owner === 'example' ? 'example' : 'mine'}
       switchable={false}
       title={knowledge?.title ?? '知识脉络'}
-      sub="每个概念都有自己的脉络，对话不会混在一起。"
-      heading={<div className="concept-back square-heading"><button type="button" className="lesson-back" aria-label="返回上一级" onClick={() => { location.hash = readKnowledgeListReturn() }}><Icon name="back" size={18}/></button></div>}
+      sub={knowledge?.owner==='example'?'从目标到来源，再到解释与追问。选择一个概念，查看完整的学习过程。':'每个概念都有自己的脉络，对话不会混在一起。'}
+      heading={<><div className="concept-back square-heading"><button type="button" className="lesson-back" aria-label="返回上一级" onClick={() => { location.hash = knowledge?.owner==='example'?'knowledge?tab=example':readKnowledgeListReturn() }}><Icon name="back" size={18}/></button></div></>}
       items={cards.map((item) => ({
         id: item.id,
         cover: coverForId(item.id),
         title: item.title,
         desc: item.description,
         author: '问山',
-        badge: knowledge?.owner==='example'?'示例笔记 · 可编辑':`最终概念 · ${item.type} · ${item.sources} 个来源`,
+        badge: knowledge?.owner==='example'?'编选讲解 · 可核对知乎来源':`最终概念 · ${item.type} · ${item.sources} 个来源`,
         onOpen: () => { openConceptKnowledge(knowledgeId, item.id) },
       }))}
       total={cards.length}
@@ -144,7 +146,7 @@ function LegacyKnowledgeDetailPage() {
     return <MineGraphCanvasPage key={`${routeId}:${conceptId}`} routeId={routeId} conceptId={conceptId}/>
   }
   if (owner === 'example') {
-    return <ProductWorkspace active="knowledge" page="knowledge-detail"><ExampleWorkspace knowledgeId={readActiveKnowledgeId()} conceptId={conceptId} onBack={closeConceptKnowledge}/></ProductWorkspace>
+    return <ProductWorkspace active="knowledge" page="knowledge-detail"><ExampleWorkspace knowledgeId={readActiveKnowledgeId()} conceptId={conceptId} onBack={()=>{closeConceptKnowledge();location.hash='knowledge?tab=example'}}/></ProductWorkspace>
   }
   return <KnowledgeConceptsPage/>
 }

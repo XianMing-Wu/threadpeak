@@ -33,12 +33,12 @@ export function useSourcePresentation(url?:string,enabled=true,includeReading=fa
   useEffect(()=>{setRecord(undefined);setFailed(false);if(!enabled||!permitted(url))return;let live=true;void load(url!,includeReading,attempt>0).then(v=>{if(live)setRecord({signature,value:v})}).catch(()=>{if(live)setFailed(true)});return()=>{live=false}},[url,enabled,includeReading,attempt])
   return {value:enabled&&record?.signature===signature?record.value:undefined,failed,retry:()=>setAttempt(n=>n+1)}
 }
-export function SourceReading({url,source}:{url?:string;source:string}){
-  const missing=hasMissingSourceExcerptMath(source),{value,failed,retry}=useSourcePresentation(url,missing,true)
-  const reading=value?.data.reading
-  if(!missing)return <MarkdownMath source={source} sourceExcerpt/>
+export function SourceReading({url,source,curated}:{url?:string;source:string;curated?:string}){
+  const missing=hasMissingSourceExcerptMath(source),{value,failed,retry}=useSourcePresentation(url,missing&&!curated,true)
+  const reading=curated?{content:curated}:value?.data.reading
+  if(!missing&&!curated)return <MarkdownMath source={source} sourceExcerpt/>
   return <div className="tp-source-reading">
-    <div className="tp-source-reading-label">{reading?'AI 公式讲解':'原摘要缺少部分公式'}<span>{reading?'根据摘要主题整理，非作者原文':'原始内容保留在下方'}</span></div>
+    <div className="tp-source-reading-label">{curated?'编选讲解':reading?'AI 公式讲解':'原摘要缺少部分公式'}<span>{curated?'根据资料与目标编选，非作者原文':reading?'根据摘要主题整理，非作者原文':'原始内容保留在下方'}</span></div>
     {reading?<MarkdownMath source={reading.content}/>:<div className="tp-source-reading-state" role="status">
       {!permitted(url)?'可前往原文查看完整内容。':failed||value?<><p>公式讲解尚未准备好。</p><button type="button" onClick={retry}>继续整理公式</button></>:<p>正在整理完整的公式讲解…</p>}
     </div>}

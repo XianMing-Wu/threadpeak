@@ -1,4 +1,6 @@
-import { canvasEdges, canvasNodes, type CanvasEdge, type CanvasNode } from '../knowledge-canvas/content'
+import {showcaseBlueprints,showcaseLesson,showcaseSourceCount} from '../showcase/catalog.ts'
+import {showcaseRoute} from '../showcase/content.ts'
+import { type CanvasEdge, type CanvasNode } from '../knowledge-canvas/content'
 import { buildPathDocument } from '../pathDocument'
 import { readableLayerTitle } from '../session/layer-title.ts'
 import type {
@@ -10,206 +12,15 @@ import type {
   RouteRecord,
 } from './types'
 
-const linearCarriers: PathCarrierSpec[] = [
-  { id: 'carrier-foundation', title: '数学基础', summary: '用向量、基与矩阵建立统一语言。', concepts: [['vector-space', '向量空间', '线性组合、张成、基与维数'], ['linear-map', '线性变换', '把矩阵看作空间中的动作']] },
-  { id: 'carrier-structure', title: '变换结构', summary: '理解线性变换中稳定与被压缩的结构。', concepts: [['kernel-image', '核、像与秩', '描述消失方向与可达空间'], ['eigen', '特征值与特征向量', '寻找变换中保持方向的轴']] },
-  { id: 'carrier-probability', title: '数据视角', summary: '从统计分布理解数据的主要变化方向。', concepts: [['variance', '方差与协方差', '度量变化强度与变量联动'], ['covariance-matrix', '协方差矩阵', '把多维变量关系写成矩阵']] },
-  { id: 'carrier-application', title: '机器学习应用', summary: '把前面的概念汇入可解释的降维方法。', concepts: [['pca', '主成分分析 PCA', '选择信息保留最多的投影轴'], ['projection', '二维数据投影', '把 PCA 用到一次真实降维中']] },
-]
-
-const thinkingCarriers: PathCarrierSpec[] = [
-  { id: 'ct-carrier-claim', title: '识别论点', summary: '先把结论、理由和隐含前提拆开。', concepts: [['argument-claim', '论点与结论', '把作者真正要你接受的判断单独拎出来'], ['hidden-premise', '隐含前提', '找出没有写出来、却支撑整段推理的假设']] },
-  { id: 'ct-carrier-evidence', title: '检验证据', summary: '判断理由是否真的撑得住结论。', concepts: [['evidence-strength', '证据质量', '区分例子、统计、权威引用和可复核事实'], ['counterexample', '反例与例外', '找一个能让原结论失效的具体情形']] },
-  { id: 'ct-carrier-rebuild', title: '重建论证', summary: '用可复用的结构重写一段长回答。', concepts: [['reasoning-structure', '论证结构', '把长文压成结论-理由-反驳的骨架'], ['common-fallacy', '常见谬误', '识别偷换概念、以偏概全和诉诸情绪']] },
-]
-
-const frontendCarriers: PathCarrierSpec[] = [
-  { id: 'fe-carrier-browser', title: '浏览器基础', summary: '从页面如何变成像素开始。', concepts: [['render-pipeline', '渲染管线', '从 HTML 到图层合成的真实顺序'], ['component-model', '组件模型', '把界面拆成可复用、有边界的单元']] },
-  { id: 'fe-carrier-state', title: '组件与状态', summary: '看清状态变化如何驱动界面。', concepts: [['state-management', '状态更新', '谁拥有数据、谁只负责显示'], ['data-fetching', '数据流', '请求、缓存和界面一致性怎么接在一起']] },
-  { id: 'fe-carrier-eng', title: '工程化', summary: '把能跑的页面变成可维护的系统。', concepts: [['perf-boundary', '性能边界', '哪些优化真的改变用户感知'], ['engineering', '构建与发布', '分层、打包和线上回滚的最小闭环']] },
-]
-
-export const exampleBlueprints: RouteBlueprint[] = [
-  {
-    id: 'linear-algebra',
-    owner: 'example',
-    title: '从线性代数走向机器学习',
-    summary: '从向量空间出发，经线性变换与特征值，最终理解 PCA 的几何直觉。',
-    outcome: '能用几何语言解释 PCA，并完成一次二维数据降维',
-    duration: '约 5 周',
-    tags: ['数学基础', '机器学习'],
-    icon: 'function',
-    documentId: 'threadpeak-linear-algebra-v1',
-    description: '四段学习内容，串起八个核心概念。',
-    goalTitle: '理解的高峰',
-    goalSummary: '能够用几何语言解释 PCA，并完成一次二维数据降维。',
-    startSummary: '刘看山会陪你沿着必要概念抵达目标。',
-    carriers: linearCarriers,
-  },
-  {
-    id: 'critical-thinking',
-    owner: 'example',
-    title: '批判性思维：从观点到论证',
-    summary: '辨认论点、证据、反例与隐含前提，建立可复用的论证分析框架。',
-    outcome: '能拆解一篇长回答的论证结构并指出证据缺口',
-    duration: '约 3 周',
-    tags: ['通识', '思维方法'],
-    icon: 'brain',
-    documentId: 'threadpeak-critical-thinking-v1',
-    description: '三段学习内容，串起六个论证方法。',
-    goalTitle: '能独立拆解论证',
-    goalSummary: '读完一篇长回答后，能画出结论、理由、反例和缺口。',
-    startSummary: '先学会把观点和论证拆开，再谈同不同意。',
-    carriers: thinkingCarriers,
-  },
-  {
-    id: 'frontend-architecture',
-    owner: 'example',
-    title: '现代前端架构的关键路径',
-    summary: '从浏览器运行机制出发，连接组件、状态、数据流与工程化决策。',
-    outcome: '能解释一个中型 React 项目的分层与性能边界',
-    duration: '约 4 周',
-    tags: ['前端', '工程实践'],
-    icon: 'layers',
-    documentId: 'threadpeak-frontend-architecture-v1',
-    description: '三段学习内容，串起六个工程概念。',
-    goalTitle: '能讲清系统边界',
-    goalSummary: '能解释中型 React 项目为什么这样分层，以及性能代价在哪里。',
-    startSummary: '从浏览器真实做了什么开始，而不是从框架名词开始。',
-    carriers: frontendCarriers,
-  },
-]
+export const exampleBlueprints = showcaseBlueprints
 
 export function documentFromBlueprint(blueprint: RouteBlueprint) {
-  return buildPathDocument({
-    id: blueprint.documentId,
-    title: blueprint.title,
-    description: blueprint.description,
-    goalTitle: blueprint.goalTitle,
-    goalSummary: blueprint.goalSummary,
-    startSummary: blueprint.startSummary,
-    carriers: blueprint.carriers,
-  })
+  return buildPathDocument({id:blueprint.documentId,title:blueprint.title,description:blueprint.description,goalTitle:blueprint.goalTitle,goalSummary:blueprint.goalSummary,startSummary:blueprint.startSummary,carriers:blueprint.carriers,stages:blueprint.stages})
 }
 
 export function routeRecordFromBlueprint(blueprint: RouteBlueprint, extra?: Partial<RouteRecord>): RouteRecord {
-  return {
-    id: blueprint.id,
-    owner: blueprint.owner,
-    title: blueprint.title,
-    summary: blueprint.summary,
-    outcome: blueprint.outcome,
-    duration: blueprint.duration,
-    tags: blueprint.tags,
-    icon: blueprint.icon,
-    document: documentFromBlueprint(blueprint),
-    conversationIds: [],
-    knowledgeId: blueprint.owner === 'example' ? `knowledge-${blueprint.id}` : null,
-    createdAt: 0,
-    ...extra,
-  }
+  return {id:blueprint.id,owner:blueprint.owner,title:blueprint.title,summary:blueprint.summary,outcome:blueprint.outcome,duration:blueprint.duration,tags:blueprint.tags,icon:blueprint.icon,document:documentFromBlueprint(blueprint),conversationIds:[],knowledgeId:blueprint.owner==='example'?`knowledge-${blueprint.id}`:null,createdAt:0,...extra}
 }
-
-function lesson(heading: string, paragraphs: string[], extra?: Partial<FirstLesson>): FirstLesson {
-  return {
-    heading,
-    paragraphs,
-    placeholder: `围绕“${heading.includes('矩阵') || heading.includes('空间') ? '线性变换' : heading}”继续提问，或选择上方模式深入理解…`,
-    ...extra,
-  }
-}
-
-const linearLessons: Record<string, FirstLesson> = {
-  'vector-space': lesson('先把“空间”看成能做线性组合的地方', [
-    '向量空间不是一张画了箭头的图，而是一套运算规则：你可以相加、可以数乘，并且这两种运算彼此兼容。',
-    '基是一组最少的方向。有了基，空间里每个向量都能写成这组方向的线性组合，维数就是这组方向的个数。',
-    '后面所有矩阵语言，都建立在“先选定一组基”这件事上。',
-  ], { quote: '基不是坐标轴装饰，而是描述整个空间的最小方向组。', placeholder: '围绕“向量空间”继续提问，或选择上方模式深入理解…' }),
-  'linear-map': lesson('先把矩阵看成“空间中的动作”', [
-    '如果只把矩阵当成一张数字表，它很容易变成机械计算。更有用的视角是：矩阵描述一个规则，这个规则把空间里的每个向量送到另一个位置。',
-    '二维矩阵的两列，分别记录两个基向量 e₁ 与 e₂ 经过变换后的去向。因为线性变换保持加法和数乘，知道基向量怎么走，就知道整个平面怎么走。',
-  ], { quote: '矩阵不是变换本身，而是某个基下对变换的坐标描述。', figureCaption: '基向量经过线性变换后的去向', placeholder: '围绕“线性变换”继续提问，或选择上方模式深入理解…' }),
-  'kernel-image': lesson('先看见被压扁的方向，再谈还能走到哪里', [
-    '核是被送到零向量的方向：这些方向在变换后消失。像是变换之后还能到达的全部位置。',
-    '秩把两者连起来：空间被压缩掉多少维，能保留的信息就少多少维。后面的 PCA，其实是在有意识地选择压缩哪些方向。',
-  ], { quote: '先看见压缩，再谈降维，公式才有几何意义。', placeholder: '围绕“核、像与秩”继续提问，或选择上方模式深入理解…' }),
-  eigen: lesson('先找变换后仍不转向的轴', [
-    '特征向量是变换后只被拉长或缩短、方向不变的向量。特征值就是这条轴上的伸缩倍数。',
-    '一旦找到这些轴，复杂的矩阵乘法就可以拆成一组彼此独立的伸缩。这是后面特征分解和 PCA 的共同入口。',
-  ], { quote: '特征方向把一个复杂动作拆成若干次独立伸缩。', placeholder: '围绕“特征值与特征向量”继续提问，或选择上方模式深入理解…' }),
-  variance: lesson('先问数据沿哪个方向散得最开', [
-    '方差描述一个变量自己跳得有多厉害；协方差描述两个变量是不是经常一起变。',
-    '如果只看平均值，你会丢掉数据真正的形状。主成分分析要的不是中心点，而是散得最开的方向。',
-  ], { quote: '方差回答“散开多少”，协方差回答“是不是一起散”。', placeholder: '围绕“方差与协方差”继续提问，或选择上方模式深入理解…' }),
-  'covariance-matrix': lesson('把多变量的共同变化写成一张矩阵', [
-    '协方差矩阵的对角是各变量自己的方差，非对角是它们两两之间的联动。',
-    '对这张矩阵做特征分解，得到的方向就是数据变化最显著的轴。于是“数据长什么样”变成了可以计算的几何对象。',
-  ], { quote: '协方差矩阵是数据形状的坐标写法。', placeholder: '围绕“协方差矩阵”继续提问，或选择上方模式深入理解…' }),
-  pca: lesson('按信息量给方向排序，而不是按公式背步骤', [
-    'PCA 选择方差最大的方向做投影，是因为这些方向保留了最多可区分样本的信息。',
-    '特征值从大到小，就是信息从多到少。丢掉小的方向，等于承认那些方向上的变化可以先忽略。',
-  ], { quote: 'PCA 不是把数据变漂亮，而是按信息量做一次有意识的压缩。', placeholder: '围绕“主成分分析 PCA”继续提问，或选择上方模式深入理解…' }),
-  projection: lesson('用一次二维投影检查你是否真的理解了 PCA', [
-    '把真实的二维样本投到第一主轴上，再看重构误差：被丢掉的垂直方向，就是你决定暂时不看的信息。',
-    '如果误差大得无法接受，说明第一主成分不够，应该把第二条轴也加回来。这比背“取前 k 个”更接近真实判断。',
-  ], { quote: '投影是检验：你到底丢掉了什么。', placeholder: '围绕“二维数据投影”继续提问，或选择上方模式深入理解…' }),
-}
-
-const thinkingLessons: Record<string, FirstLesson> = {
-  'argument-claim': lesson('先把结论单独写出来，再看理由配不配', [
-    '很多长回答把故事、例子和态度混在一起。先问：作者到底要你接受哪一句话？',
-    '把结论写成一句可以同意或反对的判断。如果写不出来，后面的证据讨论都会飘。',
-  ], { quote: '结论必须能单独被赞成或反驳。', placeholder: '围绕“论点与结论”继续提问，或选择上方模式深入理解…' }),
-  'hidden-premise': lesson('把没写出来的台阶补上', [
-    '论证常常跳步：从“很多人这样做”直接跳到“你也应该这样做”。中间缺的那一级，就是隐含前提。',
-    '把缺的台阶写出来后，你会发现争议往往不在例子，而在这个没说出口的假设。',
-  ], { quote: '隐含前提是论证真正受力的地方。', placeholder: '围绕“隐含前提”继续提问，或选择上方模式深入理解…' }),
-  'evidence-strength': lesson('先给证据分级，再决定它能不能撑住结论', [
-    '一条亲身经历、一篇统计、一个权威名字，强度完全不同。它们都可以出现，但不能被当成同一种证明。',
-    '问三个问题：来源能否复核、样本是否匹配结论、有没有同样强度的反证。',
-  ], { quote: '证据的类型决定它最多能支持到哪一步。', placeholder: '围绕“证据质量”继续提问，或选择上方模式深入理解…' }),
-  counterexample: lesson('用一个具体反例，比空泛反驳更有力', [
-    '有效反例不是抬杠，而是构造一个满足原论证前提、却让结论失败的情形。',
-    '如果对方的结论在这个情形里必须改口，你就找到了论证的边界，而不是只表达了情绪。',
-  ], { quote: '反例用来画边界，不是用来赢吵架。', placeholder: '围绕“反例与例外”继续提问，或选择上方模式深入理解…' }),
-  'reasoning-structure': lesson('把长文压成可以检查的骨架', [
-    '先标结论，再列理由，再标反驳和让步。一张骨架图比继续逐段复述更接近“读懂了”。',
-    '骨架上的缺口会自己露出来：哪条理由没有证据，哪步跳过了前提。',
-  ], { quote: '论证结构是给思考用的图纸，不是给原文做摘要。', placeholder: '围绕“论证结构”继续提问，或选择上方模式深入理解…' }),
-  'common-fallacy': lesson('先命名错误推理，再决定要不要继续听下去', [
-    '偷换概念、以偏概全、诉诸情绪，是长回答里最常见的三种滑坡。点名它们，是为了避免被节奏带走。',
-    '识别谬误之后，仍然可以吸收其中有效的观察；只是不要把整段话当成已经成立的结论。',
-  ], { quote: '给谬误命名，是为了把讨论拉回可检验的位置。', placeholder: '围绕“常见谬误”继续提问，或选择上方模式深入理解…' }),
-}
-
-const frontendLessons: Record<string, FirstLesson> = {
-  'render-pipeline': lesson('先跟着浏览器走完从文本到像素的路径', [
-    '浏览器不是“把 React 画出来”，而是解析、样式计算、布局、绘制、合成。框架只是在前面几步插入自己的调度。',
-    '你看到的卡顿，往往出在布局抖动或图层合成，而不是某一行 JSX 写得不够好看。',
-  ], { quote: '渲染管线是前端性能讨论的地面，不是背景知识。', placeholder: '围绕“渲染管线”继续提问，或选择上方模式深入理解…' }),
-  'component-model': lesson('组件的边界比组件的数量更重要', [
-    '一个好的组件有明确输入、明确职责，并且不偷偷改别人的数据。拆得碎但边界乱，比拆得少更难维护。',
-    '先问这个组件因为什么而存在，再问它该不该知道路由、请求或全局用户信息。',
-  ], { quote: '组件模型处理的是责任边界，不是文件数量。', placeholder: '围绕“组件模型”继续提问，或选择上方模式深入理解…' }),
-  'state-management': lesson('先问数据归谁，再问要用哪个库', [
-    '状态放错地方，比选错 Redux 或 Context 更伤。能留在靠近界面的局部状态，就不要提升。',
-    '共享状态只处理“两处界面必须看到同一份事实”的数据。其余的提升都是过早的架构。',
-  ], { quote: '状态管理的第一问是所有权，不是中间件。', placeholder: '围绕“状态更新”继续提问，或选择上方模式深入理解…' }),
-  'data-fetching': lesson('把请求看成状态，而不是看成副作用附录', [
-    '一次请求至少有未开始、进行中、成功、失败四种界面。把它们藏进 then，页面就会在刷新和回退时说谎。',
-    '缓存键应该反映“这份数据是谁的”。键乱了，你看到的就不是当前用户或当前筛选的结果。',
-  ], { quote: '数据流是界面一致性的来源。', placeholder: '围绕“数据流”继续提问，或选择上方模式深入理解…' }),
-  'perf-boundary': lesson('只优化用户能感觉到的那一段', [
-    '先复现慢的交互，再看是长任务、布局还是网络。没有测量的优化，常常只是把代码变得更绕。',
-    '列表虚拟化、拆包、记忆化都有效，但只在它们对应的瓶颈上有效。',
-  ], { quote: '性能边界是测出来的，不是用清单勾出来的。', placeholder: '围绕“性能边界”继续提问，或选择上方模式深入理解…' }),
-  engineering: lesson('把发布当成系统的一部分，而不是最后一天的手续', [
-    '分层让改动局部化：样式、状态、请求、路由不要缠在同一个文件里等上线那天再拆。',
-    '一次可回滚的发布，比一次“全部重构完成”的发布更接近工程。',
-  ], { quote: '工程化处理的是可回退的变化，不是目录美观。', placeholder: '围绕“构建与发布”继续提问，或选择上方模式深入理解…' }),
-}
-
-const exampleLessons: Record<string, FirstLesson> = { ...linearLessons, ...thinkingLessons, ...frontendLessons }
 
 function cloneGraph(graph: KnowledgeGraph): KnowledgeGraph {
   return {
@@ -235,11 +46,7 @@ export function conceptAccent(blueprint: RouteBlueprint, conceptId: string) {
 export function exampleConceptGraphs(blueprint: RouteBlueprint): Record<string, KnowledgeGraph> {
   const graphs: Record<string, KnowledgeGraph> = {}
   for (const concept of blueprintConcepts(blueprint)) {
-    if (blueprint.id === 'linear-algebra' && concept.id === 'linear-map') {
-      graphs[concept.id] = cloneGraph({ nodes: canvasNodes, edges: canvasEdges })
-      continue
-    }
-    const lesson = exampleLessons[concept.id] ?? draftFirstLesson(blueprint, concept.id)
+    const lesson = showcaseLesson(blueprint.id, concept.id) ?? draftFirstLesson(blueprint, concept.id)
     graphs[concept.id] = graphFromLesson(concept.title, lesson, conceptAccent(blueprint, concept.id))
   }
   return graphs
@@ -253,11 +60,11 @@ export function exampleKnowledgeRecord(blueprint: RouteBlueprint): KnowledgeReco
     id: `knowledge-${blueprint.id}`,
     routeId: blueprint.id,
     owner: 'example',
-    title: blueprint.title,
+    title: showcaseRoute(blueprint.id)?.knowledgeTitle ?? blueprint.title,
     description: blueprint.summary,
     icon: blueprint.icon,
-    sources: blueprint.id === 'linear-algebra' ? 4 : 3,
-    type: blueprint.id === 'linear-algebra' ? '知乎回答 · PDF' : '知乎回答',
+    sources: showcaseSourceCount(blueprint.id),
+    type: blueprint.id === 'attention-paper' ? '知乎来源 · 论文' : '知乎来源',
     seedConceptId: seed,
     graph: cloneGraph(graph),
     graphs,
@@ -300,7 +107,7 @@ export function firstConceptId(blueprint: RouteBlueprint) {
 }
 
 export function catalogLesson(routeId: string, conceptId: string): FirstLesson | undefined {
-  if (exampleBlueprints.some((item) => item.id === routeId)) return exampleLessons[conceptId]
+  if (exampleBlueprints.some((item) => item.id === routeId)) return showcaseLesson(routeId, conceptId)
   return undefined
 }
 
