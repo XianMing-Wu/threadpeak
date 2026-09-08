@@ -1,0 +1,290 @@
+[
+  {
+    "width": 1440,
+    "theme": "light",
+    "motion": "no-preference",
+    "metrics": {
+      "title": "路线规划",
+      "sub": "从目标出发，把学习内容组织成可以进入的路线。",
+      "rect": {
+        "x": 103,
+        "y": 39,
+        "width": 1298,
+        "height": 108,
+        "top": 39,
+        "right": 1401,
+        "bottom": 147,
+        "left": 103
+      },
+      "copyPadding": "12px 24px",
+      "gap": "6px",
+      "text": [
+        {
+          "font": "\"ThreadPeak Rounded\", \"PingFang SC\", \"Hiragino Sans GB\", sans-serif",
+          "size": "32px",
+          "weight": "550",
+          "letterSpacing": "3.84px",
+          "color": "rgb(31, 35, 41)",
+          "rect": {
+            "x": 678.390625,
+            "y": 55.28125,
+            "width": 147.203125,
+            "height": 43.1875,
+            "top": 55.28125,
+            "right": 825.59375,
+            "bottom": 98.46875,
+            "left": 678.390625
+          }
+        },
+        {
+          "font": "\"ThreadPeak Rounded\", \"PingFang SC\", \"Hiragino Sans GB\", sans-serif",
+          "size": "15px",
+          "weight": "400",
+          "letterSpacing": "1.35px",
+          "color": "rgb(107, 114, 128)",
+          "rect": {
+            "x": 572.140625,
+            "y": 104.46875,
+            "width": 359.703125,
+            "height": 26.25,
+            "top": 104.46875,
+            "right": 931.84375,
+            "bottom": 130.71875,
+            "left": 572.140625
+          }
+        }
+      ]
+    },
+    "fonts": [
+      {
+        "familyName": "ThreadPeak Rounded",
+        "postScriptName": "ThreadPeakRounded",
+        "isCustomFont": true,
+        "glyphCount": 4
+      }
+    ],
+    "a11y": {
+      "violations": [],
+      "incomplete": [
+        "color-contrast"
+      ]
+    },
+    "errors": []
+  },
+  {
+    "width": 390,
+    "theme": "light",
+    "motion": "no-preference",
+    "metrics": {
+      "title": "路线规划",
+      "sub": "从目标出发，把学习内容组织成可以进入的路线。",
+      "rect": {
+        "x": 87,
+        "y": 31,
+        "width": 280,
+        "height": 115.9375,
+        "top": 31,
+        "right": 367,
+        "bottom": 146.9375,
+        "left": 87
+      },
+      "copyPadding": "14px 20px",
+      "gap": "6px",
+      "text": [
+        {
+          "font": "\"ThreadPeak Rounded\", \"PingFang SC\", \"Hiragino Sans GB\", sans-serif",
+          "size": "27px",
+          "weight": "550",
+          "letterSpacing": "2.7px",
+          "color": "rgb(31, 35, 41)",
+          "rect": {
+            "x": 166.25,
+            "y": 45,
+            "width": 121.5,
+            "height": 36.4375,
+            "top": 45,
+            "right": 287.75,
+            "bottom": 81.4375,
+            "left": 166.25
+          }
+        },
+        {
+          "font": "\"ThreadPeak Rounded\", \"PingFang SC\", \"Hiragino Sans GB\", sans-serif",
+          "size": "13px",
+          "weight": "400",
+          "letterSpacing": "0.585px",
+          "color": "rgb(107, 114, 128)",
+          "rect": {
+            "x": 107,
+            "y": 87.4375,
+            "width": 240,
+            "height": 45.5,
+            "top": 87.4375,
+            "right": 347,
+            "bottom": 132.9375,
+            "left": 107
+          }
+        }
+      ]
+    },
+    "fonts": [
+      {
+        "familyName": "ThreadPeak Rounded",
+        "postScriptName": "ThreadPeakRounded",
+        "isCustomFont": true,
+        "glyphCount": 4
+      }
+    ],
+    "a11y": {
+      "violations": [],
+      "incomplete": [
+        "color-contrast"
+      ]
+    },
+    "errors": []
+  },
+  {
+    "width": 320,
+    "theme": "light",
+    "motion": "no-preference",
+    "metrics": {
+      "title": "路线规划",
+      "sub": "从目标出发，把学习内容组织成可以进入的路线。",
+      "rect": {
+        "x": 87,
+        "y": 31,
+        "width": 210,
+        "height": 115.9375,
+        "top": 31,
+        "right": 297,
+        "bottom": 146.9375,
+        "left": 87
+      },
+      "copyPadding": "14px 20px",
+      "gap": "6px",
+      "text": [
+        {
+          "font": "\"ThreadPeak Rounded\", \"PingFang SC\", \"Hiragino Sans GB\", sans-serif",
+          "size": "27px",
+          "weight": "550",
+          "letterSpacing": "2.7px",
+          "color": "rgb(31, 35, 41)",
+          "rect": {
+            "x": 131.25,
+            "y": 45,
+            "width": 121.5,
+            "height": 36.4375,
+            "top": 45,
+            "right": 252.75,
+            "bottom": 81.4375,
+            "left": 131.25
+          }
+        },
+        {
+          "font": "\"ThreadPeak Rounded\", \"PingFang SC\", \"Hiragino Sans GB\", sans-serif",
+          "size": "13px",
+          "weight": "400",
+          "letterSpacing": "0.585px",
+          "color": "rgb(107, 114, 128)",
+          "rect": {
+            "x": 107,
+            "y": 87.4375,
+            "width": 170,
+            "height": 45.5,
+            "top": 87.4375,
+            "right": 277,
+            "bottom": 132.9375,
+            "left": 107
+          }
+        }
+      ]
+    },
+    "fonts": [
+      {
+        "familyName": "ThreadPeak Rounded",
+        "postScriptName": "ThreadPeakRounded",
+        "isCustomFont": true,
+        "glyphCount": 4
+      }
+    ],
+    "a11y": {
+      "violations": [],
+      "incomplete": [
+        "color-contrast"
+      ]
+    },
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "theme": "dark",
+    "motion": "reduce",
+    "metrics": {
+      "title": "路线规划",
+      "sub": "从目标出发，把学习内容组织成可以进入的路线。",
+      "rect": {
+        "x": 103,
+        "y": 39,
+        "width": 1298,
+        "height": 108,
+        "top": 39,
+        "right": 1401,
+        "bottom": 147,
+        "left": 103
+      },
+      "copyPadding": "12px 24px",
+      "gap": "6px",
+      "text": [
+        {
+          "font": "\"ThreadPeak Rounded\", \"PingFang SC\", \"Hiragino Sans GB\", sans-serif",
+          "size": "32px",
+          "weight": "550",
+          "letterSpacing": "3.84px",
+          "color": "rgb(237, 240, 243)",
+          "rect": {
+            "x": 678.390625,
+            "y": 55.28125,
+            "width": 147.203125,
+            "height": 43.1875,
+            "top": 55.28125,
+            "right": 825.59375,
+            "bottom": 98.46875,
+            "left": 678.390625
+          }
+        },
+        {
+          "font": "\"ThreadPeak Rounded\", \"PingFang SC\", \"Hiragino Sans GB\", sans-serif",
+          "size": "15px",
+          "weight": "400",
+          "letterSpacing": "1.35px",
+          "color": "rgb(167, 176, 189)",
+          "rect": {
+            "x": 572.140625,
+            "y": 104.46875,
+            "width": 359.703125,
+            "height": 26.25,
+            "top": 104.46875,
+            "right": 931.84375,
+            "bottom": 130.71875,
+            "left": 572.140625
+          }
+        }
+      ]
+    },
+    "fonts": [
+      {
+        "familyName": "ThreadPeak Rounded",
+        "postScriptName": "ThreadPeakRounded",
+        "isCustomFont": true,
+        "glyphCount": 4
+      }
+    ],
+    "a11y": {
+      "violations": [],
+      "incomplete": [
+        "color-contrast"
+      ]
+    },
+    "errors": []
+  }
+]

@@ -1,6 +1,6 @@
 {
   ".vite/manifest.json": {
-    "sha256": "0c350c2f60885ac968a557aac071841504663f46fe7184985ca1a054b892893c",
+    "sha256": "8c586c50c595f81783f66a7d823dee9c6e2507691c5185e4051b6a300743f1c9",
     "bytes": 1456
   },
   "CharacterRig-BpJUYaY6.js": {
@@ -11,13 +11,13 @@
     "sha256": "a3ae64c46f8e974e5a01b17246c32f952d83a55eb1d5477156e0f68929881d93",
     "bytes": 88371
   },
-  "LearningPathSession-WoZaqSLh.js": {
-    "sha256": "53747ead99e3915d20b12733a756194903f49b27e4a8bf886bb18d46a210399d",
-    "bytes": 301827
+  "LearningPathSession-Cl847s7Y.js": {
+    "sha256": "b0f9145e7fb781037f00097dab3b79e81bec594d4fe8ba765a7324fbcab152af",
+    "bytes": 302023
   },
-  "LearningPathSession-WoZaqSLh.js.map": {
-    "sha256": "d04dfc42db6d11cec6980a4d0ac8e3577c2d1ca54a9f87232c67bd217c3797cb",
-    "bytes": 869606
+  "LearningPathSession-Cl847s7Y.js.map": {
+    "sha256": "6749695d00bef5fcf473e6df7afe41e724f51e88380c02e9af4cb7f0cc52fc36",
+    "bytes": 870497
   },
   "assets/liu-kanshan-idle.glb": {
     "sha256": "004e767bcf5af1722acce85bcbe4ed194a2d1ba01b5751b27c492be6a0d7fd45",
@@ -40,12 +40,12 @@
     "bytes": 8795
   },
   "index.js": {
-    "sha256": "37bb51bb3d7b467474320cc6d4aaf39fdac227d17f7a931bae467d6b92062807",
-    "bytes": 293913
+    "sha256": "ef9359a0da0397814e86ff2d906c121c8cfd2c1d373b389ce49becf1da74753e",
+    "bytes": 294040
   },
   "index.js.map": {
-    "sha256": "0ca42f41df80beb7af1c82a5e94fc53e94617391d52de7e2f2587502a0d28cd8",
-    "bytes": 794312
+    "sha256": "8be2ab9b641d3b48e71b89a5ea3b0058149d2b508cb61d74fcbc34afdeeb71d5",
+    "bytes": 794839
   },
   "overpassSpec-3Tu8NqTy.js": {
     "sha256": "20e227f22cdd008885ac24871f76ff1ce747df6bd8342ee76b4e4d0c34e69389",

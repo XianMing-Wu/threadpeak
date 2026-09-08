@@ -2,6 +2,7 @@ import type { ProviderConfig } from '../config.ts'
 import type { HttpPort } from '../ports.ts'
 import type { LlmCompleteInput, LlmCompleteResult, LlmProvider,ProviderMetadata } from './types.ts'
 import { readUsage,providerDiagnostic,parseProviderError,classifyProviderError } from './provider-metadata.ts'
+import { extractStructuredJson } from './schemas.ts'
 
 const MAX_RESPONSE_CHARS = 1_000_000
 class CompletionStreamError extends Error {
@@ -46,7 +47,8 @@ export async function readCompletionStream(stream: ReadableStream<Uint8Array>, i
     buffer += decoder.decode()
     if (buffer.trim()) consume(buffer)
     input.signal?.throwIfAborted()
-    if (finish !== 'stop' || !ended || !content.trim()) throw new Error(finish === 'length' ? 'OUTPUT_TRUNCATED' : finish==='insufficient_system_resource'?'PROVIDER_BUSY':'STREAM_INCOMPLETE')
+    const hasBody = content.trim() || (input.json && reasoning.trim())
+    if (finish !== 'stop' || !ended || !hasBody) throw new Error(finish === 'length' ? 'OUTPUT_TRUNCATED' : finish==='insufficient_system_resource'?'PROVIDER_BUSY':'STREAM_INCOMPLETE')
     return { content, reasoning,usage,diagnostic }
   } catch(error) {
     const code=error instanceof Error&&/^(?:(?:STREAM_|OUTPUT_)[A-Z_]+|PROVIDER_BUSY|RATE_LIMITED|MODEL_QUOTA_EXCEEDED|AUTH_INVALID|HTTP_\d+)$/.test(error.message)?error.message:'STREAM_INVALID_RESPONSE'
@@ -75,6 +77,14 @@ export function createAgentLlmProvider(ports: { config: ProviderConfig; http: Ht
         }
         if (stream && response.body) {
           const result = await readCompletionStream(response.body, input)
+          if (input.json) {
+            const extracted = extractStructuredJson(result.content, result.reasoning)
+            if (extracted === undefined) return {...failure('OUTPUT_EMPTY', true),usage:result.usage,diagnostic:result.diagnostic}
+            const text = JSON.stringify(extracted)
+            input.onText?.(text)
+            return { kind: 'completed', text, reasoning: result.reasoning,usage:result.usage,diagnostic:result.diagnostic }
+          }
+          if (!result.content.trim()) return {...failure('OUTPUT_EMPTY', true),usage:result.usage,diagnostic:result.diagnostic}
           return { kind: 'completed', text: result.content, reasoning: result.reasoning,usage:result.usage,diagnostic:result.diagnostic }
         }
         const raw = await response.text()
@@ -82,10 +92,20 @@ export function createAgentLlmProvider(ports: { config: ProviderConfig; http: Ht
         const payload = record(JSON.parse(raw)), choice = record(payload.choices?.[0]), message = record(choice.message)
         const metadata={usage:readUsage(payload.usage),diagnostic:providerDiagnostic(response.status,payload,response.headers)}
         if (choice.finish_reason !== 'stop') return {...failure(choice.finish_reason==='length'?'OUTPUT_TRUNCATED':choice.finish_reason==='insufficient_system_resource'?'PROVIDER_BUSY':'OUTPUT_INCOMPLETE', true),...metadata}
-        if (typeof message.content !== 'string' || !message.content.trim()) return {...failure('OUTPUT_EMPTY', true),...metadata}
+        const content = typeof message.content === 'string' ? message.content : ''
+        const reasoning = typeof message.reasoning_content === 'string' ? message.reasoning_content : typeof message.reasoning === 'string' ? message.reasoning : ''
+        if (input.json) {
+          const extracted = extractStructuredJson(content, reasoning)
+          if (extracted === undefined) return {...failure('OUTPUT_EMPTY', true),...metadata}
+          const text = JSON.stringify(extracted)
+          input.signal?.throwIfAborted()
+          input.onText?.(text)
+          return { kind: 'completed', text, reasoning,...metadata }
+        }
+        if (!content.trim()) return {...failure('OUTPUT_EMPTY', true),...metadata}
         input.signal?.throwIfAborted()
-        input.onText?.(message.content)
-        return { kind: 'completed', text: message.content,...metadata }
+        input.onText?.(content)
+        return { kind: 'completed', text: content, reasoning,...metadata }
       } catch (error) {
         if (input.signal?.aborted) return failure('CANCELLED', false)
         if(error instanceof CompletionStreamError)return {...failure(error.message,!/QUOTA|AUTH_INVALID|OUTPUT_LIMIT/.test(error.message)),...error.metadata}

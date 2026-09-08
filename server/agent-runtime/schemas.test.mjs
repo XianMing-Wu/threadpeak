@@ -5,6 +5,7 @@ import {
   parseAgentOutput,
   isR2ExplorationObject,
   salvageR4Route,
+  extractStructuredJson,
 } from './schemas.ts'
 
 const r1Valid = {
@@ -92,6 +93,14 @@ test('R4 rejects cycles, dangling edges, invented attachment ids and missing rea
       { id: 'island', carrierId: 'c1', title: '孤岛', hasDispute: false, detailedDescription: '不可达', attachmentSourceIds: [] },
     ],
   }, { attachmentSourceIds: ['att-1'] }).ok, false)
+})
+
+test('extractStructuredJson prefers a route-shaped object over a trailing edge fragment', () => {
+  const edge = { id: 'e1', fromConceptId: 'n1', toConceptId: 'n2', reason: '对照' }
+  const route = { title: '路线', stages: [[{ title: '入门', description: '基础', concepts: [{ title: '坐标', description: '范围', hasDispute: false }] }]] }
+  const reasoning = `先写边。${JSON.stringify(edge)} 再给出完整结构 ${JSON.stringify(route)}`
+  assert.deepEqual(extractStructuredJson('', reasoning).title, '路线')
+  assert.equal(extractStructuredJson('', '仅供模型思考'), undefined)
 })
 
 test('salvageR4Route repairs cycles, dangling edges, islands and invented attachments', () => {

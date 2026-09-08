@@ -303,7 +303,7 @@ export function ChatRoutePanel(props: {
               <div className="clarification-card__header">
                 <div className="clarification-card__main">
                   <div className="clarification-card__copy">
-                    <h5 className="clarification-card__question">{question.prompt}</h5>
+                    <h3 className="clarification-card__question">{question.prompt}</h3>
                     <p className="clarification-card__description">选一个贴近你的，也可以用自己的话说</p>
                   </div>
                 </div>

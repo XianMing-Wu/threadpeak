@@ -1,0 +1,166 @@
+.md-body {
+  display: block;
+  color: var(--ink-2);
+  font-size: var(--fs-body);
+  line-height: 1.75;
+}
+
+.md-body>p,
+.md-body>ul,
+.md-body>ol,
+.md-body>pre,
+.md-body>blockquote {
+  margin: 0 0 0.7em;
+}
+
+.md-body> :last-child {
+  margin-bottom: 0;
+}
+
+.md-body h1,
+.md-body h2,
+.md-body h3 {
+  margin: 0.9em 0 0.4em;
+  color: var(--ink-1);
+  font-size: var(--fs-strong);
+  line-height: 1.4;
+}
+
+.md-body h1:first-child,
+.md-body h2:first-child,
+.md-body h3:first-child {
+  margin-top: 0;
+}
+
+.md-body code {
+  padding: 1px 5px;
+  border-radius: var(--r-control);
+  background: var(--surface-3);
+  font-size: var(--fs-meta);
+}
+
+.md-body pre {
+  padding: 10px 12px;
+  border-radius: var(--r-control);
+  background: var(--code-surface);
+  color: var(--code-ink);
+  overflow: auto;
+}
+
+.md-body pre code {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.md-body ul,
+.md-body ol {
+  padding-left: 1.35em;
+}
+
+.md-body li {
+  margin: 0.2em 0;
+}
+
+.md-body li>p {
+  margin: 0.2em 0;
+}
+
+.md-body a {
+  color: var(--accent);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.tp-math {
+  display: inline;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.tp-math.is-inline {
+  display: inline;
+}
+
+.tp-math.is-display {
+  display: block;
+  margin: 0.45em 0;
+  text-align: left;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.tp-math .katex {
+  font-size: 1.05em;
+}
+
+.tp-math .katex-display {
+  margin: 0.35em 0;
+}
+
+.tp-math-fallback {
+  color: var(--danger);
+  white-space: pre-wrap;
+}
+
+.tp-math-unresolved {
+  font-family: var(--font-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--warning-wash);
+  border-bottom: 1px dotted var(--warning);
+  padding: 1px 3px;
+  border-radius: var(--r-control);
+  color: inherit;
+}
+
+.md-body {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.md-body pre {
+  overflow: auto;
+}
+
+.md-body table {
+  display: block;
+  overflow: auto;
+}
+
+.md-body .tp-math.is-inline {
+  overflow-wrap: normal;
+}
+
+/* Source metadata is secondary to reading, and never a trust score. */
+
+.lp-source-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  color: var(--ink-4);
+  font-size: var(--fs-meta);
+  margin: -10px 0 22px;
+}
+
+.lp-author-badge-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.lp-source-comments {
+  margin: 24px 0;
+  color: var(--ink-3);
+  font-size: var(--fs-body);
+  border-top: 1px solid var(--line-1);
+  padding-top: 14px;
+}
+
+.lp-source-comments summary {
+  cursor: pointer;
+  margin-bottom: 12px;
+}

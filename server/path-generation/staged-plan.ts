@@ -67,3 +67,246 @@ export function compileStagedPlan(raw:unknown,scope:string,attachmentSourceIds:s
   route.entryConceptIds=stages[0]!.map(x=>x.first);route.terminalConceptIds=stages.at(-1)!.map(x=>x.last)
   return R4OutputSchema.parse(route)
 }
+
+type PlanPrepared = {
+  attachments?: {ref:string;sourceId?:string;content:string;contentBasis?:string}[]
+  goalContext?: {rawGoal:string;userStatements:{text:string}[]}
+  exploration?: {candidates?: {carrier:string;concept:string;purpose:string;necessity?:string;dispute?:{exists?:boolean}}[]}
+  goal?: string
+}
+
+function asRecord(value:unknown):Record<string,unknown>|undefined {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string,unknown> : undefined
+}
+
+function clip(value:unknown, max:number, fallback:string) {
+  const text = typeof value === 'string' ? value.trim().replace(/[\u0000-\u001F\u007F]/g, ' ') : ''
+  const sliced = text.slice(0, max).trim()
+  return (sliced || fallback).slice(0, max)
+}
+
+function defaultGoal(prepared:PlanPrepared) {
+  const raw = prepared.goalContext?.rawGoal || (typeof prepared.goal === 'string' ? prepared.goal : '') || '完成这次学习目标'
+  return {
+    outcome: clip(raw, 1200, '完成这次学习目标'),
+    motivation: '',
+    successCriteria: ['能用自己的话说明并完成一个可观察的小任务'],
+    startingPoint: '',
+    constraints: [] as string[],
+    nonGoals: [] as string[],
+    assumptions: [] as string[],
+    openQuestions: [] as string[],
+  }
+}
+
+function salvageLearningGoal(raw:unknown, prepared:PlanPrepared) {
+  const record = asRecord(raw)
+  const base = defaultGoal(prepared)
+  if (!record) return base
+  const statements = [prepared.goalContext?.rawGoal ?? '', ...(prepared.goalContext?.userStatements ?? []).map(item => item.text)].map(normalizeQuote)
+  const verbatim = (text:unknown) => {
+    const value = typeof text === 'string' ? text.trim() : ''
+    if (!value) return ''
+    return statements.some(item => item.includes(normalizeQuote(value))) ? value.slice(0, 1200) : ''
+  }
+  const verbatimList = (value:unknown) => Array.isArray(value) ? value.map(verbatim).filter(Boolean).slice(0, 12) : []
+  const criteria = Array.isArray(record.successCriteria)
+    ? record.successCriteria.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).map(item => item.trim().slice(0, 1200)).slice(0, 12)
+    : []
+  return {
+    outcome: clip(record.outcome, 1200, base.outcome),
+    motivation: verbatim(record.motivation),
+    successCriteria: criteria.length ? criteria : base.successCriteria,
+    startingPoint: verbatim(record.startingPoint),
+    constraints: verbatimList(record.constraints),
+    nonGoals: verbatimList(record.nonGoals),
+    assumptions: [] as string[],
+    openQuestions: Array.isArray(record.openQuestions)
+      ? record.openQuestions.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).map(item => item.trim().slice(0, 1200)).slice(0, 12)
+      : [],
+  }
+}
+
+function conceptFrom(raw:Record<string,unknown>, files:{ref:string;sourceId?:string;content:string}[]) {
+  const title = clip(raw.title, 160, '概念')
+  const description = clip(raw.description ?? raw.detailedDescription, 6000, title)
+  const fileByRef = new Map(files.map(file => [file.ref, file]))
+  const fileBySource = new Map(files.flatMap(file => file.sourceId ? [[file.sourceId, file] as const] : []))
+  const refs = new Set<string>()
+  const addRef = (value:unknown) => {
+    if (typeof value !== 'string') return
+    if (/^F[1-9]\d*$/.test(value) && fileByRef.has(value)) refs.add(value)
+    else if (fileBySource.has(value)) refs.add(fileBySource.get(value)!.ref)
+  }
+  for (const value of Array.isArray(raw.attachmentRefs) ? raw.attachmentRefs : []) addRef(value)
+  for (const value of Array.isArray(raw.attachmentSourceIds) ? raw.attachmentSourceIds : []) addRef(value)
+  const alignment = asRecord(raw.goalAlignment)
+  const anchors:{ref:string;quote:string;role:'direct'|'prerequisite';connection:string}[] = []
+  const pushAnchor = (item:unknown) => {
+    const record = asRecord(item)
+    if (!record) return
+    const ref = typeof record.ref === 'string' && fileByRef.has(record.ref)
+      ? record.ref
+      : typeof record.sourceId === 'string' && fileBySource.has(record.sourceId)
+        ? fileBySource.get(record.sourceId)!.ref
+        : undefined
+    if (!ref) return
+    const file = fileByRef.get(ref)!
+    const quote = typeof record.quote === 'string' ? record.quote.trim() : ''
+    if (quote.length < 4 || !normalizeQuote(file.content).includes(normalizeQuote(quote))) return
+    anchors.push({
+      ref,
+      quote: quote.slice(0, 1200),
+      role: record.role === 'prerequisite' ? 'prerequisite' : 'direct',
+      connection: clip(record.connection, 1200, '用于理解这份资料'),
+    })
+  }
+  if (alignment && Array.isArray(alignment.materialAnchors)) alignment.materialAnchors.forEach(pushAnchor)
+  if (files.length && !anchors.length) {
+    const file = files[0]!
+    const quote = file.content.replace(/\s+/g, ' ').trim().slice(0, 80)
+    if (quote.length >= 4) {
+      anchors.push({ref: file.ref, quote, role: 'direct', connection: '用这份资料理解本概念'})
+      refs.add(file.ref)
+    }
+  }
+  for (const anchor of anchors) refs.add(anchor.ref)
+  return {
+    title,
+    description,
+    hasDispute: raw.hasDispute === true || raw.hasDispute === 'true',
+    attachmentRefs: [...refs].slice(0, 8),
+    goalAlignment: {
+      purpose: clip(alignment?.purpose, 1200, description),
+      depth: clip(alignment?.depth, 1200, '学到能用于当前目标即可'),
+      successCheck: clip(alignment?.successCheck, 1200, `用自己的话说明${title}`),
+      materialAnchors: anchors.slice(0, 8),
+    },
+  }
+}
+
+function carrierFrom(raw:Record<string,unknown>, files:{ref:string;sourceId?:string;content:string}[]) {
+  const title = clip(raw.title, 160, '学习阶段')
+  const conceptsRaw = Array.isArray(raw.concepts) ? raw.concepts.map(asRecord).filter((item): item is Record<string, unknown> => Boolean(item)) : []
+  const concepts = (conceptsRaw.length ? conceptsRaw : [{title}]).map(item => conceptFrom(item, files)).slice(0, 12)
+  return {title, description: clip(raw.description, 500, title), concepts}
+}
+
+function r4ToStages(root:Record<string,unknown>, files:{ref:string;sourceId?:string;content:string}[]) {
+  const carriers = (Array.isArray(root.carriers) ? root.carriers : []).map(asRecord).filter((item): item is Record<string, unknown> => Boolean(item && typeof item.title === 'string'))
+  const concepts = (Array.isArray(root.concepts) ? root.concepts : []).map(asRecord).filter((item): item is Record<string, unknown> => Boolean(item && typeof item.title === 'string'))
+  const byCarrier = new Map<string, Record<string, unknown>[]>()
+  for (const carrier of carriers) byCarrier.set(String(carrier.id ?? carrier.title), [])
+  for (const concept of concepts) {
+    const id = String(concept.carrierId ?? carriers[0]?.id ?? carriers[0]?.title ?? 'stage')
+    if (!byCarrier.has(id)) byCarrier.set(id, [])
+    byCarrier.get(id)!.push(concept)
+  }
+  const ids = [...byCarrier.keys()]
+  const edges = (Array.isArray(root.carrierEdges) ? root.carrierEdges : [])
+    .map(asRecord)
+    .filter((item): item is Record<string, unknown> => Boolean(item))
+    .map(item => ({from: String(item.fromCarrierId ?? item.from), to: String(item.toCarrierId ?? item.to)}))
+    .filter(edge => ids.includes(edge.from) && ids.includes(edge.to) && edge.from !== edge.to)
+  const incoming = new Map(ids.map(id => [id, 0]))
+  const outgoing = new Map(ids.map(id => [id, [] as string[]]))
+  for (const edge of edges) {
+    incoming.set(edge.to, (incoming.get(edge.to) ?? 0) + 1)
+    outgoing.get(edge.from)!.push(edge.to)
+  }
+  const layers: string[][] = []
+  let current = ids.filter(id => incoming.get(id) === 0)
+  const seen = new Set<string>()
+  if (!current.length && ids.length) current = [ids[0]!]
+  while (current.length && layers.length < 16) {
+    const layer = current.filter(id => !seen.has(id)).slice(0, 4)
+    if (!layer.length) break
+    layers.push(layer)
+    const next: string[] = []
+    for (const id of layer) {
+      seen.add(id)
+      for (const to of outgoing.get(id) ?? []) {
+        incoming.set(to, (incoming.get(to) ?? 1) - 1)
+        if ((incoming.get(to) ?? 0) <= 0 && !seen.has(to)) next.push(to)
+      }
+    }
+    current = next
+  }
+  for (const id of ids) {
+    if (seen.has(id) || layers.length >= 16) continue
+    layers.push([id])
+    seen.add(id)
+  }
+  const carrierById = new Map(carriers.map(item => [String(item.id ?? item.title), item]))
+  return layers.map(layer => layer.map(id => {
+    const carrier = carrierById.get(id) ?? {id, title: '学习阶段', description: '学习阶段'}
+    return carrierFrom({...carrier, concepts: byCarrier.get(id) ?? []}, files)
+  })).filter(stage => stage.length && stage.every(item => item.concepts.length))
+}
+
+function capStages(stages: ReturnType<typeof carrierFrom>[][]) {
+  const next: ReturnType<typeof carrierFrom>[][] = []
+  let carriers = 0
+  let concepts = 0
+  for (const stage of stages) {
+    const kept: ReturnType<typeof carrierFrom>[] = []
+    for (const carrier of stage) {
+      if (carriers >= 24) break
+      const trimmed = {...carrier, concepts: carrier.concepts.slice(0, Math.max(0, 64 - concepts))}
+      if (!trimmed.concepts.length) continue
+      kept.push(trimmed)
+      carriers += 1
+      concepts += trimmed.concepts.length
+    }
+    if (kept.length) next.push(kept)
+    if (carriers >= 24 || concepts >= 64) break
+  }
+  return next
+}
+
+export function planFromExploration(prepared:PlanPrepared={}) {
+  const files = prepared.attachments ?? []
+  const learningGoal = salvageLearningGoal(undefined, prepared)
+  const candidates = Array.isArray(prepared.exploration?.candidates) ? prepared.exploration!.candidates! : []
+  const grouped = new Map<string, typeof candidates>()
+  for (const candidate of candidates) {
+    const title = clip(candidate.carrier, 160, '学习内容')
+    if (!grouped.has(title)) grouped.set(title, [])
+    grouped.get(title)!.push(candidate)
+  }
+  if (!grouped.size) {
+    grouped.set('学习内容', [{carrier: '学习内容', concept: clip(learningGoal.outcome, 160, '核心概念'), purpose: learningGoal.outcome, necessity: 'direct'}])
+  }
+  const stages = capStages([...grouped.entries()].slice(0, 16).map(([title, items]) => [carrierFrom({
+    title,
+    description: clip(items[0]?.purpose, 500, title),
+    concepts: items.slice(0, 12).map(item => ({
+      title: clip(item.concept, 160, title),
+      description: clip(item.purpose, 6000, item.concept),
+      hasDispute: Boolean(item.dispute?.exists),
+    })),
+  }, files)]))
+  return {title: clip(learningGoal.outcome, 160, '学习路线'), learningGoal, stages}
+}
+
+export function salvageGoalPlan(raw:unknown, prepared:PlanPrepared={}) {
+  const files = prepared.attachments ?? []
+  const root = asRecord(raw)
+  const learningGoal = salvageLearningGoal(root?.learningGoal, prepared)
+  let stages: ReturnType<typeof carrierFrom>[][] = []
+  if (root && Array.isArray(root.stages)) {
+    stages = root.stages.slice(0, 16).map((stage: unknown) => {
+      const list = Array.isArray(stage) ? stage : [stage]
+      return list.map(asRecord).filter((item): item is Record<string, unknown> => Boolean(item)).map(item => carrierFrom(item, files)).filter(item => item.concepts.length).slice(0, 4)
+    }).filter(stage => stage.length)
+  } else if (root && (Array.isArray(root.carriers) || Array.isArray(root.concepts))) {
+    stages = r4ToStages(root, files)
+  }
+  stages = capStages(stages)
+  if (!stages.length) return planFromExploration(prepared)
+  return {
+    title: clip(root?.title, 160, learningGoal.outcome.slice(0, 160) || '学习路线'),
+    learningGoal,
+    stages,
+  }
+}

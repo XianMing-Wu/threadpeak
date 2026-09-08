@@ -688,6 +688,71 @@ export function parseAgentJson(text: string): ParseAgentOutputResult {
   return parsed
 }
 
+function structureScore(value: unknown): number {
+  const root = asRecord(value)
+  if (!root) return Array.isArray(value) ? 1 : 0
+  let score = 1
+  if (Array.isArray(root.stages)) score += 20 + Math.min(root.stages.length, 8)
+  if (Array.isArray(root.carriers)) score += 8 + Math.min(root.carriers.length, 8)
+  if (Array.isArray(root.concepts)) score += 8 + Math.min(root.concepts.length, 8)
+  if (root.learningGoal) score += 4
+  if (typeof root.title === 'string') score += 2
+  if (Array.isArray(root.conceptEdges)) score += 2
+  return score
+}
+
+function eachJsonObject(text: string, visit: (value: unknown) => void) {
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] !== '{') continue
+    let depth = 0
+    let inString = false
+    let escape = false
+    for (let j = i; j < text.length; j++) {
+      const ch = text[j]!
+      if (inString) {
+        if (escape) escape = false
+        else if (ch === '\\') escape = true
+        else if (ch === '"') inString = false
+        continue
+      }
+      if (ch === '"') {
+        inString = true
+        continue
+      }
+      if (ch === '{') depth += 1
+      else if (ch === '}') {
+        depth -= 1
+        if (depth === 0) {
+          try {
+            const value = JSON.parse(text.slice(i, j + 1)) as unknown
+            if (typeof value === 'object' && value) visit(value)
+          } catch {
+            // keep scanning
+          }
+          i = j
+          break
+        }
+      }
+    }
+  }
+}
+
+export function extractStructuredJson(...texts: string[]): unknown | undefined {
+  let best: { value: unknown; score: number } | undefined
+  const consider = (value: unknown) => {
+    if (value === undefined || value === null || typeof value !== 'object') return
+    const score = structureScore(value)
+    if (!best || score > best.score) best = { value, score }
+  }
+  for (const text of texts) {
+    if (!text?.trim()) continue
+    const parsed = parseAgentJson(text)
+    if (parsed.ok) consider(parsed.value)
+    eachJsonObject(text, consider)
+  }
+  return best?.value
+}
+
 export function parseAgentOutput(
   agentId: AgentId,
   raw: unknown,

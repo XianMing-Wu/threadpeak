@@ -21,12 +21,12 @@ export function projectLibraryReadModel(): LibraryReadModel {
   return {
     exampleKnowledge,
     routes,
-    recommendedKnowledge: exampleKnowledge.filter(k=>['knowledge-attention-paper','knowledge-numpy-collection'].includes(k.id)).flatMap(k=>{
+    recommendedKnowledge: exampleKnowledge.flatMap(k=>{
       const cards=listReadOnlyConceptCards(k.id)
       const concept=cards.find(c=>['attention-scale','array-broadcast'].includes(c.id))??cards[0]
       return concept?[{...k,title:concept.title,description:concept.description,conceptId:concept.id}]:[]
     }),
-    recommendedRoutes: routes.example.slice(0, 2),
+    recommendedRoutes: routes.example,
   }
 }
 

@@ -21,7 +21,7 @@ export function PeakHero({ title, sub }: { title: string; sub: string }) {
 
   return (
     <section className="peak-hero" ref={heroRef}>
-      <div className="lamp-root">
+      <div className="lamp-root" aria-hidden="true">
         <div className="grid-fade"><div /></div>
         <div className="lamp-shaft" />
         <div className="lamp-stage">
@@ -39,11 +39,9 @@ export function PeakHero({ title, sub }: { title: string; sub: string }) {
         </div>
       </div>
       <div className="hero-copy">
-        <h1 className="peak-hero-heading ux-flowith-heading">
-          <span className="hero-title">{title}</span>
-          <span className="hero-sub">{sub}</span>
-          <div className="hero-rule" />
-        </h1>
+        <h1 className="peak-hero-heading hero-title">{title}</h1>
+        <p className="hero-sub">{sub}</p>
+        <div className="hero-rule" aria-hidden="true" />
       </div>
     </section>
   )

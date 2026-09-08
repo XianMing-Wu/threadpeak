@@ -1,0 +1,401 @@
+{
+  "at": "2026-09-08T09:20:49.250Z",
+  "scope": "Open Three.js metal shelves, printed route/carrier/concept book covers, four whole books per desktop shelf, one-book snapping, persistent shelves during search, curated examples and explicitly intercepted API fixtures. No live-provider or production claim.",
+  "checks": [
+    {
+      "width": 1440,
+      "rows": 5,
+      "books": 22,
+      "noTabs": true,
+      "wholeBooksVisible": 4,
+      "snapOneBook": true,
+      "searchKeepsShelves": true,
+      "boundedScroll": true,
+      "noDuplicateBooks": true,
+      "shelfLabels": true,
+      "independentRows": true,
+      "dragWithoutOpen": true,
+      "keyboard": true,
+      "verticalScroll": true,
+      "searchRouteCarrierConcept": true
+    },
+    {
+      "width": 900,
+      "rows": 5,
+      "books": 22,
+      "noTabs": true,
+      "wholeBooksVisible": 3,
+      "snapOneBook": true,
+      "searchKeepsShelves": true,
+      "boundedScroll": true,
+      "noDuplicateBooks": true,
+      "shelfLabels": true,
+      "independentRows": true,
+      "dragWithoutOpen": true,
+      "keyboard": true,
+      "verticalScroll": true,
+      "searchRouteCarrierConcept": true
+    },
+    {
+      "width": 390,
+      "rows": 5,
+      "books": 22,
+      "noTabs": true,
+      "wholeBooksVisible": 1,
+      "snapOneBook": true,
+      "searchKeepsShelves": true,
+      "boundedScroll": true,
+      "noDuplicateBooks": true,
+      "shelfLabels": true,
+      "independentRows": true,
+      "dragWithoutOpen": true,
+      "keyboard": true,
+      "verticalScroll": true,
+      "searchRouteCarrierConcept": true,
+      "touchSwipe": true
+    },
+    {
+      "width": 320,
+      "rows": 5,
+      "books": 22,
+      "noTabs": true,
+      "wholeBooksVisible": 1,
+      "snapOneBook": true,
+      "searchKeepsShelves": true,
+      "boundedScroll": true,
+      "noDuplicateBooks": true,
+      "shelfLabels": true,
+      "independentRows": true,
+      "dragWithoutOpen": true,
+      "keyboard": true,
+      "verticalScroll": true,
+      "searchRouteCarrierConcept": true
+    },
+    {
+      "unifiedLegacyQuery": true,
+      "personalAndExampleTogether": true,
+      "personalResourceTarget": true,
+      "fixtureOnly": true
+    },
+    {
+      "loading": true,
+      "examplesDoNotHidePersonalError": true,
+      "retryRestoresOwnShelf": true,
+      "fixtureOnly": true
+    },
+    {
+      "searchReusesWebGL": true,
+      "contextLossFallback": true,
+      "contextRestoresScroll": true,
+      "routeRemount": true
+    },
+    {
+      "animatedBrowseFrames": 26,
+      "reducedMotionCoveredByMatrix": true
+    }
+  ],
+  "audits": [
+    {
+      "name": "shelf-1440",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 1362,
+        "scrollWidth": 1362,
+        "height": 986,
+        "scrollHeight": 1726,
+        "documentWidth": 1440,
+        "viewport": 1440
+      },
+      "model": {
+        "context": true,
+        "width": 932,
+        "height": 986,
+        "books": 22,
+        "shelves": 5,
+        "visible": "visible"
+      }
+    },
+    {
+      "name": "shelf-900",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 822,
+        "scrollWidth": 822,
+        "height": 986,
+        "scrollHeight": 1714,
+        "documentWidth": 900,
+        "viewport": 900
+      },
+      "model": {
+        "context": true,
+        "width": 696,
+        "height": 986,
+        "books": 22,
+        "shelves": 5,
+        "visible": "visible"
+      }
+    },
+    {
+      "name": "shelf-390",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 312,
+        "scrollWidth": 312,
+        "height": 986,
+        "scrollHeight": 1468,
+        "documentWidth": 390,
+        "viewport": 390
+      },
+      "model": {
+        "context": true,
+        "width": 204,
+        "height": 986,
+        "books": 22,
+        "shelves": 5,
+        "visible": "visible"
+      }
+    },
+    {
+      "name": "shelf-320",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 242,
+        "scrollWidth": 242,
+        "height": 986,
+        "scrollHeight": 1488,
+        "documentWidth": 320,
+        "viewport": 320
+      },
+      "model": {
+        "context": true,
+        "width": 204,
+        "height": 986,
+        "books": 22,
+        "shelves": 5,
+        "visible": "visible"
+      }
+    },
+    {
+      "name": "shelf-dark-1440",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 1362,
+        "scrollWidth": 1362,
+        "height": 986,
+        "scrollHeight": 1726,
+        "documentWidth": 1440,
+        "viewport": 1440
+      },
+      "model": {
+        "context": true,
+        "width": 932,
+        "height": 986,
+        "books": 22,
+        "shelves": 5,
+        "visible": "visible"
+      }
+    },
+    {
+      "name": "personal-and-example-fixture",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 1362,
+        "scrollWidth": 1362,
+        "height": 986,
+        "scrollHeight": 2034,
+        "documentWidth": 1440,
+        "viewport": 1440
+      },
+      "model": {
+        "context": true,
+        "width": 932,
+        "height": 986,
+        "books": 24,
+        "shelves": 6,
+        "visible": "visible"
+      }
+    },
+    {
+      "name": "loading-fixture",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 1362,
+        "scrollWidth": 1362,
+        "height": 986,
+        "scrollHeight": 1726,
+        "documentWidth": 1440,
+        "viewport": 1440
+      },
+      "model": {
+        "context": true,
+        "width": 932,
+        "height": 986,
+        "books": 22,
+        "shelves": 5,
+        "visible": "visible"
+      }
+    },
+    {
+      "name": "error-fixture",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 1362,
+        "scrollWidth": 1362,
+        "height": 986,
+        "scrollHeight": 1900,
+        "documentWidth": 1440,
+        "viewport": 1440
+      },
+      "model": {
+        "context": true,
+        "width": 932,
+        "height": 986,
+        "books": 22,
+        "shelves": 5,
+        "visible": "visible"
+      }
+    },
+    {
+      "name": "context-restored",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 822,
+        "scrollWidth": 822,
+        "height": 986,
+        "scrollHeight": 1714,
+        "documentWidth": 900,
+        "viewport": 900
+      },
+      "model": {
+        "context": true,
+        "width": 696,
+        "height": 986,
+        "books": 22,
+        "shelves": 5,
+        "visible": "visible"
+      }
+    },
+    {
+      "name": "motion-default",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 822,
+        "scrollWidth": 822,
+        "height": 986,
+        "scrollHeight": 1714,
+        "documentWidth": 900,
+        "viewport": 900
+      },
+      "model": {
+        "context": true,
+        "width": 696,
+        "height": 986,
+        "books": 22,
+        "shelves": 5,
+        "visible": "visible"
+      }
+    }
+  ],
+  "pageErrors": [],
+  "passed": true
+}

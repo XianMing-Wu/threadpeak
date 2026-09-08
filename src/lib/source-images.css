@@ -1,16 +1,126 @@
 /* Imported media has no authority over layout, styling, or executable HTML. */
-.md-body img.tp-source-image{display:block;max-width:100%;height:auto;margin:.7em 0;object-fit:contain}
-.md-body img.tp-source-image.is-formula{display:inline-block;max-width:100%;height:auto;margin:0 .12em;vertical-align:middle}
-.md-body .tp-source-image-fallback{display:inline;white-space:pre-wrap;overflow-wrap:anywhere;color:inherit;border-bottom:1px dotted #aaa4b3}
-.md-body .tp-source-image-status{font-size:.8em;color:#8c8495}
-.md-body .tp-source-excerpt-note{margin:.7em 0 0;font-size:12px;line-height:1.65;color:#788292;font-weight:400}
-/* An inline equation is one box. KaTeX's internal vertical layout must never scroll. */
-.md-body .tp-math.is-inline{display:inline-block;white-space:nowrap;overflow-x:auto;overflow-y:hidden;overflow-wrap:normal;max-width:100%;scrollbar-width:none;padding:.35em 0}
-.md-body .tp-math .katex-display{overflow:visible;margin:0}
-.md-body .tp-math.is-display{padding:.2em 0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
-.md-body .tp-math::-webkit-scrollbar{display:none}
-.md-body .tp-math .katex-html{white-space:nowrap}
-.tp-source-reading-label{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 16px;font-size:11px;line-height:1.6;color:#927da7}.tp-source-reading-label>span{color:#a59aa9}.tp-source-reading>details{margin-top:22px;border-top:1px solid #eee9f2;padding-top:14px}.tp-source-reading>details>summary{font-size:12px;color:#93869e;cursor:pointer}
 
-.tp-source-reading-state{font-size:13px;color:#9886a4;padding:18px;border:1px solid #eee8f3;background:#fff;border-radius:9px}
-.tp-source-reading-state p{margin:0!important}.tp-source-reading-state button{margin-top:12px;padding:7px 12px;border:1px solid #dcd0e5;border-radius:7px;background:#fff;color:#927ba3;font-size:13px}
+.md-body img.tp-source-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: .7em 0;
+  object-fit: contain;
+}
+
+.md-body img.tp-source-image.is-formula {
+  display: inline-block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 .12em;
+  vertical-align: middle;
+}
+
+.md-body .tp-source-image-fallback {
+  display: inline;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: inherit;
+  border-bottom: 1px dotted var(--line-3);
+}
+
+.md-body .tp-source-image-status {
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+
+.md-body .tp-source-excerpt-note {
+  margin: .7em 0 0;
+  font-size: var(--fs-meta);
+  line-height: 1.65;
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
+/* An inline equation is one box. KaTeX's internal vertical layout must never scroll. */
+
+.md-body .tp-math.is-inline {
+  display: inline-block;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overflow-wrap: normal;
+  max-width: 100%;
+  scrollbar-width: none;
+  padding: .35em 0;
+}
+
+.md-body .tp-math .katex-display {
+  overflow: visible;
+  margin: 0;
+}
+
+.md-body .tp-math.is-display {
+  padding: .2em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.md-body .tp-math::-webkit-scrollbar {
+  display: none;
+}
+
+.md-body .tp-math .katex-html {
+  white-space: nowrap;
+}
+
+.tp-source-reading-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.tp-source-reading-label > span {
+  color: var(--ink-3);
+}
+
+.tp-source-reading > details {
+  margin-top: 22px;
+  border-top: 1px solid var(--line-1);
+  padding-top: 14px;
+}
+
+.tp-source-reading > details > summary {
+  font-size: var(--fs-meta);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.tp-source-reading-state {
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+  padding: 18px;
+  border: 1px solid var(--line-1);
+  background: var(--surface-1);
+  border-radius: var(--r-card);
+}
+
+.tp-source-reading-state > p {
+  margin: 0;
+}
+
+.tp-source-reading-state button {
+  margin-top: 12px;
+  padding: 7px 12px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-control);
+  background: var(--surface-1);
+  color: var(--accent);
+  font-size: var(--fs-body);
+}
+
+.tp-source-reading-state button:hover {
+  border-color: var(--line-3);
+  color: var(--accent-hover);
+}

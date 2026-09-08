@@ -1,0 +1,98 @@
+@font-face {
+  font-family: "ThreadPeak Rounded";
+  src: url('/fonts/path-hero-rounded.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+}
+
+.route-hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 100%;
+  min-height: 108px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--surface-1);
+}
+
+.route-hero-copy {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 12px 24px;
+  font-family: "ThreadPeak Rounded", "PingFang SC", "Hiragino Sans GB", sans-serif;
+  font-synthesis: none;
+  text-align: center;
+}
+
+.route-hero-copy h1 {
+  margin: 0;
+  color: var(--ink-1);
+  font-size: 32px;
+  font-weight: 550;
+  line-height: 1.35;
+  letter-spacing: .12em;
+  text-indent: .12em;
+}
+
+.route-hero-heading { display: flex; align-items: center; justify-content: center; gap: 18px; }
+.route-hero-heading-art { flex: none; width: 36px; height: 36px; pointer-events: none; }
+
+.route-hero-copy p {
+  max-width: 500px;
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.75;
+  letter-spacing: .09em;
+  text-wrap: balance;
+}
+
+.route-hero-art {
+  position: absolute;
+  top: -16px;
+  z-index: 0;
+  width: 360px;
+  height: 148px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.route-hero-art--left { right: calc(50% + 200px); }
+.route-hero-art--right { left: calc(50% + 200px); }
+.route-hero-trail { fill: none; stroke: #e4eaf7; stroke-width: 1.8; stroke-dasharray: 1 6; stroke-linecap: round; }
+.route-hero-trail--faint { opacity: .5; }
+.route-hero-label { font-family: var(--font-sans); font-size: 13px; font-weight: 600; text-anchor: middle; dominant-baseline: central; }
+
+:root[data-theme="dark"] .route-hero-art { opacity: .48; }
+:root[data-theme="dark"] .route-hero-heading-art { opacity: .68; }
+
+@media (max-width: 1000px) {
+  .route-hero-art--left { right: calc(50% + 170px); }
+  .route-hero-art--right { left: calc(50% + 170px); }
+}
+
+@media (max-width: 680px) {
+  .route-hero { min-height: 112px; }
+  .route-hero-copy { gap: 6px; padding: 14px 20px; }
+  .route-hero-copy h1 { font-size: 27px; letter-spacing: .1em; text-indent: .1em; }
+  .route-hero-heading { gap: 12px; }
+  .route-hero-heading-art { width: 22px; height: 22px; }
+  .route-hero-copy p { font-size: 13px; letter-spacing: .045em; }
+  .route-hero-art { top: -46px; width: 240px; height: 120px; opacity: .72; }
+  .route-hero-art--left { right: calc(50% + 45px); }
+  .route-hero-art--right { left: calc(50% - 38px); }
+}
+
+@media (max-width: 380px) {
+  .route-hero-heading { gap: 6px; }
+  .route-hero-heading-art { width: 18px; height: 18px; }
+}

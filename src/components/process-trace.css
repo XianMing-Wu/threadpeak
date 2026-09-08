@@ -3,7 +3,7 @@
   flex-direction: column;
   align-items: flex-start;
   max-width: 520px;
-  color: #1f2329;
+  color: var(--ink-1);
 }
 
 .tp-pill {
@@ -15,21 +15,17 @@
   min-width: 0;
   margin: 8px 0;
   padding: 5px 9px;
-  border: 1px solid #e6e8ec;
-  border-radius: 20px;
-  background: #f4f5f7;
-  color: #5b626d;
-  font-size: 12px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  color: var(--ink-2);
+  font-size: var(--fs-meta);
   line-height: 1.2;
-}
-
-.tp-pill.running-step {
-  color: #727276;
 }
 
 .tp-pill b {
   flex-shrink: 0;
-  color: #1f2329;
+  color: var(--ink-1);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -38,7 +34,7 @@
   min-width: 0;
   flex: 1 1 auto;
   overflow: hidden;
-  color: #8a9099;
+  color: var(--ink-3);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -59,6 +55,12 @@
   max-width: 100%;
 }
 
+.tp-think summary:focus-visible {
+  border-radius: var(--r-control);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .tp-think summary::-webkit-details-marker {
   display: none;
 }
@@ -77,18 +79,13 @@
   padding: 10px 12px;
   overflow: auto;
   overscroll-behavior: contain;
-  border: 1px solid #e8eaed;
-  border-radius: 7px;
-  background: #f7f8fa;
-  color: #4e555f;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-control);
+  background: var(--surface-2);
+  color: var(--ink-2);
   white-space: pre-wrap;
   word-break: break-word;
-  font:
-    12px/1.65 -apple-system,
-    BlinkMacSystemFont,
-    "PingFang SC",
-    "Microsoft YaHei",
-    sans-serif;
+  font: var(--fs-meta)/1.65 var(--font-sans);
 }
 
 .tp-tool {
@@ -105,14 +102,15 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  border-radius: 30px;
+  border-radius: var(--r-pill);
   background: linear-gradient(
     110deg,
     transparent 20%,
-    #fff6 50%,
+    color-mix(in srgb, var(--accent) 9%, transparent) 50%,
     transparent 80%
   );
-  animation: tool-shimmer 1400ms linear infinite;
+  background-size: 200% 100%;
+  animation: tp-shimmer 1400ms linear infinite;
 }
 
 .tp-spinner {
@@ -120,10 +118,10 @@
   flex-shrink: 0;
   width: 16px;
   height: 16px;
-  border: 1px solid #b4b4b4;
-  border-top-color: #242424;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  border: 1px solid var(--line-3);
+  border-top-color: var(--ink-1);
+  border-radius: var(--r-avatar);
+  animation: tp-spin 0.8s linear infinite;
 }
 
 .running-step .tp-spinner {
@@ -136,13 +134,12 @@
   align-items: center;
   gap: 6px;
   margin: 14px 0 20px;
-  color: #8a9099;
-  font-size: 12px;
+  color: var(--ink-3);
+  font-size: var(--fs-meta);
 }
 
 .tp-ponder-mark {
   display: flex;
-  animation: ponder-pulse 1300ms ease-in-out infinite;
 }
 
 .tp-ponder-mark img {
@@ -150,15 +147,6 @@
   height: 13px;
   object-fit: contain;
   opacity: 0.6;
-}
-
-.tp-status-orb-chip {
-  display: block;
-  min-height: 0;
-  padding: 0;
-  background: transparent;
-  color: #1f2329;
-  line-height: 1.2;
 }
 
 .loading-panel:has(.tp-process) {
@@ -171,28 +159,13 @@
   min-width: 0;
 }
 
-.loading-panel .tp-process,
-.loading-panel .tp-status-orb-slot {
+.loading-panel .tp-process {
   flex: none;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes tool-shimmer {
-  from { background-position: -160px 0; }
-  to { background-position: 320px 0; }
-}
-
-@keyframes ponder-pulse {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 1; }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .tp-ponder-mark,
+  .tp-spinner,
   .tp-step-progress {
-    animation: none !important;
+    animation: none;
   }
 }

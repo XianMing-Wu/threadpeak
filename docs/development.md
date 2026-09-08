@@ -9,6 +9,7 @@
 | `src/learning-v2` | 当前学习工作区、作者界面、客户端请求与快照 |
 | `src/path-planning`、`src/path-3d` | 路线访谈与 3D renderer 宿主 |
 | `src/lib` | Markdown、代码和公式阅读 |
+| `src/styles` | 全局语义 token、基础交互与按领域拆分的宿主样式 |
 | `server/durable` | API、任务、数据库、身份、资料与固定工作流 |
 | `server/agent-runtime` | 当前模型/知乎适配器、预算与输出校验 |
 | `packages/contracts` | 对外数据合同和校验 |
@@ -20,6 +21,16 @@
 | `src/vendor`、`vendor` | 第三方代码/运行时、来源、许可证与完整摘要清单 |
 
 ## 日常检查
+
+### 界面样式约定
+
+全局颜色、字体、字号、圆角、阴影、动效时长和层级统一由 [tokens.css](../src/styles/tokens.css) 管理。浅色保留白色输入与工具面板、蓝色强调；深色只切换语义值。首次按系统偏好选择主题，用户明确切换后保留选择。组件使用 `--ink-*`、`--surface-*`、`--line-*` 等变量，不再定义私有浅色主题。
+
+正文使用 `--fs-body`（14px），元信息使用 `--fs-meta`（12px），11px 仅留给快捷键或角标。控件圆角 8px、卡片 12px，胶囊和头像各用独立 token。布局断点为 560px、760px、1080px；窄屏必须能到达导航、阅读区与操作控件，不能只用隐藏横向溢出来代替布局适配。用户设置的卡片颜色、来源关系图和第三方 3D 场景保留各自真实语义。
+
+样式在所属组件或领域内维护，避免另加一层覆盖皮肤；组件重置保持低特异性。`!important` 仅用于有明确理由的第三方宿主覆盖、辅助技术和全局减少动效规则。首页建议保留既有流动行为，遵守减少动效偏好；按后续裁决不显示暂停按钮。焦点、错误、加载和空状态必须验证实际交互，不用源码出现某个属性代替浏览器验收。
+
+### 常规命令
 
 ```sh
 npm run check
@@ -76,6 +87,12 @@ TEST_DATABASE_URL='postgres://USER:PASSWORD@localhost:5432/threadpeak_test' npm 
 | `research-showcase.mjs` | 搜索示例候选；真实服务调用，不自动替换已审阅来源 |
 | `build-showcase-sources.mjs` | 按明确选中位置构建来源与审阅账本，重搜后需要重新审阅 |
 | `verify-showcase-browser.mjs` | 浏览器检查编选示例；需要单独提供 Playwright 模块路径 |
+| `verify-ux-ui-browser.mjs` | 独立 QA 源上的界面、键盘、主题、窄屏及无障碍回归；需提供 Playwright、axe-core 模块路径 |
+| `verify-home-style-steering.mjs` | 独立 QA 源上的首页灯效、聚焦流光、艺术字渐变、品牌滚动与 Coverflow 定点回归；需提供 Playwright 模块路径 |
+| `verify-path-card-placement.mjs` | 独立 QA 源上的终点浮层边界、展开轨迹、窄屏闪烁与实际移动回归；需提供 Playwright 模块路径 |
+| `build-author-hero-assets.mjs` | 从编选示例的逐条真实搜索证据提取作者，并下载原始头像、记录出处和哈希；不创建作者网络关系 |
+| `verify-author-hero.mjs` | 独立 QA 源上的完整圆周回流、前后速度、卡片间隙、45° 放大镜及减少动效与窄屏回归；需提供 Playwright 模块路径 |
+| `build-cover-thumbnails.mjs` | 为已审阅 WebP 封面生成 384/768px 响应式副本；需 `SHARP_MODULE`，保留原图并输出尺寸与摘要清单 |
 | `serve-goal-ui-qa.mjs` | 独立测试 provider 服务，用于访谈交互回归 |
 | `generate-brand-outlines.py` | 手动重建固定品牌字形，按记录的字体版本下载并验证摘要 |
 

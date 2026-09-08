@@ -37,6 +37,10 @@
 
 从 `zhihu_3D_path` 工作树重新构建并完整同步：新增 carrier/concept 类别标识，重画 start/goal，圆台详情改用白色面板与统一排版；类别不由学习状态决定。公开声明同步两种新增 SVG 类别，原有语义图标仍兼容。当前各文件摘要以清单为准，未手改 bundle。
 
+## 2026-09-08 终点浮层定位同步
+
+从 `zhihu_3D_path` 现有工作树修复并执行 `npm run build:module`，整包同步并逐文件校验 19 个生成物。`LearningScene` 统一卡片避让的上移上限，拖动画布的边界只使用基础镜头计算，避免临时浮层偏移被反向抵消；`cardPlacementPolicy` 按窄屏实际可用空间计算左右留白，避免平台持续横移后引发浮层闪烁。没有修改路线、移动或学习语义。源码增量、浏览器轨迹和窗口覆盖见 [定点记录](../qa/evidence/ux-ui-2026-09-08/user-steering/path-card/README.md)，当前文件摘要以清单为准。
+
 ## Coverflow 的项目适配
 
 出处、MIT 许可、上游提交和本地改动见 [Coverflow 来源](../src/vendor/coverflow/SOURCE.md) 与 [许可证](../src/vendor/coverflow/LICENSE)。它是保留交互算法的源码 fork，不属于 3D 生成物的整包同步。更新时先对照记录的提交，逐项合并 SOURCE.md 列出的受控选中、指针取消、键盘和样式适配，再验证拖动、键盘及 reduced motion；不能直接覆盖项目适配。

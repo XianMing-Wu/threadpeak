@@ -8,6 +8,7 @@ export function NotFoundPage() {
         <article className="chat-answer ux-status-region square-empty" role="alert">
           <EmptyStatus
             kind="error"
+            headingLevel={1}
             align="center"
             title="页面不存在"
             body="这个地址不是产品里的页面。请从首页或路线列表进入。"

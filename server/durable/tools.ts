@@ -8,14 +8,14 @@ import {digest} from './store.ts'
 import { z } from 'zod'
 import { AGENT_PROMPTS, OUTPUT_STRUCTURE_TEXT, systemPromptFor } from '../agent-runtime/prompts.ts'
 import { SHARED_SYSTEM_PREFIX, DEFAULT_MAX_OUTPUT_TOKENS } from '../agent-runtime/constants.ts'
-import { parseAgentOutput, type ParseAgentOutputInput, type R4Output } from '../agent-runtime/schemas.ts'
+import { extractStructuredJson, parseAgentOutput, type ParseAgentOutputInput, type R4Output } from '../agent-runtime/schemas.ts'
 import { projectRouteToDocument } from '../path-generation/project-document.ts'
 import type { LlmProvider, ZhihuProvider, AgentId, L0aAngle, ThinkingDepth, SearchEvidence } from '../agent-runtime/types.ts'
 import { packContext, tokenBound, effectiveWindow } from './context.ts'
 import { ToolError, type TaskContext } from './worker.ts'
 import { packZhihuSearchQueries } from '../agent-runtime/pack-search.ts'
 import { structureRepairUserMessage } from '../agent-runtime/repair.ts'
-import {validateGoalPlan,compileStagedPlan,STAGED_PLAN_PROMPT,STAGED_PLAN_OUTPUT} from '../path-generation/staged-plan.ts'
+import {validateGoalPlan,compileStagedPlan,salvageGoalPlan,planFromExploration,STAGED_PLAN_PROMPT,STAGED_PLAN_OUTPUT} from '../path-generation/staged-plan.ts'
 import { paragraphDraft } from './stream-draft.ts'
 
 export const LEARNING_TOOL_SPECS = {
@@ -73,7 +73,10 @@ export class ProductTools {
         if(result.kind==='failed')throw new ToolError(result.code??'MODEL_UNAVAILABLE',result.retryable??true)
         previous=result.text
         let validated:T
-        try{validated=validate(JSON.parse(previous.replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,'')),JSON.parse(base[1]!.content))}catch(error){reason=error instanceof Error?error.message:'输出不完整';await ctx.store.checkpoint(ctx.job,`diagnostic:${name}:${attempt}`,digest(previous),{reason});continue}
+        try{
+          const extracted=extractStructuredJson(previous)??JSON.parse(previous.replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,''))
+          validated=validate(extracted,JSON.parse(base[1]!.content))
+        }catch(error){reason=error instanceof Error?error.message:'输出不完整';await ctx.store.checkpoint(ctx.job,`diagnostic:${name}:${attempt}`,digest(previous),{reason});continue}
         if(label)await ctx.activity(name,'read',label,'done')
         return validated
       }
@@ -140,12 +143,22 @@ export class ProductTools {
   async routePlan(ctx:TaskContext,input:{attachments?:{sourceId:string;fileName:string;content:string;contentBasis?:string}[];[key:string]:unknown},scope:string,attachmentSourceIds:string[]):Promise<R4Output>{
     // The model plans content; a deterministic compiler owns IDs and all edges.
     const modelInput={...input,attachments:(input.attachments??[]).map((a,i)=>({...a,ref:`F${i+1}`}))}
-    const planned=await this.structured(ctx,'R4-plan',`${SHARED_SYSTEM_PREFIX}\n${GOAL_POLICY}\n${STAGED_PLAN_PROMPT} searchScope.kind=collections 时只根据所选资料安排学习，缺口明确说明，不虚构外部来源。用户选择的 attachments 必须用于确定范围、重点和练习次序；F 引用表示概念与资料的相关关系，所有资料仍会出现在每个概念中，不要为了可见性给所有概念硬凑相同引用。\n输出 JSON：${STAGED_PLAN_OUTPUT}`,modelInput,(value,prepared)=>{
-      const plan=validateGoalPlan(value,prepared as typeof modelInput),summarizedRefs=(prepared as typeof modelInput).attachments.filter((a,i)=>a.contentBasis==='source_summary'||a.content!==modelInput.attachments[i]!.content).map(a=>a.ref),route=compileStagedPlan(plan,scope,attachmentSourceIds,new Set(summarizedRefs)),checked=projectRouteToDocument(route)
+    const settle=(value:unknown,prepared:typeof modelInput)=>{
+      const plan=validateGoalPlan(value,prepared),summarizedRefs=prepared.attachments.filter((a,i)=>a.contentBasis==='source_summary'||a.content!==modelInput.attachments[i]!.content).map(a=>a.ref),route=compileStagedPlan(plan,scope,attachmentSourceIds,new Set(summarizedRefs)),checked=projectRouteToDocument(route)
       if(!checked.ok)throw new Error(checked.message)
       return {plan,summarizedRefs}
-    },24576)
-    return compileStagedPlan(planned.plan,scope,attachmentSourceIds,new Set(planned.summarizedRefs))
+    }
+    try{
+      const planned=await this.structured(ctx,'R4-plan',`${SHARED_SYSTEM_PREFIX}\n${GOAL_POLICY}\n${STAGED_PLAN_PROMPT} searchScope.kind=collections 时只根据所选资料安排学习，缺口明确说明，不虚构外部来源。用户选择的 attachments 必须用于确定范围、重点和练习次序；F 引用表示概念与资料的相关关系，所有资料仍会出现在每个概念中，不要为了可见性给所有概念硬凑相同引用。\n输出 JSON：${STAGED_PLAN_OUTPUT}`,modelInput,(value,prepared)=>{
+        const current=prepared as typeof modelInput
+        try{return settle(value,current)}catch{return settle(salvageGoalPlan(value,current),current)}
+      },24576)
+      return compileStagedPlan(planned.plan,scope,attachmentSourceIds,new Set(planned.summarizedRefs))
+    }catch(error){
+      if(!(error instanceof ToolError) || error.code!=='STRUCTURE_NOT_SETTLED')throw error
+      const planned=settle(salvageGoalPlan(planFromExploration(modelInput),modelInput),modelInput)
+      return compileStagedPlan(planned.plan,scope,attachmentSourceIds,new Set(planned.summarizedRefs))
+    }
   }
   async search(ctx:TaskContext,name:string,query:string,scope:SearchScope={kind:'zhihu'}):Promise<SearchEvidence[]>{
     if(scope.kind==='collections')throw new ToolError('EXTERNAL_SEARCH_OUTSIDE_SCOPE',false)

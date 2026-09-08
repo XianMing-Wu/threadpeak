@@ -129,5 +129,5 @@ test.each(['knowledge','app'])('offline %s entry discovers a persisted recovery 
  const Page=entry==='knowledge'?(await import('../../src/pages/Collections')).KnowledgePage:(await import('../../src/App')).App
  render(createElement(Page))
  await screen.findByRole('alert')
- expect(screen.getByRole('button',{name:'导出本地备份'})).toBeTruthy()
+ expect(await screen.findByRole('button',{name:'导出本地备份'})).toBeTruthy()
 })

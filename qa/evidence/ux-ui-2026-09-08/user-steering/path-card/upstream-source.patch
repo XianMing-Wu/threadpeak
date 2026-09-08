@@ -1,0 +1,90 @@
+--- a/src/render/app/LearningScene.ts
++++ b/src/render/app/LearningScene.ts
+@@ -297,7 +297,9 @@
+     offsetPixels: number,
+     reducedMotion = false,
+   ): void {
+-    const maximumOffset = this.viewportHeightPixels * 0.48;
++    // Match the card-placement controller budget so endpoint cards can fit
++    // in short viewports without detaching from their projected platform.
++    const maximumOffset = this.viewportHeightPixels * 0.72;
+     this.desiredVerticalCompositionOffsetPixels = THREE.MathUtils.clamp(
+       Number.isFinite(offsetPixels) ? offsetPixels : 0,
+       0,
+@@ -657,12 +659,25 @@
+     readonly z: ReturnType<typeof resolveBoundedCameraTargetAxis>;
+   } {
+     this.camera.updateMatrixWorld(true);
+-    const footprint = [
+-      this.intersectGroundAtNdc(-1, -1),
+-      this.intersectGroundAtNdc(-1, 1),
+-      this.intersectGroundAtNdc(1, -1),
+-      this.intersectGroundAtNdc(1, 1),
+-    ].filter((point): point is THREE.Vector3 => point !== null);
++    // Pan bounds belong to the base camera. Including the temporary card
++    // offset here makes the pan clamp counteract the very lift that keeps an
++    // endpoint card inside the viewport, and persists that correction as pan.
++    const compositionView = this.camera.view?.enabled ? this.camera.view : null;
++    let footprint: THREE.Vector3[];
++    if (compositionView) this.camera.clearViewOffset();
++    try {
++      footprint = [
++        this.intersectGroundAtNdc(-1, -1),
++        this.intersectGroundAtNdc(-1, 1),
++        this.intersectGroundAtNdc(1, -1),
++        this.intersectGroundAtNdc(1, 1),
++      ].filter((point): point is THREE.Vector3 => point !== null);
++    } finally {
++      if (compositionView) {
++        compositionView.enabled = true;
++        this.camera.updateProjectionMatrix();
++      }
++    }
+ 
+     if (footprint.length === 0) {
+       const stationaryX = resolveBoundedCameraTargetAxis({
+--- a/src/ui/node-card/cardPlacementPolicy.ts
++++ b/src/ui/node-card/cardPlacementPolicy.ts
+@@ -44,9 +44,16 @@
+   input: CardSafeAreaHorizontalOffsetInput,
+ ): number {
+   const maximumOffset = Math.max(0, input.maximumOffsetPixels);
+-  const safeMargin = Math.max(
+-    0,
+-    input.safeMarginPixels ?? DEFAULT_SIDE_SAFE_MARGIN_PIXELS,
++  // A narrow viewport may only have the view's 12px gutters. Asking for
++  // wider gutters would report both edges as overflowing on every frame and
++  // keep pushing the platform sideways until projection visibility resets.
++  const availableMargin = Math.max(0, (
++    input.viewportRightClientX - input.viewportLeftClientX
++      - (input.cardRightClientX - input.cardLeftClientX)
++  ) / 2);
++  const safeMargin = Math.min(
++    availableMargin,
++    Math.max(0, input.safeMarginPixels ?? DEFAULT_SIDE_SAFE_MARGIN_PIXELS),
+   );
+   const safeLeft = input.viewportLeftClientX + safeMargin;
+   const safeRight = input.viewportRightClientX - safeMargin;
+--- a/src/app/bootstrapLearningPathPage.smoke.ts
++++ b/src/app/bootstrapLearningPathPage.smoke.ts
+@@ -182,6 +182,20 @@
+     }) === -50,
+     "a right-clipped card must shift the complete scene left into its safe area",
+   );
++  for (const width of [288, 358]) {
++    expect(
++      computeCardSafeAreaHorizontalOffset({
++        currentOffsetPixels: 0,
++        cardLeftClientX: 28,
++        cardRightClientX: 16 + width - 12,
++        viewportLeftClientX: 16,
++        viewportRightClientX: 16 + width,
++        maximumOffsetPixels: width * 0.8,
++      }) === 0,
++      "a full-width mobile card must not accumulate a sideways camera offset",
++    );
++  }
++
+   expect(
+     computeCardSafeAreaLift({
+       currentLiftPixels: 0,

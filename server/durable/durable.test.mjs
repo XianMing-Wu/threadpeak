@@ -65,6 +65,15 @@ test('interrupted stream and reasoning-only content cannot be committed as a rep
   const complete=new ReadableStream({start(c){for(const x of ['data: {"choices":[{"delta":{"content":"完整正文"}}]}\n\n','data: {"choices":[{"finish_reason":"stop","delta":{}}]}\n\n','data: [DONE]\n\n'])c.enqueue(encoder.encode(x));c.close()}})
   assert.equal((await readCompletionStream(complete,input)).content,'完整正文')
 })
+test('json completions recover the route object from reasoning when content is empty',async()=>{
+  const config={deepseekBaseUrl:'https://example.com/v1',deepseekModelName:'configured',deepseekApiKey:'test'}
+  const plan={title:'路线',stages:[[{title:'入门',description:'基础',concepts:[{title:'坐标',description:'范围',hasDispute:false}]}]]}
+  const provider=createAgentLlmProvider({config,http:async()=>({ok:true,status:200,text:async()=>JSON.stringify({choices:[{finish_reason:'stop',message:{content:'',reasoning_content:`先整理结构 ${JSON.stringify(plan)}`}}]})})})
+  const result=await provider.complete({messages:[],thinkingDepth:'deep',json:true})
+  assert.equal(result.kind,'completed')
+  assert.equal(JSON.parse(result.text).title,'路线')
+  assert.equal(JSON.parse(result.text).stages[0][0].title,'入门')
+})
 test('tree forbids multi-parent, cycles and a mismatched paragraph basis',()=>{
   const root={id:'root',type:'root',parents:[],sources:[],title:'概念',text:''},a={id:'a',type:'article',parents:['root'],sources:['a'],title:'文章',text:''}
   assert.throws(()=>validateTree([root,a,{...a,id:'b',type:'answer',parents:['root','a']}]),/INVALID_PARENT/)

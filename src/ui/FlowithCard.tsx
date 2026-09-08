@@ -1,4 +1,5 @@
 import { KanshanAvatar } from '../components/KanshanAvatar'
+import { coverSrcSet } from './covers'
 
 export type FlowithCardItem = {
   id: string
@@ -28,11 +29,10 @@ export function FlowithCard({
   return (
     <button type="button" className="ux-flowith-card" onClick={onOpen}>
       <div className="cover">
-        <img src={cover} alt="" loading="lazy" decoding="async" width="1536" height="1024" />
-        <div className="cover-fade" />
+        <img src={cover} srcSet={coverSrcSet(cover)} sizes="(max-width: 560px) calc(100vw - 116px), (max-width: 760px) calc((100vw - 128px) / 2), (max-width: 1080px) calc((100vw - 156px) / 3), 300px" alt="" loading="lazy" decoding="async" width="1536" height="1024" />
       </div>
       <div className="body">
-        <h4>{title}</h4>
+        <h3>{title}</h3>
         <p className="desc">{desc}</p>
         <div className="foot">
           <div className="author">

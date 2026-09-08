@@ -1,41 +1,29 @@
-/* System fonts keep the product usable without third-party font requests. */
-:is(.ux-flowith-home, .ux-flowith-shell) {
+/* Product navigation, input and home discovery use the shared semantic system. */
+.ux-flowith-shell {
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
-  min-height: 72vh;
+  min-height: 0;
   overflow: hidden;
-  background: #fff;
-  border-radius: 6px;
-  box-shadow: 0 0 0 2px #e6e6e6;
-  color: #000;
-  font-family: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background: var(--surface-1);
+  color: var(--ink-1);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: 1.6;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) *,
-:is(.ux-flowith-home, .ux-flowith-shell) *::before,
-:is(.ux-flowith-home, .ux-flowith-shell) *::after {
+.ux-flowith-shell *, .ux-flowith-shell *::before, .ux-flowith-shell *::after {
   box-sizing: border-box;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) button,
-:is(.ux-flowith-home, .ux-flowith-shell) input,
-:is(.ux-flowith-home, .ux-flowith-shell) textarea {
+.ux-flowith-shell button, .ux-flowith-shell input, .ux-flowith-shell textarea {
   font-family: inherit;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .shell {
+.ux-flowith-shell .shell {
   display: flex;
   flex: 1;
   min-height: 0;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .stage {
+.ux-flowith-shell .stage {
   position: relative;
   display: flex;
   flex: 1;
@@ -43,15 +31,9 @@
   min-height: 0;
   flex-direction: column;
   overflow: hidden;
-  background: #fff;
+  background: var(--surface-1);
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .sidebar,
-:is(.ux-flowith-home, .ux-flowith-shell) .sidebar :is(button, span, p, div) {
-  font-family: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif !important;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .sidebar {
+.ux-flowith-shell .sidebar {
   display: flex;
   width: 240px;
   flex-shrink: 0;
@@ -61,387 +43,228 @@
   margin: 6px 0 6px 6px;
   padding: 12px 0 8px;
   overflow: hidden;
-  background: #fff;
-  border-radius: 12px;
-  color: #000;
+  border-radius: var(--r-card);
+  background: var(--surface-1);
+  color: var(--ink-1);
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .side-body {
+.ux-flowith-shell .side-body {
   display: flex;
   flex: 1;
   min-height: 0;
   flex-direction: column;
   overflow: hidden;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .side-top {
+.ux-flowith-shell .side-top {
   display: flex;
-  flex-shrink: 0;
+  flex: none;
   align-items: center;
   justify-content: space-between;
-  height: 32px;
+  min-height: 40px;
   padding: 0 12px 0 16px;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .logo-wrap {
+.ux-flowith-shell .logo-wrap {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .logo-btn {
+.ux-flowith-shell .logo-btn, .ux-flowith-shell .icon-btn {
   display: flex;
-  width: 32px;
-  height: 32px;
-  margin-left: 4px;
+  flex: none;
   align-items: center;
   justify-content: center;
-  padding: 6px 4px;
-  border: 0;
-  border-radius: 12px;
-  background: transparent;
-  cursor: pointer;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .logo-btn:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .icon-btn {
-  display: flex;
-  width: 32px;
-  height: 32px;
-  align-items: center;
-  justify-content: center;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--r-control);
   background: transparent;
-  color: #5a6272;
+  color: var(--ink-2);
   cursor: pointer;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .icon-btn:hover {
-  background: #f1f2f4;
+.ux-flowith-shell .logo-btn:hover, .ux-flowith-shell .icon-btn:hover {
+  background: var(--surface-2);
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .icon-btn svg {
+.ux-flowith-shell .icon-btn svg {
   display: block;
-  width: 14px;
-  height: 14px;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .nav {
-  display: flex;
-  flex-shrink: 0;
-  flex-direction: column;
-  gap: 2px;
-  height: 168px;
-  margin-top: 12px;
-  padding: 0 12px;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .sec-row.proj {
-  margin-top: 12px;
-  margin-bottom: 8px;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .nav-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 32px;
-  padding: 6px 12px;
-  border: 0;
-  border-radius: 12px;
-  background: transparent;
-  color: #2d3139 !important;
-  font-size: 14px !important;
-  font-weight: 400 !important;
-  letter-spacing: -0.28px !important;
-  line-height: 20px !important;
-  cursor: pointer;
-  user-select: none;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .nav-item svg {
-  display: block;
-  flex-shrink: 0;
   width: 16px;
   height: 16px;
-  color: #2d3139;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .nav-item:hover,
-:is(.ux-flowith-home, .ux-flowith-shell) .nav-item[aria-current="page"] {
-  background: #f1f2f4;
+.ux-flowith-shell .nav {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 4px;
+  height: auto;
+  margin-top: 16px;
+  padding: 0 12px;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .nav-item span {
+.ux-flowith-shell .nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--ink-2);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+}
+.ux-flowith-shell .nav-item svg {
+  display: block;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: currentColor;
+}
+.ux-flowith-shell .nav-item:hover {
+  background: var(--surface-2);
+}
+.ux-flowith-shell .nav-item[aria-current="page"] {
+  border-color: var(--line-3);
+  background: var(--surface-1);
+  color: var(--accent);
+}
+.ux-flowith-shell .nav-item span {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  line-height: 20px;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .nav-item.nav-slot {
-  pointer-events: none;
-  visibility: hidden;
+.ux-flowith-shell .nav-item.nav-slot, .ux-flowith-shell .sec-row.proj {
+  display: none;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .sec-row {
+.ux-flowith-shell .sec-row {
   display: flex;
-  flex-shrink: 0;
+  flex: none;
   align-items: center;
   justify-content: space-between;
-  width: 216px;
-  height: 24px;
-  margin: 0 12px;
-  padding-right: 6px;
+  min-height: 36px;
+  margin: 20px 12px 4px;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .sec-lab {
+.ux-flowith-shell .sec-lab {
   display: flex;
   align-items: center;
-  gap: 4px;
-  height: 16px;
-  padding: 0 12px;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 36px;
+  gap: 8px;
+  padding: 6px 12px;
   border: 0;
   background: transparent;
-  color: #8d95a5 !important;
-  font-size: 12px !important;
-  font-weight: 400 !important;
-  letter-spacing: -0.24px !important;
-  line-height: 16px !important;
+  color: var(--ink-3);
+  font-size: var(--fs-meta);
+  font-weight: 500;
+  line-height: 1.5;
   cursor: pointer;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .sec-lab svg {
+.ux-flowith-shell .sec-lab svg {
   display: block;
-  flex-shrink: 0;
-  width: 12px;
-  height: 12px;
-  color: #8d95a5;
-  opacity: 0.7;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .caret {
-  display: flex;
-  width: 12px;
-  height: 12px;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.15s;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .sec-row.folded .caret {
-  transform: rotate(-90deg);
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .ico-sm {
-  display: flex;
-  width: 24px;
-  height: 24px;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: #737373;
-  cursor: pointer;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .ico-sm.folder {
-  color: #5a6272;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .ico-sm.filter {
-  color: #737373;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .ico-sm svg {
-  display: block;
+  flex: none;
   width: 14px;
   height: 14px;
+  color: currentColor;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .ico-sm:hover {
-  background: #f1f2f4;
+.ux-flowith-shell .caret {
+  display: flex;
+  width: 14px;
+  height: 14px;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--motion-fast);
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .hist-list {
+.ux-flowith-shell .sec-row.folded .caret {
+  transform: rotate(-90deg);
+}
+.ux-flowith-shell .hist-list {
   flex: 1;
   min-height: 0;
   padding: 0 12px;
   overflow: auto;
-  scrollbar-width: none;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .hist-list::-webkit-scrollbar {
-  display: none;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .hist {
-  position: relative;
+.ux-flowith-shell .hist {
   display: flex;
-  width: 216px;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 16px;
+  width: 100%;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--ink-2);
+  text-align: left;
   cursor: pointer;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .hist:hover {
-  background: #f1f2f4;
+.ux-flowith-shell .hist:hover {
+  background: var(--surface-2);
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .hist-th {
-  display: flex;
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+.ux-flowith-shell .t {
   overflow: hidden;
-  padding: 8px;
-  border-radius: 12px;
-  background: #f1f2f4;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .hist-th p {
-  flex: 1;
-  width: 100%;
-  margin: 0;
-  overflow: hidden;
-  color: #5a6272 !important;
-  font-size: 8px !important;
-  font-weight: 350 !important;
-  letter-spacing: -0.2px !important;
-  line-height: 10px !important;
-  text-align: start;
-  text-overflow: ellipsis;
-  white-space: normal;
-  word-break: normal;
-  overflow-wrap: break-word;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .hist .meta {
-  display: flex;
-  min-width: 0;
-  height: 48px;
-  flex: 1;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 2px 0;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .t-wrap {
-  padding: 2px 6px;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .t {
-  overflow: hidden;
-  padding-right: 8px;
-  color: #2d3139 !important;
-  font-size: 13px !important;
-  font-weight: 400 !important;
-  letter-spacing: -0.26px !important;
-  line-height: 20px !important;
+  color: var(--ink-2);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  line-height: 1.5;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .d-wrap {
+.ux-flowith-shell .user {
   display: flex;
-  height: 12px;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 4px;
-  padding-left: 6px;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .d {
-  color: #8d95a5 !important;
-  font-size: 10px !important;
-  font-weight: 400 !important;
-  letter-spacing: -0.2px !important;
-  line-height: 12px !important;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .user {
-  display: flex;
-  flex-shrink: 0;
+  flex: none;
   align-items: center;
   gap: 10px;
   width: 216px;
-  height: 40px;
+  min-height: 44px;
   margin: 16px 12px 0;
-  padding: 0 8px 0 0;
-  border-radius: 16px;
+  padding: 0;
+  border-radius: var(--r-control);
   cursor: pointer;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .user:hover {
-  background: #f1f2f4;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .user-ava {
+.ux-flowith-shell .user-ava {
   display: flex;
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
+  flex: none;
   align-items: center;
   justify-content: center;
+  width: 40px;
+  height: 40px;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .user-ava span {
-  position: relative;
+.ux-flowith-shell .user-ava span {
   display: flex;
   width: 32px;
   height: 32px;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  border-radius: 12px;
-  background: #e2e4e8;
-  box-shadow: 0 0 0 1px #f1f2f4;
-  color: #5a6272;
+  border-radius: var(--r-avatar);
+  background: var(--surface-3);
+  color: var(--ink-2);
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .name {
-  overflow: hidden;
+.ux-flowith-shell .name {
   max-width: 100px;
-  color: #000 !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  letter-spacing: -0.28px !important;
-  line-height: 22px !important;
+  overflow: hidden;
+  color: var(--ink-1);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  line-height: 1.6;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .free-chip {
+.ux-flowith-shell .free-chip {
   display: flex;
-  height: 20px;
-  flex-shrink: 0;
+  flex: none;
   align-items: center;
   justify-content: center;
   margin-left: auto;
-  padding: 4px 6px;
-  border-radius: 88px;
-  background: #f1f2f4;
-  color: #5a6272 !important;
-  font-size: 10px !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.2px !important;
-  line-height: 12px !important;
+  padding: 3px 7px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: var(--fs-meta);
+  font-weight: 500;
+  line-height: 1.5;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .stage-home {
+.ux-flowith-shell .stage-home {
   position: relative;
   display: flex;
   flex: 1;
@@ -450,352 +273,401 @@
   flex-direction: column;
   margin: 6px;
   overflow: hidden;
-  border: 1px solid #f1f2f4;
-  border-radius: 6px;
-  background: #fff;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-card);
+  background: var(--surface-1);
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .home-head {
+.home-brand {
+  --brand-padding: 156px;
+  --brand-range: 136px;
+  position: relative;
+  z-index: 2;
   display: flex;
-  flex-shrink: 0;
+  flex: none;
+  flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  height: 32px;
-  margin: 12px 12px 0;
-  gap: 8px;
+  padding: calc(var(--brand-padding) - clamp(0px, var(--home-scroll, 0px), var(--brand-range))) 16px 16px;
+  background: var(--surface-1);
+  isolation: isolate;
+  min-height: 142px;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .home-body {
+.home-brand .home-landscape { z-index: 2; background: var(--surface-1); }
+.home-brand .home-h1 { position: relative; z-index: 1; }
+.home-brand .home-sub { position: relative; z-index: 3; }
+.home-brand.is-collapsed .home-sub {
+  color: #1f2329;
+  filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff);
+}
+.ux-flowith-shell .home-body {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex: 1;
   min-height: 0;
   flex-direction: column;
   align-items: center;
-  padding: 0 24px 24px;
+  padding: 0 32px 8px;
+  margin: 0 auto;
   overflow: auto;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .home-h1,
-.ux-flowith-skin .home-h1 {
+/* Existing vector outlines remain the only source of the fixed brand lettering. */
+.ux-flowith-shell .home-h1 {
   display: flex;
+  flex: none;
   align-items: baseline;
   justify-content: center;
-  margin: 59px 0 0 !important;
-  font-size: 48px !important;
-  font-weight: 400 !important;
-  letter-spacing: -2.4px !important;
-  line-height: 44px !important;
+  margin: 0;
+  line-height: 1;
 }
-
-/* Fixed brand lettering is outlined SVG, so there is no font request or fallback flash. */
-:is(.ux-flowith-home, .ux-flowith-shell) .flow-text,
-.ux-flowith-skin .flow-text {
+.ux-flowith-shell .flow-text {
   display: inline-flex;
-  color: rgba(23, 114, 246, 0.72);
-  filter: drop-shadow(0 0 12px rgba(23, 114, 246, 0.14));
-  transition: color .3s ease, filter .3s ease;
+  color: var(--accent);
 }
-:is(.ux-flowith-home, .ux-flowith-shell) .flow-text:hover,
-.ux-flowith-skin .flow-text:hover {
-  color: #1772f6;
-  filter: drop-shadow(0 0 22px rgba(23, 114, 246, 0.32));
+.brand-lettering {
+  display: block;
+  flex: none;
+  overflow: visible;
 }
-.brand-lettering { display: block; flex: none; overflow: visible; }
-:is(.ux-flowith-home, .ux-flowith-shell) .ideas,
-.ux-flowith-skin .ideas { display: inline-flex; margin-left: 6px; color: #111214; }
-:is(.ux-flowith-home, .ux-flowith-shell) .home-sub,
-.ux-flowith-skin .home-sub {
+.ux-flowith-shell .ideas {
   display: inline-flex;
-  margin: 18px 0 0 !important;
-  line-height: 1 !important;
-  color: #101012;
+  margin-left: 6px;
+  color: var(--ink-1);
 }
-.home-sub-ink { color: inherit; }
-@media (prefers-reduced-motion: reduce) {
-  .flow-text { transition: none !important; }
+.ux-flowith-shell .home-sub {
+  display: inline-flex;
+  flex: none;
+  margin: 18px 0 0;
+  color: var(--ink-1);
+  line-height: 1;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .composer-wrap,
-.ux-flowith-skin.ux-flowith-composer-wrap,
+.home-sub-ink {
+  color: inherit;
+}
+.brand-accessible-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.home-composer {
+  flex: none;
+  width: min(760px, 100%);
+}
 .ux-flowith-composer-wrap {
   position: relative;
-  z-index: 90;
+  z-index: var(--z-popover);
   display: flex;
   width: 100%;
-  max-width: 720px;
+  max-width: 760px;
   flex-direction: column;
   gap: 4px;
   margin: 32px auto 0;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .ux-beam,
-.ux-flowith-skin .ux-beam {
-  overflow: hidden;
-  border-radius: 20px;
-  --beam-opacity: 1;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .composer,
-:is(.ux-flowith-home, .ux-flowith-shell) .ux-flowith-composer,
-.ux-flowith-skin .composer,
-.ux-flowith-skin .ux-flowith-composer {
+.ux-flowith-skin .composer {
   position: relative;
-  z-index: 0 !important;
   display: flex;
-  width: 100% !important;
-  min-height: 0 !important;
-  margin: 0 !important;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
   flex-direction: column;
   gap: 8px;
-  padding: 12px 0 8px !important;
+  padding: 12px 0 8px;
   overflow: visible;
-  border: 0.5px solid #e2e4e8 !important;
-  border-radius: 20px !important;
-  background: #fff !important;
-  box-shadow: 0 6px 12px 0 rgba(41, 37, 100, 0.04) !important;
+  border: 1px solid var(--line-3);
+  border-radius: var(--r-card);
+  background: var(--surface-1);
+  color: var(--ink-1);
+  box-shadow: var(--shadow-2);
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .style-row,
-.ux-flowith-skin .style-row {
-  padding: 0 16px;
-}
-
-.ux-flowith-skin .style-chip {
-  display: inline-flex;
-  height: 40px !important;
-  align-items: center;
-  gap: 6px;
-  padding: 0 6px 0 10px !important;
-  border: 1px dashed #e2e4e8;
-  border-radius: 16px;
-  background: #fff;
-  color: #2d3139;
-  font-size: 12px !important;
-  letter-spacing: -0.24px !important;
-  line-height: 16px !important;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .composer-input,
 .ux-flowith-skin .composer-input {
   position: relative;
   width: 100%;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .composer-input textarea,
-.ux-flowith-skin .composer-input textarea,
-.ux-flowith-skin .composer-field textarea {
+.ux-flowith-skin .composer-input textarea {
   display: block;
   width: 100%;
-  min-height: 76px !important;
-  height: auto !important;
-  padding: 2px 16px !important;
-  border: 0 !important;
+  min-height: 84px;
+  height: auto;
+  padding: 2px 16px;
+  border: 0;
   outline: 0;
-  background: transparent !important;
-  color: #2d3139;
-  font-size: 14px !important;
-  letter-spacing: -0.28px;
-  line-height: 24px !important;
-  resize: none;
+  background: transparent;
+  color: var(--ink-1);
+  font-size: var(--fs-strong);
+  line-height: 1.7;
+  resize: vertical;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .composer-input textarea::placeholder,
 .ux-flowith-skin .composer-input textarea::placeholder {
-  color: #8d95a5;
+  color: var(--ink-3);
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .composer-bar .ux-flowith-skin,
 .ux-flowith-skin .composer-bar .ux-flowith-skin {
   display: contents;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .composer-bar,
 .ux-flowith-skin .composer-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   padding: 0 8px;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .bar-l,
-:is(.ux-flowith-home, .ux-flowith-shell) .bar-r,
-.ux-flowith-skin .bar-l,
-.ux-flowith-skin .bar-r {
+.ux-flowith-skin .bar-l, .ux-flowith-skin .bar-r {
   display: flex;
   align-items: center;
-}
-
-:is(.ux-flowith-home, .ux-flowith-shell) .bar-l,
-.ux-flowith-skin .bar-l {
   gap: 4px;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .bar-r,
-.ux-flowith-skin .bar-r {
-  gap: 8px;
+.ux-flowith-skin .bar-l {
+  min-width: 0;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .bar-l button,
-:is(.ux-flowith-home, .ux-flowith-shell) .bar-r .composer-icon,
-.ux-flowith-skin .bar-l button,
-.ux-flowith-skin .bar-r .composer-icon,
-.ux-flowith-skin .composer-pill,
-.ux-flowith-skin .composer-icon {
+.ux-flowith-skin .bar-r {
+  flex: none;
+}
+.ux-flowith-skin .bar-l button, .ux-flowith-skin .composer-icon {
   display: flex;
-  height: 32px;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 0 8px;
+  min-height: 40px;
+  padding: 8px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--r-control);
   background: transparent;
-  color: #000;
-  font-size: 13px !important;
-  letter-spacing: -0.26px !important;
-  line-height: 20px !important;
+  color: var(--ink-2);
+  font-size: var(--fs-body);
+  line-height: 1.5;
   box-shadow: none;
   cursor: pointer;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .bar-l button:hover,
-:is(.ux-flowith-home, .ux-flowith-shell) .bar-r .composer-icon:hover,
-.ux-flowith-skin .composer-pill:hover,
-.ux-flowith-skin .composer-icon:hover {
-  background: #f1f2f4;
+.ux-flowith-skin .bar-l button:hover, .ux-flowith-skin .composer-icon:hover {
+  background: var(--surface-2);
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .composer-send,
 .ux-flowith-skin .composer-send {
   display: flex;
-  width: 32px;
-  height: 32px;
+  flex: none;
   align-items: center;
   justify-content: center;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border: 0;
-  border-radius: 12px;
-  background: #2d3139 !important;
-  color: #fff !important;
+  border-radius: var(--r-control);
+  background: var(--accent);
+  color: var(--on-accent);
   cursor: pointer;
+  transition: background var(--motion-fast), transform var(--motion-fast);
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .composer-send:disabled,
+.ux-flowith-skin .composer-send:hover {
+  background: var(--accent-hover);
+}
+.ux-flowith-skin .composer-send:active {
+  transform: scale(.97);
+}
 .ux-flowith-skin .composer-send:disabled {
-  opacity: 0.35;
+  background: var(--surface-3);
+  color: var(--ink-3);
+  cursor: not-allowed;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .composer-send.is-stop,
 .ux-flowith-skin .composer-send.is-stop {
-  background: #1a1c1f !important;
-  opacity: 1;
+  background: var(--ink-1);
+  color: var(--surface-1);
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .home-discovery {
-  width: 100%;
-  max-width: 720px;
-  margin: 24px 0 0;
-  padding: 0 8px;
+.ux-flowith-shell .home-discovery {
+  flex: none;
+  width: min(900px, 100%);
+  margin: 28px 0 0;
+  padding: 0 0 8px;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .suggestion-marquee {
+.home-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.ux-flowith-shell .home-section-heading h2 {
+  margin: 0;
+  color: var(--ink-1);
+  font-size: var(--fs-strong);
+  font-weight: 600;
+  line-height: 1.5;
+}
+ .home-section-heading a {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-3);
+  font-size: var(--fs-meta);
+  text-decoration: none;
+}
+.home-section-heading a:hover { color: var(--accent); }
+.suggestion-marquee {
   position: relative;
   width: 100%;
   overflow: hidden;
-  padding: 1px 0 2px;
-  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  padding: 3px 0;
+  mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .suggestion-track {
+.suggestion-track {
   display: flex;
   width: max-content;
   animation: suggestion-loop 24s linear infinite;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .suggestion-marquee:hover .suggestion-track,
-:is(.ux-flowith-home, .ux-flowith-shell) .suggestion-marquee:focus-within .suggestion-track {
+.suggestion-marquee:hover .suggestion-track, .suggestion-marquee:focus-within .suggestion-track {
   animation-play-state: paused;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .home-suggestions .suggestion-group {
+.suggestion-marquee:has(button:focus-visible) {
+  overflow-x: auto;
+  mask-image: none;
+}
+.suggestion-marquee:has(button:focus-visible) .suggestion-track {
+  animation: none;
+  transform: none;
+}
+.suggestion-group {
   display: flex;
   flex-wrap: nowrap;
   gap: 8px;
   padding-right: 8px;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .home-suggestions button {
+.home-suggestions .suggestion-group button {
   display: inline-flex;
-  height: 33px;
+  min-height: 38px;
   align-items: center;
-  padding: 0 12px;
-  border: 1px solid #e6e8ec;
-  border-radius: 17px;
-  background: #fff;
-  color: #737a85;
+  padding: 8px 12px;
+  border: 1px solid var(--line-3);
+  border-radius: var(--r-pill);
+  background: var(--surface-1);
+  color: var(--ink-2);
+  font-size: var(--fs-body);
+  line-height: 1.5;
   white-space: nowrap;
   cursor: pointer;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .home-suggestions button:hover {
-  color: #2265d4;
+.home-suggestions .suggestion-group button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .home-recommendations {
-  margin-top: 20px;
+@keyframes suggestion-loop {
+  to {
+    transform: translateX(-50%);
+  }
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .home-recommendations > div {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px;
+.home-recommendations {
+  margin-top: 32px;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .home-recommendations button {
-  display: grid;
-  width: 100%;
-  min-height: 48px;
-  grid-template-columns: 34px minmax(0, 1fr);
-  grid-template-rows: 21px auto;
-  align-items: start;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
+.home-curation-note {
+  margin: -4px 0 14px;
+  color: var(--ink-3);
+  font-size: var(--fs-meta);
+  line-height: 1.6;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .home-recommendations button > span {
-  display: grid;
-  grid-row: 1 / 3;
-  width: 29px;
-  height: 29px;
-  place-items: center;
-  border-radius: 8px;
-  background:#fff;
-  color: #7770dc;
+.home-section-heading a:focus-visible, .home-suggestions button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .home-recommendations button.home-route > span {
-  background: #eaf3ff;
-  color: #3479d6;
+@media (max-width: 1080px) {
+  .ux-flowith-shell .home-body {
+    padding-inline: 24px;
+  }
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .home-recommendations button > b {
-  overflow: hidden;
-  min-width: 0;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+@media (max-width: 760px) {
+  .home-brand { min-height: 130px; }
+  .ux-flowith-shell .home-body {
+    padding-inline: 20px;
+  }
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .home-recommendations button > small {
-  display: block;
-  color: #9ca2ab;
+@media (max-width: 560px) {
+  .home-brand {
+    --brand-padding: 140px;
+    --brand-range: 112px;
+  }
+  .ux-flowith-shell .home-body {
+    padding-inline: 16px;
+  }
+  .ux-flowith-shell .home-h1 {
+    width: 100%;
+    max-width: 100%;
+    gap: 4px;
+  }
+  .home-h1 .brand-lettering {
+    width: 100%;
+    height: auto;
+  }
+  .home-h1 .flow-text {
+    min-width: 0;
+    width: 28%;
+  }
+  .home-h1 .ideas {
+    min-width: 0;
+    width: 65%;
+    margin-left: 0;
+  }
+  .home-sub .brand-lettering {
+    max-width: 100%;
+    height: auto;
+  }
+  .home-section-heading {
+    align-items: flex-start;
+  }
+  .home-section-heading h2 {
+    max-width: 17ch;
+  }
+  .ux-flowith-skin .bar-l button {
+    padding-inline: 4px;
+    font-size: var(--fs-meta);
+  }
+  .ux-flowith-skin .composer-icon {
+    width: 36px;
+    padding-inline: 4px;
+  }
+  .home-composer .composer-bar {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 40px;
+  }
+  .home-composer .bar-l {
+    flex-basis: 100%;
+  }
+  .home-composer .bar-r {
+    margin-left: auto;
+  }
 }
-
-:is(.ux-flowith-home, .ux-flowith-shell) .home-recommendations button:hover {
-  color: #2265d4;
+@media (prefers-reduced-motion: reduce) {
+  .suggestion-track {
+    animation: none;
+  }
+  .suggestion-marquee {
+    overflow-x: auto;
+    mask-image: none;
+  }
+  .suggestion-group[aria-hidden="true"] {
+    display: none;
+  }
+  }
+html[data-reduce-motion="true"] .suggestion-track {
+  animation: none;
 }
-
-.brand-accessible-text { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+html[data-reduce-motion="true"] .suggestion-marquee {
+  overflow-x: auto;
+  mask-image: none;
+}
+html[data-reduce-motion="true"] .suggestion-group[aria-hidden="true"] { display: none; }
+.brand-gradient-ink { opacity: 0; transition: opacity .25s ease; }
+.flow-text:hover .brand-gradient-ink { opacity: 1; }
+.flow-text:hover { filter: drop-shadow(0 0 14px rgb(46 184 255 / .22)); }
+.flow-text:hover .brand-gradient-stop { animation: brand-color-flow 3s linear infinite; }
+.flow-text:hover .brand-gradient-stop:nth-child(2) { animation-delay: -1s; }
+.flow-text:hover .brand-gradient-stop:nth-child(3) { animation-delay: -2s; }
+@keyframes brand-color-flow {
+  0%, 100% { stop-color: #1772f6; }
+  33% { stop-color: #2ed7d0; }
+  66% { stop-color: #8664ef; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flow-text:hover .brand-gradient-stop { animation: none; }
+  .brand-gradient-ink { transition: none; }
+}

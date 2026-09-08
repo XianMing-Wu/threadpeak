@@ -1,0 +1,103 @@
+{
+  "startedAt": "2026-09-08T04:11:49.476Z",
+  "completedAt": "2026-09-08T04:12:03.615Z",
+  "url": "http://127.0.0.1:4404/",
+  "scope": "Local browser UX/UI only. Isolated QA API; explicit test providers; curated examples and synthetic author graph. No live-provider or production-readiness claim.",
+  "partial": true,
+  "filter": "lighthouse",
+  "gitHead": "d5ee4021525483ba18430590a5515c1c89311485",
+  "checks": [
+    {
+      "name": "lighthouse-production-home",
+      "passed": true,
+      "startedAt": "2026-09-08T04:11:49.783Z",
+      "completedAt": "2026-09-08T04:12:03.615Z",
+      "evidence": {
+        "delivery": "production-preview",
+        "results": [
+          {
+            "formFactor": "desktop",
+            "file": "qa/evidence/ux-ui-2026-09-08/browser-lighthouse-desktop.json",
+            "scores": {
+              "performance": 99,
+              "accessibility": 100,
+              "best-practices": 100
+            },
+            "runtimeError": null,
+            "metrics": {
+              "first-contentful-paint": {
+                "value": 405.6543,
+                "displayValue": "0.4 s"
+              },
+              "largest-contentful-paint": {
+                "value": 911.3086000000002,
+                "displayValue": "0.9 s"
+              },
+              "total-blocking-time": {
+                "value": 0,
+                "displayValue": "0 ms"
+              },
+              "cumulative-layout-shift": {
+                "value": 0,
+                "displayValue": "0"
+              },
+              "speed-index": {
+                "value": 405.6543,
+                "displayValue": "0.4 s"
+              }
+            }
+          },
+          {
+            "formFactor": "mobile",
+            "file": "qa/evidence/ux-ui-2026-09-08/browser-lighthouse-mobile.json",
+            "scores": {
+              "performance": 84,
+              "accessibility": 100,
+              "best-practices": 100
+            },
+            "runtimeError": null,
+            "metrics": {
+              "first-contentful-paint": {
+                "value": 1815.11,
+                "displayValue": "1.8 s"
+              },
+              "largest-contentful-paint": {
+                "value": 4431.219999999999,
+                "displayValue": "4.4 s"
+              },
+              "total-blocking-time": {
+                "value": 0,
+                "displayValue": "0 ms"
+              },
+              "cumulative-layout-shift": {
+                "value": 0,
+                "displayValue": "0"
+              },
+              "speed-index": {
+                "value": 2113.4377718358037,
+                "displayValue": "2.1 s"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "audits": [],
+  "screenshots": [],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "expectedHttpErrors": [],
+  "browserVersion": "152.0.7977.76",
+  "passed": true,
+  "summary": {
+    "checks": 1,
+    "failedChecks": [],
+    "audits": 0,
+    "failedAudits": [],
+    "criticalOrSerious": 0,
+    "pageErrors": 0,
+    "consoleErrors": 0,
+    "screenshots": 0
+  }
+}

@@ -10,7 +10,7 @@
   min-height: 200px;
   overflow: hidden;
   border-radius: 12px;
-  background: #fafafa;
+  background: var(--surface-1);
 }
 
 .peak-hero *,
@@ -99,7 +99,7 @@
   z-index: 20;
   width: 100%;
   height: 160px;
-  background: #fafafa;
+  background: var(--surface-1);
   mask-image: linear-gradient(to top, #000, transparent);
 }
 
@@ -110,7 +110,7 @@
   z-index: 20;
   width: 160px;
   height: 100%;
-  background: #fafafa;
+  background: var(--surface-1);
   mask-image: linear-gradient(to right, #fff, transparent);
 }
 
@@ -121,7 +121,7 @@
   z-index: 20;
   width: 160px;
   height: 100%;
-  background: #fafafa;
+  background: var(--surface-1);
   mask-image: linear-gradient(to left, #000, transparent);
 }
 
@@ -130,7 +130,7 @@
   top: 50%;
   width: 100%;
   height: 160px;
-  background: #fafafa;
+  background: var(--surface-1);
   filter: blur(40px);
   transform: scaleX(1.5) translateY(48px);
 }
@@ -188,25 +188,20 @@
 
 .peak-hero .hero-title {
   display: block;
-  background-image: linear-gradient(to bottom right, #fff, rgba(245, 245, 245, .8));
-  background-clip: text;
-  color: transparent;
+  color: var(--ink-1);
   font-size: 30px;
   font-weight: 700;
   letter-spacing: -.75px;
-  line-height: 36px;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  line-height: 1.3;
 }
 
 .peak-hero .hero-sub {
   display: block;
-  margin-top: 4px;
-  color: rgba(255, 255, 255, .8);
+  margin: 4px 0 0;
+  color: var(--ink-2);
   font-size: 16px;
   font-weight: 500;
-  line-height: 24px;
-  -webkit-text-fill-color: rgba(255, 255, 255, .8);
+  line-height: 1.6;
 }
 
 .peak-hero .hero-rule {
@@ -224,96 +219,8 @@
   opacity: 1;
 }
 
-.peak-market {
-  box-sizing: border-box;
-  padding: 32px 24px 24px;
-  background: #f3f4f6;
-}
+.peak-hero .hero-copy { padding: 20px; text-align: center; }
 
-.peak-market > .peak-tabs {
-  padding: 8px 0 0;
-}
-
-.consultation-page.peak-market {
-  overflow: auto;
-  padding: 24px 24px 16px;
-  background: #f3f4f6 !important;
-}
-
-.consultation-page.peak-market .peak-hero {
-  min-height: 148px;
-}
-
-.consultation-page.peak-market > .peak-tabs {
-  padding: 8px 0 0;
-}
-
-.consultation-page.peak-market .consultation-body,
-.consultation-page.peak-market .consultation-map-panel,
-.consultation-page.peak-market .consultation-sidebar,
-.consultation-page.peak-market .author-network-pane,
-.consultation-page.peak-market .consultation-map-wrap,
-.consultation-page.peak-market .consultation-map {
-  background: #f3f4f6;
-}
-
-.consultation-page.peak-market .consultation-body {
-  flex: 1;
-  min-height: 0;
-  align-items: stretch;
-  gap: 20px;
-  padding-top: 16px;
-  min-height: 380px;
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
-}
-
-.consultation-page.peak-market .consultation-map-panel {
-  height: 100%;
-  min-height: 0;
-}
-
-.consultation-page.peak-market .consultation-map-wrap {
-  height: 100%;
-  margin: 0;
-  border: 1px solid #e8ebf0;
-}
-
-.consultation-page.peak-market .consultation-sidebar {
-  height: 100%;
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  border: 1px solid #e8ebf0;
-  border-radius: 13px;
-}
-
-.consultation-page.peak-market .radar-search-status,
-.consultation-page.peak-market .radar-search-status:has(.ux-status) {
-  box-sizing: border-box;
-  min-height: 100%;
-  padding: 32px 28px 40px;
-  background: #f3f4f6 !important;
-}
-
-.consultation-page.peak-market .radar-search-status .ux-status {
-  max-width: 28ch;
-  background: transparent;
-}
-
-.consultation-page.peak-market .radar-search-status .ux-status__mascot {
-  width: 96px;
-  height: 96px;
-  margin-bottom: 16px;
-}
-
-.consultation-page.peak-market .radar-search-status .ux-status__title {
-  margin-bottom: 10px !important;
-}
-
-.consultation-page.peak-market .radar-search-status .ux-status__body {
-  line-height: 1.75 !important;
-}
-
-.consultation-page.peak-market .radar-search-status .ux-status__action {
-  margin-top: 20px !important;
+@media (prefers-reduced-motion: reduce) {
+  .peak-hero .conic, .peak-hero .hero-copy, .peak-hero .hero-rule { transition: none; }
 }

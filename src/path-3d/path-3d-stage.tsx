@@ -59,8 +59,8 @@ export function Path3DStage() {
     return <section className="path3d-stage" aria-label="3D 学习路线">
       <header>
         <div className="path3d-heading">
-          <button type="button" className="path3d-back" aria-label="返回上一级" onClick={goBack}><Icon name="back" size={18}/></button>
-          <div><small>路线规划</small><strong>{view.title}</strong></div>
+          <button type="button" className="path3d-back" aria-label="返回路线列表" onClick={goBack}><Icon name="back" size={18}/></button>
+          <div><small>路线规划</small><h1 className="path3d-title">{view.title}</h1></div>
         </div>
       </header>
       <div className="path3d-error learning-path-3d-error ux-status-region" role="alert">
@@ -94,8 +94,8 @@ export function Path3DStage() {
   return <section className="path3d-stage" aria-label="双层圆台 3D 学习路线">
     <header>
       <div className="path3d-heading">
-        <button type="button" className="path3d-back" aria-label="返回上一级" onClick={goBack}><Icon name="back" size={18}/></button>
-        <div><small>路线规划</small><strong>{view.title}</strong></div>
+        <button type="button" className="path3d-back" aria-label="返回路线列表" onClick={goBack}><Icon name="back" size={18}/></button>
+        <div><small>路线规划</small><h1 className="path3d-title">{view.title}</h1></div>
       </div>
       <span>点击圆台查看 · 黄色光圈是当前位置 · 紫色圆台是上次学习</span>
     </header>

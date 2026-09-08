@@ -1,0 +1,18 @@
+
+> threadpeak-ux-ui@2.0.0 check:docs
+> node --test tests/architecture-governance.test.mjs
+
+✔ maintained documentation links, anchors, commands and rule globs resolve in the current repository (178.113542ms)
+✔ representative implementation files receive all applicable domain rules (3.312417ms)
+✔ documentation checker detects real broken targets, headings, fences and commands without enforcing prose (1.629709ms)
+✔ rule metadata rejects always-on, duplicate and invalid fields (0.269167ms)
+✔ environment example keys are unique, empty and documented at their configuration owner (0.913708ms)
+✔ documentation index reaches maintained guides and Agent sections have unique sequential numbers (6.342834ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 272.4975

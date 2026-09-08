@@ -35,10 +35,25 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
   const [profileOpen,setProfileOpen]=useState(false)
   const [accountIdentity,setAccountIdentity]=useState(prototypeAccount)
   const [menuBox,setMenuBox]=useState<{left:number;bottom:number}|null>(null)
+  const mainRef=useRef<HTMLElement>(null)
+  const sidebarRef=useRef<HTMLElement>(null)
+  const collapseRef=useRef<HTMLButtonElement>(null)
+  const pendingMainFocus=useRef(false)
   const previousRoute=useRef(route)
   const profileRef=useRef<HTMLDivElement>(null)
   const menuRef=useRef<HTMLDivElement>(null)
-  useEffect(()=>{if(previousRoute.current!==route){if(compactRoutes.has(route))setCollapsed(true);if(narrow)setCollapsed(true);previousRoute.current=route}},[route,narrow])
+  useLayoutEffect(()=>{
+    if(previousRoute.current!==route){
+      if(compactRoutes.has(route)||narrow)setCollapsed(true)
+      setProfileOpen(false)
+      previousRoute.current=route
+      pendingMainFocus.current=true
+    }
+    if(pendingMainFocus.current&&(!narrow||collapsed)){
+      pendingMainFocus.current=false
+      mainRef.current?.focus({preventScroll:true})
+    }
+  },[route,narrow,collapsed])
   useEffect(()=>{const media=window.matchMedia('(max-width: 760px)');const resize=()=>{setNarrow(media.matches);if(media.matches)setCollapsed(true)};media.addEventListener('change',resize);return()=>media.removeEventListener('change',resize)},[])
   useEffect(()=>{const shortcut=(event:KeyboardEvent)=>{if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==='k'){event.preventDefault();location.hash='home';window.setTimeout(()=>document.querySelector<HTMLTextAreaElement>('.home .composer textarea')?.focus(),60)}};addEventListener('keydown',shortcut);return()=>removeEventListener('keydown',shortcut)},[])
   useLayoutEffect(()=>{
@@ -58,14 +73,31 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
       setProfileOpen(false)
     }
     const escape=(event:KeyboardEvent)=>{
-      if(event.key!=='Escape')return
+      if(event.key!=='Escape'||event.defaultPrevented||(event.target instanceof Element&&event.target.closest('dialog[open]')))return
       if(menuRef.current){setProfileOpen(false);profileRef.current?.querySelector<HTMLButtonElement>('.tp-profile')?.focus()}
-      else if(window.matchMedia('(max-width: 760px)').matches)setCollapsed(true)
+      else if(window.matchMedia('(max-width: 760px)').matches){setCollapsed(true);collapseRef.current?.focus()}
     }
     addEventListener('pointerdown',close)
     addEventListener('keydown',escape)
     return()=>{removeEventListener('pointerdown',close);removeEventListener('keydown',escape)}
   },[])
+  useEffect(()=>{
+    if(!narrow||collapsed)return
+    collapseRef.current?.focus()
+    const trap=(event:KeyboardEvent)=>{
+      if(event.key!=='Tab'||document.querySelector('dialog[open]'))return
+      const controls=[...(sidebarRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], [tabindex="0"]')??[]),...(menuRef.current?.querySelectorAll<HTMLElement>('button:not([disabled])')??[])]
+      const first=controls[0],last=controls[controls.length-1]
+      if(!first||!last)return
+      if(event.shiftKey&&(document.activeElement===first||!controls.includes(document.activeElement as HTMLElement))){event.preventDefault();last.focus()}
+      else if(!event.shiftKey&&(document.activeElement===last||!controls.includes(document.activeElement as HTMLElement))){event.preventDefault();first.focus()}
+    }
+    addEventListener('keydown',trap)
+    return()=>removeEventListener('keydown',trap)
+  },[narrow,collapsed])
+  useEffect(()=>{
+    if(profileOpen&&menuBox)menuRef.current?.querySelector<HTMLButtonElement>('button')?.focus()
+  },[profileOpen,menuBox])
   useEffect(()=>{
     let current=true
     void productRequest<{kind:string;provider:string|null;demo?:boolean;profile?:{demo?:boolean}}>('/api/v2/session').then((session) => {
@@ -82,19 +114,28 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
     return()=>{current=false}
   },[])
   useEffect(()=>{const refresh=()=>{setHistory(readChatHistory());setActiveHistoryId(sessionStorage.getItem(ACTIVE_HISTORY_KEY)??'')};addEventListener(HISTORY_CHANGE_EVENT,refresh);addEventListener('storage',refresh);return()=>{removeEventListener(HISTORY_CHANGE_EVENT,refresh);removeEventListener('storage',refresh)}},[])
-  const navigate=(target:RouteName)=>{if(compactRoutes.has(target))setCollapsed(true);if(narrow)setCollapsed(true);go(target)}
+  const closeNavigation=()=>{setCollapsed(true);collapseRef.current?.focus()}
+  const focusContent=()=>{
+    if(narrow&&!collapsed){pendingMainFocus.current=true;setCollapsed(true)}
+    else mainRef.current?.focus({preventScroll:true})
+  }
+  const navigate=(target:RouteName)=>{setProfileOpen(false);focusContent();if(compactRoutes.has(target))setCollapsed(true);go(target)}
   const active = route === 'chat' ? 'home' : route === 'path-3d' || route === 'session-learning' ? 'paths' : route === 'knowledge-detail' ? 'knowledge' : route
   const nav = [
     ['home','search','搜索'], ['knowledge','book','知识脉络'], ['paths','route','路线规划'], ['authors','network','博主网络'],
   ] as const
   const serverHistory=serverLibrary?.conversations??[]
   const visibleHistory=serverHistory.map(e=>({...e,experience:e.kind==='path'?'route' as const:e.kind==='learning'?'learning' as const:'answer' as const}))
-  const today=visibleHistory.filter((entry)=>Date.now()-entry.updatedAt<24*60*60*1000)
-  const recent=visibleHistory.filter((entry)=>{const age=Date.now()-entry.updatedAt;return age>=24*60*60*1000&&age<7*24*60*60*1000})
-  const earlier=visibleHistory.filter((entry)=>Date.now()-entry.updatedAt>=7*24*60*60*1000)
+  const startOfToday=new Date();startOfToday.setHours(0,0,0,0)
+  const startOfRecent=new Date(startOfToday);startOfRecent.setDate(startOfRecent.getDate()-6)
+  const historyGroups=[
+    {id:'today',title:'今天',entries:visibleHistory.filter(entry=>entry.updatedAt>=startOfToday.getTime())},
+    {id:'recent',title:'最近',entries:visibleHistory.filter(entry=>entry.updatedAt<startOfToday.getTime()&&entry.updatedAt>=startOfRecent.getTime())},
+    {id:'earlier',title:'更早',entries:visibleHistory.filter(entry=>entry.updatedAt<startOfRecent.getTime())},
+  ]
   const historyCurrent=route==='chat'||route==='session-learning'
-  const historyButton=(entry:(typeof history)[number])=><button type="button" key={entry.id} className={`hist${historyCurrent&&activeHistoryId===entry.id?' is-current':''}`} aria-current={historyCurrent&&activeHistoryId===entry.id?'page':undefined} title={entry.title} onClick={()=>{
-    if(narrow)setCollapsed(true)
+  const historyButton=(entry:(typeof history)[number])=><button type="button" className={`hist${historyCurrent&&activeHistoryId===entry.id?' is-current':''}`} aria-current={historyCurrent&&activeHistoryId===entry.id?'page':undefined} title={entry.title} onClick={()=>{
+    focusContent()
     const remote=serverHistory?.find(h=>h.id===entry.id)
     if(remote){
       sessionStorage.setItem(ACTIVE_HISTORY_KEY,remote.id)
@@ -105,9 +146,10 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
     }
   }}><span className="t">{entry.title}</span></button>
   return <div className={`tp-shell ux-flowith-shell ${collapsed?'is-collapsed':''}`} data-page={route}>
+    <a className="tp-skip-link" href="#main-content" onClick={(event)=>{event.preventDefault();focusContent()}}>跳到主要内容</a>
     <div className="shell">
-        {narrow&&!collapsed&&<button className="tp-sidebar-backdrop" aria-label="关闭导航" onClick={()=>setCollapsed(true)} />}
-    <aside className="sidebar tp-sidebar" aria-label="问山主导航">
+    {narrow&&!collapsed&&<button type="button" tabIndex={-1} className="tp-sidebar-backdrop" aria-label="关闭导航" onClick={closeNavigation} />}
+    <aside ref={sidebarRef} className="sidebar tp-sidebar" aria-label="问山主导航">
       <div className="side-body">
         <div className="side-top">
           <div className="logo-wrap">
@@ -116,11 +158,11 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
               <strong>问山</strong>
             </button>
           </div>
-          <button type="button" className="icon-btn tp-collapse" aria-label={collapsed?'展开侧栏':'收起侧栏'} onClick={()=>setCollapsed((value)=>!value)}>
+          <button ref={collapseRef} type="button" className="icon-btn tp-collapse" aria-expanded={!collapsed} aria-controls="sidebar-navigation" aria-label={collapsed?'展开侧栏':'收起侧栏'} onClick={()=>setCollapsed((value)=>!value)}>
             <FlowithGlyph name="collapse" size={14} />
           </button>
         </div>
-        <nav className="nav">
+        <nav id="sidebar-navigation" className="nav" aria-label="主要功能">
           {nav.map(([id, glyph, label]) => <button type="button" key={id} className={`nav-item tp-nav ${active === id ? 'is-active' : ''}`} aria-label={label} onClick={() => navigate(id)} aria-current={active === id ? 'page' : undefined}>
             <FlowithGlyph name={glyph} size={16}/><span>{label}</span>
           </button>)}
@@ -128,29 +170,46 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
         </nav>
         <div className="sec-row proj" aria-hidden="true" />
         <section className={`tp-history ${historyOpen?'is-open':''}`} aria-label="历史记录">
-          <div className="sec-row hist-head">
-            <button type="button" className="sec-lab tp-history-toggle" aria-label={historyOpen?'收起聊天历史':'展开聊天历史'} aria-expanded={historyOpen} onClick={()=>setHistoryOpen((value)=>!value)}>
+          <h2 className="sec-row hist-head">
+            <button type="button" className="sec-lab tp-history-toggle" aria-label={historyOpen?'收起聊天历史':'展开聊天历史'} aria-expanded={historyOpen} aria-controls="sidebar-history" onClick={()=>setHistoryOpen((value)=>!value)}>
               <span>历史记录</span>
               <span className="caret"><FlowithGlyph name="caret" size={12} /></span>
             </button>
-          </div>
-          {historyOpen&&<div className="hist-list">{reopen?.kind==='unavailable'&&<p className="tp-history-empty" role="alert">{reopen.title}。{reopen.message}</p>}{visibleHistory.length===0?<p className="tp-history-empty">暂无聊天历史</p>:<>{today.length>0&&<>{today.map(historyButton)}</>}{recent.length>0&&<>{recent.map(historyButton)}</>}{earlier.length>0&&<>{earlier.map(historyButton)}</>}</>}</div>}
+          </h2>
+          {historyOpen&&<div id="sidebar-history" className="hist-list">
+            {reopen?.kind==='unavailable'&&<p className="tp-history-empty" role="alert">{reopen.title}。{reopen.message}</p>}
+            {visibleHistory.length===0?<p className="tp-history-empty">暂无聊天历史</p>:historyGroups.filter(group=>group.entries.length>0).map(group=><section className="tp-history-group" key={group.id} aria-labelledby={`history-${group.id}`}>
+              <h3 id={`history-${group.id}`}>{group.title}</h3>
+              <ul>{group.entries.map(entry=><li key={entry.id}>{historyButton(entry)}</li>)}</ul>
+            </section>)}
+          </div>}
         </section>
       </div>
       <div className="tp-profile-wrap user" ref={profileRef}>
-        {profileOpen&&menuBox&&createPortal(<div ref={menuRef} className="tp-profile-menu" role="menu" aria-label="账号菜单" style={menuBox}>
-          <button type="button" role="menuitem" onClick={() => { setProfileOpen(false); go('settings') }}><Icon name="panel" size={20}/><span>设置</span></button>
+        {profileOpen&&menuBox&&createPortal(<div ref={menuRef} id="account-menu" className="tp-profile-menu" role="menu" aria-label="账号菜单" style={menuBox} onKeyDown={(event)=>{
+          const buttons=Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('button'))
+          const index=buttons.indexOf(document.activeElement as HTMLButtonElement)
+          let next=index
+          if(event.key==='ArrowDown')next=(index+1)%buttons.length
+          else if(event.key==='ArrowUp')next=(index-1+buttons.length)%buttons.length
+          else if(event.key==='Home')next=0
+          else if(event.key==='End')next=buttons.length-1
+          else if(event.key==='Tab'){setProfileOpen(false);profileRef.current?.querySelector<HTMLButtonElement>('.tp-profile')?.focus();return}
+          else return
+          event.preventDefault();buttons[next]?.focus()
+        }}>
+          <button type="button" role="menuitem" onClick={() => navigate('settings')}><Icon name="panel" size={20}/><span>设置</span></button>
           <button type="button" role="menuitem" onClick={onThemeChange}><Icon name="moon" size={20}/><span>夜间模式</span><i className={`theme-switch ${theme==='dark'?'is-on':''}`} aria-hidden="true"><b/></i></button>
           <button type="button" role="menuitem" className="is-danger" onClick={onLogout}><Icon name="logout" size={20}/><span>退出登录</span></button>
         </div>,document.body)}
-        <button type="button" className="tp-profile user" aria-label="打开账号菜单" aria-expanded={profileOpen} title={accountIdentity.message} onClick={()=>setProfileOpen((value)=>!value)}>
+        <button type="button" className="tp-profile user" aria-label="打开账号菜单" aria-expanded={profileOpen} aria-haspopup="menu" aria-controls={profileOpen?'account-menu':undefined} title={accountIdentity.message} onClick={()=>setProfileOpen((value)=>!value)}>
           <div className="user-ava"><span><Icon name="user" size={18} /></span></div>
           <div className="name"><b>{accountIdentity.title}</b></div>
           <div className="free-chip">{accountIdentity.title==='演示账号'?'演示':accountIdentity.title === '已登录知乎' ? '知乎' : accountIdentity.title==='已登录账号'?'账号':'本地'}</div>
         </button>
       </div>
     </aside>
-    <section className={`stage tp-panel${route==='home'?' stage-home':''}`}>{children}</section>
+    <section ref={mainRef} id="main-content" tabIndex={-1} inert={narrow&&!collapsed} aria-label="主要内容" className={`stage tp-panel${route==='home'?' stage-home':''}`}>{children}</section>
     </div>
   </div>
 }

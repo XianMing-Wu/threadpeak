@@ -1,0 +1,98 @@
+[
+  {
+    "id": "zhihu-aead0522d960c8fccad1e86b1d76cec0",
+    "name": "跟我学机器学习",
+    "topic": "注意力机制",
+    "avatar": "/art/authors/attention-shapes.jpg",
+    "sourceUrl": "https://www.zhihu.com/question/362131975/answer/2182682685",
+    "articleTitle": "transformer的细节到底是怎么样的?"
+  },
+  {
+    "id": "zhihu-eadc710fccd7c8e2eaa5459ee0bff4d5",
+    "name": "揣着梦想",
+    "topic": "论文与代码",
+    "avatar": "/art/authors/attention-dot.jpg",
+    "sourceUrl": "https://zhuanlan.zhihu.com/p/4792859557",
+    "articleTitle": "Transformer 论文精读与完整代码复现【Attention Is All You Need】"
+  },
+  {
+    "id": "zhihu-c96fd0999e9e64747e300bb7a1f1057e",
+    "name": "sonald",
+    "topic": "数学推导",
+    "avatar": "/art/authors/attention-scale.jpg",
+    "sourceUrl": "https://zhuanlan.zhihu.com/p/2035645890195669149",
+    "articleTitle": "注意力机制中 √dₖ 缩放因子的数学原理(翻译)"
+  },
+  {
+    "id": "zhihu-40002d5f6bbd4d76f9c2f53b87983712",
+    "name": "7号床",
+    "topic": "深度学习",
+    "avatar": "/art/authors/attention-softmax.jpg",
+    "sourceUrl": "https://www.zhihu.com/question/592626839/answer/3304714001",
+    "articleTitle": "为什么Self-Attention要通过线性变换计算Q K V,背后的原理或直观解释是什么?"
+  },
+  {
+    "id": "zhihu-c8f643a8a13bfe8f8dddd27b4cf8842c",
+    "name": "千千",
+    "topic": "Three.js",
+    "avatar": "/art/authors/scene-camera.jpg",
+    "sourceUrl": "https://www.zhihu.com/question/427762007/answer/2000153747221940068",
+    "articleTitle": "ThreeJs如何使用?"
+  },
+  {
+    "id": "zhihu-e2f99b27df49da0ff1070ababe35aaa6",
+    "name": "三木",
+    "topic": "三维图形",
+    "avatar": "/art/authors/geometry-material.jpg",
+    "sourceUrl": "https://zhuanlan.zhihu.com/p/10005205070",
+    "articleTitle": "Three.js入门-常见几何体"
+  },
+  {
+    "id": "zhihu-9dab53930e715141035f2ec3705ce36a",
+    "name": "司马云课堂",
+    "topic": "交互开发",
+    "avatar": "/art/authors/orbit-controls.jpg",
+    "sourceUrl": "https://zhuanlan.zhihu.com/p/1921568552537789863",
+    "articleTitle": "Three.js搭建小米SU7三维汽车实战(3)轨道控制器"
+  },
+  {
+    "id": "zhihu-175025e0406dc5316439266d2b46544f",
+    "name": "赤羽尾风",
+    "topic": "NumPy",
+    "avatar": "/art/authors/array-shape.jpg",
+    "sourceUrl": "https://zhuanlan.zhihu.com/p/2073415173059233106",
+    "articleTitle": "NumPy 入门第一课——为什么数据科学离不开它"
+  },
+  {
+    "id": "zhihu-218127fef1d9d26ff1b6692226edcc5b",
+    "name": "敲代码不忘补水",
+    "topic": "数据分析",
+    "avatar": "/art/authors/array-index.jpg",
+    "sourceUrl": "https://zhuanlan.zhihu.com/p/1009022132",
+    "articleTitle": "Python NumPy 数据清洗:高效处理数据异常与缺失"
+  },
+  {
+    "id": "zhihu-4e8d7562560d1b5b9587beb55cd7be90",
+    "name": "AINLPer",
+    "topic": "大模型应用",
+    "avatar": "/art/authors/llm-delivery.jpg",
+    "sourceUrl": "https://zhuanlan.zhihu.com/p/1918838032745882209",
+    "articleTitle": "一文了解:大模型「推理基准测试」及其「核心评估指标」"
+  },
+  {
+    "id": "zhihu-99a35ad0fe7b1601357b0d67b25a32bb",
+    "name": "源势AI",
+    "topic": "多头注意力",
+    "avatar": "/art/authors/attention-heads.jpg",
+    "sourceUrl": "https://www.zhihu.com/question/341222779/answer/2076761714759054280",
+    "articleTitle": "为什么Transformer 需要进行 Multi-head Attention?"
+  },
+  {
+    "id": "zhihu-8a8098fab6c4081a80dd4a8428a67e70",
+    "name": "费米子父",
+    "topic": "矩阵与广播",
+    "avatar": "/art/authors/array-broadcast.jpg",
+    "sourceUrl": "https://zhuanlan.zhihu.com/p/2070149177640751491",
+    "articleTitle": "NumPy 进阶指南:第 7 - 9 天(矩阵运算与广播)"
+  }
+]

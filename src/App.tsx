@@ -26,18 +26,45 @@ function readRoute():RouteName {
 }
 const AUTH_KEY='threadpeak-authenticated'
 const THEME_KEY='threadpeak-theme'
+type Theme = 'light' | 'dark'
+function readThemePreference(): Theme | null {
+  try {
+    const stored = localStorage.getItem(THEME_KEY)
+    return stored === 'light' || stored === 'dark' ? stored : null
+  } catch { return null }
+}
+function systemTheme(): Theme { return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light' }
 export function App(){
   const[notice,setNotice]=useState('')
   const[sessionReady,setSessionReady]=useState(false)
   const[route,setRoute]=useState<RouteName>(readRoute)
   const[authenticated,setAuthenticated]=useState(()=>localStorage.getItem(AUTH_KEY)!=='false')
-  const[theme,setTheme]=useState<'light'|'dark'>(()=>localStorage.getItem(THEME_KEY)==='dark'?'dark':'light')
+  const[themePreference,setThemePreference]=useState<Theme|null>(readThemePreference)
+  const[systemAppearance,setSystemAppearance]=useState<Theme>(systemTheme)
+  const theme=themePreference??systemAppearance
   useEffect(()=>{const onHash=()=>setRoute(readRoute());addEventListener('hashchange',onHash);return()=>removeEventListener('hashchange',onHash)},[])
-  useEffect(()=>{document.documentElement.dataset.theme=theme;localStorage.setItem(THEME_KEY,theme)},[theme])
+  useEffect(()=>{
+    document.documentElement.dataset.theme=theme
+    document.documentElement.style.colorScheme=theme
+    document.documentElement.style.backgroundColor=`var(--surface-rail, ${theme==='dark'?'#111317':'#f4f6f9'})`
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content',theme==='dark'?'#111317':'#f4f6f9')
+  },[theme])
+  useEffect(()=>{
+    const media=window.matchMedia('(prefers-color-scheme: dark)')
+    const update=()=>setSystemAppearance(media.matches?'dark':'light')
+    const sync=(event:StorageEvent)=>{if(event.key===THEME_KEY||event.key===null)setThemePreference(readThemePreference())}
+    media.addEventListener('change',update)
+    addEventListener('storage',sync)
+    return()=>{media.removeEventListener('change',update);removeEventListener('storage',sync)}
+  },[])
   useEffect(()=>{
     void ensureSession().then(async()=>{const session=await requestAuthSession();if(session.kind==='authenticated'){localStorage.setItem(AUTH_KEY,'true');setAuthenticated(true)}setSessionReady(true)}).catch(()=>{setAuthenticated(false);setSessionReady(true)})
   },[])
-  const toggleTheme=()=>setTheme((value)=>value==='dark'?'light':'dark')
+  const toggleTheme=()=>{
+    const next=theme==='dark'?'light':'dark'
+    setThemePreference(next)
+    try {localStorage.setItem(THEME_KEY,next)} catch { /* Keep the explicit choice for this session. */ }
+  }
   const logout=()=>{
     void requestAuthLogout().then(()=>{clearProductLibrary();localStorage.setItem(AUTH_KEY,'false');setAuthenticated(false)}).catch(e=>setNotice(e instanceof Error?e.message:'退出登录暂未完成。'))
   }

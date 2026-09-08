@@ -1,0 +1,101 @@
+:root {
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  color: var(--ink-1);
+  background: var(--surface-rail);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  height: min(100svh, 100dvh, var(--app-h, 100svh));
+  max-height: min(100svh, 100dvh, var(--app-h, 100svh));
+  margin: 0;
+  overflow: hidden;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+}
+
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+[tabindex]:not(input, textarea, select, [contenteditable=true]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--ink-4);
+  opacity: 1;
+}
+
+svg {
+  display: block;
+}
+
+.tp-icon-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.tp-skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: var(--z-toast);
+  padding: 9px 14px;
+  border-radius: var(--r-control);
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: var(--shadow-3);
+  text-decoration: none;
+  transform: translateY(calc(-100% - 18px));
+}
+
+.tp-skip-link:focus-visible {
+  transform: none;
+}
+
+@keyframes tp-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes tp-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+input:focus, textarea:focus, select:focus, [contenteditable=true]:focus {
+  outline: none;
+}

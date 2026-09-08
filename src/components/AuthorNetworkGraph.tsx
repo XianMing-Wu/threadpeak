@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
+import './author-network-graph.css'
 import {
   NETWORK_KIND_META,
   NETWORK_KIND_ORDER,
@@ -151,23 +152,81 @@ export function AuthorNetworkGraph({
   edges,
   highlight,
   onSelect,
+  describedBy,
 }: {
   nodes: AuthorNetworkNode[]
   edges: AuthorNetworkEdge[]
   onSelect?: (node:AuthorNetworkNode)=>void
   highlight?: AuthorNetworkHighlight | null
+  describedBy?: string
 }) {
   const hostRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
+  const viewportRef = useRef<SVGGElement>(null)
+  const nodeRefs = useRef(new Map<string, SVGCircleElement>())
+  const edgeRefs = useRef(new Map<string, SVGLineElement>())
+  const instructionsId = useId()
   const simRef = useRef<SimNode[]>([])
   const viewRef = useRef<View>({ x: 0, y: 0, k: 1 })
   const hoverRef = useRef('')
+  const focusRef = useRef('')
+  const selectedRef = useRef('')
+  const [selectedId, setSelectedId] = useState('')
   const highlightRef = useRef(highlight)
   const paintRef = useRef<() => void>(() => {})
   const selectRef = useRef(onSelect)
   selectRef.current = onSelect
   highlightRef.current = highlight
   const [tooltip, setTooltip] = useState<{ x: number; y: number; label: string; kind: string } | null>(null)
+
+  const selectNode = (node: AuthorNetworkNode) => {
+    hoverRef.current = ''
+    selectedRef.current = node.id
+    setSelectedId(node.id)
+    paintRef.current()
+    selectRef.current?.(node)
+  }
+
+  const showFocusedNode = (node: AuthorNetworkNode) => {
+    hoverRef.current = ''
+    focusRef.current = node.id
+    const position = simRef.current.find((candidate) => candidate.id === node.id)
+    if (position) {
+      const view = viewRef.current
+      setTooltip({ x: position.x * view.k + view.x, y: position.y * view.k + view.y, label: node.label, kind: NETWORK_KIND_META[node.kind].label })
+    }
+    paintRef.current()
+  }
+
+  const onKeyDown = (event: KeyboardEvent<SVGSVGElement>) => {
+    if (event.altKey || event.ctrlKey || event.metaKey) return
+    const view = viewRef.current
+    const distance = event.shiftKey ? 80 : 40
+    if (event.key === 'ArrowLeft') view.x -= distance
+    else if (event.key === 'ArrowRight') view.x += distance
+    else if (event.key === 'ArrowUp') view.y -= distance
+    else if (event.key === 'ArrowDown') view.y += distance
+    else if (event.key === '+' || event.key === '=' || event.key === '-') {
+      const width = hostRef.current?.clientWidth || 780
+      const height = hostRef.current?.clientHeight || 520
+      const scale = Math.min(2.6, Math.max(0.35, view.k * (event.key === '-' ? 1 / 1.12 : 1.12)))
+      view.x = width / 2 - (width / 2 - view.x) * scale / view.k
+      view.y = height / 2 - (height / 2 - view.y) * scale / view.k
+      view.k = scale
+    } else if (event.key === '0') viewRef.current = { x: 0, y: 0, k: 1 }
+    else if (event.key === 'Enter' && event.target === event.currentTarget) {
+      const node = nodes.find((candidate) => candidate.id === selectedRef.current) ?? nodes[0]
+      if (node) {
+        nodeRefs.current.get(node.id)?.focus()
+        selectNode(node)
+      }
+    } else return
+    event.preventDefault()
+    hoverRef.current = ''
+    const focused = nodes.find((node) => node.id === focusRef.current)
+    if (focused) showFocusedNode(focused)
+    else { setTooltip(null); paintRef.current() }
+  }
 
   useEffect(() => {
     const host = hostRef.current
@@ -182,6 +241,15 @@ export function AuthorNetworkGraph({
       return kept ? { ...node, x: kept.x, y: kept.y, vx: 0, vy: 0 } : node
     })
     simRef.current = sim
+    if (focusRef.current && !sim.some((node) => node.id === focusRef.current)) {
+      focusRef.current = ''
+      setTooltip(null)
+      if (document.activeElement === document.body) svg.focus()
+    }
+    if (hoverRef.current && !sim.some((node) => node.id === hoverRef.current)) {
+      hoverRef.current = ''
+      setTooltip(null)
+    }
     const byId = new Map(sim.map((node) => [node.id, node]))
     const home = new Map(sim.map((node) => [node.id, { x: node.x, y: node.y }]))
     if (!previous.size) viewRef.current = { x: 0, y: 0, k: 1 }
@@ -191,32 +259,49 @@ export function AuthorNetworkGraph({
     let alpha = 0.28
     let dragging = false
     let drag: { pointerId: number; node?: SimNode; lastX: number; lastY: number; moved: boolean } | null = null
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    let reducedMotion = motionQuery.matches
 
     const paint = () => {
       const view = viewRef.current
-      const hover = hoverRef.current
+      const hover = hoverRef.current || focusRef.current
       const active = highlightRef.current
       const near = hover ? neighborIds(hover, edges) : null
       const markedNodes = active?.nodeIds.length ? new Set(active.nodeIds) : null
       const markedEdges = active?.edgeIds?.length ? new Set(active.edgeIds) : null
-      const lines = edges.map((edge) => {
+      viewportRef.current?.setAttribute('transform', `translate(${view.x} ${view.y}) scale(${view.k})`)
+      // React owns stable, focusable SVG elements; the simulation only paints their geometry.
+      for (const edge of edges) {
         const source = byId.get(edge.source)
         const target = byId.get(edge.target)
-        if (!source || !target) return ''
+        const element = edgeRefs.current.get(edge.id)
+        if (!source || !target || !element) continue
         const inHover = !near || near.has(source.id)
         const inMark = !markedNodes || (markedNodes.has(source.id) && markedNodes.has(target.id) && (!markedEdges || markedEdges.has(edge.id)))
         const on = inHover && inMark
-        return `<line x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" stroke="${on ? '#c5c9ce' : '#e8eaed'}" stroke-width="${on ? 1 : 0.7}" opacity="${on ? 0.88 : 0.12}"/>`
-      }).join('')
-      const dots = sim.map((node) => {
+        element.setAttribute('x1', String(source.x))
+        element.setAttribute('y1', String(source.y))
+        element.setAttribute('x2', String(target.x))
+        element.setAttribute('y2', String(target.y))
+        element.setAttribute('stroke', on ? '#c5c9ce' : '#e8eaed')
+        element.setAttribute('stroke-width', on ? '1' : '0.7')
+        element.setAttribute('opacity', on ? '0.88' : '0.12')
+      }
+      for (const node of sim) {
+        const element = nodeRefs.current.get(node.id)
+        if (!element) continue
         const meta = NETWORK_KIND_META[node.kind]
         const inHover = !near || near.has(node.id)
         const inMark = !markedNodes || markedNodes.has(node.id)
-        const focused = active?.focusId === node.id || hover === node.id
-        const on = inHover && inMark
-        return `<circle data-id="${node.id}" cx="${node.x}" cy="${node.y}" r="${focused ? meta.radius + 1.6 : meta.radius}" fill="${meta.color}" opacity="${on ? 1 : 0.12}" stroke="${focused ? '#111' : 'none'}" stroke-width="${focused ? 1 : 0}"/>`
-      }).join('')
-      svg.innerHTML = `<g transform="translate(${view.x} ${view.y}) scale(${view.k})"><g class="author-network-edges">${lines}</g><g class="author-network-nodes">${dots}</g></g>`
+        const focused = active?.focusId === node.id || hover === node.id || selectedRef.current === node.id
+        const on = focusRef.current === node.id || (inHover && inMark)
+        element.setAttribute('cx', String(node.x))
+        element.setAttribute('cy', String(node.y))
+        element.setAttribute('r', String(focused ? meta.radius + 1.6 : meta.radius))
+        element.setAttribute('opacity', on ? '1' : '0.12')
+        element.setAttribute('stroke', focused ? '#111' : 'none')
+        element.setAttribute('stroke-width', focused ? '1' : '0')
+      }
     }
     paintRef.current = paint
 
@@ -287,12 +372,13 @@ export function AuthorNetworkGraph({
 
     const wake = (heat = 0.12) => {
       alpha = Math.max(alpha, heat)
-      if (!frame && running) frame = window.requestAnimationFrame(loop)
+      if (!frame && running && !reducedMotion) frame = window.requestAnimationFrame(loop)
     }
 
     const loop = () => {
       if (!running) return
       frame = 0
+      if (reducedMotion) { paint(); return }
       if (alpha > 0.01 || dragging) {
         integrate(alpha)
         if (!dragging) alpha *= 0.94
@@ -316,7 +402,10 @@ export function AuthorNetworkGraph({
       if (event.button !== 0) return
       const box = svg.getBoundingClientRect()
       const point = worldPoint(viewRef.current, event.clientX, event.clientY, box)
-      const node = hitNode(sim, point.x, point.y)
+      const target = event.target instanceof Element ? event.target.closest('[data-id]') : null
+      const node = byId.get(target?.getAttribute('data-id') ?? '') ?? hitNode(sim, point.x, point.y)
+      if (node) nodeRefs.current.get(node.id)?.focus({ preventScroll: true })
+      else svg.focus({ preventScroll: true })
       svg.setPointerCapture(event.pointerId)
       dragging = true
       drag = { pointerId: event.pointerId, node: node ?? undefined, lastX: event.clientX, lastY: event.clientY, moved: false }
@@ -376,11 +465,23 @@ export function AuthorNetworkGraph({
         drag.node.vx = 0
         drag.node.vy = 0
       }
-      if (drag.node && !drag.moved && event.type !== 'pointercancel') selectRef.current?.(drag.node)
+      if (drag.node && !drag.moved && event.type !== 'pointercancel') {
+        selectedRef.current = drag.node.id
+        setSelectedId(drag.node.id)
+        selectRef.current?.(drag.node)
+      }
       if (svg.hasPointerCapture(event.pointerId)) svg.releasePointerCapture(event.pointerId)
       drag = null
       dragging = false
       wake(0.06)
+      paint()
+    }
+    const onPointerLeave = () => {
+      if (drag) return
+      hoverRef.current = ''
+      const focused = byId.get(focusRef.current)
+      const view = viewRef.current
+      setTooltip(focused ? { x: focused.x * view.k + view.x, y: focused.y * view.k + view.y, label: focused.label, kind: NETWORK_KIND_META[focused.kind].label } : null)
       paint()
     }
     const onWheel = (event: WheelEvent) => {
@@ -400,22 +501,35 @@ export function AuthorNetworkGraph({
       width = host.clientWidth || width
       height = host.clientHeight || height
     }
+    const onMotionChange = () => {
+      reducedMotion = motionQuery.matches
+      if (reducedMotion) {
+        window.cancelAnimationFrame(frame)
+        frame = 0
+      } else wake(0.08)
+    }
 
     const observer = new ResizeObserver(onResize)
     observer.observe(host)
+    motionQuery.addEventListener('change', onMotionChange)
     svg.addEventListener('pointerdown', onPointerDown)
     svg.addEventListener('pointermove', onPointerMove)
     svg.addEventListener('pointerup', onPointerUp)
     svg.addEventListener('pointercancel', onPointerUp)
+    svg.addEventListener('pointerleave', onPointerLeave)
     svg.addEventListener('wheel', onWheel, { passive: false })
     return () => {
       running = false
       window.cancelAnimationFrame(frame)
       observer.disconnect()
+      motionQuery.removeEventListener('change', onMotionChange)
+      if (drag && svg.hasPointerCapture(drag.pointerId)) svg.releasePointerCapture(drag.pointerId)
+      if (paintRef.current === paint) paintRef.current = () => {}
       svg.removeEventListener('pointerdown', onPointerDown)
       svg.removeEventListener('pointermove', onPointerMove)
       svg.removeEventListener('pointerup', onPointerUp)
       svg.removeEventListener('pointercancel', onPointerUp)
+      svg.removeEventListener('pointerleave', onPointerLeave)
       svg.removeEventListener('wheel', onWheel)
     }
   }, [nodes, edges])
@@ -432,7 +546,25 @@ export function AuthorNetworkGraph({
           <li key={kind}><i style={{ background: NETWORK_KIND_META[kind].color }}/><span>{NETWORK_KIND_META[kind].label}</span></li>
         ))}
       </ul>
-      <svg ref={svgRef} className="author-network-canvas" role="img" aria-label="博主与知识的关系图"/>
+      <p id={instructionsId} className="author-network-instructions">Tab 切换节点，Enter 或空格选择。方向键平移，按住 Shift 加快；加减键缩放，0 复位。也可从来源作者列表查看资料。</p>
+      <svg ref={svgRef} className="author-network-canvas" role="group" tabIndex={0} aria-label="博主与知识的关系图" aria-describedby={[instructionsId, describedBy].filter(Boolean).join(' ')} onKeyDown={onKeyDown}>
+        <g ref={viewportRef}>
+          <g className="author-network-edges" aria-hidden="true">
+            {edges.map((edge) => <line key={edge.id} ref={(element) => { if (element) edgeRefs.current.set(edge.id, element); else edgeRefs.current.delete(edge.id) }}/>) }
+          </g>
+          <g className="author-network-nodes">
+            {nodes.map((node) => (
+              <circle key={node.id} ref={(element) => { if (element) nodeRefs.current.set(node.id, element); else nodeRefs.current.delete(node.id) }} data-id={node.id} fill={NETWORK_KIND_META[node.kind].color}
+                role="button" tabIndex={0} aria-label={`${NETWORK_KIND_META[node.kind].label}：${node.label}`} aria-pressed={selectedId === node.id}
+                onFocus={() => showFocusedNode(node)} onBlur={() => { focusRef.current = ''; setTooltip(null); paintRef.current() }}
+                onClick={(event) => { if (event.detail === 0) selectNode(node) }}
+                onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); if (!event.repeat) { showFocusedNode(node); selectNode(node) } } }}>
+                <title>{node.label}{node.detail ? `，${node.detail}` : ''}</title>
+              </circle>
+            ))}
+          </g>
+        </g>
+      </svg>
       {tooltip && (
         <div className="author-network-tooltip" style={{ left: tooltip.x, top: tooltip.y }}>
           <small>{tooltip.kind}</small>

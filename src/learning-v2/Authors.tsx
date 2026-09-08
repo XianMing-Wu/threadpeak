@@ -2,7 +2,7 @@ import {pollResource} from './poll'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { rankAuthorMatches, type AuthorBrief, type AuthorMatch, type AuthorNetwork, type AuthorSearchState } from '@threadpeak/contracts/authors'
 import {AuthorSearchComposer} from './AuthorSearchComposer'
-import { PeakHero } from '../components/PeakHero'
+import { AuthorDiscoveryHero } from './AuthorDiscoveryHero'
 import { PeakTabs } from '../components/PeakTabs'
 import { ProductWorkspace } from '../components/Shell'
 import { productRequest, type TaskView, type LearningSnapshot } from './client'
@@ -69,7 +69,7 @@ export function DurableAuthorsPage(){
   const phaseIndex=Math.max(0,phases.indexOf(snapshot?.job?.phase??''))
   const patch=(values:Partial<AuthorBrief>)=>setBrief(b=>({...b,...values}))
   return <ProductWorkspace active="authors" page="authors"><main className="ux-flowith peak-market au-page" tabIndex={0} aria-label="博主搜索与网络">
-    <PeakHero title="博主网络" sub="从问题找到值得请教的人，让学习中的好来源持续积累。"/>
+    <AuthorDiscoveryHero/>
     <div className="tabs-wrap au-market-tabs"><PeakTabs items={[{id:'search' as const,label:'搜索博主',icon:'search'},{id:'network' as const,label:'我的博主网络',icon:'network'}]} active={section} onChange={setSection}/><details className="au-history"><summary><Glyph name="clock" size={16}/>搜索历史</summary><div>{past.length?past.map(item=><button key={item.id} onClick={e=>{setResourceId(item.id);setSection('search');e.currentTarget.closest('details')?.removeAttribute('open')}}>{item.question}</button>):<p>还没有搜索记录</p>}</div></details></div>
     <section className="panel"><div className="sec au-content">
     {notice&&<div className="au-notice" role="status"><span>{notice}</span><button onClick={()=>{setReconnect(n=>n+1);void loadNetwork().then(()=>setNotice('')).catch(e=>setNotice(e.message))}}>重新连接</button><button aria-label="关闭提示" onClick={()=>setNotice('')}><Glyph name="close" size={14}/></button></div>}

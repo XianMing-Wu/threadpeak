@@ -1,60 +1,52 @@
-/* Product host for the Flowith visual system. Studio preview chrome is stripped. */
-
+/* Host layout: keep navigation and content scroll independent at every supported width. */
 .ux-flowith-shell.tp-shell {
   min-width: 0;
   min-height: 0;
   height: 100%;
   border-radius: 0;
   box-shadow: none;
-  background: #fff;
+  background: var(--surface-1);
 }
-
 .ux-flowith-shell .shell {
   width: 100%;
   height: 100%;
   min-height: 0;
 }
-
 .ux-flowith-shell .stage.tp-panel {
   margin: 6px 6px 6px 0;
   width: auto;
   height: auto;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid #f1f2f4;
-  border-radius: 6px;
-  background: #fff;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-card);
+  background: var(--surface-1);
   box-shadow: none;
 }
-
 .ux-flowith-shell .stage > .product-workspace {
   flex: 1;
   min-height: 0;
   height: 100%;
   overflow: hidden;
 }
-
 .ux-flowith-shell .stage.stage-home {
   margin: 6px;
 }
-
 .ux-flowith-shell .stage.stage-home .home {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  background: #fff;
+  background: var(--surface-1);
 }
-
-.ux-flowith-shell .stage.stage-home .home:before {
+.ux-flowith-shell .stage.stage-home .home::before {
   display: none;
 }
-
 .ux-flowith-shell .home-body {
   width: 100%;
 }
-
 .ux-flowith-shell.tp-shell.is-collapsed .sidebar {
   width: 64px;
   min-width: 64px;
@@ -62,7 +54,6 @@
   padding: 12px 0 8px;
   align-items: center;
 }
-
 .ux-flowith-shell.tp-shell.is-collapsed .side-top {
   width: 100%;
   padding: 0 8px;
@@ -71,75 +62,44 @@
   gap: 4px;
   height: auto;
 }
-
 .ux-flowith-shell.tp-shell.is-collapsed .logo-wrap {
   margin: 0;
 }
-
-.ux-flowith-shell.tp-shell.is-collapsed .logo-btn {
-  margin-left: 0;
-}
-
 .ux-flowith-shell.tp-shell.is-collapsed .nav {
   height: auto;
   padding: 0 8px;
   align-items: center;
 }
-
 .ux-flowith-shell.tp-shell.is-collapsed .nav-item {
-  width: 42px;
-  padding: 6px 0;
+  width: 44px;
+  height: 44px;
+  padding: 8px 0;
   justify-content: center;
 }
-
-.ux-flowith-shell.tp-shell.is-collapsed .nav-item span,
-.ux-flowith-shell.tp-shell.is-collapsed .nav-item.nav-slot,
-.ux-flowith-shell.tp-shell.is-collapsed .sec-row,
-.ux-flowith-shell.tp-shell.is-collapsed .hist-list,
-.ux-flowith-shell.tp-shell.is-collapsed .name,
-.ux-flowith-shell.tp-shell.is-collapsed .free-chip,
-.ux-flowith-shell.tp-shell.is-collapsed .tp-history {
+.ux-flowith-shell.tp-shell.is-collapsed .nav-item span, .ux-flowith-shell.tp-shell.is-collapsed .nav-item.nav-slot, .ux-flowith-shell.tp-shell.is-collapsed .sec-row, .ux-flowith-shell.tp-shell.is-collapsed .hist-list, .ux-flowith-shell.tp-shell.is-collapsed .name, .ux-flowith-shell.tp-shell.is-collapsed .free-chip, .ux-flowith-shell.tp-shell.is-collapsed .tp-history {
   display: none;
 }
-
-.ux-flowith-shell.tp-shell.is-collapsed .user,
-.ux-flowith-shell.tp-shell.is-collapsed .tp-profile-wrap {
-  width: 42px;
+.ux-flowith-shell.tp-shell.is-collapsed .user, .ux-flowith-shell.tp-shell.is-collapsed .tp-profile-wrap {
+  width: 44px;
   margin: 16px auto 0;
   padding: 0;
   justify-content: center;
 }
-
 .ux-flowith-shell.tp-shell.is-collapsed .icon-btn svg {
   transform: rotate(180deg);
 }
-
-.ux-flowith-shell .sidebar svg,
-.ux-flowith-shell .logo-btn svg,
-.ux-flowith-shell .nav-item svg,
-.ux-flowith-shell .icon-btn svg {
+.ux-flowith-shell .sidebar svg {
   pointer-events: none;
 }
-
 .ux-flowith-shell .tp-wordmark strong {
   display: none;
 }
-
-.ux-flowith-shell .ux-beam,
-.ux-flowith-shell .composer.input-motion-frame,
-.ux-flowith-shell .query-chat-composer .ux-beam,
-.ux-flowith-shell .lesson-chat .ux-beam,
-.ux-flowith-shell .canvas-composer .ux-beam,
-.ux-flowith-shell .ux-flowith-composer-wrap .ux-beam {
+.ux-flowith-shell .ux-beam, .ux-flowith-shell .composer.input-motion-frame {
   overflow: visible;
 }
-
-.ux-flowith-shell .query-chat-composer .composer.input-motion-frame,
-.ux-flowith-shell .lesson-chat .composer.input-motion-frame,
-.ux-flowith-shell .canvas-composer .composer.input-motion-frame {
+.ux-flowith-shell .query-chat-composer .composer.input-motion-frame, .ux-flowith-shell .lesson-chat .composer.input-motion-frame, .ux-flowith-shell .canvas-composer .composer.input-motion-frame {
   isolation: auto;
 }
-
 .ux-flowith-shell .tp-history {
   display: flex;
   flex: 1 1 0;
@@ -147,33 +107,25 @@
   overflow: hidden;
   flex-direction: column;
 }
-
 .ux-flowith-shell .tp-history:not(.is-open) {
   flex: 0 0 auto;
 }
-
-.ux-flowith-shell .tp-history > .hist-head,
-.ux-flowith-shell .tp-history > .sec-row {
+.ux-flowith-shell .tp-history > .hist-head {
   display: flex;
   flex: 0 0 auto;
   overflow: visible;
   padding: 0;
 }
-
 .ux-flowith-shell .tp-history:not(.is-open) .hist-list {
   display: none;
 }
-
-.ux-flowith-shell .hist-head .tp-history-toggle,
-.ux-flowith-shell .hist-head .tp-history-toggle:hover {
+.ux-flowith-shell .hist-head .tp-history-toggle {
   background: transparent;
 }
-
 .ux-flowith-shell .hist-head .tp-history-toggle:focus-visible {
-  outline: 1px solid #b8b2c2;
+  outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
-
 .ux-flowith-shell .hist-list {
   display: flex;
   flex: 1 1 0;
@@ -181,206 +133,119 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: stretch;
-  align-content: start;
   padding: 4px 12px 8px;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-
-.ux-flowith-shell .tp-history > div button.hist,
 .ux-flowith-shell .hist {
-  display: flex;
   width: 100%;
-  height: 32px;
-  min-height: 32px;
+  min-height: 40px;
   margin: 0;
   align-items: center;
   gap: 0;
-  padding: 6px 12px;
+  padding: 8px 12px;
   overflow: hidden;
-  border-radius: 12px;
-  color: #2d3139;
-  font-size: 13px;
-  line-height: 20px;
+  font-size: var(--fs-body);
+  line-height: 1.5;
   text-align: left;
   white-space: nowrap;
 }
-
 .ux-flowith-shell .hist .t {
   min-width: 0;
   overflow: hidden;
   padding: 0;
-  color: #2d3139 !important;
-  font-size: 13px !important;
-  line-height: 20px !important;
+  color: var(--ink-2);
+  font-size: var(--fs-body);
+  line-height: 1.5;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-.ux-flowith-shell .hist-th,
-.ux-flowith-shell .hist .meta,
-.ux-flowith-shell .hist .d-wrap {
-  display: none;
-}
-
 .ux-flowith-shell .hist.is-current {
-  background: #f1f2f4;
+  border-color: var(--line-3);
+  background: var(--surface-1);
 }
-
 .ux-flowith-shell .hist.is-current .t {
-  color: #1772f6 !important;
+  color: var(--accent);
 }
-
 .ux-flowith-shell .tp-profile-wrap.user {
   width: 216px;
   margin: 16px 12px 0;
 }
-
 .ux-flowith-shell .tp-profile.user {
   display: flex;
   width: 100%;
-  height: 40px;
+  min-height: 44px;
   align-items: center;
   gap: 10px;
+  margin: 0;
   padding: 0 8px 0 0;
-  border-radius: 16px;
+  border-radius: var(--r-control);
   background: transparent;
 }
-
-.ux-flowith-shell .tp-profile.user[aria-expanded="true"],
-.ux-flowith-shell .tp-profile.user:hover {
-  background: #f1f2f4;
+.ux-flowith-shell .tp-profile.user[aria-expanded="true"], .ux-flowith-shell .tp-profile.user:hover {
+  background: var(--surface-2);
 }
-
-.ux-beam .input-motion-frame::before,
-.ux-beam .input-motion-frame::after {
-  content: none !important;
-  display: none !important;
-}
-
 .ux-flowith-shell .composer-wrap {
   width: 100%;
 }
-
-.ux-flowith-shell .query-chat-composer .composer-wrap,
-.ux-flowith-shell .lesson-chat .composer-wrap,
-.ux-flowith-shell .canvas-composer .composer-wrap {
+.ux-flowith-shell .query-chat-composer .composer-wrap, .ux-flowith-shell .lesson-chat .composer-wrap, .ux-flowith-shell .canvas-composer .composer-wrap {
   max-width: none;
   margin: 0;
 }
-
 .ux-flowith-shell .composer-chips {
   padding: 0 16px;
 }
-
 .ux-flowith-shell .home-attachments {
-  width: min(720px, 100%);
+  width: min(760px, 100%);
   margin: 0 auto 10px;
 }
-
-.ux-flowith-shell .home-suggestions button {
-  font-size: 13px;
-  color: #5a6272;
-}
-
-.ux-flowith-shell .home-discovery h2 {
-  margin: 0 0 10px;
-  font-size: 13px;
-}
-
-.ux-flowith-shell .home-discovery h2 > small {
-  margin-left: 6px;
-  color: #a0a6af;
-  font-size: 9px;
-  font-weight: 500;
-}
-
 .ux-flowith-shell .concept-back {
   display: flex;
   align-items: center;
   gap: 8px;
   margin: 0 0 12px;
 }
-
-.ux-flowith .grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-@media (max-width: 1100px) {
-  .ux-flowith .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (max-width: 760px) {
+  .ux-flowith-shell .shell {
+    padding-left: 70px;
   }
-}
-
-@media (max-width: 760px) {
-  .ux-flowith .grid,
-  .knowledge-grid,
-  .route-grid {
-    grid-template-columns: 1fr;
+  .ux-flowith-shell.tp-shell .sidebar {
+    position: fixed;
+    inset: 6px auto 6px 6px;
+    margin: 0;
+    z-index: var(--z-navigation);
+    background: var(--surface-1);
   }
-}
-
-:root[data-theme="dark"] .ux-flowith-shell.tp-shell,
-:root[data-theme="dark"] .ux-flowith-shell .stage.tp-panel,
-:root[data-theme="dark"] .ux-flowith-shell .sidebar,
-:root[data-theme="dark"] .ux-flowith-shell .stage-home,
-:root[data-theme="dark"] .ux-flowith-shell .home,
-:root[data-theme="dark"] .ux-flowith {
-  color: #e8ebef;
-  background: #17191d;
-}
-
-:root[data-theme="dark"] .ux-flowith-shell .stage.tp-panel,
-:root[data-theme="dark"] .ux-flowith-shell .stage.stage-home {
-  border-color: #30343a;
-}
-
-:root[data-theme="dark"] .ux-flowith-shell .nav-item:hover,
-:root[data-theme="dark"] .ux-flowith-shell .nav-item[aria-current="page"],
-:root[data-theme="dark"] .ux-flowith-shell .hist:hover,
-:root[data-theme="dark"] .ux-flowith-shell .hist.is-current,
-:root[data-theme="dark"] .ux-flowith-shell .tp-profile.user:hover,
-:root[data-theme="dark"] .ux-flowith-shell .icon-btn:hover {
-  background: #24272d;
-}
-
-:root[data-theme="dark"] .ux-flowith-shell .nav-item,
-:root[data-theme="dark"] .ux-flowith-shell .nav-item span,
-:root[data-theme="dark"] .ux-flowith-shell .t,
-:root[data-theme="dark"] .ux-flowith-shell .name,
-:root[data-theme="dark"] .ux-flowith-shell .ideas,
-:root[data-theme="dark"] .ux-flowith-shell .home-sub-ink {
-  color: #e8ebef !important;
-  -webkit-text-fill-color: #e8ebef;
-}
-
-:root[data-theme="dark"] .ux-flowith-card {
-  border-color: #30343a;
-  background: #1d2127;
-}
-
-:root[data-theme="dark"] .ux-flowith-card .body h4 {
-  color: #eef1f4 !important;
-}
-
-:root[data-theme="dark"] .ux-flowith .search input {
-  background: #24272d;
-  color: #e8ebef;
-}
-
-@media (max-width: 760px) {
-  .ux-flowith-shell .shell { padding-left: 70px; }
-  .ux-flowith-shell.tp-shell .sidebar { position: fixed; inset: 6px auto 6px 6px; margin: 0 !important; z-index: 150; background: #fff; }
-  .tp-sidebar-backdrop { position: fixed; inset: 0; z-index: 140; background: #1113; }
-  .query-chat-header { gap: 8px; padding-inline: 8px; }
-  .query-chat-header h1 { max-width: 34vw; }
-  .new-chat-only { white-space: nowrap; flex: none; padding-inline: 8px; }
-  .route-ready-card { padding: 14px; gap: 10px; }
-  .route-ready-card > div { min-width: 0; }
-  .tp-pill b { flex-shrink: 1; overflow: hidden; text-overflow: ellipsis; }
-  .path3d-stage > header > span { display: none; }
-}
-@media (max-width: 760px) {
-  .ux-flowith-shell.tp-shell .sidebar { transition: none !important; }
+  .tp-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--z-navigation) - 1);
+    border: 0;
+    background: var(--overlay);
+  }
+  .query-chat-header {
+    gap: 8px;
+    padding-inline: 8px;
+  }
+  .query-chat-header h1 {
+    max-width: 34vw;
+  }
+  .new-chat-only {
+    white-space: nowrap;
+    flex: none;
+    padding-inline: 8px;
+  }
+  .route-ready-card {
+    padding: 14px;
+    gap: 10px;
+  }
+  .route-ready-card > div {
+    min-width: 0;
+  }
+  .tp-pill b {
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }

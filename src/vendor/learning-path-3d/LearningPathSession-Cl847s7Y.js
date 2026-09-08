@@ -1274,7 +1274,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 		});
 	}
 	setVerticalCompositionOffsetPixels(e, t = !1) {
-		let n = this.viewportHeightPixels * .48;
+		let n = this.viewportHeightPixels * .72;
 		this.desiredVerticalCompositionOffsetPixels = _.clamp(Number.isFinite(e) ? e : 0, 0, n), t && (this.currentVerticalCompositionOffsetPixels = this.desiredVerticalCompositionOffsetPixels, this.applyCompositionOffset());
 	}
 	getVerticalCompositionOffsetPixels() {
@@ -1370,13 +1370,19 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 	}
 	resolveViewportPanConstraints() {
 		this.camera.updateMatrixWorld(!0);
-		let e = [
-			this.intersectGroundAtNdc(-1, -1),
-			this.intersectGroundAtNdc(-1, 1),
-			this.intersectGroundAtNdc(1, -1),
-			this.intersectGroundAtNdc(1, 1)
-		].filter((e) => e !== null);
-		if (e.length === 0) return {
+		let e = this.camera.view?.enabled ? this.camera.view : null, t;
+		e && this.camera.clearViewOffset();
+		try {
+			t = [
+				this.intersectGroundAtNdc(-1, -1),
+				this.intersectGroundAtNdc(-1, 1),
+				this.intersectGroundAtNdc(1, -1),
+				this.intersectGroundAtNdc(1, 1)
+			].filter((e) => e !== null);
+		} finally {
+			e && (e.enabled = !0, this.camera.updateProjectionMatrix());
+		}
+		if (t.length === 0) return {
 			x: U({
 				contentMin: this.cameraTarget.x,
 				contentMax: this.cameraTarget.x,
@@ -1392,20 +1398,20 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 				proposedTarget: this.cameraTarget.z
 			})
 		};
-		let t = e.map((e) => e.x - this.cameraTarget.x), n = e.map((e) => e.z - this.cameraTarget.z);
+		let n = t.map((e) => e.x - this.cameraTarget.x), r = t.map((e) => e.z - this.cameraTarget.z);
 		return {
 			x: U({
 				contentMin: this.fullBounds.minX,
 				contentMax: this.fullBounds.maxX,
-				viewportMinOffset: Math.min(...t),
-				viewportMaxOffset: Math.max(...t),
+				viewportMinOffset: Math.min(...n),
+				viewportMaxOffset: Math.max(...n),
 				proposedTarget: this.cameraTarget.x
 			}),
 			z: U({
 				contentMin: this.fullBounds.minZ,
 				contentMax: this.fullBounds.maxZ,
-				viewportMinOffset: Math.min(...n),
-				viewportMaxOffset: Math.max(...n),
+				viewportMinOffset: Math.min(...r),
+				viewportMaxOffset: Math.max(...r),
 				proposedTarget: this.cameraTarget.z
 			})
 		};
@@ -6727,4 +6733,4 @@ function Jn(e) {
 //#endregion
 export { Jn as createLearningPathSession };
 
-//# sourceMappingURL=LearningPathSession-WoZaqSLh.js.map
+//# sourceMappingURL=LearningPathSession-Cl847s7Y.js.map

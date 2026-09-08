@@ -291,7 +291,7 @@ test('observed unfenced NumPy arrays remain complete code, including indentation
   const p=prepareMarkdown(numpyExcerpt)
   assert.equal(p.math.length,0,JSON.stringify(p))
   const html=await renderActual(numpyExcerpt)
-  assert.match(html,/<pre><code class="language-python">import numpy as np/)
+  assert.match(html,/<pre\b[^>]*><code class="language-python">import numpy as np/)
   assert.match(html,/A = np.array\(\[\[1,2\],\n             \[3,4\]\]\) # 2行2列/)
   assert.match(html,/B = np.array\(\[\[5,6\],\n             \[7,8\]\]\) # 2行2列/)
   assert.match(html,/<\/code><\/pre>[\s\S]*<p>这里开始解释矩阵乘法。<\/p>/)
@@ -353,7 +353,7 @@ print(C)
 这里讨论矩阵的运算规则。`
  const html=await renderActual(source)
  assert.equal(prepareMarkdown(source).math.length,0)
- assert.match(html,/<pre><code class="language-python">[\s\S]*result = A @ B[\s\S]*C = A \+ B\nprint\(C\)[\s\S]*<\/code><\/pre>/)
+ assert.match(html,/<pre\b[^>]*><code class="language-python">[\s\S]*result = A @ B[\s\S]*C = A \+ B\nprint\(C\)[\s\S]*<\/code><\/pre>/)
  assert.match(html,/<p>这里讨论矩阵的运算规则。<\/p>/)
  assert.equal(prepareMarkdown('公式：C = A + B。').math.length,1)
 })
@@ -367,7 +367,7 @@ for(const sample of readingCorpus)test(`reading corpus ${sample.id}: ${sample.la
  if(sample.unresolved)assert.match(html,/tp-math-unresolved/)
  if(sample.code){
   const encoded=sample.code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;')
-  assert.ok([...html.matchAll(/<pre><code[^>]*>([\s\S]*?)<\/code><\/pre>/g)].some(m=>m[1].includes(encoded)),html)
+  assert.ok([...html.matchAll(/<pre\b[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/g)].some(m=>m[1].includes(encoded)),html)
  }
  if(sample.incomplete)assert.ok(html.indexOf('role="note"')<html.indexOf('<ul>')||!html.includes('<ul>'),'notice must precede incomplete prose')
 })

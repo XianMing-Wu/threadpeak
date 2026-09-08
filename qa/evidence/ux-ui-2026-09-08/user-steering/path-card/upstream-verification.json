@@ -1,0 +1,13 @@
+{
+  "scope": "Upstream working tree, local source and module checks only",
+  "checks": [
+    "typecheck",
+    "test:experience",
+    "test:page-generation",
+    "build:module",
+    "test:module-boundary"
+  ],
+  "passed": true,
+  "graphUpdate": "Completed; existing parser warnings in five barrel index files were reported by Graphify. No new import edges in changed rendering and placement functions.",
+  "artifactFilesVerified": 19
+}

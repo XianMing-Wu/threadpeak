@@ -1,0 +1,776 @@
+{
+  "startedAt": "2026-09-08T04:22:27.570Z",
+  "completedAt": "2026-09-08T04:22:31.620Z",
+  "url": "http://127.0.0.1:4404/",
+  "scope": "Local browser UX/UI only. Isolated QA API; explicit test providers; curated examples and synthetic author graph. No live-provider or production-readiness claim.",
+  "partial": true,
+  "filter": "auth-landing|reduced-motion",
+  "gitHead": "d5ee4021525483ba18430590a5515c1c89311485",
+  "checks": [
+    {
+      "name": "reduced-motion-home-and-author-graph",
+      "passed": true,
+      "startedAt": "2026-09-08T04:22:27.862Z",
+      "completedAt": "2026-09-08T04:22:29.239Z",
+      "evidence": {
+        "motion": {
+          "name": "none",
+          "duration": "1e-05s",
+          "iterations": "1"
+        },
+        "keyboardSelect": true,
+        "panZoomReset": true,
+        "audits": [
+          "author-graph-keyboard-light",
+          "author-graph-keyboard-dark"
+        ]
+      }
+    },
+    {
+      "name": "auth-landing-theme-and-small-viewport",
+      "passed": true,
+      "startedAt": "2026-09-08T04:22:29.239Z",
+      "completedAt": "2026-09-08T04:22:31.620Z",
+      "evidence": {
+        "darkSurfaceAudited": true,
+        "themeSwitch": true,
+        "measurements": [
+          {
+            "appearance": "dark",
+            "viewport": {
+              "width": 390,
+              "height": 780
+            },
+            "layout": {
+              "introWidth": 350,
+              "titleWidth": 350,
+              "cardWidth": 350,
+              "viewportWidth": 390
+            },
+            "bottom": {
+              "scrollTop": 0,
+              "buttonLeft": 45,
+              "buttonRight": 345,
+              "buttonTop": 560.359375,
+              "buttonBottom": 608.359375,
+              "buttonWidth": 300,
+              "innerHeight": 780,
+              "innerWidth": 390
+            }
+          },
+          {
+            "appearance": "dark",
+            "viewport": {
+              "width": 320,
+              "height": 720
+            },
+            "layout": {
+              "introWidth": 280,
+              "titleWidth": 280,
+              "cardWidth": 280,
+              "viewportWidth": 320
+            },
+            "bottom": {
+              "scrollTop": 63,
+              "buttonLeft": 45,
+              "buttonRight": 275,
+              "buttonTop": 537.953125,
+              "buttonBottom": 585.953125,
+              "buttonWidth": 230,
+              "innerHeight": 720,
+              "innerWidth": 320
+            }
+          },
+          {
+            "appearance": "dark",
+            "viewport": {
+              "width": 800,
+              "height": 515
+            },
+            "layout": {
+              "introWidth": 744,
+              "titleWidth": 690,
+              "cardWidth": 408,
+              "viewportWidth": 800
+            },
+            "bottom": {
+              "scrollTop": 252,
+              "buttonLeft": 233,
+              "buttonRight": 567,
+              "buttonTop": 318.765625,
+              "buttonBottom": 366.765625,
+              "buttonWidth": 334,
+              "innerHeight": 515,
+              "innerWidth": 800
+            }
+          },
+          {
+            "appearance": "light",
+            "viewport": {
+              "width": 390,
+              "height": 780
+            },
+            "layout": {
+              "introWidth": 350,
+              "titleWidth": 350,
+              "cardWidth": 350,
+              "viewportWidth": 390
+            },
+            "bottom": {
+              "scrollTop": 0,
+              "buttonLeft": 45,
+              "buttonRight": 345,
+              "buttonTop": 560.359375,
+              "buttonBottom": 608.359375,
+              "buttonWidth": 300,
+              "innerHeight": 780,
+              "innerWidth": 390
+            }
+          },
+          {
+            "appearance": "light",
+            "viewport": {
+              "width": 320,
+              "height": 720
+            },
+            "layout": {
+              "introWidth": 280,
+              "titleWidth": 280,
+              "cardWidth": 280,
+              "viewportWidth": 320
+            },
+            "bottom": {
+              "scrollTop": 63,
+              "buttonLeft": 45,
+              "buttonRight": 275,
+              "buttonTop": 537.953125,
+              "buttonBottom": 585.953125,
+              "buttonWidth": 230,
+              "innerHeight": 720,
+              "innerWidth": 320
+            }
+          },
+          {
+            "appearance": "light",
+            "viewport": {
+              "width": 800,
+              "height": 515
+            },
+            "layout": {
+              "introWidth": 744,
+              "titleWidth": 690,
+              "cardWidth": 408,
+              "viewportWidth": 800
+            },
+            "bottom": {
+              "scrollTop": 252,
+              "buttonLeft": 233,
+              "buttonRight": 567,
+              "buttonTop": 318.765625,
+              "buttonBottom": 366.765625,
+              "buttonWidth": 334,
+              "innerHeight": 515,
+              "innerWidth": 800
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "audits": [
+    {
+      "name": "author-graph-keyboard-light",
+      "at": "2026-09-08T04:22:29.063Z",
+      "url": "http://127.0.0.1:4404/qa/ux-ui-lab.html",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": null,
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "aria-prohibited-attr",
+          "impact": "serious",
+          "nodes": [
+            [
+              ".author-network-graph"
+            ]
+          ]
+        },
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": [
+            [
+              "li:nth-child(1) > span"
+            ],
+            [
+              "li:nth-child(2) > span"
+            ],
+            [
+              "li:nth-child(3) > span"
+            ],
+            [
+              "li:nth-child(4) > span"
+            ]
+          ]
+        }
+      ],
+      "passes": 32,
+      "axeVersion": "4.13.0",
+      "layout": {
+        "viewportWidth": 1440,
+        "bodyWidth": 1440,
+        "documentWidth": 1440,
+        "horizontalOverflow": false,
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "作者图键盘验收",
+            "color": "rgb(31, 35, 41)",
+            "textFillColor": "rgb(31, 35, 41)",
+            "fontSize": "28px",
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        ],
+        "tinyText": [],
+        "panels": []
+      },
+      "passed": true,
+      "images": []
+    },
+    {
+      "name": "author-graph-keyboard-dark",
+      "at": "2026-09-08T04:22:29.172Z",
+      "url": "http://127.0.0.1:4404/qa/ux-ui-lab.html",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "aria-prohibited-attr",
+          "impact": "serious",
+          "nodes": [
+            [
+              ".author-network-graph"
+            ]
+          ]
+        },
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": [
+            [
+              "li:nth-child(1) > span"
+            ],
+            [
+              "li:nth-child(2) > span"
+            ],
+            [
+              "li:nth-child(3) > span"
+            ],
+            [
+              "li:nth-child(4) > span"
+            ]
+          ]
+        }
+      ],
+      "passes": 32,
+      "axeVersion": "4.13.0",
+      "layout": {
+        "viewportWidth": 1440,
+        "bodyWidth": 1440,
+        "documentWidth": 1440,
+        "horizontalOverflow": false,
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "作者图键盘验收",
+            "color": "rgb(237, 240, 243)",
+            "textFillColor": "rgb(237, 240, 243)",
+            "fontSize": "28px",
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        ],
+        "tinyText": [],
+        "panels": []
+      },
+      "passed": true,
+      "images": []
+    },
+    {
+      "name": "auth-dark-390",
+      "at": "2026-09-08T04:22:30.383Z",
+      "url": "http://127.0.0.1:4404/",
+      "viewport": {
+        "width": 390,
+        "height": 780
+      },
+      "theme": "dark",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": [
+            [
+              ".auth-theme > span"
+            ]
+          ]
+        }
+      ],
+      "passes": 26,
+      "axeVersion": "4.13.0",
+      "layout": {
+        "viewportWidth": 390,
+        "bodyWidth": 390,
+        "documentWidth": 390,
+        "horizontalOverflow": false,
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "循着问题与答案的脉络，登上理解的高峰。",
+            "color": "rgb(237, 240, 243)",
+            "textFillColor": "rgb(237, 240, 243)",
+            "fontSize": "28px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "tag": "H2",
+            "text": "进入本地工作区",
+            "color": "rgb(237, 240, 243)",
+            "textFillColor": "rgb(237, 240, 243)",
+            "fontSize": "20px",
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        ],
+        "tinyText": [],
+        "panels": []
+      },
+      "passed": true,
+      "images": []
+    },
+    {
+      "name": "auth-dark-320",
+      "at": "2026-09-08T04:22:30.584Z",
+      "url": "http://127.0.0.1:4404/",
+      "viewport": {
+        "width": 320,
+        "height": 720
+      },
+      "theme": "dark",
+      "violations": [],
+      "incomplete": [],
+      "passes": 27,
+      "axeVersion": "4.13.0",
+      "layout": {
+        "viewportWidth": 320,
+        "bodyWidth": 320,
+        "documentWidth": 320,
+        "horizontalOverflow": false,
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "循着问题与答案的脉络，登上理解的高峰。",
+            "color": "rgb(237, 240, 243)",
+            "textFillColor": "rgb(237, 240, 243)",
+            "fontSize": "28px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "tag": "H2",
+            "text": "进入本地工作区",
+            "color": "rgb(237, 240, 243)",
+            "textFillColor": "rgb(237, 240, 243)",
+            "fontSize": "20px",
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        ],
+        "tinyText": [],
+        "panels": []
+      },
+      "passed": true,
+      "images": []
+    },
+    {
+      "name": "auth-dark-800",
+      "at": "2026-09-08T04:22:30.798Z",
+      "url": "http://127.0.0.1:4404/",
+      "viewport": {
+        "width": 800,
+        "height": 515
+      },
+      "theme": "dark",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": [
+            [
+              ".auth-theme > span"
+            ],
+            [
+              ".auth-card-mark"
+            ]
+          ]
+        }
+      ],
+      "passes": 27,
+      "axeVersion": "4.13.0",
+      "layout": {
+        "viewportWidth": 800,
+        "bodyWidth": 800,
+        "documentWidth": 800,
+        "horizontalOverflow": false,
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "循着问题与答案的脉络，登上理解的高峰。",
+            "color": "rgb(237, 240, 243)",
+            "textFillColor": "rgb(237, 240, 243)",
+            "fontSize": "28px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "tag": "H2",
+            "text": "进入本地工作区",
+            "color": "rgb(237, 240, 243)",
+            "textFillColor": "rgb(237, 240, 243)",
+            "fontSize": "20px",
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        ],
+        "tinyText": [],
+        "panels": []
+      },
+      "passed": true,
+      "images": []
+    },
+    {
+      "name": "auth-light-390",
+      "at": "2026-09-08T04:22:31.066Z",
+      "url": "http://127.0.0.1:4404/",
+      "viewport": {
+        "width": 390,
+        "height": 780
+      },
+      "theme": "light",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": [
+            [
+              ".auth-theme > span"
+            ]
+          ]
+        }
+      ],
+      "passes": 26,
+      "axeVersion": "4.13.0",
+      "layout": {
+        "viewportWidth": 390,
+        "bodyWidth": 390,
+        "documentWidth": 390,
+        "horizontalOverflow": false,
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "循着问题与答案的脉络，登上理解的高峰。",
+            "color": "rgb(31, 35, 41)",
+            "textFillColor": "rgb(31, 35, 41)",
+            "fontSize": "28px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "tag": "H2",
+            "text": "进入本地工作区",
+            "color": "rgb(31, 35, 41)",
+            "textFillColor": "rgb(31, 35, 41)",
+            "fontSize": "20px",
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        ],
+        "tinyText": [],
+        "panels": []
+      },
+      "passed": true,
+      "images": []
+    },
+    {
+      "name": "auth-light-320",
+      "at": "2026-09-08T04:22:31.286Z",
+      "url": "http://127.0.0.1:4404/",
+      "viewport": {
+        "width": 320,
+        "height": 720
+      },
+      "theme": "light",
+      "violations": [],
+      "incomplete": [],
+      "passes": 27,
+      "axeVersion": "4.13.0",
+      "layout": {
+        "viewportWidth": 320,
+        "bodyWidth": 320,
+        "documentWidth": 320,
+        "horizontalOverflow": false,
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "循着问题与答案的脉络，登上理解的高峰。",
+            "color": "rgb(31, 35, 41)",
+            "textFillColor": "rgb(31, 35, 41)",
+            "fontSize": "28px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "tag": "H2",
+            "text": "进入本地工作区",
+            "color": "rgb(31, 35, 41)",
+            "textFillColor": "rgb(31, 35, 41)",
+            "fontSize": "20px",
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        ],
+        "tinyText": [],
+        "panels": []
+      },
+      "passed": true,
+      "images": []
+    },
+    {
+      "name": "auth-light-800",
+      "at": "2026-09-08T04:22:31.512Z",
+      "url": "http://127.0.0.1:4404/",
+      "viewport": {
+        "width": 800,
+        "height": 515
+      },
+      "theme": "light",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": [
+            [
+              ".auth-theme > span"
+            ],
+            [
+              ".auth-card-mark"
+            ]
+          ]
+        }
+      ],
+      "passes": 27,
+      "axeVersion": "4.13.0",
+      "layout": {
+        "viewportWidth": 800,
+        "bodyWidth": 800,
+        "documentWidth": 800,
+        "horizontalOverflow": false,
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "循着问题与答案的脉络，登上理解的高峰。",
+            "color": "rgb(31, 35, 41)",
+            "textFillColor": "rgb(31, 35, 41)",
+            "fontSize": "28px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "tag": "H2",
+            "text": "进入本地工作区",
+            "color": "rgb(31, 35, 41)",
+            "textFillColor": "rgb(31, 35, 41)",
+            "fontSize": "20px",
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        ],
+        "tinyText": [],
+        "panels": []
+      },
+      "passed": true,
+      "images": []
+    }
+  ],
+  "screenshots": [
+    {
+      "name": "author-graph-keyboard-light",
+      "file": "qa/evidence/ux-ui-2026-09-08/screenshots/author-graph-keyboard-light.png",
+      "at": "2026-09-08T04:22:29.101Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": null,
+      "url": "http://127.0.0.1:4404/qa/ux-ui-lab.html"
+    },
+    {
+      "name": "author-graph-keyboard-dark",
+      "file": "qa/evidence/ux-ui-2026-09-08/screenshots/author-graph-keyboard-dark.png",
+      "at": "2026-09-08T04:22:29.233Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "url": "http://127.0.0.1:4404/qa/ux-ui-lab.html"
+    },
+    {
+      "name": "auth-dark-390",
+      "file": "qa/evidence/ux-ui-2026-09-08/screenshots/auth-dark-390.png",
+      "at": "2026-09-08T04:22:30.417Z",
+      "viewport": {
+        "width": 390,
+        "height": 780
+      },
+      "theme": "dark",
+      "url": "http://127.0.0.1:4404/"
+    },
+    {
+      "name": "auth-dark-390-bottom",
+      "file": "qa/evidence/ux-ui-2026-09-08/screenshots/auth-dark-390-bottom.png",
+      "at": "2026-09-08T04:22:30.467Z",
+      "viewport": {
+        "width": 390,
+        "height": 780
+      },
+      "theme": "dark",
+      "url": "http://127.0.0.1:4404/"
+    },
+    {
+      "name": "auth-dark-320",
+      "file": "qa/evidence/ux-ui-2026-09-08/screenshots/auth-dark-320.png",
+      "at": "2026-09-08T04:22:30.633Z",
+      "viewport": {
+        "width": 320,
+        "height": 720
+      },
+      "theme": "dark",
+      "url": "http://127.0.0.1:4404/"
+    },
+    {
+      "name": "auth-dark-320-bottom",
+      "file": "qa/evidence/ux-ui-2026-09-08/screenshots/auth-dark-320-bottom.png",
+      "at": "2026-09-08T04:22:30.684Z",
+      "viewport": {
+        "width": 320,
+        "height": 720
+      },
+      "theme": "dark",
+      "url": "http://127.0.0.1:4404/"
+    },
+    {
+      "name": "auth-dark-800",
+      "file": "qa/evidence/ux-ui-2026-09-08/screenshots/auth-dark-800.png",
+      "at": "2026-09-08T04:22:30.851Z",
+      "viewport": {
+        "width": 800,
+        "height": 515
+      },
+      "theme": "dark",
+      "url": "http://127.0.0.1:4404/"
+    },
+    {
+      "name": "auth-dark-800-bottom",
+      "file": "qa/evidence/ux-ui-2026-09-08/screenshots/auth-dark-800-bottom.png",
+      "at": "2026-09-08T04:22:30.900Z",
+      "viewport": {
+        "width": 800,
+        "height": 515
+      },
+      "theme": "dark",
+      "url": "http://127.0.0.1:4404/"
+    },
+    {
+      "name": "auth-light-390",
+      "file": "qa/evidence/ux-ui-2026-09-08/screenshots/auth-light-390.png",
+      "at": "2026-09-08T04:22:31.117Z",
+      "viewport": {
+        "width": 390,
+        "height": 780
+      },
+      "theme": "light",
+      "url": "http://127.0.0.1:4404/"
+    },
+    {
+      "name": "auth-light-390-bottom",
+      "file": "qa/evidence/ux-ui-2026-09-08/screenshots/auth-light-390-bottom.png",
+      "at": "2026-09-08T04:22:31.168Z",
+      "viewport": {
+        "width": 390,
+        "height": 780
+      },
+      "theme": "light",
+      "url": "http://127.0.0.1:4404/"
+    },
+    {
+      "name": "auth-light-320",
+      "file": "qa/evidence/ux-ui-2026-09-08/screenshots/auth-light-320.png",
+      "at": "2026-09-08T04:22:31.350Z",
+      "viewport": {
+        "width": 320,
+        "height": 720
+      },
+      "theme": "light",
+      "url": "http://127.0.0.1:4404/"
+    },
+    {
+      "name": "auth-light-320-bottom",
+      "file": "qa/evidence/ux-ui-2026-09-08/screenshots/auth-light-320-bottom.png",
+      "at": "2026-09-08T04:22:31.401Z",
+      "viewport": {
+        "width": 320,
+        "height": 720
+      },
+      "theme": "light",
+      "url": "http://127.0.0.1:4404/"
+    },
+    {
+      "name": "auth-light-800",
+      "file": "qa/evidence/ux-ui-2026-09-08/screenshots/auth-light-800.png",
+      "at": "2026-09-08T04:22:31.566Z",
+      "viewport": {
+        "width": 800,
+        "height": 515
+      },
+      "theme": "light",
+      "url": "http://127.0.0.1:4404/"
+    },
+    {
+      "name": "auth-light-800-bottom",
+      "file": "qa/evidence/ux-ui-2026-09-08/screenshots/auth-light-800-bottom.png",
+      "at": "2026-09-08T04:22:31.616Z",
+      "viewport": {
+        "width": 800,
+        "height": 515
+      },
+      "theme": "light",
+      "url": "http://127.0.0.1:4404/"
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "expectedHttpErrors": [],
+  "failedRequests": [],
+  "browserVersion": "152.0.7977.76",
+  "passed": true,
+  "summary": {
+    "checks": 2,
+    "failedChecks": [],
+    "audits": 8,
+    "failedAudits": [],
+    "criticalOrSerious": 0,
+    "pageErrors": 0,
+    "consoleErrors": 0,
+    "screenshots": 14
+  }
+}

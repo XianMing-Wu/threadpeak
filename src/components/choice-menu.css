@@ -1,13 +1,148 @@
-.tp-choice{display:inline-flex;min-width:0;max-width:100%}
-.tp-choice .tp-choice-trigger{display:flex;align-items:center;gap:9px;min-width:0;width:100%;min-height:40px;padding:9px 12px;border:1px solid #e5dfeb;border-radius:10px;background:#fff;color:#706579;font:inherit;font-size:13px;line-height:1.5;cursor:pointer}
-.tp-choice-trigger>span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}.tp-choice-trigger>svg{flex-shrink:0}
-.tp-choice.is-quiet .tp-choice-trigger{background:transparent;border-color:transparent;padding:6px 8px;min-height:32px}
-.tp-choice .tp-choice-trigger:hover:not(:disabled){background:#fff}.tp-choice .tp-choice-trigger:focus-visible{outline:2px solid #ad96c3;outline-offset:2px}.tp-choice-trigger:disabled{opacity:.5;cursor:default}
-.tp-choice-menu{position:fixed;inset:auto;margin:0;padding:6px;border:1px solid #e8e1ee;border-radius:13px;background:#fff;color:#62576d;box-shadow:4px 8px 28px #5141601c;overflow:auto;overscroll-behavior:contain;box-sizing:border-box}
-.tp-choice-menu:popover-open{display:grid;gap:3px}.tp-choice-menu::backdrop{background:transparent}
-.tp-choice .tp-choice-menu[popover]>button{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;height:auto;min-height:40px;border:0;border-radius:8px;padding:9px 11px;background:transparent;color:inherit;text-align:left;font:inherit;font-size:13px;line-height:1.5;cursor:pointer}
-.tp-choice .tp-choice-menu[popover]>button>span{flex:1;min-width:0}.tp-choice-menu b{font-weight:500;overflow-wrap:anywhere}.tp-choice-menu small{display:block;margin-top:3px;color:#9b8fa6;font-size:11px}.tp-choice-menu svg{flex-shrink:0;color:#9b7db5}
-.tp-choice .tp-choice-menu[popover]>button:hover,.tp-choice .tp-choice-menu[popover]>button:focus-visible{background:#fff;outline:1px solid #cbd3df;outline-offset:-1px}.tp-choice .tp-choice-menu[popover]>button[aria-selected=true]{color:#52637c;background:#fff}
+.tp-choice {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+}
 
-.tp-choice.is-thinking .tp-choice-trigger[aria-expanded=false] .tp-choice-caret{transform:rotate(180deg)}
-.tp-choice.is-thinking .tp-choice-trigger[aria-expanded=true] .tp-choice-caret{transform:rotate(0)}
+.tp-choice .tp-choice-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-control);
+  background: var(--surface-1);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--ease-standard);
+}
+
+.tp-choice-trigger > span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.tp-choice-trigger > svg {
+  flex-shrink: 0;
+}
+
+.tp-choice.is-quiet .tp-choice-trigger {
+  background: transparent;
+  border-color: transparent;
+  padding: 8px;
+}
+
+.tp-choice .tp-choice-trigger:hover:not(:disabled) {
+  background: var(--surface-1);
+  border-color: var(--line-3);
+}
+
+.tp-choice .tp-choice-trigger:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tp-choice-trigger:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+.tp-choice-menu {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-card);
+  background: var(--surface-1);
+  color: var(--ink-2);
+  box-shadow: var(--shadow-3);
+  overflow: auto;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+}
+
+.tp-choice-menu:popover-open {
+  display: grid;
+  gap: 4px;
+}
+
+.tp-choice-menu::backdrop {
+  background: transparent;
+}
+
+.tp-choice .tp-choice-menu[popover] > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  height: auto;
+  min-height: 40px;
+  border: 0;
+  border-radius: var(--r-control);
+  padding: 8px 12px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.tp-choice .tp-choice-menu[popover] > button > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.tp-choice-menu b {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.tp-choice-menu small {
+  display: block;
+  margin-top: 4px;
+  color: var(--ink-3);
+  font-size: var(--fs-meta);
+}
+
+.tp-choice-menu svg {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.tp-choice .tp-choice-menu[popover] > button:hover {
+  background: var(--surface-1);
+  outline: 1px solid var(--line-3);
+  outline-offset: -1px;
+}
+
+.tp-choice .tp-choice-menu[popover] > button:focus-visible {
+  background: var(--surface-1);
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.tp-choice .tp-choice-menu[popover] > button[aria-selected=true] {
+  color: var(--accent);
+  background: var(--surface-1);
+}
+
+.tp-choice.is-thinking .tp-choice-trigger[aria-expanded=false] .tp-choice-caret {
+  transform: rotate(180deg);
+}
+
+.tp-choice.is-thinking .tp-choice-trigger[aria-expanded=true] .tp-choice-caret {
+  transform: rotate(0);
+}

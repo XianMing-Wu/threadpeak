@@ -5,8 +5,12 @@
 }
 
 @keyframes tp-input-motion-orbit {
-  from { --tp-input-motion-angle: -45deg; }
-  to { --tp-input-motion-angle: 315deg; }
+  from {
+    --tp-input-motion-angle: -45deg;
+  }
+  to {
+    --tp-input-motion-angle: 315deg;
+  }
 }
 
 /*
@@ -15,17 +19,18 @@
  * Zhihu blue, vivid aqua, and mint stay bright and far enough apart to read.
  * The crisp ring and its blurred bloom are separate so text never animates.
  */
+
 .input-motion-frame {
   position: relative;
   isolation: isolate;
   overflow: visible;
-  border-color: rgba(43, 48, 55, .15);
-  box-shadow: 0 4px 14px rgba(31, 36, 43, .035);
+  border-color: var(--line-2);
+  box-shadow: var(--shadow-1);
 }
 
 .input-motion-frame:focus-within {
-  border-color: rgba(43, 48, 55, .2);
-  box-shadow: 0 5px 16px rgba(31, 36, 43, .045);
+  border-color: var(--line-3);
+  box-shadow: var(--shadow-1);
 }
 
 .input-motion-frame::before,
@@ -46,12 +51,10 @@
     rgba(46, 184, 255, .62) 342deg,
     rgba(23, 114, 246, .82) 360deg
   );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
+  -webkit-mask: linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
+  mask: linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
   mask-composite: exclude;
   animation: tp-input-motion-orbit 2s linear infinite;
@@ -73,14 +76,15 @@
 }
 
 /* Keyboard focus strengthens the same hairline instead of adding a second ring. */
+
 .input-motion-frame:has(input:focus-visible, textarea:focus-visible) {
-  border-color: rgba(43, 48, 55, .32);
+  border-color: var(--line-3);
 }
 
 .ask-authors-prompt__input-frame {
-  border: 1px solid rgba(43, 48, 55, .15);
-  border-radius: 12px;
-  background: #fff;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-card);
+  background: var(--surface-1);
 }
 
 .ask-authors-prompt__input-frame > textarea,
@@ -89,23 +93,6 @@
   border: 0;
   border-radius: inherit;
   box-shadow: none;
-}
-
-html[data-theme="dark"] .input-motion-frame {
-  border-color: rgba(255, 255, 255, .18);
-  box-shadow: 0 5px 16px rgba(0, 0, 0, .18);
-}
-
-html[data-theme="dark"] .input-motion-frame:focus-within {
-  border-color: rgba(255, 255, 255, .25);
-}
-
-html[data-theme="dark"] .input-motion-frame:has(input:focus-visible, textarea:focus-visible) {
-  border-color: rgba(255, 255, 255, .38);
-}
-
-html[data-theme="dark"] .ask-authors-prompt__input-frame {
-  background: #17191d;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -119,14 +106,13 @@ html[data-theme="dark"] .ask-authors-prompt__input-frame {
 html[data-reduce-motion="true"] .input-motion-frame::before,
 html[data-reduce-motion="true"] .input-motion-frame::after {
   --tp-input-motion-angle: 35deg;
-  animation: none !important;
+  animation: none;
 }
 
 @media (forced-colors: active) {
   .input-motion-frame {
     border-color: CanvasText;
   }
-
   .input-motion-frame::before,
   .input-motion-frame::after {
     display: none;

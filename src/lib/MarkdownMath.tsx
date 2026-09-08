@@ -22,7 +22,7 @@ export function SourceImageView({ src, alt, title }: { src?: string; alt?: strin
 function KatexView({ tex, display }: { tex: string; display: boolean }) {
   const result=useMemo(()=>renderMath(tex,display),[tex,display])
   if(result.kind==='unresolved')return <span className="tp-math-unresolved" title="这段原式缺少可确定的数学信息，已保留原文，可在文档中修正。">{tex}</span>
-  return <span className={display ? 'tp-math is-display' : 'tp-math is-inline'} data-math-repaired={result.repaired||undefined} dangerouslySetInnerHTML={{ __html: result.html }} />
+  return <span className={display ? 'tp-math is-display' : 'tp-math is-inline'} tabIndex={display ? 0 : undefined} data-math-repaired={result.repaired||undefined} dangerouslySetInnerHTML={{ __html: result.html }} />
 }
 
 function texOf(children: ReactNode) {
@@ -42,7 +42,7 @@ function mathComponents(): Components {
       if (isValidElement<{ className?: string }>(child) && child.props.className?.includes('math')) {
         return <>{children}</>
       }
-      return <pre>{children}</pre>
+      return <pre tabIndex={0}>{children}</pre>
     },
   }
 }

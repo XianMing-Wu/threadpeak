@@ -14,7 +14,7 @@ test('author overview lists all articles across concepts and keeps reading and d
   const html=renderToStaticMarkup(createElement(AuthorDetail,{author,initialLearningId:'1',onClose(){},async onFeedback(){}}))
   assert.match(html,/资料1/);assert.match(html,/资料2/)
   assert.equal((html.match(/class="au-source-row"/g)||[]).length,2)
-  assert.match(html,/学习足迹/);assert.match(html,/推荐设置/)
-  assert.doesNotMatch(html,/原始正文|加入这篇资料|选择正在学习的概念|au-topic-stats/)
+  assert.match(html,/学习足迹/)
+  assert.doesNotMatch(html,/推荐设置|原始正文|加入这篇资料|选择正在学习的概念|au-topic-stats/)
  }finally{await server.close()}
 })

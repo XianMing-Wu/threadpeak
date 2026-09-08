@@ -1,0 +1,90 @@
+// Scoped browser verification of the user's visual corrections, on an isolated QA source.
+import assert from 'node:assert/strict'
+import { createRequire } from 'node:module'
+import { mkdir, writeFile } from 'node:fs/promises'
+const require = createRequire(import.meta.url)
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright')
+const directory = 'qa/evidence/ux-ui-2026-09-08/user-steering'
+await mkdir(directory, { recursive: true })
+const browser = await chromium.launch({ headless: true, channel: 'chrome' })
+const report = { at: new Date().toISOString(), scope: 'User-approved visual corrections; isolated QA source, no provider verification', checks: [], errors: [] }
+try {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, colorScheme: 'light' })
+  page.on('pageerror', error => report.errors.push(error.message))
+  const home = async () => { await page.goto('http://127.0.0.1:4404/#home'); await page.locator('.home-coverflow .cf-card').first().waitFor() }
+  const shot = async name => page.screenshot({ path: `${directory}/${name}.png` })
+  await home()
+  assert.equal(await page.getByRole('button', { name: '暂停流动', exact: true }).count(), 0)
+  assert.equal(await page.locator('.home-flow-controls,.home-flow-detail').count(), 0)
+  const counts = await page.locator('.home-coverflow').evaluateAll(es => es.map(e => e.querySelectorAll('.cf-card').length))
+  assert.ok(counts.every(n => n >= 5))
+  await shot('home-top')
+  const beam = page.locator('.home .ux-beam')
+  assert.equal(await beam.evaluate(e => getComputedStyle(e).animationName), 'none')
+  await page.locator('.home textarea').click()
+  await page.waitForFunction(() => getComputedStyle(document.querySelector('.home .ux-beam'), '::after').opacity > 0)
+  const focus = await beam.evaluate(e => ({ animation: getComputedStyle(e).animationName, outline: getComputedStyle(e).outlineStyle, inputOutline: getComputedStyle(e.querySelector('textarea')).outlineStyle, after: getComputedStyle(e, '::after').content }))
+  assert.match(focus.animation, /ux-beam-spin/); assert.equal(focus.outline, 'none'); assert.equal(focus.inputOutline, 'none'); assert.equal(focus.after, '""')
+  await shot('input-focused')
+  await page.locator('.home textarea').evaluate(e => e.blur())
+  assert.equal(await beam.evaluate(e => getComputedStyle(e).animationName), 'none')
+  await page.locator('.flow-text').hover()
+  await page.waitForFunction(() => getComputedStyle(document.querySelector('.brand-gradient-ink')).opacity === '1')
+  const colors = await page.locator('.brand-gradient-stop').evaluateAll(es => es.map(e => getComputedStyle(e).stopColor))
+  assert.ok(new Set(colors).size > 1)
+  await page.waitForFunction(before => getComputedStyle(document.querySelector('.brand-gradient-stop')).stopColor !== before, colors[0])
+  await shot('wordmark-hover')
+  await page.mouse.move(2, 2)
+  await page.waitForFunction(() => getComputedStyle(document.querySelector('.brand-gradient-ink')).opacity === '0')
+  report.checks.push({ name: 'focus-beam-and-hover-gradient', passed: true, focus, colors })
+  const brandHeight = await page.locator('.home-brand').evaluate(e => e.getBoundingClientRect().height)
+  await page.locator('.home-brand').hover(); await page.mouse.wheel(0, 280)
+  await page.waitForFunction(() => document.querySelector('.home-body').scrollTop > 136)
+  const brand = await page.locator('.home-brand').evaluate(e => {
+    const box = e.getBoundingClientRect(), art = e.querySelector('.home-h1').getBoundingClientRect(), mountains = e.querySelector('.home-landscape').getBoundingClientRect(), motto = e.querySelector('.home-sub').getBoundingClientRect()
+    return { height: box.height, englishBehindMountain: art.bottom <= mountains.bottom, mottoOverMountain: motto.top < mountains.bottom && motto.bottom > mountains.top }
+  })
+  assert.ok(brandHeight - brand.height > 100); assert.ok(brand.englishBehindMountain); assert.ok(brand.mottoOverMountain)
+  await shot('brand-collapsed')
+  await page.locator('.home-body').evaluate(e => { e.scrollTop = 0 })
+  await page.waitForFunction(height => document.querySelector('.home-brand').getBoundingClientRect().height >= height - 1, brandHeight)
+  report.checks.push({ name: 'brand-scroll-collapse-and-restore', passed: true, brand })
+  for (const [theme, width, height] of [['light', 1440, 1000], ['dark', 1440, 1000], ['light', 390, 780], ['dark', 320, 720]]) {
+    await page.setViewportSize({ width, height }); await page.emulateMedia({ colorScheme: theme }); await home()
+    const flow = page.locator('.home-coverflow').first(); await flow.scrollIntoViewIfNeeded()
+    const region = flow.locator('.cf-root'); await region.focus(); const before = await region.getAttribute('aria-label'); await page.keyboard.press('ArrowRight')
+    await page.waitForFunction(old => document.querySelector('.home-coverflow .cf-root').getAttribute('aria-label') !== old, before)
+    await page.waitForTimeout(350)
+    assert.ok(await page.locator('.home-flow-open').first().isVisible())
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+    await shot(`cards-${theme}-${width}`)
+    await region.press('Enter'); await page.locator('.lp-example-note').waitFor()
+    report.checks.push({ name: `coverflow-${theme}-${width}`, passed: true, counts, keyboardOpen: true })
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 }); await page.emulateMedia({ colorScheme: 'light' })
+  await page.goto('http://127.0.0.1:4404/#knowledge?tab=example'); await page.locator('.knowledge-library').waitFor()
+  assert.equal(await page.locator('.lamp-stage').count(), 0)
+  await shot('knowledge-library')
+  await page.getByRole('searchbox').click(); assert.equal(await page.getByRole('searchbox').evaluate(e => getComputedStyle(e).outlineStyle), 'none')
+  report.checks.push({ name: 'knowledge-library-and-search-focus', passed: true })
+  await page.goto('http://127.0.0.1:4404/#authors'); await page.locator('.au-page textarea').first().click()
+  assert.equal(await page.locator('.au-page textarea').first().evaluate(e => getComputedStyle(e).outlineStyle), 'none')
+  assert.equal(await page.locator('.au-page .ux-beam').evaluate(e => getComputedStyle(e).animationName), 'none')
+  report.checks.push({ name: 'author-input-stays-static', passed: true })
+  for (const width of [1440, 900, 390]) for (const route of ['paths', 'knowledge']) {
+    await page.setViewportSize({ width, height: 620 })
+    await page.goto(`http://127.0.0.1:4404/#${route}?tab=example`)
+    await page.locator('.grid li, .knowledge-shelf').last().waitFor()
+    const market = page.locator('.peak-market, .knowledge-library')
+    assert.equal(await market.evaluate(e => getComputedStyle(e).overflowY), 'auto')
+    await market.hover(); await page.mouse.wheel(0, 100000)
+    await page.waitForFunction(() => { const e = document.querySelector('.peak-market, .knowledge-library'); return e.scrollTop >= e.scrollHeight - e.clientHeight - 1 })
+    const scrolling = await market.evaluate(e => ({ scrollTop: e.scrollTop, maxScroll: e.scrollHeight - e.clientHeight, lastCardVisible: e.querySelector('.grid li:last-child, .knowledge-shelf:last-child').getBoundingClientRect().bottom <= e.getBoundingClientRect().bottom + 1 }))
+    assert.ok(scrolling.scrollTop > 0); assert.ok(scrolling.lastCardVisible)
+    await shot(`${route}-scroll-${width}`)
+    report.checks.push({ name: `${route}-scroll-${width}`, passed: true, ...scrolling })
+  }
+  assert.deepEqual(report.errors, [])
+  report.passed = true
+} catch (error) { report.passed = false; report.errors.push(error.stack); process.exitCode = 1 }
+finally { await writeFile(`${directory}/report.json`, JSON.stringify(report, null, 2) + '\n'); await browser.close(); console.log(JSON.stringify(report, null, 2)) }

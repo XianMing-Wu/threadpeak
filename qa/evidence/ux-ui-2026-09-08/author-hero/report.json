@@ -1,0 +1,286 @@
+{
+  "startedAt": "2026-09-08T05:58:42.466Z",
+  "target": "http://127.0.0.1:4404/",
+  "scope": "Decorative author hero only; isolated local QA, no real account or live provider acceptance.",
+  "checks": [
+    {
+      "name": "real-avatars-and-requested-presentation",
+      "passed": true,
+      "evidence": {
+        "headings": 0,
+        "names": [
+          "跟我学机器学习",
+          "揣着梦想",
+          "sonald",
+          "7号床",
+          "千千",
+          "三木",
+          "司马云课堂",
+          "赤羽尾风",
+          "敲代码不忘补水",
+          "AINLPer",
+          "源势AI",
+          "费米子父"
+        ],
+        "images": [
+          {
+            "complete": true,
+            "width": 100
+          },
+          {
+            "complete": true,
+            "width": 100
+          },
+          {
+            "complete": true,
+            "width": 100
+          },
+          {
+            "complete": true,
+            "width": 100
+          },
+          {
+            "complete": true,
+            "width": 100
+          },
+          {
+            "complete": true,
+            "width": 100
+          },
+          {
+            "complete": true,
+            "width": 100
+          },
+          {
+            "complete": true,
+            "width": 100
+          },
+          {
+            "complete": true,
+            "width": 100
+          },
+          {
+            "complete": true,
+            "width": 100
+          },
+          {
+            "complete": true,
+            "width": 100
+          },
+          {
+            "complete": true,
+            "width": 100
+          }
+        ],
+        "aspect": [
+          1.338235294117647,
+          1.338235294117647,
+          1.338235294117647,
+          1.338235294117647,
+          1.338235294117647,
+          1.338235294117647,
+          1.338235294117647,
+          1.338235294117647,
+          1.338235294117647,
+          1.338235294117647,
+          1.338235294117647,
+          1.338235294117647
+        ]
+      }
+    },
+    {
+      "name": "complete-loop-with-visible-depth-and-fixed-lens-angle",
+      "passed": true,
+      "evidence": {
+        "centerIds": [
+          "zhihu-aead0522d960c8fccad1e86b1d76cec0",
+          "zhihu-8a8098fab6c4081a80dd4a8428a67e70",
+          "zhihu-99a35ad0fe7b1601357b0d67b25a32bb",
+          "zhihu-4e8d7562560d1b5b9587beb55cd7be90",
+          "zhihu-218127fef1d9d26ff1b6692226edcc5b",
+          "zhihu-175025e0406dc5316439266d2b46544f",
+          "zhihu-9dab53930e715141035f2ec3705ce36a",
+          "zhihu-e2f99b27df49da0ff1070ababe35aaa6",
+          "zhihu-c8f643a8a13bfe8f8dddd27b4cf8842c",
+          "zhihu-40002d5f6bbd4d76f9c2f53b87983712",
+          "zhihu-c96fd0999e9e64747e300bb7a1f1057e",
+          "zhihu-eadc710fccd7c8e2eaa5459ee0bff4d5",
+          "zhihu-aead0522d960c8fccad1e86b1d76cec0",
+          "zhihu-8a8098fab6c4081a80dd4a8428a67e70",
+          "zhihu-99a35ad0fe7b1601357b0d67b25a32bb"
+        ],
+        "approaches": [
+          {
+            "key": "zhihu-aead0522d960c8fccad1e86b1d76cec0",
+            "nearHeight": 192.39866638183594,
+            "farHeight": 164.5048370361328
+          },
+          {
+            "key": "zhihu-eadc710fccd7c8e2eaa5459ee0bff4d5",
+            "nearHeight": 192.38258361816406,
+            "farHeight": 164.72439575195312
+          },
+          {
+            "key": "zhihu-c96fd0999e9e64747e300bb7a1f1057e",
+            "nearHeight": 192.41876220703125,
+            "farHeight": 164.35986328125
+          },
+          {
+            "key": "zhihu-40002d5f6bbd4d76f9c2f53b87983712",
+            "nearHeight": 192.40672302246094,
+            "farHeight": 164.43389892578125
+          },
+          {
+            "key": "zhihu-c8f643a8a13bfe8f8dddd27b4cf8842c",
+            "nearHeight": 192.38221740722656,
+            "farHeight": 164.36117553710938
+          },
+          {
+            "key": "zhihu-e2f99b27df49da0ff1070ababe35aaa6",
+            "nearHeight": 192.39801025390625,
+            "farHeight": 164.289306640625
+          },
+          {
+            "key": "zhihu-9dab53930e715141035f2ec3705ce36a",
+            "nearHeight": 192.4183349609375,
+            "farHeight": 164.5814208984375
+          },
+          {
+            "key": "zhihu-175025e0406dc5316439266d2b46544f",
+            "nearHeight": 192.41024780273438,
+            "farHeight": 164.4365234375
+          },
+          {
+            "key": "zhihu-218127fef1d9d26ff1b6692226edcc5b",
+            "nearHeight": 192.410400390625,
+            "farHeight": 164.57528686523438
+          },
+          {
+            "key": "zhihu-4e8d7562560d1b5b9587beb55cd7be90",
+            "nearHeight": 192.38613891601562,
+            "farHeight": 164.5757293701172
+          },
+          {
+            "key": "zhihu-99a35ad0fe7b1601357b0d67b25a32bb",
+            "nearHeight": 192.406005859375,
+            "farHeight": 164.72222900390625
+          },
+          {
+            "key": "zhihu-8a8098fab6c4081a80dd4a8428a67e70",
+            "nearHeight": 192.41067504882812,
+            "farHeight": 164.4312744140625
+          }
+        ],
+        "minimumCardGap": 3.1240234375,
+        "backwards": [],
+        "returnSpeedRatio": 14.72329221159119,
+        "radiusRange": [
+          897.5901685911201,
+          897.6096584291352
+        ]
+      }
+    },
+    {
+      "name": "lens-mirrors-the-actual-card-underneath",
+      "passed": true,
+      "evidence": {
+        "source": [
+          "zhihu-aead0522d960c8fccad1e86b1d76cec0",
+          "zhihu-eadc710fccd7c8e2eaa5459ee0bff4d5",
+          "zhihu-c96fd0999e9e64747e300bb7a1f1057e",
+          "zhihu-40002d5f6bbd4d76f9c2f53b87983712",
+          "zhihu-c8f643a8a13bfe8f8dddd27b4cf8842c",
+          "zhihu-e2f99b27df49da0ff1070ababe35aaa6",
+          "zhihu-9dab53930e715141035f2ec3705ce36a",
+          "zhihu-175025e0406dc5316439266d2b46544f",
+          "zhihu-218127fef1d9d26ff1b6692226edcc5b",
+          "zhihu-4e8d7562560d1b5b9587beb55cd7be90",
+          "zhihu-99a35ad0fe7b1601357b0d67b25a32bb",
+          "zhihu-8a8098fab6c4081a80dd4a8428a67e70"
+        ],
+        "mirror": [
+          "zhihu-aead0522d960c8fccad1e86b1d76cec0",
+          "zhihu-eadc710fccd7c8e2eaa5459ee0bff4d5",
+          "zhihu-c96fd0999e9e64747e300bb7a1f1057e",
+          "zhihu-40002d5f6bbd4d76f9c2f53b87983712",
+          "zhihu-c8f643a8a13bfe8f8dddd27b4cf8842c",
+          "zhihu-e2f99b27df49da0ff1070ababe35aaa6",
+          "zhihu-9dab53930e715141035f2ec3705ce36a",
+          "zhihu-175025e0406dc5316439266d2b46544f",
+          "zhihu-218127fef1d9d26ff1b6692226edcc5b",
+          "zhihu-4e8d7562560d1b5b9587beb55cd7be90",
+          "zhihu-99a35ad0fe7b1601357b0d67b25a32bb",
+          "zhihu-8a8098fab6c4081a80dd4a8428a67e70"
+        ],
+        "zoom": 1.55,
+        "inert": true
+      }
+    },
+    {
+      "name": "reduced-motion-and-responsive-themes",
+      "passed": true,
+      "evidence": [
+        {
+          "theme": "light",
+          "width": 1440,
+          "fits": true,
+          "angle": -45
+        },
+        {
+          "theme": "light",
+          "width": 900,
+          "fits": true,
+          "angle": -45
+        },
+        {
+          "theme": "light",
+          "width": 390,
+          "fits": true,
+          "angle": -45
+        },
+        {
+          "theme": "light",
+          "width": 320,
+          "fits": true,
+          "angle": -45
+        },
+        {
+          "theme": "dark",
+          "width": 1440,
+          "fits": true,
+          "angle": -45
+        },
+        {
+          "theme": "dark",
+          "width": 900,
+          "fits": true,
+          "angle": -45
+        },
+        {
+          "theme": "dark",
+          "width": 390,
+          "fits": true,
+          "angle": -45
+        },
+        {
+          "theme": "dark",
+          "width": 320,
+          "fits": true,
+          "angle": -45
+        }
+      ]
+    },
+    {
+      "name": "route-cleanup-and-remount",
+      "passed": true,
+      "evidence": {
+        "hero": 1,
+        "lensMirror": 1
+      }
+    }
+  ],
+  "errors": [],
+  "warnings": [],
+  "completedAt": "2026-09-08T05:59:36.411Z",
+  "passed": true
+}

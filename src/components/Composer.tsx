@@ -7,7 +7,7 @@ import {
 import { ChoiceMenu } from './ChoiceMenu'
 import { BeamFrame } from '../ui/BeamFrame'
 
-export function Composer({ value, onChange, onSend, compact = false, quote, onClearQuote, showAttachment = true, onPickFiles, placeholder: customPlaceholder, requireQuestion = false, thinkingDepth, onThinkingDepth, busy = false, sendDisabled=false, onStop, topContent, beforeAttachment, toolbarStart, bottomContent, inputLabel, sendLabel = '发送', animatedBorder = true }: {
+export function Composer({ value, onChange, onSend, compact = false, quote, onClearQuote, showAttachment = true, onPickFiles, placeholder: customPlaceholder, requireQuestion = false, thinkingDepth, onThinkingDepth, busy = false, sendDisabled=false, onStop, topContent, beforeAttachment, toolbarStart, bottomContent, inputLabel = '输入你的问题或学习目标', sendLabel = '发送', animatedBorder = true }: {
   value: string; onChange: (value:string) => void; onSend: () => void; compact?: boolean; quote?: string; onClearQuote?: () => void; showAttachment?: boolean; onPickFiles?: (files: FileList) => void; placeholder?: string; requireQuestion?: boolean; thinkingDepth?: 'fast' | 'deep'; onThinkingDepth?: (value: 'fast' | 'deep') => void; busy?: boolean; sendDisabled?: boolean; onStop?: () => void; topContent?: ReactNode; beforeAttachment?: ReactNode; toolbarStart?: ReactNode; bottomContent?: ReactNode; inputLabel?: string; sendLabel?: string; animatedBorder?: boolean
 }) {
   const fileInput = useRef<HTMLInputElement>(null)

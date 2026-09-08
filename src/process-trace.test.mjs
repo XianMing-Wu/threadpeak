@@ -61,6 +61,18 @@ test('thought display strips dumped JSON so the think bar stays readable', () =>
   assert.doesNotMatch(thoughtForDisplay(raw), /fromConceptId/)
 })
 
+test('thought display hides streaming JSON fragments that never form a complete object', () => {
+  const fragment = `"id": "f6e5d4c3-b2a1-4f8e-9d0c-1a2b3c4d5e23",
+"fromConceptId": "b2a3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c19",
+"toConceptId": "b2a3c4d5-6e7f-4a8b-9c0d-1e2f3a4b5c23",
+"reason": "对角化与特征分解的几何直觉可立即在 MATLAB 的 eig 调用中对照，适合边学边验证。"
+}
+],`
+  assert.equal(thoughtForDisplay(fragment), '')
+  assert.doesNotMatch(thoughtForDisplay(`还差入口可达。\n${fragment}`), /fromConceptId/)
+  assert.match(thoughtForDisplay(`还差入口可达。\n${fragment}`), /还差入口可达/)
+})
+
 test('failed settle keeps a think bar with thought as 思考完成', () => {
   const steps = settleTrace([
     agentStep('r1', '拆成检索问题', undefined, 'running'),

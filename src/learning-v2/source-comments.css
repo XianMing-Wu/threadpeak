@@ -1,7 +1,38 @@
-.tp-source-comments{margin:26px 0 16px;padding-top:20px;border-top:1px solid #e5e8ed;background:#fff;color:#4d5665}
-.tp-source-comments>header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.tp-source-comments>header h3{margin:0;font-size:14px!important;font-weight:600;color:#394353}
-.tp-source-comments>ol{list-style:none;margin:0;padding:0}
-.tp-source-comments>ol>li{padding:14px 0;border-bottom:1px solid #edf0f3;font-size:13px;line-height:1.85;overflow-wrap:anywhere}
-.tp-source-comments>ol>li:last-child{border-bottom:0}
-.tp-source-comments>ol>li .markdown-math>p{margin:0 0 8px}
+/* Every non-empty API comment remains available in source order. */
+.tp-source-comments {
+  margin: 28px 0 16px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line-2);
+  background: var(--surface-1);
+  color: var(--ink-2);
+}
+.tp-source-comments > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.tp-source-comments > header h3 {
+  margin: 0;
+  font-size: var(--fs-strong);
+  font-weight: 600;
+  color: var(--ink-1);
+}
+.tp-source-comments > ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.tp-source-comments > ol > li {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line-1);
+  font-size: var(--fs-body);
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+}
+.tp-source-comments > ol > li:last-child {
+  border-bottom: 0;
+}
+.tp-source-comments > ol > li .markdown-math > p {
+  margin: 0 0 8px;
+}

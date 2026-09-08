@@ -13,6 +13,7 @@ import {packContext,boundedSummary,tokenBound} from './context.ts'
 import {semanticChunks} from '../agent-runtime/semantic-chunks.ts'
 import {validateGoalExploration} from '../path-generation/goal-exploration.ts'
 import {validateGoalPlan,compileStagedPlan} from '../path-generation/staged-plan.ts'
+import {projectRouteToDocument} from '../path-generation/project-document.ts'
 import {plan,interview,exploration,goal} from '../../tests/fixtures/goal-agents.mjs'
 
 const material={ref:'F1',sourceId:'owned-file',fileName:'收藏',content:'坐标表示基下的分量。'}
@@ -68,6 +69,19 @@ test('new interview calls repair non-three choices with the same prompt and free
   const result=await tools.legacy(ctx,'R3',{goalContext:{rawGoal:'读论文',userStatements:[]},exploration:exploration()})
   assert.equal(result.questions[0].options.length,3);assert.equal(calls.length,2)
   assert.equal(calls[0].messages[0].content,calls[1].messages[0].content)
+})
+test('routePlan salvages dumped R4 JSON instead of failing the path',async t=>{
+  const store=await fixture(t),ctx=await context(store)
+  const dumped={
+    version:'1.0',title:'线性代数入门',
+    carriers:[{id:'c1',title:'线性代数',description:'基础'}],
+    concepts:[{id:'n1',carrierId:'c1',title:'坐标',detailedDescription:'解释坐标表示基下的分量',hasDispute:false,attachmentSourceIds:['owned-file']}],
+    carrierEdges:[],conceptEdges:[],entryConceptIds:['n1'],terminalConceptIds:['n1'],
+  }
+  const tools=new ProductTools({complete:async()=>({kind:'completed',text:JSON.stringify(dumped)})},{})
+  const route=await tools.routePlan(ctx,{goal:'读懂收藏',goalContext:{rawGoal:'读懂收藏',userStatements:[]},exploration:exploration(),attachments:[material]},'user-path',['owned-file'])
+  assert.ok(route.concepts.some(concept=>concept.title==='坐标'))
+  assert.equal(projectRouteToDocument(route).ok,true)
 })
 test('first teaching reviews every source without turning every source into another paragraph',async t=>{
   const store=await fixture(t),ctx=await context(store),calls=[]

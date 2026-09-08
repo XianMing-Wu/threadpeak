@@ -1,0 +1,155 @@
+{
+  "at": "2026-09-08T06:18:00.362Z",
+  "scope": "Local isolated QA source; spotlight presentation only, no live provider acceptance.",
+  "checks": [
+    {
+      "name": "real-swing-and-expanded-blue-coverage",
+      "passed": true,
+      "evidence": {
+        "time0": 0.4666439890861511,
+        "time1": 1.183243989944458,
+        "photos": [
+          {
+            "label": "right",
+            "angle": -32,
+            "blue": 1551
+          },
+          {
+            "label": "center",
+            "angle": 0.9462013244628906,
+            "blue": 2746
+          },
+          {
+            "label": "left",
+            "angle": 32,
+            "blue": 1627
+          }
+        ]
+      }
+    },
+    {
+      "name": "route-filter-and-scroll-pause",
+      "passed": true,
+      "evidence": {
+        "bottom": {
+          "scrollTop": 519,
+          "atEnd": true
+        },
+        "t0": 2.6500658988952637,
+        "t1": 2.6500658988952637
+      }
+    },
+    {
+      "name": "reduced-motion-and-responsive-themes",
+      "passed": true,
+      "evidence": {
+        "t0": 1.25,
+        "t1": 1.25,
+        "layouts": [
+          {
+            "theme": "light",
+            "width": 1440,
+            "noHorizontalOverflow": true,
+            "titleFits": true,
+            "subtitleFits": true,
+            "heroHeight": 200
+          },
+          {
+            "theme": "light",
+            "width": 900,
+            "noHorizontalOverflow": true,
+            "titleFits": true,
+            "subtitleFits": true,
+            "heroHeight": 200
+          },
+          {
+            "theme": "light",
+            "width": 390,
+            "noHorizontalOverflow": true,
+            "titleFits": true,
+            "subtitleFits": true,
+            "heroHeight": 200
+          },
+          {
+            "theme": "light",
+            "width": 320,
+            "noHorizontalOverflow": true,
+            "titleFits": true,
+            "subtitleFits": true,
+            "heroHeight": 200
+          },
+          {
+            "theme": "dark",
+            "width": 1440,
+            "noHorizontalOverflow": true,
+            "titleFits": true,
+            "subtitleFits": true,
+            "heroHeight": 200
+          },
+          {
+            "theme": "dark",
+            "width": 900,
+            "noHorizontalOverflow": true,
+            "titleFits": true,
+            "subtitleFits": true,
+            "heroHeight": 200
+          },
+          {
+            "theme": "dark",
+            "width": 390,
+            "noHorizontalOverflow": true,
+            "titleFits": true,
+            "subtitleFits": true,
+            "heroHeight": 200
+          },
+          {
+            "theme": "dark",
+            "width": 320,
+            "noHorizontalOverflow": true,
+            "titleFits": true,
+            "subtitleFits": true,
+            "heroHeight": 200
+          }
+        ]
+      }
+    },
+    {
+      "name": "other-page-backgrounds-and-remount",
+      "passed": true,
+      "evidence": {
+        "knowledgeLamp": true,
+        "authorOrbit": true,
+        "remount": true
+      }
+    },
+    {
+      "name": "axe-light-and-dark",
+      "passed": true,
+      "evidence": [
+        {
+          "theme": "light",
+          "violations": [
+            {
+              "id": "landmark-main-is-top-level",
+              "impact": "moderate",
+              "description": "Ensure the main landmark is at top level"
+            }
+          ]
+        },
+        {
+          "theme": "dark",
+          "violations": [
+            {
+              "id": "landmark-main-is-top-level",
+              "impact": "moderate",
+              "description": "Ensure the main landmark is at top level"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "completedAt": "2026-09-08T06:18:07.232Z",
+  "passed": true
+}

@@ -3,7 +3,6 @@ import {archivedWorkspace,localRecoveryAvailable,exportLocalArchive} from '../wo
 import { lazy,Suspense,useEffect,useState } from 'react'
 import { EmptyStatus } from '../components/EmptyStatus'
 import { ProductWorkspace } from '../components/Shell'
-import { StatusOrbChip } from '../components/StatusOrb'
 import { Icon } from '../icons'
 import { MineGraphCanvasPage } from '../knowledge-canvas/mine-graph-canvas'
 import { ExampleWorkspace } from '../learning-v2/ExampleWorkspace'
@@ -14,6 +13,8 @@ import { selectExampleKnowledge,selectRouteCards } from '../runtime/library-read
 import { useLibrarySelector } from '../runtime/use-library-selector'
 import { coverForId } from '../ui/covers'
 import { FlowithMarket } from '../ui/FlowithMarket'
+import { KnowledgeLibrary } from '../ui/KnowledgeLibrary'
+import { buildKnowledgeShelves } from '../ui/knowledge-shelves'
 import { closeConceptKnowledge,NAV_EVENT,openConceptKnowledge,openRoute,readActiveKnowledgeId,readActiveRouteId,readKnowledgeConceptId,readKnowledgeListReturn } from '../workspace/nav'
 import { getReadOnlyConceptGraph,getReadOnlyKnowledge,getReadOnlyKnowledgeByRoute,getRoute,hasSettledMineConceptGraph,listReadOnlyConceptCards,readWorkspace,useWorkspaceTick } from '../workspace/store'
 
@@ -32,34 +33,24 @@ function LocalArchive(){
 }
 
 export function KnowledgePage() {
-  const [section, setSection] = useState<'mine' | 'example'>(()=>new URLSearchParams(location.hash.split('?')[1]??'').get('tab')==='example'?'example':'mine')
   const {data,error,reload}=useProductLibrary()
-  const mineReady=!!data
   const items = useLibrarySelector(selectExampleKnowledge)
-  const shown = section === 'mine'
-    ? (data?.knowledge??[]).map(k=>({id:k.id,title:k.title,description:'围绕这个概念积累的文章与知识卡片',owner:'mine' as const,onOpen:()=>{location.hash=`knowledge-detail?resource=${encodeURIComponent(k.id)}`}}))
-    : items.flatMap(k=>listReadOnlyConceptCards(k.id).map(c=>({id:c.id,title:c.title,description:c.description,owner:'example' as const,onOpen:()=>openConceptKnowledge(k.id,c.id)})))
+  const shelves = buildKnowledgeShelves(data, items.map(knowledge => {
+    const route = getRoute(knowledge.routeId)
+    return { id: knowledge.id, routeId: knowledge.routeId, title: route?.title ?? knowledge.title,
+      document: route?.document, concepts: listReadOnlyConceptCards(knowledge.id) }
+  }))
   return <ProductWorkspace active="knowledge" page="knowledge">
-    <FlowithMarket
-      kind="collections"
-      title="知识脉络"
-      tab={section}
-      onTab={setSection}
-      items={shown.map((item) => ({
-        id: item.id,
-        cover: coverForId(item.id),
-        title: item.title,
-        desc: item.description,
-        author: item.owner === 'mine' ? '我' : '问山',
-        badge: item.owner === 'mine' ? '我的' : '示例',
-        onOpen:item.onOpen,
-      }))}
-      total={shown.length}
-      loading={section === 'mine' && !mineReady}
-      loadingStatus={<div role="status" aria-live="polite"><StatusOrbChip label="正在读取知识脉络" flow="knowledge-read"/></div>}
-      empty={<div className="square-empty">{error&&<button onClick={()=>void reload()}>{error} · 重新连接</button>}<EmptyStatus kind="empty" title="还没有自己的知识脉络" body="制定路线并开始学习后，会出现在这里。" action="去看我的路线" onAction={() => { location.hash = 'paths' }} /></div>}
+    <KnowledgeLibrary
+      shelves={shelves}
+      onOpen={book => {
+        if (book.target.kind === 'resource') location.hash = `knowledge-detail?resource=${encodeURIComponent(book.target.resourceId)}`
+        else openConceptKnowledge(book.target.knowledgeId, book.target.conceptId)
+      }}
+      loading={!data && !error}
+      error={error ? <EmptyStatus headingLevel={2} kind="error" density="inline" title={data?'暂时无法更新你的知识脉络':'暂时无法读取你的知识脉络'} body={data?'已读取的内容仍然保留，可继续浏览。':'下方编选示例仍可浏览，你的内容读取失败，请重新连接。'} action="重新连接" onAction={()=>void reload()}/> : undefined}
+      footer={<LocalArchive/>}
     />
-    {section==='mine'&&<LocalArchive/>}
   </ProductWorkspace>
 }
 
@@ -84,8 +75,10 @@ export function PathsPage() {
         onOpen: () => { openRoute(route.id, 'paths'); location.hash='path-3d' },
       }))}
       total={shown.length}
-      empty={<div className="square-empty">{error&&<button onClick={()=>void reload()}>{error} · 重新连接</button>}<EmptyStatus kind="empty" title="还没有自己的路线" body="在首页制定路线后，会出现在这里。" action="去问山制定路线" onAction={() => { sessionStorage.setItem('threadpeak-home-select-route', '1'); location.hash = 'home' }} /></div>}
+      error={tab==='mine'&&error&&!data ? <EmptyStatus headingLevel={3} kind="error" title="暂时无法读取路线" body="已有路线仍然保留，请重新连接后再试。" action="重新连接" onAction={()=>void reload()}/> : undefined}
+      empty={<EmptyStatus headingLevel={3} title={tab==='mine'?'还没有自己的路线':'暂时没有示例路线'} body="在首页制定路线后，会出现在这里。" action="去问山制定路线" onAction={() => { sessionStorage.setItem('threadpeak-home-select-route', '1'); location.hash = 'home' }} />}
     />
+    {tab==='mine'&&error&&data&&<EmptyStatus headingLevel={2} kind="error" density="inline" title="暂时无法更新路线" body="正在显示已读取的路线。" action="重新连接" onAction={()=>void reload()}/>}
     {tab==='mine'&&<LocalArchive/>}
   </ProductWorkspace>
 }
@@ -117,7 +110,7 @@ export function KnowledgeConceptsPage() {
         onOpen: () => { openConceptKnowledge(knowledgeId, item.id) },
       }))}
       total={cards.length}
-      empty={<div className="square-empty"><EmptyStatus kind="empty" title="还没有概念脉络" body="进入学习后，相关概念会出现在这里。" action="去看我的路线" onAction={() => { location.hash = 'paths' }} /></div>}
+      empty={<EmptyStatus headingLevel={3} kind="empty" title="还没有概念脉络" body="进入学习后，相关概念会出现在这里。" action="去看我的路线" onAction={() => { location.hash = 'paths' }} />}
     />
   </ProductWorkspace>
 }

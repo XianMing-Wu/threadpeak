@@ -1,4 +1,4 @@
-/* 1:1 from flowith-clone home composer beam. Scoped to the dictionary studio. */
+/* Original flowing light geometry; it appears only while this composer is focused. */
 
 @property --beam-angle {
   syntax: "<angle>";
@@ -20,31 +20,27 @@
   to { --beam-opacity: 1; }
 }
 
-.ux-beam,
-.home .composer.input-motion-frame {
+.ux-beam {
   position: relative;
   display: block;
   width: 100%;
   overflow: hidden;
   isolation: isolate;
   --beam-strength: 0.7;
-  --ux-beam-radius: 20px;
-  --ux-beam-inner: 19px;
+  --ux-beam-radius: var(--r-card);
+  --ux-beam-inner: calc(var(--r-card) - 1px);
 }
 
-.home .composer.input-motion-frame,
 .ux-beam .composer {
   border-radius: var(--ux-beam-radius);
 }
 
-.ux-beam[data-active],
-.home .composer.input-motion-frame {
+.ux-beam[data-active]:focus-within {
   --beam-opacity: 1;
   animation: ux-beam-spin 1.96s linear infinite, ux-beam-fade-in 0.6s ease forwards;
 }
 
-.ux-beam[data-active]::after,
-.home .composer.input-motion-frame::after {
+.ux-beam[data-active]:focus-within::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -104,8 +100,7 @@
   animation: none;
 }
 
-.ux-beam[data-active]::before,
-.home .composer.input-motion-frame::before {
+.ux-beam[data-active]:focus-within::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -186,7 +181,7 @@
   opacity: 0;
 }
 
-.ux-beam[data-active] [data-beam-bloom] {
+.ux-beam[data-active]:focus-within [data-beam-bloom] {
   display: block;
   opacity: calc(var(--beam-opacity) * 0.54 * var(--beam-strength, 1));
 }
@@ -199,32 +194,28 @@
 
 .ux-beam .input-motion-frame::before,
 .ux-beam .input-motion-frame::after {
-  content: none !important;
-  display: none !important;
-  animation: none !important;
+  content: none;
+  display: none;
+  animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ux-beam[data-active],
-  .home .composer.input-motion-frame {
+  .ux-beam[data-active]:focus-within {
     animation: ux-beam-fade-in 0.6s ease forwards;
     --beam-angle: 48deg;
   }
 }
 
-html[data-reduce-motion="true"] .ux-beam[data-active],
-html[data-reduce-motion="true"] .home .composer.input-motion-frame {
-  animation: none !important;
+html[data-reduce-motion="true"] .ux-beam[data-active]:focus-within {
+  animation: none;
   --beam-angle: 48deg;
   --beam-opacity: 1;
 }
 
 @media (forced-colors: active) {
-  .ux-beam[data-active]::before,
-  .ux-beam[data-active]::after,
-  .home .composer.input-motion-frame::before,
-  .home .composer.input-motion-frame::after,
+  .ux-beam[data-active]:focus-within::before,
+  .ux-beam[data-active]:focus-within::after,
   .ux-beam [data-beam-bloom] {
-    display: none !important;
+    display: none;
   }
 }

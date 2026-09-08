@@ -1,0 +1,19 @@
+{
+  "scope": "src CSS, excluding vendor; comments excluded; no assertion of visual quality",
+  "files": 30,
+  "bytes": 223569,
+  "hexValues": 70,
+  "hexOccurrences": 85,
+  "important": 17,
+  "fontSizesBelow12": 0,
+  "variableReferences": 1963,
+  "mediaWidths": [
+    "560",
+    "760",
+    "1080"
+  ],
+  "perFileImportant": {
+    "src/styles/accessibility.css": 12,
+    "src/styles/legacy-domain.css": 5
+  }
+}

@@ -3,8 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="color-scheme" content="light" />
     <meta name="theme-color" content="#f4f6f9" />
+    <script>
+      (() => {
+        let preference;
+        try { preference = localStorage.getItem("threadpeak-theme"); } catch {}
+        const theme = preference === "light" || preference === "dark"
+          ? preference
+          : matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+        document.documentElement.style.backgroundColor = `var(--surface-rail, ${theme === "dark" ? "#111317" : "#f4f6f9"})`;
+        document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#111317" : "#f4f6f9";
+      })();
+    </script>
     <title>问山 · ThreadPeak UX/UI</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23056de8'/%3E%3Cpath d='M8 49 25 19l9 14 8-13 14 29H8Z' fill='white'/%3E%3C/svg%3E" />
   </head>

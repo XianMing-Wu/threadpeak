@@ -1,21 +1,495 @@
 /* Compact source controls inherit the same white, quiet surfaces as the composer. */
-.material-inline-list{display:grid;gap:5px;max-height:180px;overflow:auto;margin:0 12px 2px;overscroll-behavior:contain;scrollbar-width:thin}
-.material-inline{display:flex;align-items:center;gap:7px;width:100%;min-width:0;min-height:29px;padding:3px 7px 3px 10px;border:1px solid #e3e6e9;background:#fbfcfc;border-radius:7px;font-size:12px;line-height:20px;color:#4f575d}
-.material-inline>svg{flex-shrink:0;color:#70a2a5}.material-inline .material-inline-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;background:none;border:0;padding:0;color:inherit;font:inherit}
-.material-inline button.material-inline-name:hover{color:#67517f}.material-inline-action{display:grid;place-items:center;flex-shrink:0;width:23px;height:23px;padding:0;border:0;border-radius:5px;background:transparent;color:#8a9298}.material-inline-action:hover{background:#eef0f2;color:#4f5960}
-.material-inline-status{display:flex;align-items:center;gap:5px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:1;font-size:10px;color:#9b929f}.material-spinner{display:inline-block;width:11px;height:11px;border:1.5px solid #ded9e4;border-top-color:#9580ad;border-radius:50%;flex-shrink:0;animation:material-spin .85s linear infinite}
-.material-inline-notice{display:flex;align-items:flex-start;gap:8px;padding:0 16px;color:#8a6373;font-size:11px;line-height:1.6}.material-inline-notice span{flex:1;white-space:pre-line}.material-inline-notice button{padding:2px;background:transparent;color:inherit}.material-inline-guidance{font-size:11px;line-height:1.5;color:#928598;padding:0 16px;margin:0}
-.material-scope-trigger{position:relative}.material-scope-trigger.is-selected{color:#88709e!important}.material-scope-count{position:absolute;right:0;top:0;font-size:8px;line-height:12px;min-width:12px;border-radius:6px;color:#fff;background:#9782ad}
-.material-scope-menu{position:fixed;z-index:1200;display:flex;flex-direction:column;padding:7px;background:#fff;border:1px solid #e5e5e9;border-radius:14px;box-shadow:0 12px 42px #26233424;overflow:auto;color:#37343d;font-size:13px;overscroll-behavior:contain;animation:material-menu-in .14s ease-out;scrollbar-width:thin}
-.material-scope-menu button{display:flex;align-items:center;gap:10px;width:100%;min-height:39px;padding:8px 10px;border:0;border-radius:8px;background:none;color:inherit;text-align:left;font-size:13px;cursor:pointer}
-.material-scope-menu button:hover,.material-scope-menu button:focus-visible{background:#fff}.material-scope-menu button:focus-visible,.material-dialog button:focus-visible,.material-inline button:focus-visible,.material-scope-trigger:focus-visible{outline:2px solid #a48bc0;outline-offset:-2px}
-.material-scope-menu button[aria-checked=true]{background:#fff}.material-scope-options>button>span:nth-last-child(2){flex:1}.material-scope-options>button>span:last-child:not(.material-radio){flex:1}.material-scope-options>button>svg{color:#78727f;flex-shrink:0}
-.material-radio{display:inline-block;width:14px;height:14px;flex-shrink:0;border:1.5px solid #c6c5cb;border-radius:50%}.material-scope-menu button[aria-checked=true]>.material-radio{border:4px solid #514758}
-.material-scope-divider{height:1px;min-height:1px;background:#fff;margin:7px 3px}.material-scope-menu .material-scope-heading{justify-content:space-between;min-height:35px;color:#89838f;font-size:12px;background:none}.material-scope-heading>span:last-child{color:#aaa3af;font-size:10px}
-.material-folder-list{min-height:0;max-height:220px;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;flex:0 1 auto}.material-folder-list>button>span:nth-of-type(2){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.material-folder-list>button>svg{flex-shrink:0;color:#99909f}.material-checkbox{width:14px;height:14px;display:grid;place-items:center;border:1px solid #d2ccd8;border-radius:4px;flex-shrink:0;color:#8f75a9}.material-scope-menu button[aria-checked=true]>.material-checkbox{border-color:#ad97bf;background:#fff}
-.material-folder-list p,.material-scope-hint{margin:7px 10px;font-size:11px;color:#a49aaa;line-height:1.65}.material-folder-notice button{display:inline-flex;width:auto;min-height:28px;font-size:11px;color:#887199}.material-folder-notice p{overflow-wrap:anywhere}.material-scope-menu .material-saved-entry{font-size:12px;color:#85788f}.material-saved-entry>span{flex:1}.material-saved-entry>svg:last-child{transform:rotate(-90deg)}
-.material-dialog{position:fixed;margin:auto;width:min(620px,calc(100vw - 32px));max-height:calc(100dvh - 48px);padding:0;border:1px solid #e6e2ec;border-radius:16px;box-shadow:0 24px 100px #33234b26;color:#34313b;background:#fff;overflow:hidden}.material-dialog[open]{display:flex;flex-direction:column}.material-dialog::backdrop{background:#22202b38;backdrop-filter:blur(3px)}.material-dialog>header{display:flex;align-items:flex-start;gap:20px;justify-content:space-between;padding:22px 24px 16px;border-bottom:1px solid #efedf3;flex-shrink:0}.material-dialog h2{font-size:17px;margin:0;overflow-wrap:anywhere}.material-dialog header p{font-size:12px;color:#9a93a2;margin:8px 0 0;line-height:1.6}.material-dialog header button{flex-shrink:0;border:0;background:transparent;color:#8e8899;padding:3px}
-.material-dialog-body,.material-preview{overflow-y:auto;min-height:0;padding:20px 24px;overscroll-behavior:contain}.material-dialog-body{min-height:130px}.material-preview{line-height:1.8}.material-saved{display:grid;gap:4px}.material-saved>button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;text-align:left;padding:12px 8px;border-radius:8px;color:#635b6b}.material-saved>button:hover{background:#fff}.material-saved>button:disabled{opacity:.5;cursor:default}.material-saved>button>svg{flex-shrink:0}.material-saved span{flex:1;min-width:0;overflow-wrap:anywhere}.material-saved small{display:block;color:#a39ca9;font-size:10px;margin-top:4px}.material-saved>p{font-size:12px;color:#a29ba8}.material-notice{font-size:12px;color:#8b6a81;line-height:1.6}.material-retry{padding:8px 12px;border:1px solid #e5deeb;border-radius:8px;background:#fff;color:#8f75a9}
-@keyframes material-spin{to{transform:rotate(360deg)}}@keyframes material-menu-in{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
-@media(prefers-reduced-motion:reduce){.material-spinner,.material-scope-menu{animation:none}}
-@media(max-width:500px){.material-dialog>header,.material-dialog-body,.material-preview{padding:18px}.material-inline-status{max-width:80px;font-size:9px}.material-inline-list{margin-inline:10px}.material-scope-menu{font-size:12px}}
+
+.material-inline-list {
+  display: grid;
+  gap: 6px;
+  max-height: 180px;
+  overflow: auto;
+  margin: 0 12px 2px;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.material-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+  padding: 3px 6px 3px 10px;
+  border: 1px solid var(--line-1);
+  background: var(--surface-1);
+  border-radius: var(--r-control);
+  font-size: var(--fs-meta);
+  line-height: 20px;
+  color: var(--ink-2);
+}
+
+.material-inline > svg {
+  flex-shrink: 0;
+  color: var(--ink-3);
+}
+
+.material-inline .material-inline-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+}
+
+.material-inline button.material-inline-name:hover {
+  color: var(--accent);
+}
+
+.material-inline-action {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--ink-3);
+}
+
+.material-inline-action:hover {
+  background: var(--surface-2);
+  color: var(--ink-1);
+}
+
+.material-inline-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 144px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+
+.material-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid var(--line-2);
+  border-top-color: var(--ink-2);
+  border-radius: var(--r-avatar);
+  flex-shrink: 0;
+  animation: tp-spin .85s linear infinite;
+}
+
+.material-inline-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 0 16px;
+  color: var(--danger);
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+}
+
+.material-inline-notice span {
+  flex: 1;
+  white-space: pre-line;
+}
+
+.material-inline-notice button {
+  padding: 2px;
+  background: transparent;
+  color: inherit;
+}
+
+.material-inline-guidance {
+  font-size: var(--fs-meta);
+  line-height: 1.5;
+  color: var(--ink-3);
+  padding: 0 16px;
+  margin: 0;
+}
+
+.material-scope-trigger {
+  position: relative;
+}
+
+.composer-icon.material-scope-trigger.is-selected {
+  color: var(--ink-1);
+}
+
+.material-scope-count {
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: var(--fs-kbd);
+  line-height: 15px;
+  min-width: 16px;
+  padding-inline: 3px;
+  border: 1px solid var(--line-3);
+  border-radius: var(--r-pill);
+  color: var(--ink-1);
+  background: var(--surface-1);
+}
+
+.material-scope-menu {
+  position: fixed;
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  padding: 7px;
+  background: var(--surface-1);
+  border: 1px solid var(--line-1);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-3);
+  overflow: auto;
+  color: var(--ink-1);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  overscroll-behavior: contain;
+  animation: material-menu-in var(--motion-fast) var(--ease-standard);
+  scrollbar-width: thin;
+}
+
+.material-scope-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: none;
+  color: inherit;
+  text-align: left;
+  font-size: var(--fs-body);
+  cursor: pointer;
+}
+
+.material-scope-menu button:hover,
+.material-scope-menu button:focus-visible {
+  background: var(--surface-1);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+
+.material-scope-menu button:focus-visible,
+.material-dialog button:focus-visible,
+.material-inline button:focus-visible,
+.material-scope-trigger:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.material-scope-menu button[aria-checked=true] {
+  background: var(--surface-1);
+}
+
+.material-scope-options > button > span:nth-last-child(2) {
+  flex: 1;
+}
+
+.material-scope-options > button > span:last-child:not(.material-radio) {
+  flex: 1;
+}
+
+.material-scope-options > button > svg {
+  color: var(--ink-3);
+  flex-shrink: 0;
+}
+
+.material-radio {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--line-3);
+  border-radius: var(--r-avatar);
+}
+
+.material-scope-menu button[aria-checked=true] > .material-radio {
+  border: 4px solid var(--ink-2);
+}
+
+.material-scope-divider {
+  height: 1px;
+  min-height: 1px;
+  background: var(--line-1);
+  margin: 7px 3px;
+}
+
+.material-scope-menu .material-scope-heading {
+  justify-content: space-between;
+  min-height: 35px;
+  color: var(--ink-2);
+  font-size: var(--fs-meta);
+  background: none;
+}
+
+.material-scope-heading > span:last-child {
+  color: var(--ink-3);
+  font-size: var(--fs-meta);
+}
+
+.material-folder-list {
+  min-height: 0;
+  max-height: 220px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  flex: 0 1 auto;
+}
+
+.material-folder-list > button > span:nth-of-type(2) {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.material-folder-list > button > svg {
+  flex-shrink: 0;
+  color: var(--ink-3);
+}
+
+.material-checkbox {
+  width: 14px;
+  height: 14px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-3);
+  border-radius: var(--r-control);
+  flex-shrink: 0;
+  color: var(--ink-1);
+}
+
+.material-scope-menu button[aria-checked=true] > .material-checkbox {
+  border-color: var(--ink-2);
+  background: var(--surface-1);
+}
+
+.material-folder-list p,
+.material-scope-hint {
+  margin: 7px 10px;
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+  line-height: 1.65;
+}
+
+.material-folder-notice button {
+  display: inline-flex;
+  width: auto;
+  min-height: 28px;
+  font-size: var(--fs-meta);
+  color: var(--accent);
+}
+
+.material-folder-notice p {
+  overflow-wrap: anywhere;
+}
+
+.material-scope-menu .material-saved-entry {
+  font-size: var(--fs-meta);
+  color: var(--ink-2);
+}
+
+.material-saved-entry > span {
+  flex: 1;
+}
+
+.material-saved-entry > svg:last-child {
+  transform: rotate(-90deg);
+}
+
+.material-dialog {
+  position: fixed;
+  z-index: var(--z-modal);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  margin: auto;
+  width: min(620px,calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  padding: 0;
+  border: 1px solid var(--line-1);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-4);
+  color: var(--ink-1);
+  background: var(--surface-1);
+  overflow: hidden;
+}
+
+.material-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.material-dialog::backdrop {
+  background: var(--overlay);
+  backdrop-filter: blur(3px);
+}
+
+.material-dialog > header {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  justify-content: space-between;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid var(--line-1);
+  flex-shrink: 0;
+}
+
+.material-dialog h2 {
+  font-size: var(--fs-h3);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.material-dialog header p {
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+  margin: 8px 0 0;
+  line-height: 1.6;
+}
+
+.material-dialog header button {
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: var(--r-control);
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-3);
+  padding: 3px;
+}
+
+.material-dialog-body,
+.material-preview {
+  overflow-y: auto;
+  min-height: 0;
+  padding: 20px 24px;
+  overscroll-behavior: contain;
+}
+
+.material-dialog-body {
+  min-height: 130px;
+}
+
+.material-preview {
+  line-height: 1.8;
+}
+
+.material-saved {
+  display: grid;
+  gap: 4px;
+}
+
+.material-saved > button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 12px 8px;
+  border-radius: var(--r-control);
+  color: var(--ink-2);
+}
+
+.material-saved > button:hover {
+  background: var(--surface-1);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+
+.material-saved > button:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+.material-saved > button > svg {
+  flex-shrink: 0;
+}
+
+.material-saved span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.material-saved small {
+  display: block;
+  color: var(--ink-3);
+  font-size: var(--fs-meta);
+  margin-top: 4px;
+}
+
+.material-saved > p {
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+
+.material-notice {
+  font-size: var(--fs-meta);
+  color: var(--danger);
+  line-height: 1.6;
+}
+
+.material-retry {
+  padding: 8px 12px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-control);
+  background: var(--surface-1);
+  color: var(--ink-1);
+}
+
+@keyframes material-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .material-dialog > header,
+  .material-dialog-body,
+  .material-preview {
+    padding: 18px;
+  }
+  .material-inline-status {
+    max-width: 104px;
+  }
+  .material-inline-list {
+    margin-inline: 10px;
+  }
+  .material-scope-menu {
+    font-size: var(--fs-meta);
+  }
+}
+
+@media (pointer: coarse) {
+  .material-inline-action,
+  .material-dialog header button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .material-scope-menu button {
+    min-height: 44px;
+  }
+}

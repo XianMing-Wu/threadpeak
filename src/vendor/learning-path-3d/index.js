@@ -2274,8 +2274,8 @@ function ln(e) {
 	return Math.min(Math.max(0, e.maximumLiftPixels), Math.max(0, e.currentLiftPixels + i));
 }
 function un(e) {
-	let t = Math.max(0, e.maximumOffsetPixels), n = Math.max(0, e.safeMarginPixels ?? cn), r = e.viewportLeftClientX + n, i = e.viewportRightClientX - n, a = r - e.cardLeftClientX, o = e.cardRightClientX - i, s = e.currentOffsetPixels;
-	return a > 0 ? s += a : o > 0 ? s -= o : s > 0 ? s = Math.max(0, s - Math.max(0, e.cardLeftClientX - r)) : s < 0 && (s = Math.min(0, s + Math.max(0, i - e.cardRightClientX))), Math.min(t, Math.max(-t, s));
+	let t = Math.max(0, e.maximumOffsetPixels), n = Math.max(0, (e.viewportRightClientX - e.viewportLeftClientX - (e.cardRightClientX - e.cardLeftClientX)) / 2), r = Math.min(n, Math.max(0, e.safeMarginPixels ?? cn)), i = e.viewportLeftClientX + r, a = e.viewportRightClientX - r, o = i - e.cardLeftClientX, s = e.cardRightClientX - a, c = e.currentOffsetPixels;
+	return o > 0 ? c += o : s > 0 ? c -= s : c > 0 ? c = Math.max(0, c - Math.max(0, e.cardLeftClientX - i)) : c < 0 && (c = Math.min(0, c + Math.max(0, a - e.cardRightClientX))), Math.min(t, Math.max(-t, c));
 }
 //#endregion
 //#region src/ui/node-card/createNodeCardViewModel.ts
@@ -6928,7 +6928,7 @@ var fo = class {
 	}
 }, po = null, mo = null;
 function ho() {
-	return po ??= import("./LearningPathSession-WoZaqSLh.js").catch((e) => {
+	return po ??= import("./LearningPathSession-Cl847s7Y.js").catch((e) => {
 		throw po = null, e;
 	}), po;
 }

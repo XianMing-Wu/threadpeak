@@ -1,0 +1,7 @@
+{
+  "width": 336,
+  "height": 256,
+  "type": 1016,
+  "format": "RGBA half float, little endian",
+  "source": "Three.js RoomEnvironment r185, PMREM sigma 0.04, generated for the metal shelf"
+}

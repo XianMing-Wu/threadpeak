@@ -1,6 +1,6 @@
 import { productRequest } from '../learning-v2/client'
 import { requestAuthStart } from '../runtime/request-auth-session'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { clearChatHistory } from '../history'
 import { requestAuthSession } from '../runtime/request-auth-session'
 
@@ -15,16 +15,25 @@ export function SettingsPage({
 }) {
   const [confirm, setConfirm] = useState(false)
   const [notice, setNotice] = useState('')
+  const confirmRef = useRef<HTMLDialogElement>(null)
+  const cancelRef = useRef<HTMLButtonElement>(null)
+  const openerRef = useRef<HTMLButtonElement | null>(null)
   const [oauthSignedIn, setOauthSignedIn] = useState(false)
   const [account,setAccount]=useState<{name?:string;demo?:boolean;mode?:'real'|'mock'}|null>(null),[connected,setConnected]=useState(false),[demoMode,setDemoMode]=useState(false)
   useEffect(()=>{void productRequest<any>('/api/v2/session').then(s=>{setAccount(s.profile??null);setOauthSignedIn(s.provider==='zhihu')}).catch(()=>setNotice('账号信息暂未读取完成，请稍后重新进入设置。'));void fetch('/api/auth/config').then(r=>r.json()).then(c=>{setConnected(c.zhihuAvailable);setDemoMode(c.zhihuMode==='mock')}).catch(()=>setConnected(false))},[])
   const connect=async()=>{const result=await requestAuthStart();if(result.kind==='redirect')location.href=result.authorizeUrl;else setNotice(result.message)}
 
   useEffect(() => {
-    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') setConfirm(false) }
-    addEventListener('keydown', escape)
-    return () => removeEventListener('keydown', escape)
-  }, [])
+    if (!confirm) return
+    const dialog = confirmRef.current
+    if (!dialog) return
+    dialog.showModal()
+    cancelRef.current?.focus()
+    return () => {
+      dialog.close()
+      openerRef.current?.focus()
+    }
+  }, [confirm])
   useEffect(() => {
     void requestAuthSession().then((session) => {
       setOauthSignedIn(session.kind === 'authenticated'&&session.provider==='zhihu')
@@ -44,16 +53,16 @@ export function SettingsPage({
         <button className={`switch ${theme === 'dark' ? 'is-on' : ''}`} aria-label="夜间模式" role="switch" aria-checked={theme === 'dark'} onClick={onThemeChange}><i/></button>
       </div>
       <h2>历史记录</h2>
-      <div className="setting-row danger"><div><b>清空本地历史</b><small>只清空这台设备上的对话记录，不会删除你的路线和知识脉络</small></div><button onClick={() => setConfirm(true)}>清空</button></div>
+      <div className="setting-row danger"><div><b>清空本地历史</b><small>只清空这台设备上的对话记录，不会删除你的路线和知识脉络</small></div><button onClick={(event) => { openerRef.current = event.currentTarget; setConfirm(true) }}>清空</button></div>
       <h2>账号</h2>
       <div className="setting-row danger"><div><b>退出登录</b><small>退出后需要重新登录</small></div><button onClick={onLogout}>退出</button></div>
       {notice && <p className="settings-notice" role="status">{notice}</p>}
     </section>
-    {confirm && <div className="dialog-mask" onMouseDown={() => setConfirm(false)}>
-      <section className="confirm-dialog" role="dialog" aria-modal="true" aria-label="确认清空本地历史" onMouseDown={(event) => event.stopPropagation()}>
-        <h2>清空本地历史？</h2><p>只清空这台设备上的对话记录，不会删除你的路线和知识脉络。</p>
-        <div><button onClick={() => setConfirm(false)}>取消</button><button onClick={() => { clearChatHistory(); setConfirm(false); setNotice('本地历史已清空') }}>确认清空</button></div>
-      </section>
-    </div>}
+    {confirm && <dialog ref={confirmRef} className="confirm-dialog" aria-labelledby="clear-history-title" aria-describedby="clear-history-description"
+      onCancel={(event) => { event.preventDefault(); setConfirm(false) }} onClose={(event) => { if (!event.currentTarget.open) setConfirm(false) }}
+      onClick={(event) => { if (event.target === event.currentTarget) { const box = event.currentTarget.getBoundingClientRect(); if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) setConfirm(false) } }}>
+      <h2 id="clear-history-title">清空本地历史？</h2><p id="clear-history-description">只清空这台设备上的对话记录，不会删除你的路线和知识脉络。</p>
+      <div><button ref={cancelRef} type="button" onClick={() => setConfirm(false)}>取消</button><button type="button" onClick={() => { clearChatHistory(); setConfirm(false); setNotice('本地历史已清空') }}>确认清空</button></div>
+    </dialog>}
   </main>
 }

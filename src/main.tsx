@@ -8,6 +8,7 @@ import './ui/flowith-home.css'
 import './ui/flowith-market.css'
 import './ui/composer-beam.css'
 import './ui/flowith-product.css'
+import './styles/accessibility.css'
 
 function syncAppFrame() {
   const inner = window.innerHeight

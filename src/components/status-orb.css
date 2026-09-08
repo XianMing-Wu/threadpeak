@@ -3,11 +3,10 @@
   min-height: 0;
   padding: 0;
   background: transparent;
-  color: #1f2329;
+  color: var(--ink-1);
   line-height: 1.2;
 }
 
-.loading-panel:has(.tp-process),
 .loading-panel:has(.tp-status-orb-chip) {
   background: transparent;
   border: 0;
@@ -18,9 +17,7 @@
   min-width: 0;
 }
 
-.loading-panel .tp-process,
-.loading-panel .tp-status-orb-chip,
-.loading-panel .tp-status-orb-slot {
+.loading-panel .tp-status-orb-chip {
   flex: none;
 }
 

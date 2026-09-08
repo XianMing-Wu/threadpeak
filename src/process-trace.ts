@@ -71,10 +71,7 @@ export function thoughtForDisplay(text: string): string {
       continue
     }
     if (ch === '}') {
-      if (depth === 0) {
-        result += ch
-        continue
-      }
+      if (depth === 0) continue
       depth -= 1
       if (depth === 0 && start >= 0) {
         const slice = withoutFences.slice(start, i + 1)
@@ -93,7 +90,21 @@ export function thoughtForDisplay(text: string): string {
     }
     if (depth === 0) result += ch
   }
-  return result.replace(/\n{3,}/g, '\n\n').trim()
+  const readable = result
+    .split('\n')
+    .filter((line) => {
+      const trimmed = line.trim()
+      if (!trimmed) return true
+      if (/^[{}\[\].,]+$/.test(trimmed)) return false
+      if (/^"[^"]+"\s*:/.test(trimmed)) return false
+      if (/^(fromConceptId|toConceptId|fromCarrierId|toCarrierId)\b/.test(trimmed)) return false
+      return true
+    })
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+  const letters = readable.replace(/[{}\[\]",:_\-0-9a-fA-F\s]/g, '')
+  return letters.length < 4 ? '' : readable
 }
 
 export function confirmStep(id: string, label: string): ProcessStep {

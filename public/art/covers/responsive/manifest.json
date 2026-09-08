@@ -1,0 +1,259 @@
+{
+  "generatedAt": "2026-09-08T04:14:15.042Z",
+  "source": "Reviewed public/art/covers WebP files",
+  "transform": "Proportional resize only; WebP quality 80; no crop or content changes",
+  "records": [
+    {
+      "source": "01-trail.webp",
+      "sourceBytes": 202078,
+      "sourceHash": "04029e861d70fb0d14c57958383e80e99c0f2705fee74fb647d82ca71855b871",
+      "variants": [
+        {
+          "file": "01-trail-384.webp",
+          "width": 384,
+          "height": 256,
+          "bytes": 8738,
+          "sha256": "d41cc57e2e5bc354a923813ff166327b8b1a0d3f5cbc2ccd366610841e7f1352"
+        },
+        {
+          "file": "01-trail-768.webp",
+          "width": 768,
+          "height": 512,
+          "bytes": 26424,
+          "sha256": "640e1afcc67c232f4a290592d8e67bc3ccb2327e00b486241e87bbd71fc45675"
+        }
+      ]
+    },
+    {
+      "source": "02-library.webp",
+      "sourceBytes": 148486,
+      "sourceHash": "b008c67d5d0649503397f7615497ece3b2bfa8261697d85fb781fe2d007d6b44",
+      "variants": [
+        {
+          "file": "02-library-384.webp",
+          "width": 384,
+          "height": 256,
+          "bytes": 9158,
+          "sha256": "cef1c3a9cd264c86ebb97973bcffa7dfc6e0d74b78a3f61d777d50fb13e2cbc0"
+        },
+        {
+          "file": "02-library-768.webp",
+          "width": 768,
+          "height": 512,
+          "bytes": 26088,
+          "sha256": "13237c67a6b551911fdcf921a3c0587fec2fe6521b5154dc5f8bd212d74f2448"
+        }
+      ]
+    },
+    {
+      "source": "03-vectors.webp",
+      "sourceBytes": 85612,
+      "sourceHash": "be3d0e6971e79f665e2cb3c456b37a1d65218099cbbbd809765799d15059ece9",
+      "variants": [
+        {
+          "file": "03-vectors-384.webp",
+          "width": 384,
+          "height": 256,
+          "bytes": 6290,
+          "sha256": "e3cb0f79d3fe3ad5f431446da1282bfc9d7aba99daf93c20b527ccfebb15f2f0"
+        },
+        {
+          "file": "03-vectors-768.webp",
+          "width": 768,
+          "height": 512,
+          "bytes": 15604,
+          "sha256": "e78589f792dd374377c761126ab17738b49d0b3e31b0cc35942e41ec9540d3b4"
+        }
+      ]
+    },
+    {
+      "source": "04-observatory.webp",
+      "sourceBytes": 114054,
+      "sourceHash": "91c7299243b3dc874bd0b39fc9f3bc39ea3a29d6b0a72c1abdab18a59a8e58c2",
+      "variants": [
+        {
+          "file": "04-observatory-384.webp",
+          "width": 384,
+          "height": 256,
+          "bytes": 7610,
+          "sha256": "4a5b658e7956560fca2b8d18fb68efc1f6bd7b5e23bbe2505bb497a6c62ee29c"
+        },
+        {
+          "file": "04-observatory-768.webp",
+          "width": 768,
+          "height": 512,
+          "bytes": 20098,
+          "sha256": "912a2237cf3bd8b5052634345358739182f0f2d19149dc4f575cf3b3d5fa292a"
+        }
+      ]
+    },
+    {
+      "source": "05-bridge.webp",
+      "sourceBytes": 66772,
+      "sourceHash": "4044f3b2a6b4ae324f5223cf1de897187cdf9c6a1d6de95455e6d7a35668601c",
+      "variants": [
+        {
+          "file": "05-bridge-384.webp",
+          "width": 384,
+          "height": 256,
+          "bytes": 5302,
+          "sha256": "9e099da205dad4e7bad69ff5fff19580b31b1f6e6c85e7fac2bdbf33c4c57252"
+        },
+        {
+          "file": "05-bridge-768.webp",
+          "width": 768,
+          "height": 512,
+          "bytes": 13458,
+          "sha256": "a1fb1eb2138001a3ab54b3c5f98b72b07396ac58bd1c14b84fa0a46065138362"
+        }
+      ]
+    },
+    {
+      "source": "06-garden.webp",
+      "sourceBytes": 106234,
+      "sourceHash": "e862b66a0b896c3bd799ad61f994c40e7ed40f673735c52e84c4a81ca1449426",
+      "variants": [
+        {
+          "file": "06-garden-384.webp",
+          "width": 384,
+          "height": 256,
+          "bytes": 9372,
+          "sha256": "72714b9272bd3f26303b81ff16e69a21f32365d47be20ce6b30d28c1a74ecbb8"
+        },
+        {
+          "file": "06-garden-768.webp",
+          "width": 768,
+          "height": 512,
+          "bytes": 23250,
+          "sha256": "d2e655f1866bb9e711e65f82d8d884a72fa24d28f74e8276088d40ed6c005f89"
+        }
+      ]
+    },
+    {
+      "source": "07-laboratory.webp",
+      "sourceBytes": 93164,
+      "sourceHash": "1f51868b4282c08aedad3ba2baba6d261ec6525b0a7f26591905a356f35e52a0",
+      "variants": [
+        {
+          "file": "07-laboratory-384.webp",
+          "width": 384,
+          "height": 256,
+          "bytes": 5998,
+          "sha256": "69b63ef9be652fb934028f66ffba9d1cf0f1525c3b579bc5df4e5909f92864f9"
+        },
+        {
+          "file": "07-laboratory-768.webp",
+          "width": 768,
+          "height": 512,
+          "bytes": 15174,
+          "sha256": "075a811aefd8142b2e2e1910e4dce6eb08ccf7405d527011b66312251ddff8e4"
+        }
+      ]
+    },
+    {
+      "source": "08-ocean.webp",
+      "sourceBytes": 85384,
+      "sourceHash": "ade791f1ef15dda1e87c1713d168247e0ab34139f3a491ee532508d4094bab1a",
+      "variants": [
+        {
+          "file": "08-ocean-384.webp",
+          "width": 384,
+          "height": 256,
+          "bytes": 5062,
+          "sha256": "02892518486f29560246cd07a2e8f9abcacc9b652116c1afbc0307ce6cbeadbb"
+        },
+        {
+          "file": "08-ocean-768.webp",
+          "width": 768,
+          "height": 512,
+          "bytes": 12418,
+          "sha256": "bdf61f7ed486d16cd9e00d6bf7377ffbda7d3e0a435bf4e75bb023d49edea64a"
+        }
+      ]
+    },
+    {
+      "source": "09-orbit.webp",
+      "sourceBytes": 76214,
+      "sourceHash": "8777361a29394f3549a0c562c2a2f73511dfd6d2b615a62457fff4ec9d47e42e",
+      "variants": [
+        {
+          "file": "09-orbit-384.webp",
+          "width": 384,
+          "height": 256,
+          "bytes": 5432,
+          "sha256": "c7f5600f0cde423891b2931cd7c5e3e80b3dc3b43f09b724ed2769581f7ff219"
+        },
+        {
+          "file": "09-orbit-768.webp",
+          "width": 768,
+          "height": 512,
+          "bytes": 13670,
+          "sha256": "7a9640847e6eb0feaaf4efe7373ec362c95120a5bf9ed06ed410df1ff0aab465"
+        }
+      ]
+    },
+    {
+      "source": "10-stairs.webp",
+      "sourceBytes": 145158,
+      "sourceHash": "2605bdcd16f70c495aa54c373df8687121c25199f34197638cf3ad0acf13fe08",
+      "variants": [
+        {
+          "file": "10-stairs-384.webp",
+          "width": 384,
+          "height": 256,
+          "bytes": 4528,
+          "sha256": "965671437239bda81a8504104ca0e2dee74fd493949e6eb5d907a36a30b3f4f3"
+        },
+        {
+          "file": "10-stairs-768.webp",
+          "width": 768,
+          "height": 512,
+          "bytes": 12946,
+          "sha256": "464ffb3e236b103cf215145219b1e4070135536bae83945731177089cbccc740"
+        }
+      ]
+    },
+    {
+      "source": "11-puzzle.webp",
+      "sourceBytes": 90712,
+      "sourceHash": "c76284970a3467f68eab527f86ce84c698111950bbc3428af22f61fc43010cbe",
+      "variants": [
+        {
+          "file": "11-puzzle-384.webp",
+          "width": 384,
+          "height": 256,
+          "bytes": 5640,
+          "sha256": "18559960202151a0b72fb078950c6a48572ec2bbff5ac00120f7c170956c5ed2"
+        },
+        {
+          "file": "11-puzzle-768.webp",
+          "width": 768,
+          "height": 512,
+          "bytes": 13694,
+          "sha256": "00689a44bda1ff2f147fcf311809a62da80653c7862564df836f7ec4703fbb34"
+        }
+      ]
+    },
+    {
+      "source": "12-summit.webp",
+      "sourceBytes": 75688,
+      "sourceHash": "6006ac0c0f3d9758eda731312cb018afd70e50e4f334a35fd218f36ebe5555e6",
+      "variants": [
+        {
+          "file": "12-summit-384.webp",
+          "width": 384,
+          "height": 256,
+          "bytes": 5686,
+          "sha256": "2bf4cd277303c81e71095182831e5fa6f10f5255df624ed22888b24d2cce5595"
+        },
+        {
+          "file": "12-summit-768.webp",
+          "width": 768,
+          "height": 512,
+          "bytes": 14012,
+          "sha256": "70d712e35fa9f393a5bf6c42c8ea5b6c71a6659f9a4b7184bd9f501464bb066f"
+        }
+      ]
+    }
+  ]
+}

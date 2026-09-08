@@ -15,8 +15,8 @@ export function CommentList({ comments = [], url }: CommentProps) {
   </section>
 }
 
-export function SourceComments({ comments, total, url }: CommentProps) {
-  const { value } = useSourcePresentation(url, comments === undefined && total !== 0)
+export function SourceComments({ comments, total, url, allowPresentation = true }: CommentProps & { allowPresentation?: boolean }) {
+  const { value } = useSourcePresentation(url, allowPresentation && comments === undefined && total !== 0)
   const metadata = value?.data.metadata
   return <CommentList comments={comments ?? metadata?.comments} total={total ?? metadata?.commentCount} url={url}/>
 }

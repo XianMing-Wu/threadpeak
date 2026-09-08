@@ -1,0 +1,118 @@
+{
+  "at": "2026-09-08T04:49:46.551Z",
+  "scope": "User-approved visual corrections; isolated QA source, no provider verification",
+  "checks": [
+    {
+      "name": "focus-beam-and-hover-gradient",
+      "passed": true,
+      "focus": {
+        "animation": "ux-beam-spin, ux-beam-fade-in",
+        "outline": "none",
+        "inputOutline": "none",
+        "after": "\"\""
+      },
+      "colors": [
+        "rgb(29, 140, 236)",
+        "rgb(69, 185, 216)",
+        "rgb(105, 104, 241)"
+      ]
+    },
+    {
+      "name": "brand-scroll-collapse-and-restore",
+      "passed": true,
+      "brand": {
+        "height": 142,
+        "englishBehindMountain": true,
+        "mottoOverMountain": true
+      }
+    },
+    {
+      "name": "coverflow-light-1440",
+      "passed": true,
+      "counts": [
+        5,
+        5
+      ],
+      "keyboardOpen": true
+    },
+    {
+      "name": "coverflow-dark-1440",
+      "passed": true,
+      "counts": [
+        5,
+        5
+      ],
+      "keyboardOpen": true
+    },
+    {
+      "name": "coverflow-light-390",
+      "passed": true,
+      "counts": [
+        5,
+        5
+      ],
+      "keyboardOpen": true
+    },
+    {
+      "name": "coverflow-dark-320",
+      "passed": true,
+      "counts": [
+        5,
+        5
+      ],
+      "keyboardOpen": true
+    },
+    {
+      "name": "lamp-and-search-focus",
+      "passed": true
+    },
+    {
+      "name": "author-input-stays-static",
+      "passed": true
+    },
+    {
+      "name": "paths-scroll-1440",
+      "passed": true,
+      "scrollTop": 558,
+      "maxScroll": 558,
+      "lastCardVisible": true
+    },
+    {
+      "name": "knowledge-scroll-1440",
+      "passed": true,
+      "scrollTop": 2077,
+      "maxScroll": 2077,
+      "lastCardVisible": true
+    },
+    {
+      "name": "paths-scroll-900",
+      "passed": true,
+      "scrollTop": 519,
+      "maxScroll": 519,
+      "lastCardVisible": true
+    },
+    {
+      "name": "knowledge-scroll-900",
+      "passed": true,
+      "scrollTop": 2477,
+      "maxScroll": 2477,
+      "lastCardVisible": true
+    },
+    {
+      "name": "paths-scroll-390",
+      "passed": true,
+      "scrollTop": 1619,
+      "maxScroll": 1619,
+      "lastCardVisible": true
+    },
+    {
+      "name": "knowledge-scroll-390",
+      "passed": true,
+      "scrollTop": 7673,
+      "maxScroll": 7673,
+      "lastCardVisible": true
+    }
+  ],
+  "errors": [],
+  "passed": true
+}

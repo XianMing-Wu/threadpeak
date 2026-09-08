@@ -1,0 +1,268 @@
+{
+  "at": "2026-09-08T07:30:34.808Z",
+  "scope": "Knowledge list presentation and interactions only. Browser-isolated API fixtures and curated examples; no live-provider or production claim.",
+  "checks": [
+    {
+      "width": 1440,
+      "exampleCount": 22,
+      "search": true,
+      "clear": true,
+      "scroll": true,
+      "keyboardOpen": true,
+      "mineSeparation": true
+    },
+    {
+      "width": 390,
+      "exampleCount": 22,
+      "search": true,
+      "clear": true,
+      "scroll": true,
+      "keyboardOpen": true,
+      "mineSeparation": true
+    },
+    {
+      "width": 320,
+      "exampleCount": 22,
+      "search": true,
+      "clear": true,
+      "scroll": true,
+      "keyboardOpen": true,
+      "mineSeparation": true
+    },
+    {
+      "ownDataRendering": true,
+      "fixtureOnly": true
+    },
+    {
+      "loading": true,
+      "errorNotHiddenBySearch": true,
+      "retry": true,
+      "routeEntry": true,
+      "fixtureOnly": true
+    }
+  ],
+  "audits": [
+    {
+      "name": "example-1440",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 1362,
+        "scrollWidth": 1362,
+        "height": 986,
+        "scrollHeight": 1545,
+        "documentWidth": 1440,
+        "viewport": 1440
+      }
+    },
+    {
+      "name": "mine-1440",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 1362,
+        "scrollWidth": 1362,
+        "height": 986,
+        "scrollHeight": 986,
+        "documentWidth": 1440,
+        "viewport": 1440
+      }
+    },
+    {
+      "name": "example-390",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 312,
+        "scrollWidth": 312,
+        "height": 986,
+        "scrollHeight": 2551,
+        "documentWidth": 390,
+        "viewport": 390
+      }
+    },
+    {
+      "name": "mine-390",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 312,
+        "scrollWidth": 312,
+        "height": 986,
+        "scrollHeight": 986,
+        "documentWidth": 390,
+        "viewport": 390
+      }
+    },
+    {
+      "name": "example-320",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 242,
+        "scrollWidth": 242,
+        "height": 986,
+        "scrollHeight": 2881,
+        "documentWidth": 320,
+        "viewport": 320
+      }
+    },
+    {
+      "name": "mine-320",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 242,
+        "scrollWidth": 242,
+        "height": 986,
+        "scrollHeight": 986,
+        "documentWidth": 320,
+        "viewport": 320
+      }
+    },
+    {
+      "name": "example-dark-1440",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 1362,
+        "scrollWidth": 1362,
+        "height": 986,
+        "scrollHeight": 1545,
+        "documentWidth": 1440,
+        "viewport": 1440
+      }
+    },
+    {
+      "name": "mine-populated-fixture",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 1362,
+        "scrollWidth": 1362,
+        "height": 986,
+        "scrollHeight": 986,
+        "documentWidth": 1440,
+        "viewport": 1440
+      }
+    },
+    {
+      "name": "mine-loading-fixture",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 1362,
+        "scrollWidth": 1362,
+        "height": 986,
+        "scrollHeight": 986,
+        "documentWidth": 1440,
+        "viewport": 1440
+      }
+    },
+    {
+      "name": "mine-error-fixture",
+      "accessibility": [
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "nodes": [
+            [
+              "main"
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "width": 1362,
+        "scrollWidth": 1362,
+        "height": 986,
+        "scrollHeight": 986,
+        "documentWidth": 1440,
+        "viewport": 1440
+      }
+    }
+  ],
+  "pageErrors": [],
+  "passed": true
+}
