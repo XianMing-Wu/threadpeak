@@ -20,10 +20,14 @@ import { createZhihuGate,limitZhihuProvider,type ZhihuGate } from './zhihu-gate.
 import { instrumentProviders } from './provider-runtime.ts'
 
 export function serverEnvironment():NodeJS.ProcessEnv{
-  const env={...process.env}
+  // Blank optional values in .env.example must leave startup defaults intact.
+  const env:NodeJS.ProcessEnv=Object.fromEntries(Object.entries(process.env).filter(([,value])=>value?.trim()))
   try{for(const line of readFileSync(resolve('.env'),'utf8').split(/\r?\n/)){
     const match=/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/.exec(line)
-    if(match && !env[match[1]!])env[match[1]!]=match[2]!.replace(/^(['"])(.*)\1$/,'$2')
+    if(match && !env[match[1]!]){
+      const value=match[2]!.replace(/^(['"])(.*)\1$/,'$2')
+      if(value.trim())env[match[1]!]=value
+    }
   }}catch{ /* readiness handles absent provider configuration */ }
   return env
 }

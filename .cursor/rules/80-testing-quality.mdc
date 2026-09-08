@@ -1,12 +1,12 @@
 ---
 description: "定义与两份重构文档一致的测试矩阵、证据边界和完成标准。"
-globs: "src/**,apps/**,packages/**,server/**,tests/**,catalog/**,qa/**,package.json,tsconfig*.json,vite.config.*,eslint.config.*,playwright.config.*"
+globs: "src/**,packages/**,server/**,tests/**,scripts/**,qa/**,package.json,tsconfig*.json,vite.config.*,vitest.config.*,eslint.config.*"
 alwaysApply: false
 ---
 
 # 测试与验收
 
-以[最新目标](../../as-implemented-logic.md)和[Agent 合同](../../agent-specs.md)为准。旧测试只证明旧链；变更后的行为测试必须覆盖实际新入口，不用源码关键词替代集成验收。
+以[最新目标](../../docs/product.md)和[Agent 合同](../../docs/agents.md)为准。旧测试只证明旧链；变更后的行为测试必须覆盖实际新入口，不用源码关键词替代集成验收。
 
 | 范围 | 必须覆盖 |
 | --- | --- |
@@ -19,14 +19,14 @@ alwaysApply: false
 | UI | 真实文章/图/文档、浮动提问、编辑定位、添加/颜色、草稿、断线刷新、历史、新对话、窄屏和键盘焦点 |
 | 部署 | 真实 PostgreSQL 两进程领取、备份恢复、生产鉴权/CSRF、容器启动、健康检查与负载；配置检查不等于 provider 可用性 |
 
-运行 npm run check、npm test、npm run build。持久链测试是 npm run test:durable；真实 PostgreSQL 用单独 threadpeak_test 库运行 npm run test:postgres；真实 provider 和浏览器证据另记日期、范围和结果。不得把本地 PGlite 或 mock 测试称作 PostgreSQL/live gate。
+运行 `npm run check`、`npm run lint`、`npm test`、`npm run build`；文档、规则、脚本路径变化时同时运行 `npm run check:docs`。持久链测试是 npm run test:durable；真实 PostgreSQL 用单独 threadpeak_test 库运行 npm run test:postgres；真实 provider 和浏览器证据另记日期、范围和结果。不得把本地 PGlite 或 mock 测试称作 PostgreSQL/live gate。
 
-文档检查包括十条规则路由、frontmatter、非空 globs、少于 500 行、本地链接、围栏、trailing whitespace、merge marker。已归档旧合同不能用来覆盖当前目标。测试失败若源于旧目标，要同步替换断言并保留新行为覆盖，不能删测试来隐藏回归。
+文档检查包括十条规则路由、frontmatter、有实际文件命中的 globs、代表性文件路由、少于 500 行、本地链接和锚点、npm 命令、围栏、trailing whitespace、merge marker。已归档旧合同不能用来覆盖当前目标。测试失败若源于旧目标，要同步替换断言并保留新行为覆盖，不能删测试来隐藏回归。
 
 只有生产身份接通、迁移/备份/恢复、真实用户流、压缩质量、性能与观测均达到验收指标后，才能声明 production-ready；本地通过次数不是永久事实。
 
 - 目标访谈回归覆盖三个建议＋自定义、幂等与刷新、后续补充优先、目标跨学习/新对话/作者步骤、直接/必要前置资料锚点与未知引用拒绝、用途缓存隔离。论文/收藏/理财/3D作品/求职的真实模型样本单独审阅，结构通过不代表语义质量。
 
-- 编选示例覆盖逐概念真实来源摘要哈希、目标与材料锚点、单父树/对话对应、真实 renderer 编译与示例不回退为正式结果；保留首页流动建议的浏览器验收，详情见[记录](../../docs/investor-showcase-2026-09-07.md)。
+- 编选示例覆盖逐概念真实来源摘要哈希、目标与材料锚点、单父树/对话对应、真实 renderer 编译与示例不回退为正式结果；保留首页流动建议的浏览器验收，详情见[记录](../../docs/showcase.md)。
 
 - `npm test` 包含组件 → 真实 HTTP 路由 → store 的组合测试，provider 替身必须停留在边界；生产模式身份单独验证签名、Cookie、CSRF、所有者与大小限制。`check:docs` 只证明文档，`check:product-invariants` 验证行为，不能用源码拼写替代产品运行。覆盖率分别报告服务端测试与前端全部源码的实际分母，不以数量宣称上线。

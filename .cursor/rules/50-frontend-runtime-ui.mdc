@@ -1,12 +1,12 @@
 ---
 description: "约束 ThreadPeak 前端页面、Composer、跨页状态与已裁决交互。"
-globs: "src/**/*.ts,src/**/*.tsx,src/**/*.css,src/chat/**,src/pages/Chat.tsx,src/chat/resolve-chat-launch.ts,src/pages/Settings.tsx,src/resolve-settings-identity.ts,src/components/Shell.tsx,src/resolve-account-identity.ts,src/components/Composer.tsx,src/resolve-composer-attachment.ts,src/pages/AuthLanding.tsx,src/resolve-auth-session.ts,apps/web/**,packages/runtime-store/**,packages/api-client/**,packages/design-system/**"
+globs: "src/**/*.ts,src/**/*.tsx,src/**/*.css,packages/runtime-store/**,packages/api-client/**"
 alwaysApply: false
 ---
 
 # 前端运行时
 
-[最新产品目标](../../as-implemented-logic.md)与[Agent 合同](../../agent-specs.md)拥有行为，ux-ui 是已确认视觉与交互参考。
+[最新产品目标](../../docs/product.md)与[Agent 合同](../../docs/agents.md)拥有行为，ux-ui 是已确认视觉与交互参考。
 
 - 真实数据从服务端资源恢复。页面卸载、切换研究/画布/文档、浏览器断网不取消后台工作；显示重连并保留内容。提交成功前不清输入、不藏选择题。
 - 首页品牌固定文字使用本地矢量字形，首次可见即为艺术字，不依赖外部字体或系统回退。

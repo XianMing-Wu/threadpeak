@@ -1,12 +1,12 @@
 ---
 description: "约束最终路线 3D 展示、知识画布交互，并禁止恢复已删除的图文资产。"
-globs: "src/chat/**,src/learning-v2/Graph.tsx,src/learning-v2/Document.tsx,src/learning-v2/tree.ts,src/pages/Chat.tsx,src/knowledge-canvas/**,src/pages/KnowledgeCanvas.tsx,src/pages/Session.tsx,src/components/BasisVisual.tsx,src/components/Path3D.tsx,src/path-3d/**,src/vendor/learning-path-3d/**,src/pathDocument.ts,apps/web/**/path-3d/**,apps/web/**/knowledge-map/**,packages/surface-catalog/**,packages/path-3d-host/**,packages/contracts/visualization/**,server/visualization/**"
+globs: "src/learning-v2/Graph.tsx,src/learning-v2/Document.tsx,src/learning-v2/tree.ts,src/learning-v2/NodeEditor.tsx,src/knowledge-canvas/**,src/pages/Session.tsx,src/components/Path3D.tsx,src/path-3d/**,src/vendor/learning-path-3d/**,src/pathDocument.ts,packages/contracts/src/host-subject-flow.ts,packages/contracts/src/validate-renderer-document.ts,packages/contracts/src/path-document.ts"
 alwaysApply: false
 ---
 
 # 3D 与知识画布
 
-可见目标以 [as-implemented-logic.md](../../as-implemented-logic.md) 第 2.3、2.5、2.7、2.8 和 4.1 节为准。路线结构与学习卡片树合同分别由 10-path-generation.mdc、20-knowledge-lifecycle.mdc 和 [agent-specs.md](../../agent-specs.md) 负责。
+可见目标以 [product.md](../../docs/product.md) 第 2 节的第 3、5、7、8 项与第 4.1 节为准。路线结构与学习卡片树合同分别由 10-path-generation.mdc、20-knowledge-lifecycle.mdc 和 [agents.md](../../docs/agents.md) 负责。
 
 路线 3D 与知识画布是两件事，不能因为都可视化就共用数据或失败 fallback。产品已删除图文模式：不得恢复入口、失败页、`src/visuals/` 或 `vendor/charts/`，也不得用预写图冒充成功。
 

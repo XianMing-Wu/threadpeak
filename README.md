@@ -1,66 +1,117 @@
-# ThreadPeak
+# 问山 · ThreadPeak
 
-React/Vite 前端与 Fastify 持久 Agent 工作流。默认服务入口是 `server/durable`，学习页采用已确认的 ux-ui 文章、单父卡片树、文档和聊天交互。当前已有本地真实 provider 联调证据，生产身份接入与上线指标仍待验收；测试通过不能证明产品零故障。
+**从一个想完成的目标，走到一条能读、能问、能积累的学习路线。**
 
-## 启动
+ThreadPeak 是一个 AI 辅助学习工作台。它把知乎内容、你提供的资料和持续对话串起来：先弄清楚要学到什么程度，再生成可探索的 3D 路线，让阅读与追问逐渐沉淀成有来源的知识卡片。
 
-需要 Node 24+、npm。PDF 通过知乎异步解析 API 处理，默认资料管线不依赖本机 `pdftotext`。
+[快速开始](#快速开始) · [核心能力](#核心能力) · [开发](#开发) · [文档](docs/README.md) · [部署](deploy/README.md)
+
+![问山首页：从真实目标出发，探索编选的学习路线](qa/evidence/showcase/browser/home.png)
+
+*首页编选示例。示例与个人生成内容分开保存。*
+
+## 核心能力
+
+- **围绕目标制定路线**：通过简短访谈明确成果、基础和限制。每个概念都有用途、学习深度和检验任务，路线支持顺序、分叉与汇合。
+- **让学习过程可探索**：在 3D 场景中浏览路线、进入概念，再回到上次位置。推荐顺序不会锁住学习节点。
+- **从资料长出知识**：文章、回答和追问组成单父卡片树；聊天、画布与文档共享内容，可以编辑、整理和继续提问。
+- **控制本次学习的材料**：支持 PDF、Markdown、TXT，以及显式导入的知乎收藏夹和公开创作。可选择全知乎、全网或仅收藏夹范围。
+- **找到问题背后的作者**：按问题检索公开文章和相关博主，保留来源关系与主题反馈，帮助准备请教。这里提供的是资料与线索，不代表作者本人在线回复。
+- **中断后继续**：任务、检查点、对话和知识保存在服务端。刷新页面不取消生成；新对话保留已有文章和知识树。
+- **统一阅读体验**：聊天、文章、卡片和文档共用 Markdown、代码与数学公式渲染，原始材料与编辑副本分开保存。
+
+## 快速开始
+
+需要 **Node.js 24+** 和 npm。默认使用本地 PGlite，无需先安装 PostgreSQL；生成路线和回答需要配置模型及知乎 API。
+
+### 1. 获取项目
+
+以下命令检出当前开发分支 `codex/investor-showcase`。
 
 ```sh
+git clone --branch codex/investor-showcase https://github.com/XianMing-Wu/threadpeak.git
+cd threadpeak
 npm ci
 cp .env.example .env
+```
+
+### 2. 配置服务
+
+编辑 `.env`，填写以下生成服务配置；具体含义及可选账号设置见[配置指南](docs/configuration.md)。
+
+```dotenv
+DEEPSEEK_API_KEY=
+DEEPSEEK_BASE_URL=
+DEEPSEEK_MODEL_NAME=
+DEEPSEEK_CONTEXT_TOKENS=
+ZHIHU_ACCESS_SECRET=
+ZHIHU_API_BASE_URL=
+```
+
+未配置 provider 时可以启动本地界面、查看编选示例，生成服务会明确报告未就绪。真实凭证只放在本地 `.env` 或部署环境中。
+
+### 3. 启动
+
+在一个终端启动 API：
+
+```sh
 npm run server
+```
+
+在另一个终端启动前端：
+
+```sh
 npm run dev
 ```
 
-在 `.env` 填入服务端 provider 配置。默认 API 4312、Vite 4301；可用 `THREADPEAK_PORT` 与 `THREADPEAK_API_TARGET` 改端口。本地数据位于 `server/.data/product-v2`；本地工作区使用隔离 cookie，清除 cookie 会失去该匿名身份，因此不应用于正式用户。生产部署见 [运行手册](deploy/README.md)。
+打开 **[localhost:4301](http://localhost:4301)**。API 默认监听 `127.0.0.1:4312`，前端通过同源代理访问它。
 
-## 数据与流程
+本地数据保存在 `server/.data/product-v2`。匿名工作区依靠浏览器 Cookie 找回身份；需要正式账号或多副本运行时，请使用[部署指南](deploy/README.md)中的 PostgreSQL 和身份配置。
 
-- 路线：R1 → 按搜索范围读取资料 → R2 → R3/R3b 最多三轮 → R4 顺序/并列阶段 → 程序编译 → renderer 校验后发布。选择题确认后保持可见，答完自动生成；继续任务只恢复未完成步骤。
-- 学习：三路概念搜索 → 过滤相关文章 → 三角度直答 → L-answer。首次回复的各段挂在对应文章后，每段通过 append_cards 指定一个范围内依据卡。
-- 首页输入框中，范围图标位于附件图标左侧：全知乎、全网、仅知乎收藏夹（多选）。附件在输入框顶部按行展示；范围和本次资料在创建路线时固定，并继承至每个概念。收藏只记兴趣，后续主动使用与帮助反馈影响对应主题偏好。设置中也可导入公开创作或最近收藏。
-- 全网同时调用知乎搜索和 global_search，保留 CSDN 等网站的标题、内容和溯源链接；仅知乎来源进入博主网络。仅收藏夹使用所选收藏与文件，不外搜，三角度讲解通过实际 LLM 阅读这些资料。
-- 公式在聊天、文章、卡片和文档统一渲染，编辑时保留原始 LaTeX；无法还原的损坏内容不猜补。
-- 研究、知识脉络与文档读取同一服务端资源。新对话归档旧聊天、当前清空，文章与树保留。编辑的是展示副本，原始文章总结保留。
-- 问博主检索 1–3 位新作者的公开文章并生成卡片；零合适才刘看山直答。不会联系作者。博主搜索遵循 network-first，先读取来源网络并探索新证据；相关性优先，同级时参考主题反馈，最多 3 位。结果支持 Coverflow 卡片拖动、键盘切换和减少动效。刘看山不是博主，不入作者网络。
-- 模型、知乎/全网搜索、直答与 PDF 使用真实 provider；仅用户明确指定的本地 OAuth/用户 API 可切换演示适配器，演示不填补真实服务失败。MCP 可作为外部工具适配，内部步骤由程序固定编排。
+## 开始一次学习
 
-任务、检查点、资源版本、事件与作者关系持久保存；租约/fence 阻止迟到结果，最终聊天/卡片事务提交。外部调用可能重试，不能声称 exactly-once。调用副本按 provider 窗口压缩，原文不覆盖；摘要保留来源并按账号缓存。
+1. 在首页描述想完成的事，按需添加资料并选择检索范围。
+2. 回答目标访谈，也可以直接填写自己的情况；当前题组答完后自动生成路线。
+3. 打开路线中的概念，阅读收集的资料与首次讲解。
+4. 从卡片发起追问，在画布或文档中整理；下次从历史或“我的”列表继续。
 
-## 配置
+想先了解交互，可以浏览内置的论文、3D 作品、公开文章选集等[编选示例](docs/showcase.md)。知乎授权域还提供显式的[本地演示模式](docs/configuration.md#知乎账号与演示模式)，模型、搜索和 PDF 解析仍使用真实服务。
 
-仅服务端可读：`DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、`DEEPSEEK_MODEL_NAME`、`DEEPSEEK_CONTEXT_TOKENS`、`ZHIHU_ACCESS_SECRET`、`ZHIHU_API_BASE_URL`。生产还需 `DATABASE_URL`、`THREADPEAK_PUBLIC_ORIGIN`、`THREADPEAK_IDENTITY_SECRET`、`THREADPEAK_IDENTITY_ISSUER`、`THREADPEAK_IDENTITY_AUDIENCE`；登录跳转用 `THREADPEAK_LOGIN_URL`。
+## 开发
 
-端口/数据路径：`THREADPEAK_PORT`、`THREADPEAK_HOST`、`THREADPEAK_DATA_DIR`。Compose 使用 `POSTGRES_PASSWORD`、`SITE_ADDRESS`。`ZHIHU_OAUTH_APP_ID`、`ZHIHU_OAUTH_APP_KEY`、`ZHIHU_OAUTH_REDIRECT_URI` 配置知乎应用；还需 `ZHIHU_OAUTH_USERINFO_URL`、`ZHIHU_OAUTH_USER_ID_PATH` 及 `THREADPEAK_TOKEN_SECRET`。名称和头像映射可用 `ZHIHU_OAUTH_USER_NAME_PATH`、`ZHIHU_OAUTH_USER_AVATAR_PATH`。用户信息接口合同、state 回传及真实授权仍待知乎应用获批后验收，详见[资料与账号接入](docs/materials-zhihu-integration-2026-09-06.md)。所有示例配置值为空，真实 `.env` 不提交。
-
-## 本地演示知乎账号
-
-在 `.env` 设置 `ZHIHU_OAUTH_MODE=mock` 后重启 API，可从账号菜单或范围菜单连接演示账号，体验收藏夹、公开创作和资料学习。演示使用同一授权回调、接口结构、所有者校验和导入任务；账号与文章标明演示，并与真实身份分开。它不会模拟模型、搜索或 PDF，也不会向知乎发送演示令牌。`NODE_ENV=production` 拒绝此模式。
-
-获批后把模式改为 `real`，填写前述 OAuth 配置和官方用户信息字段映射后重启。前端无需替换接口；真实授权、回调 state 和字段映射仍须联调。旧演示会话失效，演示资料不会并入真实账号。本次本地预览已启用 mock，详细验收见[范围、公式与博主卡片](docs/search-scope-formulas-coverflow-2026-09-06.md)。
-
-## 检查与证据
+前端使用 React、TypeScript 和 Vite；后端使用 Fastify、持久任务与 PostgreSQL/PGlite；共享数据合同使用 Zod。
 
 ```sh
-npm run check
-npm run lint
-npm test
-npm run test:coverage
-npm run build
-npm run test:durable
-# 只允许明确隔离的 threadpeak_test 数据库
-npm run test:postgres
+npm run check       # 主项目与测试的类型检查
+npm run lint        # 代码检查
+npm test            # Node 行为测试与前端组合测试
+npm run build       # 构建前端
 ```
 
-PostgreSQL gate 从 `TEST_DATABASE_URL` 读取连接；不得传正式库。`npm run ops:queue` 只输出任务状态/错误类别计数，不输出用户正文或秘密。旧 orchestrator 及仅覆盖这些入口的测试已删除，默认测试同时运行 Node 行为测试和组件到真实 Fastify 的组合测试。文档格式校验用 `check:docs`，产品行为用 `check:product-invariants`；两者不互相替代。真实执行范围与当次证据见 [重构记录](docs/backend-rebuild-2026-09-06.md)，不能用旧测试数量代替新链验收。
+覆盖率、PostgreSQL 验证、QA 页面和维护脚本见[开发指南](docs/development.md)。
 
-## 当前明确未完成
+```text
+src/        页面、学习工作区、阅读与 3D 宿主
+server/     持久工作流、provider、鉴权与存储
+packages/   共享合同、API 客户端与运行时原语
+docs/       当前产品、Agent 合同和工程指南
+qa/         可复现的验收页面与证据
+```
 
-实际域名/服务器与生产身份签发方接入；正式用户规模下的延迟/成本/压缩质量指标；无官方 authorId 时的跨文章作者身份完备性；正式用户数据删除/备份政策及大规模不可压缩骨架分区。详见 [现状与上线缺口](as-implemented-logic.md)。
+## 项目状态
 
-合同权威：[agent-specs.md](agent-specs.md)、[as-implemented-logic.md](as-implemented-logic.md)、[AGENTS.md](AGENTS.md)。参考迁移见 [REFERENCE_AUDIT.md](REFERENCE_AUDIT.md)。
+当前处于持续开发阶段，已有本地模型调用、持久任务、数据库及浏览器集成验收。生产身份、规模化负载、长材料摘要质量和数据保留政策仍有待完成的工作，详见[现状与边界](docs/product.md#42-仍需实际验收或外部配置)。测试结果按具体版本记录在 [QA](qa/README.md) 中。
 
-最新架构复核、修复范围和验证结果见 [第三轮审查修复记录](docs/architecture-review-round-3-2026-09-07.md)。旧浏览器记录只读归档，可在知识脉络和路线页导出；未完整恢复的本机备份在离线登录页也可导出。正式路线、知识树与历史从服务端恢复。PGlite 目录通过内核文件锁限定一个进程持有；多个 API/worker 副本必须共用 PostgreSQL，HTTP 额度也由数据库共享。
+## 文档
 
-事件保留 7 天，断点过旧必须重新读取完整快照；完成任务 30 天后压缩重复输入和检查点，保留资源正文与幂等收据。自动错误重试至多 4 次失败，每任务至多 4 次手动恢复，手动恢复间隔至少 30 秒并计入账号额度。等待/取消任务仍保留恢复所需内容；这不是正式用户数据删除政策。
+| 想了解什么 | 从这里开始 |
+| --- | --- |
+| 配置模型、数据库与知乎账号 | [配置指南](docs/configuration.md) |
+| 运行、测试与修改代码 | [开发指南](docs/development.md) |
+| 部署、备份与运维 | [部署指南](deploy/README.md) |
+| 产品目标、当前实现与缺口 | [产品说明](docs/product.md) |
+| 工作流、存储与恢复机制 | [工程设计](docs/engineering.md) |
+| Agent 输入、提示词和输出合同 | [Agent 合同](docs/agents.md) |
+| 资源出处与第三方许可 | [资源来源](vendor/SOURCE.md) |
+
+参与修改前，请阅读 [AGENTS.md](AGENTS.md)。历史设计与审查记录集中在[历史索引](docs/history.md)。

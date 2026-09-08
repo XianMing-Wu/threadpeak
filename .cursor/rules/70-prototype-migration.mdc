@@ -1,21 +1,21 @@
 ---
-description: "指导把当前错误原型迁移到两个重构文档定义的目标流程。"
-globs: "src/**,package.json,tsconfig*.json,vite.config.*,README.md,catalog/**"
+description: "约束旧数据只读兼容、浏览器投影和示例隔离，防止恢复已下线的写入链。"
+globs: "src/workspace/**,src/runtime/**,src/knowledge-canvas/**,src/learning-v2/account-storage.ts,src/learning-v2/client.ts,src/learning-v2/ExampleWorkspace.tsx,src/showcase/**,packages/contracts/compat/**"
 alwaysApply: false
 ---
 
-# 新前端与后端迁移
+# 旧数据兼容与投影边界
 
-最新目标见 [as-implemented-logic.md](../../as-implemented-logic.md)；合同见 [agent-specs.md](../../agent-specs.md)。
+最新目标见 [product.md](../../docs/product.md)；合同见 [agents.md](../../docs/agents.md)。
 
-- ux-ui 是已确认交互参考，演示数据/预写答案/计时器不进入生产链。展示组件可复用，数据与任务来自服务端。
+- 当前页面是交互参考，演示数据/预写答案/计时器不进入生产链。展示组件可复用，数据与任务来自服务端。
 - 旧 orchestrator 与 G1/G2 测试已删除；历史文档仅作迁移参考，不能覆盖最新卡片树裁决。旧数据只读保留，不编造文章来源来转换。
 - 新写链统一经持久任务和事务，不能与旧内存管线共同写一份事实。
 - 路线发布不建立学习图；首次学习三路搜索，回答一段一依据，问博主 1–3 人成为卡。
-- 浏览器 storage 仅保存可丢弃偏好/未提交草稿/服务端快照缓存，不作为用户数据唯一来源。
+- 服务端拥有已提交的资源。浏览器保留偏好、未提交草稿、服务端投影与只读旧记录；草稿和旧记录不一定能从服务端重建，账号切换前须持久备份，不能与缓存一起静默删除。
 - 任务恢复、幂等、取消、深度冻结已按本次授权选定；无需重复索要技术许可，但应记录工程决策和证据。
 - 每片先合同/实现/运行测试，再报告当前实际成熟度，不把 doc/regex/typecheck 当完整产品验收。
 
-- 本轮仅授权域采用同接口 mock，参见第十节；范围菜单和收藏学习管线共用正式持久任务，不能把演示作者作为真实咨询人选。
+- 仅授权域采用同接口 mock，参见 [Agent 合同](../../docs/agents.md) 第 6 节；范围菜单和收藏学习管线共用正式持久任务，不能把演示作者作为真实咨询人选。
 
-- 当前收敛和恢复边界见[架构审查修复](../../docs/architecture-review-fixes-2026-09-07.md)：旧浏览器字节只读归档；不得恢复缺失旧接口的调用或在读取失败时删除用户记录。
+- 当前收敛和恢复边界见[工程设计](../../docs/engineering.md)：旧浏览器字节只读归档；不得恢复缺失旧接口的调用或在读取失败时删除用户记录。

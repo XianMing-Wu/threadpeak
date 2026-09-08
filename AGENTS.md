@@ -10,18 +10,18 @@
 
 | 内容 | 唯一用途 |
 | --- | --- |
-| [as-implemented-logic.md](./as-implemented-logic.md) | 第 1 节记录现场代码；第 2 节和第 4.1 节记录已裁决重构目标；第 3 节记录现状与目标差异；第 4.2 节记录仍未裁决的空位 |
-| [agent-specs.md](./agent-specs.md) | 路线、卡片树与作者 Agent 的上下文、压缩、提示词和输出结构 |
-| AGENTS.md + 匹配的 .cursor/rules/*.mdc | 把上述目标路由到代码范围，并约束实现与验证 |
+| [产品说明](docs/product.md) | 第 1 节记录当前实现；第 2 节与第 4.1 节保留用户裁决；第 3 节指向验收证据；第 4.2 节列出未完成的上线工作 |
+| [Agent 合同](docs/agents.md) | 路线、卡片树与作者 Agent 的上下文、压缩、提示词和输出结构 |
+| AGENTS.md + 匹配的 `.cursor/rules/*.mdc` | 把上述目标路由到代码范围，并约束实现与验证 |
 | 现场源码和本次命令输出 | 只证明当前实现和当前测试状态，不能反向改写目标 |
 
-Agent 的完整合同以 agent-specs.md 为准；实现状态与未完成的上线门槛以 as-implemented-logic.md 和本次真实验收为准。
+Agent 的完整合同以 docs/agents.md 为准；实现状态与未完成的上线门槛以 docs/product.md 和本次真实验收为准。
 
 旧算法文档、PRODUCT_SPEC、状态机、fixture、截图、README、历史测试和现有源码都只能作为参考或现状证据。它们与上述两份文档冲突时，不得覆盖用户已裁决目标。
 
-## 2. 当前产品不变量（2026-09-06 更新）
+## 2. 当前产品不变量
 
-1. 路线只生成路线，R1 → 两路搜索 → R2 → R3/R3b 最多三轮 → R4 阶段计划 → 程序编译 → 3D 校验后发布；不建立学习图。当前题组答完自动生成，旧题保留且不可答。访谈每题三个建议加独立自定义输入，真实目标与材料关联贯穿路线和学习，完整合同见 agent-specs.md。
+1. 路线只生成路线，R1 → 两路搜索 → R2 → R3/R3b 最多三轮 → R4 阶段计划 → 程序编译 → 3D 校验后发布；不建立学习图。当前题组答完自动生成，旧题保留且不可答。访谈每题三个建议加独立自定义输入，真实目标与材料关联贯穿路线和学习，完整合同见 docs/agents.md。
 2. 首页附件支持 pdf/md/markdown/txt 和显式导入的知乎授权收藏夹/公开创作；学习页不上传附件。调用按实际 provider 窗口和输出预留预算，不再假定每个模型可接收 500k。原文不覆盖，不截断 JSON，不用原文前缀冒充摘要。
 3. 检索范围随路线冻结：全知乎沿用站内搜索，全网加全网 API；仅收藏夹只读取所选资料、不调用外部检索，三角度改由模型整理。其他范围首次学习先三路概念搜索，收齐筛选后保存文章，再三种角度直答、L-answer 汇总。文章先可读；概念根下是文章卡，首次回答在这些卡后延展。
 4. 新对话清空当前聊天、归档旧聊天，保留文章和知识树；不重新搜索或自动塞回首次回复。
@@ -36,37 +36,40 @@ Agent 的完整合同以 agent-specs.md 为准；实现状态与未完成的上�
 
 ## 3. 工程决策与上线边界
 
-本次用户已授权完整后端重构，存储、任务恢复和深度冻结等工程选择记录在 [重构记录](docs/backend-rebuild-2026-09-06.md)，无需再次逐条追问技术细节。仍须区分产品目标、已落代码、离线测试、真实 provider 验收与生产部署。生产身份、数据库、附件解析、压缩质量和负载门槛未实际验证时，不得宣称产品已上线或零失误。
+本次用户已授权完整后端重构，存储、任务恢复和深度冻结等工程选择记录在 [工程设计](docs/engineering.md)，无需再次逐条追问技术细节。仍须区分产品目标、已落代码、离线测试、真实 provider 验收与生产部署。生产身份、数据库、附件解析、压缩质量和负载门槛未实际验证时，不得宣称产品已上线或零失误。
 
 ## 4. Cursor 渐进式规则路由
 
 | 规则 | 自动匹配的关注点 |
 | --- | --- |
-| .cursor/rules/00-architecture-core.mdc | 全部产品代码与工程配置的权威边界、模块职责、Agent 编排边界 |
-| .cursor/rules/10-path-generation.mdc | R1–R5、路线问题轮次、附件、最终路线 JSON、3D handoff |
-| .cursor/rules/20-knowledge-lifecycle.mdc | 概念搜索、L0a/L-answer、单父卡片树、对话与文档同步 |
-| .cursor/rules/30-authors.mdc | A-card-plan/select、A3、N0–N2、作者证据和高低权网络 |
-| .cursor/rules/40-visualization-3d.mdc | 3D renderer、知识画布可视交互；图文资产已删除 |
-| .cursor/rules/50-frontend-runtime-ui.mdc | 页面、Composer、导航、历史、思考深度、附件、设置和 404 |
-| .cursor/rules/60-backend-platform.mdc | 真实 provider、上下文构造、压缩、输出校验、错误与服务端安全 |
-| .cursor/rules/70-prototype-migration.mdc | 从当前错误/原型管线迁往两份目标文档 |
-| .cursor/rules/80-testing-quality.mdc | 文档、合同、Agent 顺序、失败分支和浏览器验收 |
-| .cursor/rules/90-docs-rules.mdc | 两份源文档、AGENTS 和 Cursor Rules 的同步与格式 |
+| [00-architecture-core.mdc](.cursor/rules/00-architecture-core.mdc) | 全部产品代码与工程配置的权威边界、模块职责、Agent 编排边界 |
+| [10-path-generation.mdc](.cursor/rules/10-path-generation.mdc) | R1–R5、路线问题轮次、附件、最终路线 JSON、3D handoff |
+| [20-knowledge-lifecycle.mdc](.cursor/rules/20-knowledge-lifecycle.mdc) | 概念搜索、L0a/L-answer、单父卡片树、对话与文档同步 |
+| [30-authors.mdc](.cursor/rules/30-authors.mdc) | A-card-plan/select、A3、N0–N2、作者证据和高低权网络 |
+| [40-visualization-3d.mdc](.cursor/rules/40-visualization-3d.mdc) | 3D renderer、知识画布可视交互；图文资产已删除 |
+| [50-frontend-runtime-ui.mdc](.cursor/rules/50-frontend-runtime-ui.mdc) | 页面、Composer、导航、历史、思考深度、附件、设置和 404 |
+| [60-backend-platform.mdc](.cursor/rules/60-backend-platform.mdc) | 真实 provider、上下文构造、压缩、输出校验、错误与服务端安全 |
+| [70-prototype-migration.mdc](.cursor/rules/70-prototype-migration.mdc) | 只读旧记录、投影缓存、示例隔离与兼容边界 |
+| [80-testing-quality.mdc](.cursor/rules/80-testing-quality.mdc) | 文档、合同、Agent 顺序、失败分支和浏览器验收 |
+| [90-docs-rules.mdc](.cursor/rules/90-docs-rules.mdc) | 两份源文档、AGENTS 和 Cursor Rules 的同步与格式 |
 
 纯规划任务也必须先读取相关规则。修改跨域流程时，同时读取所有参与域的规则。
 
 ## 5. 每次任务的最小流程
 
 1. 先读用户点名的文件和现有改动；不得因为源码很多就假定源码正确。
-2. 先区分 as-implemented-logic.md 中的“代码实际”“用户裁决”“问题账本”和“未裁决空位”。
-3. 涉及任一模型/直答步骤时，读取 agent-specs.md 对应 Agent 的完整四项合同，不凭摘要重写提示词或 schema。
+2. 先区分 docs/product.md 中的当前实现、用户裁决、验收证据和未完成的上线工作。
+3. 涉及任一模型/直答步骤时，读取 docs/agents.md 对应 Agent 的完整四项合同，不凭摘要重写提示词或 schema。
 4. 只实现已裁决语义；遇到会改变产品行为的空位就停止扩张并明确指出。
 5. 按匹配规则验证。规则或文档写完只证明文档一致，不证明源码已实现。
 
 ## 6. 维护规则体系
 
-- 根 AGENTS.md 不放长提示词和完整上下文 JSON；这些只在 agent-specs.md。
+- 根 AGENTS.md 不放长提示词和完整上下文 JSON；这些只在 docs/agents.md。
 - .mdc 只复述本领域必须阻断的少量语义，并链接唯一来源，不复制整段可漂移提示词。
 - 每条 .mdc 必须有合法 frontmatter、alwaysApply: false、非空 globs，保持单一关注点且少于 500 行。
 - 新增、删除或改名规则时同步本路由表；修改产品语义时同步两份源文档后再改规则。
 - 修改后检查 frontmatter、代表性 glob、本地链接、表格、代码围栏、trailing whitespace、merge marker 和关键不变量；动态测试结果不得写成永久事实。
+
+- README 面向使用者；配置、开发和工程细节更新现有 `docs/` 入口，验收页面及带时间和范围的证据放在 `qa/`。过期阶段文档经 [历史索引](docs/history.md) 回查 Git，不复制第二份产品或 Agent 规范。
+- 清理时核对导入、脚本、文档和规则引用；保留原始资料、用户数据库、私有配置、必要资产来源与许可。运行 `npm run check:docs` 验证链接、规则匹配和文档命令；产品语义仍由真实行为测试验证。

@@ -1,12 +1,12 @@
 ---
 description: "为产品代码与工程配置定义两份目标文档的权威边界、领域职责和 Agent 编排约束。"
-globs: "src/**,Dockerfile,compose.yaml,deploy/**,apps/**,packages/**,server/**,package.json,tsconfig*.json,vite.config.*,eslint.config.*,pnpm-workspace.yaml"
+globs: "src/**,packages/**,server/**,scripts/**,Dockerfile,compose.yaml,deploy/**,package.json,tsconfig*.json,vite.config.*,vitest.config.*,eslint.config.*"
 alwaysApply: false
 ---
 
 # 当前架构与权威边界
 
-当前用户裁决最高；[产品现状与目标](../../as-implemented-logic.md)区分现场、目标和上线缺口，[Agent 合同](../../agent-specs.md)拥有提示词、上下文、压缩与结构。[工程记录](../../docs/backend-rebuild-2026-09-06.md)记录本次获授权的持久化方案；不再把这些工程选择列为需要逐条追问的旧空位。
+当前用户裁决最高；[产品现状与目标](../../docs/product.md)区分现场、目标和上线缺口，[Agent 合同](../../docs/agents.md)拥有提示词、上下文、压缩与结构。[工程设计](../../docs/engineering.md)记录本次获授权的持久化方案；不再把这些工程选择列为需要逐条追问的旧空位。
 
 - 默认入口是 server/durable。固定流程由程序编排，模型只生成当前步骤的受约束结果；不增加统一总控、语义 judge 或第二个修复 Agent。MCP 是可选适配层。
 - 路线：R1/R-S/R2/R3/R3b/R4；普通问答 R5。发布路线不创建知识。

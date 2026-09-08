@@ -1,136 +1,91 @@
 import assert from 'node:assert/strict'
-import { readFile, readdir } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
+import path from 'node:path'
 import test from 'node:test'
+import { checkDocumentation, inspectMarkdown, parseRule, validateDocuments } from '../scripts/check-documentation.mjs'
 
-const root = new URL('../', import.meta.url)
-const read = (path) => readFile(new URL(path, root), 'utf8')
+const read = name => readFile(new URL(`../${name}`, import.meta.url), 'utf8')
+const repository = checkDocumentation()
 
-const ruleNames = [
-  '00-architecture-core.mdc',
-  '10-path-generation.mdc',
-  '20-knowledge-lifecycle.mdc',
-  '30-authors.mdc',
-  '40-visualization-3d.mdc',
-  '50-frontend-runtime-ui.mdc',
-  '60-backend-platform.mdc',
-  '70-prototype-migration.mdc',
-  '80-testing-quality.mdc',
-  '90-docs-rules.mdc',
-]
+test('maintained documentation links, anchors, commands and rule globs resolve in the current repository', async () => {
+  const result = await repository
+  assert.deepEqual(result.errors, [])
+  assert.equal(result.rules.size, 10)
+})
 
-const providerKeys = [
-  'DEEPSEEK_API_KEY',
-  'DEEPSEEK_BASE_URL',
-  'DEEPSEEK_MODEL_NAME',
-  'ZHIHU_ACCESS_SECRET',
-  'ZHIHU_API_BASE_URL',
-]
-
-const optionalOauthKeys = [
-  'ZHIHU_OAUTH_APP_ID',
-  'ZHIHU_OAUTH_APP_KEY',
-  'ZHIHU_OAUTH_REDIRECT_URI',
-]
-
-test('Cursor rules expose complete progressive-disclosure metadata', async () => {
-  const actual = (await readdir(new URL('.cursor/rules/', root)))
-    .filter((name) => name.endsWith('.mdc'))
-    .sort()
-
-  assert.deepEqual(actual, ruleNames)
-
-  for (const name of actual) {
-    const source = await read(`.cursor/rules/${name}`)
-    const frontmatter = source.match(/^---\n([\s\S]*?)\n---\n/)
-
-    assert.ok(frontmatter, `${name} must start with frontmatter`)
-    assert.match(frontmatter[1], /^description: "[^"\n]+"$/m)
-    assert.match(frontmatter[1], /^globs: "[^"\n]+"$/m)
-    assert.match(frontmatter[1], /^alwaysApply: false$/m)
-    assert.ok(source.split(/\r?\n/).length - 1 < 500, `${name} must remain focused`)
+test('representative implementation files receive all applicable domain rules', async () => {
+  const { rules, files } = await repository
+  const cases = {
+    'src/path-planning/chat-route-panel.tsx': ['00', '10', '50', '80'],
+    'src/learning-v2/Workspace.tsx': ['00', '20', '50', '80'],
+    'server/durable/authors-search.ts': ['00', '30', '60', '80'],
+    'server/agent-runtime/prompts.ts': ['00', '10', '20', '30', '60', '80'],
+    'src/path-3d/path-3d-stage.tsx': ['00', '10', '40', '50', '80'],
+    'src/learning-v2/account-storage.ts': ['00', '20', '50', '70', '80'],
+    'tests/product-invariants.test.mjs': ['80'],
+    'docs/agents.md': ['90'],
+    'qa/reading-lab.html': ['80'],
+    '.env.example': ['60'],
+  }
+  for (const [file, required] of Object.entries(cases)) {
+    assert.ok(files.includes(file), `representative file disappeared: ${file}`)
+    const matched = [...rules].filter(([, globs]) => globs.some(glob => path.matchesGlob(file, glob))).map(([name]) => path.basename(name).slice(0, 2))
+    for (const prefix of required) assert.ok(matched.includes(prefix), `${file} must receive rule ${prefix}`)
   }
 })
 
-test('documentation: AGENTS routes every rule and records the current card-tree targets', async () => {
-  const agents = await read('AGENTS.md')
-
-  for (const name of ruleNames) assert.match(agents, new RegExp(name.replace('.', '\\.')))
-  for (const invariant of [
-    '路线只生成路线',
-    '新对话清空当前聊天',
-    '知识是一棵单父树',
-    '1–3 位不同新作者',
-    '刘看山不是博主',
-    '生产调用必须真实 provider',
-  ]) assert.ok(agents.includes(invariant), `missing invariant: ${invariant}`)
-})
-
-test('AGENTS, README and reference audit agree on lifecycle and author ordering', async () => {
-  const documents = await Promise.all(['AGENTS.md', 'README.md', 'REFERENCE_AUDIT.md'].map(read))
-
-  for (const source of documents) {
-    assert.match(source, /新对话/)
-    assert.match(source, /初始回复|首次回复/)
-    assert.match(source, /1–3/)
-    assert.match(source, /刘看山/)
-    assert.match(source, /network-first|网络优先/)
-    assert.match(source, /最多返回 3 位|最多 3 位|最多 3/)
-    assert.match(source, /真实 provider|真实数据|真实知乎/)
-  }
-})
-
-test('real-provider configuration is server-only and examples contain no values', async () => {
-  const [example, backend, readme, audit, ignore] = await Promise.all([
-    read('.env.example'),
-    read('.cursor/rules/60-backend-platform.mdc'),
-    read('README.md'),
-    read('REFERENCE_AUDIT.md'),
-    read('.gitignore'),
+test('documentation checker detects real broken targets, headings, fences and commands without enforcing prose', () => {
+  const files = ['README.md', 'docs/guide.md', 'assets/screen.png']
+  const good = new Map([
+    ['README.md', '# Start\n\n[中文](docs/guide.md#快速开始)\n\n[duplicate](docs/guide.md#快速开始-1)\n\n![screen](assets/screen.png)\n\n`npm run check`\n'],
+    ['docs/guide.md', '# 快速开始\n\n## 快速开始\n\n[Back](../README.md#start)\n'],
   ])
-  const entries = example
-    .split(/\r?\n/)
-    .filter(Boolean)
-    .map((line) => line.split('='))
-
-  for(const key of [...providerKeys,...optionalOauthKeys,'DATABASE_URL','THREADPEAK_PUBLIC_ORIGIN','THREADPEAK_IDENTITY_SECRET','DEEPSEEK_CONTEXT_TOKENS'])assert.ok(entries.some(([name])=>name===key))
-  assert.equal(new Set(entries.map(([key])=>key)).size,entries.length)
-  assert.ok(entries.every(([, value]) => value === ''), '.env.example must never contain secrets')
-  for (const key of [...providerKeys, ...optionalOauthKeys]) {
-    assert.ok(backend.includes(key), `${key} missing from backend rule`)
-    assert.ok(readme.includes(key), `${key} missing from README`)
-    assert.ok(audit.includes(key), `${key} missing from reference audit`)
+  assert.deepEqual(validateDocuments(good, files, { check: 'tsc -b' }), [])
+  for (const [content, expected] of [
+    ['[lost](docs/missing.md)', 'missing link target'],
+    ['[heading](docs/guide.md#absent)', 'missing heading'],
+    ['[outside](../private.md)', 'escapes repository'],
+    ['[bad](docs/%ZZ.md)', 'malformed link'],
+    ['`npm run missing`', 'unknown npm script'],
+    ['```sh\nnpm run check\n', 'unclosed code fence'],
+    ['# Title  \n', 'trailing whitespace'],
+    ['<<<<<<< HEAD\n', 'merge marker'],
+    ['| A | B |\n| --- | --- |\n| only one |\n', 'table row column count'],
+  ]) {
+    const docs = new Map(good); docs.set('README.md', '# Start\n\n' + content)
+    assert.ok(validateDocuments(docs, files, { check: 'tsc -b' }).some(error => error.includes(expected)), expected)
   }
-  assert.match(backend, /服务端|server/)
-  assert.match(backend, /不得.*浏览器|浏览器.*不得/)
-  assert.match(ignore, /^\.env$/m)
-  assert.match(ignore, /^!\.env\.example$/m)
+  assert.deepEqual(inspectMarkdown('```text\n[example](not-a-file)\n```\n').links, [])
+  assert.deepEqual(inspectMarkdown('| A | B |\n| --- | --- |\n| escaped \\| pipe | value |\n').errors, [])
 })
 
-test('governance command and evidence boundary stay explicit', async () => {
-  const [packageSource, readme, audit] = await Promise.all([
-    read('package.json'),
-    read('README.md'),
-    read('REFERENCE_AUDIT.md'),
-  ])
-  const pkg = JSON.parse(packageSource)
+test('rule metadata rejects always-on, duplicate and invalid fields', () => {
+  const valid = '---\ndescription: "Scope"\nglobs: "src/**"\nalwaysApply: false\n---\n# Rule\n'
+  assert.deepEqual(parseRule(valid), ['src/**'])
+  for (const source of [valid.replace('false', 'true'), valid.replace('src/**', ''), valid.replace('src/**', 'src/**,src/**'), valid.replace('---\n#', 'globs: "server/**"\n---\n#'), valid.replace('description:', 'unknown:')]) assert.throws(() => parseRule(source))
+})
 
-  assert.equal(pkg.scripts['check:product-invariants'], 'node --test tests/product-invariants.test.mjs')
-  assert.equal(pkg.scripts['check:docs'], 'node --test tests/architecture-governance.test.mjs')
-  assert.equal(pkg.scripts['check:architecture'], 'node --test tests/architecture-baseline.test.mjs')
-  assert.equal(
-    pkg.scripts['check:contracts'],
-    'node --test packages/contracts/tests/*.test.mjs packages/api-client/tests/*.test.mjs tests/runtime-contracts-compat.test.mjs',
-  )
-  assert.ok(Array.isArray(pkg.workspaces) && pkg.workspaces.includes('packages/*'))
-  assert.match(pkg.engines?.node ?? '', /24/)
-  assert.equal(typeof pkg.dependencies?.react, 'string')
-  assert.equal(typeof pkg.devDependencies?.vite, 'string')
-  for (const command of Object.values(pkg.scripts)) {
-    assert.doesNotMatch(command, /zhihu_thread_chatbot|zhihu_ux_ui|zhihu_3D_path|交互图/)
-    assert.doesNotMatch(command, /\.\.\/\.\.\/.*node_modules/)
+test('environment example keys are unique, empty and documented at their configuration owner', async () => {
+  const [example, configuration, ignore] = await Promise.all(['.env.example', 'docs/configuration.md', '.gitignore'].map(read))
+  const entries = example.split(/\r?\n/).filter(line => line && !line.startsWith('#')).map(line => line.split('='))
+  assert.ok(entries.length > 0)
+  assert.equal(new Set(entries.map(([key]) => key)).size, entries.length)
+  for (const [key, value, extra] of entries) {
+    assert.match(key, /^[A-Z][A-Z0-9_]+$/)
+    assert.equal(value, '', `${key} must not commit credentials`)
+    assert.equal(extra, undefined)
+    assert.ok(configuration.includes(`\`${key}\``), `${key} is missing from configuration.md`)
   }
-  assert.match(readme, /当前明确未完成/)
-  assert.match(audit, /当前未达到的完成条件/)
-  assert.match(readme, /不能.*证明|不能证明/)
-  assert.match(audit, /不能.*证明|不能证明/)
+  assert.ok(ignore.split('\n').includes('.env'))
+  assert.ok(ignore.split('\n').includes('!.env.example'))
+})
+
+test('documentation index reaches maintained guides and Agent sections have unique sequential numbers', async () => {
+  const { documents } = await repository
+  const index = inspectMarkdown(documents.get('docs/README.md'))
+  const linked = new Set(index.links.map(link => link.url))
+  for (const name of documents.keys()) if (name.startsWith('docs/') && name !== 'docs/README.md') assert.ok(linked.has(name.slice(5)), `${name} needs a docs index entry`)
+  const sections = inspectMarkdown(documents.get('docs/agents.md')).tree.children.filter(node => node.type === 'heading' && node.depth === 2)
+  const numbers = sections.map(node => Number(node.children[0].value.match(/^(\d+)\./)?.[1]))
+  assert.deepEqual(numbers, Array.from({ length: sections.length }, (_, index) => index))
 })

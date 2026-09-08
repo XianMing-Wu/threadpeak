@@ -1,16 +1,20 @@
 ---
 description: "约束 AGENTS、两份重构文档与 Cursor Rules 的权威关系和同步检查。"
-globs: "AGENTS.md,.cursor/rules/**,README.md,qa/**,catalog/**,**/*.md,**/*.mdx"
+globs: "AGENTS.md,.cursor/rules/**,README.md,docs/**,qa/README.md,deploy/README.md,vendor/SOURCE.md,src/ui/brand/README.md,tests/architecture-governance.test.mjs,scripts/check-documentation.mjs"
 alwaysApply: false
 ---
 
 # 文档维护
 
-当前用户裁决最高。[as-implemented-logic.md](../../as-implemented-logic.md)第 1 节记录代码、第 2 节记录目标、第 3 节记录当次验收、第 4 节记录工程决策和上线缺口。[agent-specs.md](../../agent-specs.md)是上下文、压缩、提示词和输出结构的详细合同。
+当前用户裁决最高。[product.md](../../docs/product.md)第 1 节记录代码、第 2 节记录目标、第 3 节指向有日期和范围的验收证据、第 4 节记录工程决策和上线缺口。[agents.md](../../docs/agents.md)是上下文、压缩、提示词和输出结构的详细合同。
 
 - 本次用户已授权持久工作流、上下文、压缩与完整后端重构。数据库、任务、事务、幂等、恢复、取消、深度冻结属于已记录的工程选择，无需重复问技术细节；域名、生产身份和实测指标仍需真实配置/验收。
-- 当前卡片树、新对话、三路搜索、问博主长卡覆盖旧的 G1/G2、批注和固定首轮展示。旧稿只留 docs/archive 作追溯；不得把旧文档恢复成实现约束。
-- 产品行为变化同步目标；Agent 变化同步四项合同；工程决策同步重构记录；测试数字与实测证据写当次账本，不写成永久产品规则。
+- 当前卡片树、新对话、三路搜索、问博主长卡覆盖旧的 G1/G2、批注和固定首轮展示。旧稿通过 docs/history.md 指向已提交 Git 版本作追溯；不得把旧文档恢复成实现约束。
+- 产品行为变化同步目标；Agent 变化同步四项合同；工程决策同步工程设计；测试数字与实测证据写当次账本，不写成永久产品规则。
 - AGENTS 只放权威关系、必要不变量和十条规则路由，不复制长提示词。匹配多条规则时合并执行。
 - `.mdc` 必须有 description、非空 globs、alwaysApply: false，少于 500 行。新增或改名同步 AGENTS 表。
 - 检查相对链接、围栏、表格、空白、冲突标记和关键语义。文档一致只证明文档一致，不能证明 runtime、provider 或生产完成。
+
+- [文档索引](../../docs/README.md)按用途路由到配置、开发、产品、Agent、工程及阅读规范；README 保持产品介绍和可执行的快速开始，不重复完整合同或每轮测试次数。
+- QA 页面使用真实组件和独立测试源；证据记录执行时间、范围与限制。改名时同步脚本、测试、忽略规则及相对链接；历史索引链接固定 Git 版本，不改写历史证据里的原始执行结果。
+- 文档门禁验证结构、链接、实际 glob 命中和脚本入口；产品行为用对应测试证明，不要求不同职责的文档重复相同句子。

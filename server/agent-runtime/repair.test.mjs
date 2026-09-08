@@ -10,7 +10,7 @@ import {
 } from './repair.ts'
 
 test('repair user copy matches the active agent contract', async () => {
-  const specs = await readFile(new URL('../../agent-specs.md', import.meta.url), 'utf8')
+  const specs = await readFile(new URL('../../docs/agents.md', import.meta.url), 'utf8')
   assert.match(specs, /### 0\.1 任务、预算与修复/)
   assert.ok(specs.includes(STRUCTURE_REPAIR_USER_PREFIX))
   assert.ok(specs.includes(PUBLIC_STRUCTURE_FAILURE_MESSAGE))

@@ -1,12 +1,12 @@
 ---
 description: "约束 A1–A3 问博主、N0–N2 博主搜索、作者证据 ID、请教简报和主题来源网络。"
-globs: "src/pages/Authors.tsx,src/learning-v2/**,server/durable/flows.ts,server/durable/tools.ts,server/durable/http.ts,server/durable/network-retrieval.ts,server/durable/authors*.ts,packages/contracts/src/authors.ts,src/components/AuthorNetworkGraph.tsx,src/pages/Session.tsx,src/session/ask-authors.ts,src/session/resolve-ask-author.ts,src/session/resolve-author-search.ts,src/session/resolve-author-network.ts,src/session/request-ask-author.ts,src/session/request-author-search.ts,src/session/request-author-network.ts,src/session/useAnnotations.ts,src/components/AskAuthorsPrompt.tsx,src/components/AnnotationPanel.tsx,apps/web/**/concept-learning/**,apps/web/**/author-search/**,apps/web/**/author-network/**,packages/contracts/authors/**,server/authors/**"
+globs: "src/learning-v2/**,src/components/AuthorNetworkGraph.tsx,src/session/*author*.ts,server/durable/authors*.ts,server/durable/flows.ts,server/durable/tools.ts,server/durable/http.ts,server/durable/learning-goal.ts,server/durable/zhihu*.ts,server/agent-runtime/**,packages/contracts/src/authors.ts"
 alwaysApply: false
 ---
 
 # 作者证据与卡片
 
-合同见 [agent-specs.md](../../agent-specs.md) 第三、五节；状态见 [as-implemented-logic.md](../../as-implemented-logic.md)。
+合同见 [agents.md](../../docs/agents.md) 第 3、4 节；状态见 [product.md](../../docs/product.md)。
 
 - 问博主以所选卡和问题为输入，A-card-plan 拆问 → 两路知乎搜索 → A-card-select 选本次 1–3 位新作者。
 - ID/作者名/完整总结/链接从同一真实候选回查；模型只选择证据 ID，不重写资料。排除原卡作者和已有分支作者，不按名字合并身份。
@@ -16,7 +16,7 @@ alwaysApply: false
 - 同一稳定作者可关联多篇文章、多个主题和多个问题；每次搜索、当前/归档对话的实际引用分别保留，不以作者或文章为键覆盖旧问题。模型选择材料和段落编号，程序回查来源并按人去重；作者网络允许多重关系，知识卡仍为单父树。
 - 验证 1–3 人、真实零人、异常、重复/错误 ID、原作者排除、单父树和事务回滚。
 
-- 本轮博主结果采用 Coverflow 中心/侧卡布局，支持拖拽、点选、左右键和减少动效；网络图样式不变。API 头像/认证使用真实字段。授权 mock 示例来源只可在对应演示所有者范围出现，不成为真实作者。
+- 博主结果采用 Coverflow 中心/侧卡布局，支持拖拽、点选、左右键和减少动效；网络图样式不变。API 头像/认证使用真实字段。授权 mock 示例来源只可在对应演示所有者范围出现，不成为真实作者。
 
 - 作者卡的昵称、头像、认证图标和文案来自实际知乎字段；没有认证不得补造。内容权威等级与排序分数不是用户身份证明。旧来源头像回查严格匹配原文 URL，阅读补充不改变身份或使用分。
 

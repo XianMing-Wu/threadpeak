@@ -49,7 +49,7 @@ const rejectionReasons={
 }
 const sources={},audit=[]
 for(const [conceptId,[queryId,index,why,caveat]] of Object.entries(selections)){
- const raw=await readFile(`qa/showcase-2026-09-07/raw/${queryId}.json`,'utf8'),run=JSON.parse(raw)
+ const raw=await readFile(`qa/evidence/showcase/raw/${queryId}.json`,'utf8'),run=JSON.parse(raw)
  if(run.result.kind!=='hits')throw new Error(`No real evidence: ${queryId}`)
  const hit=run.result.items[index]
  if(!hit?.summary||!hit.url||!hit.evidenceId)throw new Error(`Incomplete evidence: ${conceptId}`)
@@ -60,8 +60,8 @@ for(const [conceptId,[queryId,index,why,caveat]] of Object.entries(selections)){
 }
 await mkdir('src/showcase',{recursive:true})
 await writeFile('src/showcase/sources.json',JSON.stringify(sources,null,2)+'\n')
-await writeFile('qa/showcase-2026-09-07/source-review.json',JSON.stringify({version:1,reviewMethod:'逐条审阅真实搜索返回的摘要，显式指定选择位置；不代表逐篇核验原文全文或作者认可本产品。',conceptCount:audit.length,entries:audit},null,2)+'\n')
+await writeFile('qa/evidence/showcase/source-review.json',JSON.stringify({version:1,reviewMethod:'逐条审阅真实搜索返回的摘要，显式指定选择位置；不代表逐篇核验原文全文或作者认可本产品。',conceptCount:audit.length,entries:audit},null,2)+'\n')
 const inventory=[]
-for(const file of (await readdir('qa/showcase-2026-09-07/raw')).filter(f=>f.endsWith('.json')).sort()){const raw=await readFile(`qa/showcase-2026-09-07/raw/${file}`,'utf8'),run=JSON.parse(raw);inventory.push({id:run.id,query:run.query,observedAt:run.requestedAt,provider:run.provider,status:run.result.kind,candidateCount:run.result.items?.length??0,responseSha256:digest(raw),selectedFor:audit.filter(e=>e.queryId===run.id).map(e=>e.conceptId)})}
-await writeFile('qa/showcase-2026-09-07/search-inventory.json',JSON.stringify(inventory,null,2)+'\n')
+for(const file of (await readdir('qa/evidence/showcase/raw')).filter(f=>f.endsWith('.json')).sort()){const raw=await readFile(`qa/evidence/showcase/raw/${file}`,'utf8'),run=JSON.parse(raw);inventory.push({id:run.id,query:run.query,observedAt:run.requestedAt,provider:run.provider,status:run.result.kind,candidateCount:run.result.items?.length??0,responseSha256:digest(raw),selectedFor:audit.filter(e=>e.queryId===run.id).map(e=>e.conceptId)})}
+await writeFile('qa/evidence/showcase/search-inventory.json',JSON.stringify(inventory,null,2)+'\n')
 console.log(`Packaged ${audit.length} reviewed concepts; original API summaries preserved.`)

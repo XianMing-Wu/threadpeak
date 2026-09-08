@@ -1,12 +1,12 @@
 ---
 description: "约束来源卡片树、L-answer 工具范围、对话和文档编辑同步。"
-globs: "packages/contracts/src/learning-goal.ts,src/pages/Session.tsx,src/learning-v2/**,server/durable/**,packages/contracts/src/learning-v2.ts,src/pages/NotFound.tsx,src/pages/KnowledgeCanvas.tsx,src/pages/Collections.tsx,src/learningSession.ts,src/history.ts,src/resolve-history-reopen.ts,src/workspace/nav.ts,src/workspace/store.ts,src/knowledge-canvas/**,src/session/**,src/components/Shell.tsx,src/components/AnnotatedText.tsx,src/components/SelectionToolbar.tsx,src/components/Composer.tsx,src/components/AskAuthorsPrompt.tsx,apps/web/**/concept-learning/**,apps/web/**/knowledge-map/**,apps/web/**/history/**,packages/contracts/knowledge/**,server/knowledge/**,server/first-learning/**,server/follow-up/**"
+globs: "src/pages/Session.tsx,src/pages/Collections.tsx,src/learning-v2/**,src/knowledge-canvas/**,src/session/**,src/history.ts,src/resolve-history-reopen.ts,src/workspace/**,src/components/Shell.tsx,server/durable/**,server/knowledge/**,server/agent-runtime/**,packages/contracts/src/learning-v2.ts,packages/contracts/src/learning-goal.ts,packages/contracts/src/node-edits.ts"
 alwaysApply: false
 ---
 
 # 学习卡片树生命周期
 
-唯一目标见 [现状清单](../../as-implemented-logic.md) 第 2 节与 [Agent 合同](../../agent-specs.md) 第二、三节；工程运行边界见 [重构记录](../../docs/backend-rebuild-2026-09-06.md)。
+唯一目标见 [现状清单](../../docs/product.md) 第 2 节与 [Agent 合同](../../docs/agents.md) 第 2、3 节；工程运行边界见 [工程设计](../../docs/engineering.md)。
 
 - 首次概念名称消息 → 三种限定概念的问法分别搜索（共享两路并发，第三项排队） → 收齐筛选 → 文章与根持久保存 → 三角度直答 → L-answer。
 - 概念唯一根，文章及本条路线资料为一级子卡，每段只一个 basisId、每卡只一个父卡，禁止汇合、循环与伪造 ID。路线 3D DAG 不受此限制。
@@ -21,8 +21,8 @@ alwaysApply: false
 
 - 首页加入的文件与显式导入的收藏资料用于路线生成并继承至每个概念，已有资料可先阅读。PDF 卡用总结，文本卡保留正文；材料与概念不相关时不强行引用，文件不能冒充知乎作者。
 
-- 本轮范围继承覆盖默认知乎检索：全网额外收集站外资料；仅收藏夹跳过 L-search-plan/检索，三角度由模型只读资料完成。站外卡无作者身份，不进入作者网络。
+- 检索范围继承覆盖默认知乎检索：全网额外收集站外资料；仅收藏夹跳过 L-search-plan/检索，三角度由模型只读资料完成。站外卡无作者身份，不进入作者网络。
 
-- 本轮 goalContext 从本账号路线带入概念搜索、筛选、三角度直答、首次及后续讲解；包含原始目标、真实访谈回答、最终成果与概念用途/深度/检验任务。新对话保留目标，显式选卡改变证据范围而不删除目的；未知旧目标不编造。
+- goalContext 从本账号路线带入概念搜索、筛选、三角度直答、首次及后续讲解；包含原始目标、真实访谈回答、最终成果与概念用途/深度/检验任务。新对话保留目标，显式选卡改变证据范围而不删除目的；未知旧目标不编造。
 
 - 审阅全部来源不等于逐篇生成正文；围绕当前概念与目标去重，首次最多 8 段、追问最多 12 段。超限同一 L-answer 修复，不截断结果发布；版本与数学前提不能因来源有引文就免于核对。

@@ -1,7 +1,7 @@
 // Publish only synthetic goals and reviewed result structure, not provider request payloads.
 import {readFile,writeFile} from 'node:fs/promises'
 import {createHash} from 'node:crypto'
-const root='qa/goal-agents-2026-09-07',samples=[]
+const root='qa/evidence/goal-agents',samples=[]
 for(const id of ['paper-math','collection','finance','minimal-3d','llm-job']){
  const r=JSON.parse(await readFile(`${root}/raw/${id}.json`,'utf8')),route=r.path.route
  samples.push({id,provider:r.provider,syntheticInput:true,goal:r.scenario.goal,customAnswer:r.scenario.answer,material:r.scenario.content??null,

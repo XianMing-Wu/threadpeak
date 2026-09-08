@@ -1,17 +1,17 @@
 ---
 description: "约束后端 Agent 编排、上下文预算、真实 provider、校验、失败与安全边界。"
-globs: "apps/api/**,Dockerfile,compose.yaml,deploy/**,apps/worker/**,server/**,packages/contracts/**,packages/api-client/**,packages/runtime-store/**,**/*.schema.ts,**/*.port.ts,**/*.adapter.ts"
+globs: "server/**,packages/contracts/**,packages/api-client/**,packages/runtime-store/**,Dockerfile,compose.yaml,deploy/**,.env.example"
 alwaysApply: false
 ---
 
 # 持久工作流与 provider 边界
 
-[Agent 合同](../../agent-specs.md)规定每个步骤的上下文、压缩、提示词和输出。[工程记录](../../docs/backend-rebuild-2026-09-06.md)是本次授权下的实现选择；不冒称历史产品裁决。
+[Agent 合同](../../docs/agents.md)规定每个步骤的上下文、压缩、提示词和输出。[工程设计](../../docs/engineering.md)是本次授权下的实现选择；不冒称历史产品裁决。
 
 - 默认入口使用 server/durable，不注册旧 G1/G2 和批注写链；MCP 只作为可选外部适配，不把固定步骤交给模型自由选择。
 - 请求必须校验所有者、范围、输入、幂等键；资源事实和最终成功事件同事务。队列领取带租约/fence，成功步骤检查点可恢复。外部调用至少一次可能重复，不声称 exactly-once。
 - 所有知乎 API 共用持久两路并发额度，跨任务/同库服务实例生效；HTTP 429 触发共享冷却并遵守 Retry-After，不丢第三种搜索或讲解角度。
-- 同库请求发送间隔与并发上限分别执行；缓存遵循 agent-specs.md 的账号/完整上下文隔离，DeepSeek KV 命中只按真实 usage 记录，不把未知写成零或声称必定命中。
+- 同库请求发送间隔与并发上限分别执行；缓存遵循 agents.md 的账号/完整上下文隔离，DeepSeek KV 命中只按真实 usage 记录，不把未知写成零或声称必定命中。
 - 临时故障退避恢复，配置/鉴权等待处理；停止与完成的先后由数据库决定。浏览器断连不自动取消。
 - 只使用真实 provider。JSON/引用/renderer 校验不通过由同一 Agent 修复，禁止补字段、猜边、删环或 fixture 成功。
 - 空正文、仅 reasoning、流断开、length 截断都不是完成。草稿和正式结果分开，不把内部思考当正文或日志。
@@ -22,10 +22,10 @@ alwaysApply: false
 
 服务端配置键（不得进入浏览器）：`ZHIHU_ACCESS_SECRET`、`ZHIHU_API_BASE_URL`、`DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、`DEEPSEEK_MODEL_NAME`、`DEEPSEEK_CONTEXT_TOKENS`、`DATABASE_URL`、`THREADPEAK_PUBLIC_ORIGIN`、`THREADPEAK_IDENTITY_SECRET`、`THREADPEAK_IDENTITY_ISSUER`、`THREADPEAK_IDENTITY_AUDIENCE`、`THREADPEAK_LOGIN_URL`、`THREADPEAK_PORT`、`THREADPEAK_HOST`、`THREADPEAK_DATA_DIR`、`POSTGRES_PASSWORD`、`SITE_ADDRESS`、`ZHIHU_OAUTH_APP_ID`、`ZHIHU_OAUTH_APP_KEY`、`ZHIHU_OAUTH_REDIRECT_URI`。可配置知乎 OAuth 或受信身份网关。知乎还需 `ZHIHU_OAUTH_USERINFO_URL`、`ZHIHU_OAUTH_USER_ID_PATH`、`ZHIHU_OAUTH_USER_NAME_PATH`、`ZHIHU_OAUTH_USER_AVATAR_PATH`、`THREADPEAK_TOKEN_SECRET`；前两项按官方合同配置，不能猜稳定 ID。用户 API 强制该授权用户 Token，禁止回退开发者数据；未真实验证不得宣称登录完成。
 
-- 本轮用户授权 OAuth/个人内容域的显式 mock 例外：ZHIHU_OAUTH_MODE=mock 只用于本地，账号/来源独立命名空间，接口同合同，生产启动拒绝，真实API失败不得隐式回退；模型/搜索/PDF仍真实。
+- 用户已授权 OAuth/个人内容域的显式 mock 例外：ZHIHU_OAUTH_MODE=mock 只用于本地，账号/来源独立命名空间，接口同合同，生产启动拒绝，真实API失败不得隐式回退；模型/搜索/PDF仍真实。
 
 - goal-v1：原始目标、真实回答、用户消息、当前问题/概念和来源绑定不压缩；来源按段落/公式/代码边界全量分块，逐来源独立摘要，缓存包含 owner、用途、深度、窗口、预算和版本；不合并同作者文章，不用截文本兜底。新 R4 要求逐概念资料锚点，并回查模型实际收到的材料版本。
 
-- 恢复/保留策略与驱动边界见[架构审查修复](../../docs/architecture-review-fixes-2026-09-07.md)。PGlite 单目录单进程；共享 PostgreSQL 才承诺跨副本额度。嵌套事务必须同连接 savepoint，浏览器采用修订号快照；未接入事件消费不能声称已完成客户端缺口恢复，不能重复消费已完成的幂等命令。
+- 恢复/保留策略与驱动边界见[工程设计](../../docs/engineering.md)。PGlite 单目录单进程；共享 PostgreSQL 才承诺跨副本额度。嵌套事务必须同连接 savepoint，浏览器采用修订号快照；未接入事件消费不能声称已完成客户端缺口恢复，不能重复消费已完成的幂等命令。
 
-- 维护不得阻塞任务领取，失败须退避并记录安全错误码；正常停机按 fence 释放任务且不增加失败预算。反向代理仅信任部署白名单，不能用未校验转发头构造限流身份。详见[二次审查](../../docs/architecture-review-round-2-2026-09-07.md)。
+- 维护不得阻塞任务领取，失败须退避并记录安全错误码；正常停机按 fence 释放任务且不增加失败预算。反向代理仅信任部署白名单，不能用未校验转发头构造限流身份。详见[工程设计](../../docs/engineering.md)。

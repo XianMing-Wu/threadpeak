@@ -1,12 +1,12 @@
 ---
 description: "约束 R1–R5 路线制定、澄清题轮次、附件、最终路线 JSON、发布与 3D handoff。"
-globs: "server/agent-runtime/goal-policy.ts,packages/contracts/src/learning-goal.ts,src/path-planning/**,src/path-3d/**,src/pathDocument.ts,src/pages/Chat.tsx,src/pages/Home.tsx,src/pages/Collections.tsx,src/workspace/**,src/components/Path3D.tsx,src/chat/**,apps/web/**/path-planning/**,apps/web/**/path-3d/**,packages/contracts/path/**,packages/path-3d-host/**,server/path-generation/**,server/durable/**,packages/contracts/src/path-document.ts,server/ordinary-chat/**"
+globs: "src/path-planning/**,src/path-3d/**,src/pathDocument.ts,src/pages/Chat.tsx,src/pages/Home.tsx,src/pages/Collections.tsx,src/workspace/**,src/components/Path3D.tsx,src/components/Composer.tsx,src/chat/**,src/materials/**,server/path-generation/**,server/agent-runtime/**,server/durable/**,packages/contracts/src/path-document.ts,packages/contracts/src/learning-goal.ts,packages/contracts/src/search-scope.ts"
 alwaysApply: false
 ---
 
 # 路线制定 R1–R5
 
-目标流程以 [as-implemented-logic.md](../../as-implemented-logic.md) 第 2 节与第 4.1 节为准；每个 Agent 的输入、压缩、系统提示词和输出以 [agent-specs.md](../../agent-specs.md) 第 0 节和第一节为准。旧的一次 CandidateSet、固定五角检索和纯 TypeScript 剪枝不是目标。
+目标流程以 [product.md](../../docs/product.md) 第 2 节与第 4.1 节为准；每个 Agent 的输入、压缩、系统提示词和输出以 [agents.md](../../docs/agents.md) 第 0、1 节为准。旧的一次 CandidateSet、固定五角检索和纯 TypeScript 剪枝不是目标。
 
 ## 固定流程
 
@@ -48,7 +48,7 @@ alwaysApply: false
    - 当前已是第 3 轮：可以解释，但不再换题。
 4. 换题后旧题保留在对话中、变灰且不可再点；旧题、已选 optionId、自定义原话和自由补充继续进入 R4。
 5. 不同轮选择冲突时较新轮优先。当前 active 题组全部答完后自动调用 R4，不得再要用户点「生成完整路径」。
-6. 问题、选项和题组输出必须通过 agent-specs.md 的联合结构验证；不合格时按 0.1 由同一 Agent 自我修复，不能用自由文本猜测分支。
+6. 问题、选项和题组输出必须通过 agents.md 的联合结构验证；不合格时按 0.1 由同一 Agent 自我修复，不能用自由文本猜测分支。
 
 ## R4 最终路线
 
@@ -62,7 +62,7 @@ R4 画像中的动机、基础、限制和非目标逐字回查用户原话；�
 
 ## 附件与调用预算
 
-附件首页支持 pdf/md/markdown/txt 和显式导入的知乎授权收藏夹/公开创作，所有本次路线 Agent 均携带。PDF 优先读取已保存的完整解析正文，再按当前目标压缩；解析正文缺失时才读取明确标注的来源摘要，不覆盖原文。预算/分块压缩按 [Agent 合同](../../agent-specs.md) 第 0 节，不能假定 500k 等于 provider 能力；保留来源、ID、轮次和用户选择，禁止截断 JSON。
+附件首页支持 pdf/md/markdown/txt 和显式导入的知乎授权收藏夹/公开创作，所有本次路线 Agent 均携带。PDF 优先读取已保存的完整解析正文，再按当前目标压缩；解析正文缺失时才读取明确标注的来源摘要，不覆盖原文。预算/分块压缩按 [Agent 合同](../../docs/agents.md) 第 0 节，不能假定 500k 等于 provider 能力；保留来源、ID、轮次和用户选择，禁止截断 JSON。
 
 ## 发布、列表与 3D
 
@@ -87,4 +87,4 @@ path-lab 与 `/api/paths/generate` 已从源码删除。不得重新加入侧栏
 - 分叉/汇合可渲染、所有节点可进入、返回路线列表、非法 concept 不跳学习页。
 - 路线发布后 R5 可继续，重新制定新增路线；path-lab 不再可达。
 
-- 本轮搜索范围合同见 agent-specs.md 第十节。R1 保持拆问，R-S 按全知乎/全网路由；仅收藏夹用 R-materials 读取全部选中资料而不发外部搜索。范围保留到 R2/R3/R3b/R4/R5 及路线每个概念。
+- 搜索范围合同见 agents.md 第 6 节。R1 保持拆问，R-S 按全知乎/全网路由；仅收藏夹用 R-materials 读取全部选中资料而不发外部搜索。范围保留到 R2/R3/R3b/R4/R5 及路线每个概念。

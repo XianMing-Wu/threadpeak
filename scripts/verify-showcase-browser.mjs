@@ -10,7 +10,7 @@ const browser=await chromium.launch({headless:true,channel:'chrome',args:['--ena
 const page=await browser.newPage({viewport:{width:1440,height:1000}})
 page.setDefaultTimeout(10000)
 const base=process.env.SHOWCASE_URL||'http://127.0.0.1:4304/'
-const directory='qa/showcase-2026-09-07/browser'
+const directory='qa/evidence/showcase/browser'
 await mkdir(directory,{recursive:true})
 const report={url:base,version:SHOWCASE_VERSION,date:new Date().toISOString(),concepts:[],screenshots:[],errors:[],checks:[]}
 page.on('pageerror',e=>report.errors.push(e.message))

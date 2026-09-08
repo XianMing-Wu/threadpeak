@@ -30,7 +30,7 @@ export const queries=[
  ['tool-boundary','大模型 Agent Function Calling 工具调用 权限'],
  ['llm-delivery','大模型 应用 部署 监控 成本 延迟 评估'],
 ]
-const directory='qa/showcase-2026-09-07/raw'
+const directory='qa/evidence/showcase/raw'
 await mkdir(directory,{recursive:true})
 const config=resolveProviderConfig(serverEnvironment())
 if(!config.ok)throw new Error('Real provider configuration required')

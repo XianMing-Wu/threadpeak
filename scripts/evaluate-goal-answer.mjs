@@ -11,7 +11,7 @@ import {replyInput} from '../server/durable/flows.ts'
 const config=resolveProviderConfig(serverEnvironment());if(!config.ok)throw Error('PROVIDER_REQUIRED')
 const raw=createAgentLlmProvider({config:config.config,http})
 for(const name of process.argv.slice(2)){
- const file=`qa/goal-agents-2026-09-07/raw/${name}.json`,sample=JSON.parse(await readFile(file,'utf8')),state=sample.learning
+ const file=`qa/evidence/goal-agents/raw/${name}.json`,sample=JSON.parse(await readFile(file,'utf8')),state=sample.learning
  if(!state?.initialized)throw Error('COMPLETED_REAL_LEARNING_REQUIRED')
  const last=sample.checkpoints.filter(j=>j.kind==='learning.enter').at(-1)
  const directAnswers=Object.entries(last.checkpoints).filter(([k])=>k.startsWith('L-direct:')&&k.includes('@')).map(([k,v])=>({angle:k.split(':')[1].split('@')[0],content:v.value}))

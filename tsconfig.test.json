@@ -2,6 +2,7 @@
   "extends": "./tsconfig.json",
   "include": [
     "tests/ui",
+    "qa/reading-lab.tsx",
     "vitest.config.ts",
     "server/**/*.d.ts"
   ],

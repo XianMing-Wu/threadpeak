@@ -28,7 +28,7 @@ if(!config.ok)throw new Error('真实 provider 未配置')
 const rawLlm=createAgentLlmProvider({config:config.config,http}),rawZhihu=createAgentZhihuProvider({config:config.config,http,clock:{now:()=>new Date(),unixSeconds:()=>Math.floor(Date.now()/1000)}})
 const permitDb=await openDatabase();await migrate(permitDb)
 const zhihu={search:(q,n,signal)=>withPermit(permitDb,'zhihu',3,signal,next=>rawZhihu.search(q,n,next)),direct:input=>withPermit(permitDb,'direct',2,input.signal,next=>withPermit(permitDb,'zhihu',3,next,signal=>rawZhihu.direct({...input,signal})))}
-const directory=resolve('qa/goal-agents-2026-09-07/raw');await mkdir(directory,{recursive:true})
+const directory=resolve('qa/evidence/goal-agents/raw');await mkdir(directory,{recursive:true})
 async function run(scenario){
  const db=await openDatabase();await migrate(db);const store=new DurableStore(db)
  const calls=[]

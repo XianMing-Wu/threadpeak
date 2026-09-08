@@ -11,7 +11,7 @@ import {resolvePath3DView} from '../path-3d/resolved-path-document.ts'
 import {preflightLearningPath} from '../vendor/learning-path-3d/index.js'
 import {prepareMarkdown} from '../lib/markdown-source.ts'
 import {renderMath} from '@threadpeak/contracts/math-normalize'
-const review=JSON.parse(readFileSync(new URL('../../qa/showcase-2026-09-07/source-review.json',import.meta.url),'utf8'))
+const review=JSON.parse(readFileSync(new URL('../../qa/evidence/showcase/source-review.json',import.meta.url),'utf8'))
 const sha=text=>createHash('sha256').update(text).digest('hex')
 
 test('all five investor scenarios have a real goal, a stated starting point, three suggestions and a free response',()=>{
