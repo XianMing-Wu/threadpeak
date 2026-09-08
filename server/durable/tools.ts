@@ -47,7 +47,7 @@ export class ProductTools {
   constructor(llm:LlmProvider, zhihu:ZhihuProvider, window=64_000) { this.llm=llm; this.zhihu=zhihu; this.window=window }
   async structured<T>(ctx:TaskContext, name:string, system:string, input:unknown, validate:(value:unknown,prepared:unknown)=>T, output=8192, options:{stream?:boolean;prepare?:(input:any)=>unknown}={}):Promise<T> {
     return ctx.step(`${name}@${AGENT_CONTRACT_VERSION}`, {input,system,window:this.window}, async()=>{
-      const label=({'L-search-plan':'拆解检索方向','L-source-select':'筛选相关资料','A-card-plan':'理解请教问题','A-card-select':'筛选相关博主'} as Record<string,string>)[name]
+      const label=({'L-search-plan':'拆解检索方向','L-source-select':'筛选相关资料','A-card-plan':'理解请教问题','A-card-select':'筛选相关博主'} as Record<string,string>)[name.split(':')[0]!]
       if(label)await ctx.activity(name,'read',label)
       const depth:ThinkingDepth=ctx.job.input.depth??'fast'
       const window=effectiveWindow(this.window)

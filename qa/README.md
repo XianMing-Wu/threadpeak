@@ -12,6 +12,7 @@
 | [author-surface.html](author-surface.html) | 390px 真实 App 视口，检查作者目录、卡片与资料页面 |
 | [visual-atlas.html](visual-atlas.html) | 390px 视口切换首页、作者、路线与封面原图目录 |
 | [ux-ui-lab.html](ux-ui-lab.html) | 真实作者关系图的独立合成资料，验证键盘、焦点、缩放和减少动效 |
+| [learning-actions-lab.html](learning-actions-lab.html) | 真实文章作者入口与浮动问博主输入，验证窄屏、失败保留和成功接收 |
 | [account-storage-review.html](account-storage-review.html) | 用合成草稿填满真实浏览器容量，验证账号隔离和恢复 |
 | [account-recovery-review.html](account-recovery-review.html) | 登录接口不可用时，验证重新打开真实 App 后仍发现持久备份 |
 
@@ -49,6 +50,7 @@ THREADPEAK_API_TARGET=http://127.0.0.1:4412 npm run dev -- --port 4404 --strictP
 | [来源审阅](evidence/showcase/source-review.json) | 22 个示例概念的取舍、来源 ID 和摘要哈希；不是作者背书或全文事实审校 |
 | [示例浏览器报告](evidence/showcase/browser/report.json) | 2026-09-07 浏览器逐概念、路线与窄屏验收，截图与报告对应当时版本 |
 | [UX/UI 优化验收](evidence/ux-ui-2026-09-08/README.md) | 2026-09-08 样式体系、明暗主题、响应式和键盘交互；命令、浏览器结果及范围分别记录 |
+| [学习发送与知乎调用验收](evidence/learning-actions-2026-09-08/README.md) | 2026-09-08 真实任务恢复、三路直答、发送反馈、作者入口与身份边界 |
 
 2026-09-07 第三轮前端行覆盖率为 25.70%；画布编辑、作者全部交互、移动端操作尚未完整覆盖。真实 PostgreSQL 和真实 provider 是不同验收；其中任何一项通过，都不证明正式 OAuth、生产负载或教学事实全部正确。
 

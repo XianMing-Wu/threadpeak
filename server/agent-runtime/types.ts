@@ -145,7 +145,7 @@ export type LlmCompleteInput = {
 }
 
 export type ProviderUsage = { prompt_tokens?:number; completion_tokens?:number; total_tokens?:number; prompt_cache_hit_tokens?:number; prompt_cache_miss_tokens?:number }
-export type ProviderDiagnostic = { httpStatus:number; upstreamCode?:string; requestId?:string }
+export type ProviderDiagnostic = { httpStatus?:number; upstreamCode?:string; requestId?:string; transportCode?:string; retryAfter?:string }
 export type ProviderMetadata = { usage?:ProviderUsage; diagnostic?:ProviderDiagnostic; cache?:'hit'|'miss'; cacheable?:boolean }
 export type LlmCompleteResult = (
   | { kind: 'completed'; text: string; reasoning?: string }

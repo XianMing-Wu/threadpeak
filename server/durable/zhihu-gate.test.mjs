@@ -55,3 +55,13 @@ test('Retry-After supports seconds and HTTP dates with a conservative fallback',
   assert.equal(retryAfterUntil('Mon, 07 Sep 2026 12:01:00 GMT',now),now+60_000)
   for(const value of [null,'invalid','-5','0','Sun, 06 Sep 2026 12:00:00 GMT'])assert.equal(retryAfterUntil(value,now),now+10_000)
 })
+
+test('HTTP 200 business-level direct throttling cools all interfaces before another request starts',async t=>{
+  const db=await fixture(t),gate=createZhihuGate(db,0)
+  const provider=limitZhihuProvider({direct:async()=>({kind:'failed',code:'ZHIHU_RATE_LIMITED',diagnostic:{httpStatus:200,retryAfter:'0.12'}}),search:async()=>({kind:'empty'})},gate)
+  const result=await provider.direct({messages:[],thinkingDepth:'fast'})
+  assert.equal(result.code,'ZHIHU_RATE_LIMITED')
+  const [cooldown]=await db.query("SELECT until_at FROM tp_provider_cooldowns WHERE pool='zhihu'")
+  assert.ok(Number(cooldown.until_at)>Date.now())
+  await createZhihuGate(db,0).run(undefined,async()=>assert.ok(Date.now()>=Number(cooldown.until_at)))
+})

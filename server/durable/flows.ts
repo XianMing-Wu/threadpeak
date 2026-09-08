@@ -1,4 +1,5 @@
 import { pathGoalContext } from './learning-goal.ts'
+import {authorCardCandidates} from './author-card-selection.ts'
 import type { GoalExploration } from '../path-generation/goal-exploration.ts'
 import type {SearchScope} from '@threadpeak/contracts/search-scope'
 import {presentSource} from './source-presentation.ts'
@@ -198,14 +199,13 @@ export function createFlows(tools:ProductTools,api?:ZhihuDataClient,login?:Zhihu
       await ctx.progress('正在换几种问法寻找博主')
       const plan=await tools.learning(ctx,'A-card-plan',{goalContext:input.goalContext,concept:input.concept,host:input.allowedCards[0],question:input.currentQuestion})
       const queries=plan.queries.length===3?[plan.queries[0]!,`${plan.queries[1]} ${plan.queries[2]}`]:plan.queries
-      const evidence=uniqueEvidence(await settledParallel(queries.map((q,i)=>tools.search(ctx,`A-search:${i}`,q)))).filter(e=>e.authorId&&e.authorName&&!excluded.includes(e.authorId)&&!(ctx.job.input.excludedAuthorNames??[]).includes(e.authorName))
+      const evidence=uniqueEvidence(await settledParallel(queries.map((q,i)=>tools.search(ctx,`A-search:${i}`,q)))).filter(e=>e.authorId&&e.authorName&&!excluded.includes(e.authorId))
       await ctx.progress('正在阅读相关博主的解读')
-      const selection=evidence.length?await tools.learning(ctx,'A-card-select',{goalContext:input.goalContext,concept:input.concept,question:input.currentQuestion,host:input.allowedCards[0],candidates:evidence,excludedAuthorIds:excluded},v=>{
-        const ids=v.selections.map((s:any)=>evidence.find(e=>e.evidenceId===s.evidenceId)?.authorId)
-        const names=v.selections.map((s:any)=>evidence.find(e=>e.evidenceId===s.evidenceId)?.authorName)
-        if(ids.some((id:any)=>!id)||new Set(ids).size!==ids.length||new Set(names).size!==names.length)throw new Error('每项必须选择本次真实证据，作者不能重复')
-      }):{normalizedQuestion:input.currentQuestion,selections:[]}
-      const selected=selection.selections.map(s=>evidence.find(e=>e.evidenceId===s.evidenceId)!)
+      const catalog=authorCardCandidates(evidence)
+      const selection=evidence.length?await tools.learning(ctx,'A-card-select',{goalContext:input.goalContext,concept:input.concept,question:input.currentQuestion,host:input.allowedCards[0],candidates:catalog.candidates,excludedAuthorIds:excluded},v=>{
+        catalog.resolve(v.selections)
+      },'A-card-select:refs-v1'):{normalizedQuestion:input.currentQuestion,selections:[]}
+      const selected=catalog.resolve(selection.selections)
       if(!selected.length){
         const text=await tools.direct(ctx,'A3','A3',{goalContext:input.goalContext,concept:input.concept,question:input.currentQuestion,selection:host.text,selectionSummary:null})
         await settleLearning(ctx,[{id:`direct-${ctx.job.id}`,title:'刘看山来解释',text,sources:[],parents:[host.id],basisId:host.id,origin:'direct'}]);return

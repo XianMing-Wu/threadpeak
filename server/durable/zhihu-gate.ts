@@ -33,12 +33,16 @@ export function createZhihuGate(db:Sql,intervalMs=ZHIHU_START_INTERVAL_MS):Zhihu
 export function limitZhihuProvider(provider:ZhihuProvider,gate:ZhihuGate):ZhihuProvider {
   const search=async(q:string,count:number,signal:AbortSignal|undefined,web=false)=>gate.run(signal,async next=>{
     const result=await (web?provider.globalSearch!:provider.search)(q,count,next)
-    if(result.kind==='failed'&&result.code==='ZHIHU_RATE_LIMITED'&&result.diagnostic?.httpStatus===200)await gate.observe({status:429})
+    if(result.kind==='failed'&&result.code==='ZHIHU_RATE_LIMITED'&&result.diagnostic?.httpStatus===200)await gate.observe({status:429,headers:{get:()=>result.diagnostic?.retryAfter??null}})
     return result
   })
   return {
     search:(q,count,signal)=>search(q,count,signal),
     ...(provider.globalSearch?{globalSearch:(q:string,count:number,signal?:AbortSignal)=>search(q,count,signal,true)}:{}),
-    direct:input=>gate.run(input.signal,signal=>provider.direct({...input,signal})),
+    direct:input=>gate.run(input.signal,async signal=>{
+      const result=await provider.direct({...input,signal})
+      if(result.kind==='failed'&&result.code==='ZHIHU_RATE_LIMITED'&&result.diagnostic?.httpStatus===200)await gate.observe({status:429,headers:{get:()=>result.diagnostic?.retryAfter??null}})
+      return result
+    }),
   }
 }

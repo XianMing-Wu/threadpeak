@@ -14,6 +14,7 @@ import type {
   ZhihuProvider,
   ZhihuSearchHit,
   ZhihuSearchResult,
+  ProviderDiagnostic,
 } from './types.ts'
 
 const OUTPUT_LIMIT = 200_000
@@ -47,6 +48,14 @@ export function resolveSearchAuthorId(officialId: string | null | undefined, evi
 
 function assertAllowed(url: string, origin: string) {
   if (new URL(url).origin !== origin) throw new Error('ssrf')
+}
+
+function transportFailure(cause:unknown,signal?:AbortSignal,diagnostic?:ProviderDiagnostic) {
+  const error=cause as {name?:string;code?:unknown;cause?:{code?:unknown}}
+  const raw=error?.cause?.code??error?.code
+  const transportCode=typeof raw==='string'&&/^[A-Z0-9_]{2,60}$/.test(raw)?raw:undefined
+  const code=signal?.aborted?'CANCELLED':error?.name==='TimeoutError'||transportCode==='UND_ERR_CONNECT_TIMEOUT'?'ZHIHU_TIMEOUT':'ZHIHU_NETWORK_UNAVAILABLE'
+  return {kind:'failed' as const,code,retryable:code!=='CANCELLED',message:code==='CANCELLED'?'知乎请求已中止。':code==='ZHIHU_TIMEOUT'?'知乎请求超时。':'知乎连接暂时不可用。',diagnostic:{...diagnostic,transportCode}}
 }
 
 function zhihuHeaders(config: ProviderConfig, clock: ClockPort): Record<string, string> {
@@ -84,6 +93,7 @@ export function createAgentZhihuProvider(ports: {
       const q = query.trim()
       if (!q) return { kind: 'empty' }
       const url = (source==='zhihu'?zhihuSearchUrl:globalSearchUrl)(ports.config.zhihuApiBaseUrl, q, count)
+      let received:ProviderDiagnostic|undefined
       try {
         assertAllowed(url, origin)
         const response = await ports.http(url, {
@@ -91,6 +101,7 @@ export function createAgentZhihuProvider(ports: {
           headers: zhihuHeaders(ports.config, ports.clock),
           signal,
         })
+        received=providerDiagnostic(response.status,undefined,response.headers)
         const text = await response.text()
         if (!response.ok) {
           const diagnostic=providerDiagnostic(response.status,parseProviderError(text),response.headers)
@@ -100,14 +111,13 @@ export function createAgentZhihuProvider(ports: {
         try {
           payload = JSON.parse(text) as unknown
         } catch {
-          return { kind: 'failed', message: '知乎检索返回了无法解析的响应。' }
+          return { kind: 'failed', code:'ZHIHU_INVALID_JSON',retryable:true,diagnostic:received,message: '知乎检索返回了无法解析的响应。' }
         }
         const diagnostic=providerDiagnostic(response.status,payload,response.headers)
         if(diagnostic.upstreamCode&&diagnostic.upstreamCode!=='0')return {kind:'failed',message:'知乎检索未完成。',...classifyProviderError(response.status,diagnostic.upstreamCode,true),diagnostic}
         return {...mapHits(parseZhihuSearchPayload(payload,source)),diagnostic}
       } catch (cause) {
-        if (cause instanceof Error && cause.name === 'AbortError') return { kind: 'failed', message: '知乎检索已中止。' }
-        return { kind: 'failed', message: '知乎检索不可用。' }
+        return transportFailure(cause,signal,received)
       }
     }
   return {
@@ -115,6 +125,7 @@ export function createAgentZhihuProvider(ports: {
     globalSearch:(query,count,signal)=>search(query,count,signal,'web'),
     async direct(input: ZhihuDirectInput): Promise<ZhihuDirectResult> {
       const url = new URL(zhihuDirectUrl(ports.config.zhihuApiBaseUrl))
+      let received:ProviderDiagnostic|undefined
       try {
         assertAllowed(url.toString(), origin)
         const body = JSON.stringify({
@@ -129,6 +140,7 @@ export function createAgentZhihuProvider(ports: {
             signal: input.signal,
             body,
           })
+          received=providerDiagnostic(response.status,undefined,response.headers)
           const text = await response.text()
           if (!response.ok) {
             const diagnostic=providerDiagnostic(response.status,parseProviderError(text),response.headers)
@@ -138,25 +150,24 @@ export function createAgentZhihuProvider(ports: {
           try {
             payload = JSON.parse(text) as unknown
           } catch {
-            return { kind: 'failed', message: '知乎直答返回了无法解析的响应。' }
+            return { kind: 'failed',code:'ZHIHU_INVALID_JSON',retryable:true,diagnostic:received,message: '知乎直答返回了无法解析的响应。' }
           }
           const root = asRecord(payload)
           const diagnostic=providerDiagnostic(response.status,payload,response.headers)
-          if(root?.error)return {kind:'failed',message:'知乎直答未完成。',...classifyProviderError(response.status,diagnostic.upstreamCode,true),diagnostic}
+          if(root?.error||diagnostic.upstreamCode&&diagnostic.upstreamCode!=='0')return {kind:'failed',message:'知乎直答未完成。',...classifyProviderError(response.status,diagnostic.upstreamCode,true),diagnostic}
           const choices = pick(root, 'choices', 'Choices')
           const first = Array.isArray(choices) ? asRecord(choices[0]) : undefined
           const message = asRecord(pick(first, 'message', 'Message'))
           const content = asText(pick(message, 'content', 'Content') ?? pick(root, 'answer', 'Answer', 'output', 'Output'))
-          if (!content) return { kind: 'failed', message: '知乎直答返回了空内容。' }
-          if (content.length > OUTPUT_LIMIT) return { kind: 'failed', message: '知乎直答内容未完整接收。' }
+          if (!content) return { kind: 'failed',code:'ZHIHU_EMPTY_RESPONSE',retryable:true,diagnostic,message: '知乎直答返回了空内容。' }
+          if (content.length > OUTPUT_LIMIT) return { kind: 'failed',code:'ZHIHU_OUTPUT_LIMIT',retryable:false,diagnostic,message: '知乎直答内容未完整接收。' }
           const finish = pick(first, 'finish_reason', 'FinishReason')
-          if (finish && finish !== 'stop') return { kind: 'failed', message: '知乎直答尚未完整完成。' }
+          if (finish && finish !== 'stop') return { kind: 'failed',code:'ZHIHU_INCOMPLETE_RESPONSE',retryable:true,diagnostic,message: '知乎直答尚未完整完成。' }
           input.signal?.throwIfAborted()
           return { kind: 'completed', text: content,cacheable:finish==='stop',diagnostic,usage:readUsage(root?.usage) }
         }
       } catch (cause) {
-        if (cause instanceof Error && cause.name === 'AbortError') return { kind: 'failed', message: '知乎直答已中止。' }
-        return { kind: 'failed', message: '知乎直答不可用。' }
+        return transportFailure(cause,input.signal,received)
       }
     },
   }

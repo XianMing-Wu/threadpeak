@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
 import { KnowledgeGraph } from '../../src/learning-v2/Graph'
+import { NodePrompt } from '../../src/learning-v2/NodePrompt'
 import { KnowledgeDocument } from '../../src/learning-v2/Document'
 import { SourceComments } from '../../src/learning-v2/SourceComments'
 import { SourceReading } from '../../src/learning-v2/SourcePresentation'
@@ -14,6 +15,21 @@ const nodes: GraphNode[] = [
 ]
 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
+
+test.each(['author','ai'] as const)('the %s prompt shows sending and failure locally, preserves input and blocks repeat clicks',async mode=>{
+  let finish!:(sent:boolean)=>void
+  const pending=new Promise<boolean>(resolve=>{finish=resolve}),submit=vi.fn().mockReturnValueOnce(pending).mockRejectedValueOnce(Error('network')).mockResolvedValueOnce(true)
+  const label=mode==='author'?'问博主':'询问 AI '
+  render(<NodePrompt mode={mode} nodes={[nodes[2]]} depth="fast" onDepth={()=>{}} onClose={()=>{}} onSubmit={submit}/>)
+  const input=screen.getByRole('textbox',{name:`${label}的问题`}),send=screen.getByRole('button',{name:`发送${label}问题`})
+  fireEvent.change(input,{target:{value:'详细讲解一下'}});fireEvent.click(send);fireEvent.click(send)
+  expect(submit).toHaveBeenCalledTimes(1);expect(screen.getByRole('status').textContent).toBe('正在发送…')
+  finish(false)
+  await screen.findByRole('alert');expect((input as HTMLTextAreaElement).value).toBe('详细讲解一下')
+  fireEvent.click(send);await screen.findByText('暂时没有发送成功，内容已保留，请重试。')
+  fireEvent.click(send);await waitFor(()=>expect((input as HTMLTextAreaElement).value).toBe(''))
+  expect(submit).toHaveBeenCalledTimes(3)
+})
 
 test('keyboard selection exposes a separate toolbar and preserves the selected basis for both question modes', async () => {
   const submit = vi.fn().mockResolvedValue(true)

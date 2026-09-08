@@ -12,7 +12,9 @@ export function readUsage(value:unknown):ProviderUsage|undefined {
 export function providerDiagnostic(status:number,payload:unknown,headers?:{get(name:string):string|null}):ProviderDiagnostic {
   const p=payload as any,raw=p?.error?.code??p?.Code??p?.code
   const safe=(v:unknown,max:number)=>typeof v==='string'&&v.length<=max&&/^[\w.:-]+$/.test(v)?v:undefined
-  return {httpStatus:status,upstreamCode:safe(String(raw??''),80),requestId:safe(headers?.get('x-request-id')??headers?.get('request-id')??p?.id,128)}
+  const retryAfter=headers?.get('retry-after')?.trim()
+  return {httpStatus:status,upstreamCode:safe(String(raw??''),80),requestId:safe(headers?.get('x-request-id')??headers?.get('request-id')??p?.id,128),
+    ...(retryAfter&&retryAfter.length<=64&&(/^\d+(?:\.\d+)?$/.test(retryAfter)||/^[A-Za-z]{3}, \d{2} [A-Za-z]{3} \d{4} \d{2}:\d{2}:\d{2} GMT$/.test(retryAfter))?{retryAfter}:{})}
 }
 export function parseProviderError(text:string):unknown {
   try{return text.length<=50_000?JSON.parse(text):undefined}catch{return undefined}

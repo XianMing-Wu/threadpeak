@@ -681,9 +681,18 @@
   color: var(--ink-2);
 }
 
-.lp-detail-author div span {
+.lp-detail-author-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.lp-detail-author-description {
   font-size: var(--fs-meta);
   color: var(--ink-3);
+  line-height: 1.65;
+  overflow-wrap: anywhere;
 }
 
 .lp-detail-body {
@@ -3164,11 +3173,41 @@ textarea.lp-doc-text {
   flex-shrink: 0;
 }
 
-.lp-detail-author .lp-text-button {
+.lp-detail-author-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: var(--fs-meta);
-  color: var(--ink-3);
-  margin-top: 4px;
-  padding: 0;
+  color: var(--accent);
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  margin-top: 6px;
+  padding: 6px 9px;
+  min-height: 32px;
+  text-align: left;
+}
+
+.lp-detail-author-action svg {
+  flex-shrink: 0;
+}
+
+.lp-detail-author-action:hover {
+  background: var(--surface-1);
+  border-color: var(--accent);
+}
+
+.lp-detail-author-action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.lp-node-prompt .lp-node-prompt-error {
+  margin: 0;
+  padding: 8px 14px;
+  font-size: var(--fs-meta);
+  line-height: 1.5;
+  color: var(--ink-2);
+  border-top: 1px solid var(--line-1);
 }
 
 .lp-find-person:focus-visible {

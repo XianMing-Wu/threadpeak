@@ -10,16 +10,20 @@ export const aiQuickActions: {label:string;icon:IconName;question:string}[] = [
   {label:'示例',icon:'example',question:'请围绕这张卡片给出一个具体例子，帮助我理解。'},
 ]
 
-export function NodePrompt({ mode, nodes, depth, onDepth, busy=false, onSubmit, onClose }: {
+export function NodePrompt({ mode, nodes, depth, onDepth, busy=false, onSubmit, onClose, submitError }: {
   mode: NodePromptMode
   nodes: GraphNode[]
   depth: 'fast' | 'deep'
   onDepth: (depth: 'fast' | 'deep') => void
   busy?: boolean
+  submitError?: string
   onSubmit: (text: string) => Promise<boolean>
   onClose: () => void
 }) {
   const [value, setValue] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const inFlight = useRef(false)
   const input = useRef<HTMLTextAreaElement>(null)
   const opener = useRef<HTMLElement | null>(null)
   const titleId = useId()
@@ -35,17 +39,26 @@ export function NodePrompt({ mode, nodes, depth, onDepth, busy=false, onSubmit, 
     onClose()
     if (opener.current?.isConnected) opener.current.focus({ preventScroll: true })
   }
-  async function submit() {
-    if (!value.trim() || busy || nodes.length === 0) return
-    const sent=value;if (await onSubmit(sent.trim())) setValue(current=>current===sent?'':current)
+  async function submit(question=value) {
+    if (!question.trim() || busy || inFlight.current || nodes.length === 0) return
+    inFlight.current=true;setSubmitting(true);setError('')
+    try {
+      if (await onSubmit(question.trim())) setValue(current=>current===question?'':current)
+      else setError('问题尚未发送，内容已保留。请处理提示后重试。')
+    } catch {
+      setError('暂时没有发送成功，内容已保留，请重试。')
+    } finally {inFlight.current=false;setSubmitting(false)}
   }
+  const feedback=submitError||error
+  const status=submitting?'正在发送…':busy?'正在完成上一条回复':''
 
-  if(mode==='ai')return <form className="lp-node-prompt lp-ai-quick" role="dialog" aria-label="询问 AI" onSubmit={e=>{e.preventDefault();submit()}} onPointerDown={e=>e.stopPropagation()} onWheel={e=>e.stopPropagation()} onKeyDown={e=>{e.stopPropagation();if(e.key==='Escape'){e.preventDefault();dismiss()}}}>
-    <div className="lp-ai-input"><Glyph name="spark" size={19}/><textarea ref={input} aria-label="询问 AI 的问题" placeholder="询问 AI" value={value} onChange={e=>setValue(e.target.value)} rows={value.includes('\n')?3:1} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();submit()}}}/><button type="submit" aria-label="发送询问 AI 问题" disabled={busy||!value.trim()||!nodes.length}><Glyph name="arrow" size={20}/></button></div>
-    <div className="lp-quick-actions"><span>快速操作</span>{aiQuickActions.map(action=><button type="button" key={action.label} disabled={busy||!nodes.length} onClick={()=>onSubmit(action.question)}><Glyph name={action.icon} size={19}/>{action.label}</button>)}</div>
-    <footer><button type="button" className="lp-node-prompt-depth" aria-pressed={depth==='deep'} onClick={()=>onDepth(depth==='fast'?'deep':'fast')}><Glyph name="spark" size={13}/>{depth==='deep'?'深度思考':'快速回答'}</button><span>{busy?'正在完成上一条回复':'Esc 关闭'}</span><IconButton icon="close" label="关闭询问 AI 输入框" onClick={dismiss}/></footer>
+  if(mode==='ai')return <form className="lp-node-prompt lp-ai-quick" aria-busy={submitting} role="dialog" aria-label="询问 AI" onSubmit={e=>{e.preventDefault();submit()}} onPointerDown={e=>e.stopPropagation()} onWheel={e=>e.stopPropagation()} onKeyDown={e=>{e.stopPropagation();if(e.key==='Escape'){e.preventDefault();dismiss()}}}>
+    <div className="lp-ai-input"><Glyph name="spark" size={19}/><textarea ref={input} aria-label="询问 AI 的问题" placeholder="询问 AI" value={value} onChange={e=>setValue(e.target.value)} rows={value.includes('\n')?3:1} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();submit()}}}/><button type="submit" aria-label="发送询问 AI 问题" disabled={busy||submitting||!value.trim()||!nodes.length}><Glyph name="arrow" size={20}/></button></div>
+    <div className="lp-quick-actions"><span>快速操作</span>{aiQuickActions.map(action=><button type="button" key={action.label} disabled={busy||submitting||!nodes.length} onClick={()=>void submit(action.question)}><Glyph name={action.icon} size={19}/>{action.label}</button>)}</div>
+    {feedback&&<p className="lp-node-prompt-error" role="alert">{feedback}</p>}
+    <footer><button type="button" className="lp-node-prompt-depth" aria-pressed={depth==='deep'} onClick={()=>onDepth(depth==='fast'?'deep':'fast')}><Glyph name="spark" size={13}/>{depth==='deep'?'深度思考':'快速回答'}</button><span role="status">{status||'Esc 关闭'}</span><IconButton icon="close" label="关闭询问 AI 输入框" onClick={dismiss}/></footer>
   </form>
-  return <form className="lp-node-prompt" role="dialog" aria-labelledby={titleId}
+  return <form className="lp-node-prompt" aria-busy={submitting} role="dialog" aria-labelledby={titleId}
     onSubmit={event => { event.preventDefault(); submit() }}
     onPointerDown={event => event.stopPropagation()} onWheel={event => event.stopPropagation()}
     onDoubleClick={event => event.stopPropagation()}
@@ -63,9 +76,10 @@ export function NodePrompt({ mode, nodes, depth, onDepth, busy=false, onSubmit, 
       onKeyDown={event => {
         if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); submit() }
       }}/>
+    {feedback&&<p className="lp-node-prompt-error" role="alert">{feedback}</p>}
     <footer><button type="button" className="lp-node-prompt-depth" aria-label="深度思考" aria-pressed={depth === 'deep'} onClick={() => onDepth(depth === 'fast' ? 'deep' : 'fast')}><Glyph name="spark" size={14}/>{depth === 'deep' ? '深度思考' : '快速回答'}</button>
-      <span>{busy ? '正在完成上一条回复' : 'Shift + Enter 换行'}</span>
-      <button type="submit" className="lp-node-prompt-send" aria-label={`发送${label}问题`} disabled={busy || !value.trim() || nodes.length === 0}><Glyph name="arrow" size={18}/></button>
+      <span role="status">{status||'Shift + Enter 换行'}</span>
+      <button type="submit" className="lp-node-prompt-send" aria-label={`发送${label}问题`} disabled={busy || submitting || !value.trim() || nodes.length === 0}><Glyph name="arrow" size={18}/></button>
     </footer>
   </form>
 }
