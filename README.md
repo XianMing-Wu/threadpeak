@@ -26,10 +26,10 @@ ThreadPeak 是一个 AI 辅助学习工作台。它把知乎内容、你提供�
 
 ### 1. 获取项目
 
-以下命令检出当前开发分支 `codex/investor-showcase`。
+以下命令检出项目维护分支 `main`。
 
 ```sh
-git clone --branch codex/investor-showcase https://github.com/XianMing-Wu/threadpeak.git
+git clone --branch main https://github.com/XianMing-Wu/threadpeak.git
 cd threadpeak
 npm ci
 cp .env.example .env
