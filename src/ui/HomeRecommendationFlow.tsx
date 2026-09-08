@@ -20,18 +20,20 @@ export function HomeRecommendationFlow({ items, label, action }: { items: Recomm
   if (!active) return null
   return <div className="home-coverflow" ref={host}>
     <div className="home-coverflow-stage">
-      <CoverFlow items={items.map((item, i) => ({ id: item.id, image: String(i), title: item.title }))}
-        index={index} onIndexChange={i => setSelectedId(items[i].id)}
-        itemWidth={270} itemHeight={310} centerGap={215} stackSpacing={72} rotation={50}
-        enableReflection enableScroll enableAudio={false} onItemClick={(_, i) => items[i].open()}
-        renderImage={props => {
-          const item = items[Number(props.src)]
-          return <div className="home-flow-card" aria-hidden="true">
-            <img src={item.cover} srcSet={coverSrcSet(item.cover)} sizes="96px" alt="" draggable={false} width={96} height={96} loading="lazy" />
-            <strong>{item.title}</strong><small>{item.meta}</small><p>{item.description}</p>
-            <span className="home-flow-open">{action}<Icon name="arrow-right" size={16} /></span>
-          </div>
-        }} />
+      <div className="home-coverflow-scale">
+        <CoverFlow items={items.map((item, i) => ({ id: item.id, image: String(i), title: item.title }))}
+          index={index} onIndexChange={i => setSelectedId(items[i].id)}
+          itemWidth={270} itemHeight={310} centerGap={215} stackSpacing={72} rotation={50}
+          enableReflection enableScroll enableAudio={false} onItemClick={(_, i) => items[i].open()}
+          renderImage={props => {
+            const item = items[Number(props.src)]
+            return <div className="home-flow-card" aria-hidden="true">
+              <img src={item.cover} srcSet={coverSrcSet(item.cover)} sizes="96px" alt="" draggable={false} width={96} height={96} loading="lazy" />
+              <strong>{item.title}</strong><small>{item.meta}</small><p>{item.description}</p>
+              <span className="home-flow-open">{action}<Icon name="arrow-right" size={16} /></span>
+            </div>
+          }} />
+      </div>
     </div>
   </div>
 }

@@ -1,5 +1,7 @@
-.home-coverflow { min-width: 0; width: 100%; container-type: inline-size; }
-.home-coverflow-stage { height: 400px; min-width: 0; }
+.home-coverflow { --home-flow-scale: .85; min-width: 0; width: 100%; container-type: inline-size; }
+.home-coverflow-stage { height: calc(400px * var(--home-flow-scale)); min-width: 0; }
+/* Keep scaling outside Motion's drag surface: dragging writes its inline transform. */
+.home-coverflow-scale { height: 400px; transform: scale(var(--home-flow-scale)); transform-origin: top center; }
 .home-coverflow .cf-caption { display: none; }
 .home-coverflow .cf-surface { background: var(--surface-1); }
 .home-coverflow .cf-border { border-color: var(--line-3); }
@@ -11,7 +13,8 @@
 .home-flow-card strong, .home-flow-card p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .home-flow-open { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--accent); font-size: 12px; margin-top: auto; }
 @container (max-width: 360px) {
-  .home-coverflow-stage { height: 310px; }
+  .home-coverflow-stage { height: calc(310px * var(--home-flow-scale)); }
+  .home-coverflow-scale { height: 310px; }
   .home-flow-card { padding: 12px; gap: 6px; }
   .home-flow-card img { width: 54px; height: 54px; border-width: 2px; }
   .home-flow-card strong { font-size: 14px; line-height: 1.4; }
