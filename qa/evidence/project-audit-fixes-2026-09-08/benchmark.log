@@ -1,0 +1,54 @@
+{
+  "tree": [
+    {
+      "count": 1000,
+      "samples": 5,
+      "validateLayoutDocumentP50Ms": 1.139792,
+      "validateLayoutDocumentP95Ms": 2.755790999999988,
+      "authorLookupMs": 0.5861250000000098,
+      "fullEditBytes": 259327,
+      "patchBytes": 271
+    },
+    {
+      "count": 3000,
+      "samples": 5,
+      "validateLayoutDocumentP50Ms": 3.4304170000000056,
+      "validateLayoutDocumentP95Ms": 4.917915999999991,
+      "authorLookupMs": 1.2991670000000113,
+      "fullEditBytes": 791325,
+      "patchBytes": 277
+    },
+    {
+      "count": 6000,
+      "samples": 5,
+      "validateLayoutDocumentP50Ms": 8.46041599999998,
+      "validateLayoutDocumentP95Ms": 9.013125000000002,
+      "authorLookupMs": 1.3216250000000116,
+      "fullEditBytes": 1589325,
+      "patchBytes": 277
+    },
+    {
+      "count": 20000,
+      "samples": 5,
+      "validateLayoutDocumentP50Ms": 25.22841699999998,
+      "validateLayoutDocumentP95Ms": 30.43670800000001,
+      "authorLookupMs": 4.535292000000027,
+      "fullEditBytes": 5373323,
+      "patchBytes": 283
+    }
+  ],
+  "database": {
+    "oldFullRead": {
+      "samples": 9,
+      "p50Ms": 89.88270799999998,
+      "p95Ms": 99.72583299999997,
+      "bytes": 24514177
+    },
+    "projectedAllPages": {
+      "samples": 9,
+      "p50Ms": 8.238832999999886,
+      "p95Ms": 12.607291999999916,
+      "bytes": 46747
+    }
+  }
+}

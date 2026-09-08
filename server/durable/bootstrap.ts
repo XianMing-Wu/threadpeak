@@ -18,6 +18,7 @@ import { createProductApp } from './http.ts'
 import { withPermit } from './limits.ts'
 import { createZhihuGate,limitZhihuProvider,type ZhihuGate } from './zhihu-gate.ts'
 import { instrumentProviders } from './provider-runtime.ts'
+import {resolveCapabilities} from './capabilities.ts'
 
 export function serverEnvironment():NodeJS.ProcessEnv{
   // Blank optional values in .env.example must leave startup defaults intact.
@@ -47,11 +48,7 @@ export function createZhihuUserServices(db:Sql,env:Record<string,string|undefine
 export async function startProductServer(env=serverEnvironment()){
   const production=env.NODE_ENV==='production',oauth=loginConfig(env)
   if(production&&(!env.DATABASE_URL||!env.THREADPEAK_PUBLIC_ORIGIN||(!oauth&&(!env.THREADPEAK_IDENTITY_SECRET||env.THREADPEAK_IDENTITY_SECRET.length<32||!env.THREADPEAK_IDENTITY_ISSUER||!env.THREADPEAK_IDENTITY_AUDIENCE))||!env.DEEPSEEK_CONTEXT_TOKENS))throw new Error('PRODUCTION_CONFIG_REQUIRED')
-  // Capability is explicit for gateways/unknown models. Only this verified official
-  // V4 family gets its documented 1M window; the product still caps each call at 500k.
-  const officialV4=env.DEEPSEEK_BASE_URL && new URL(env.DEEPSEEK_BASE_URL).hostname==='api.deepseek.com' && /^deepseek-v4-(flash|pro)(?:-|$)/.test(env.DEEPSEEK_MODEL_NAME??'')
-  const window=Number(env.DEEPSEEK_CONTEXT_TOKENS??(officialV4?1_000_000:64_000))
-  if(!Number.isInteger(window)||window<32000||window>2_000_000)throw new Error('MODEL_CONTEXT_CONFIG_INVALID')
+  const capabilities=resolveCapabilities(env)
   if(env.THREADPEAK_LOGIN_URL&&new URL(env.THREADPEAK_LOGIN_URL).protocol!=='https:')throw new Error('LOGIN_URL_MUST_BE_HTTPS')
   const db=await openDatabase({url:env.DATABASE_URL,directory:env.THREADPEAK_DATA_DIR??resolve('server/.data/product-v2')});
   for(let attempt=0;;attempt++){try{await migrate(db);break}catch(error){const code=(error as {code?:string}).code??'';if(attempt>=9||!['ECONNREFUSED','ECONNRESET','CONNECTION_CLOSED','CONNECTION_ENDED','CONNECT_TIMEOUT','57P03','57P01'].includes(code)){await db.close();throw new Error('DATABASE_START_FAILED')}process.stdout.write(JSON.stringify({event:'server.waiting_for_database',attempt:attempt+1})+'\n');await new Promise(resolve=>{setTimeout(resolve,Math.min(5000,1000*2**attempt))})}}
@@ -67,7 +64,7 @@ export async function startProductServer(env=serverEnvironment()){
     const llm:LlmProvider={complete:input=>withPermit(db,'llm',4,input.signal,signal=>rawLlm.complete({...input,signal}))}
     const zhihu=limitZhihuProvider(rawZhihu,gate)
     const providers=instrumentProviders(db,config.config,llm,zhihu)
-    handler=createFlows(new ProductTools(providers.llm,providers.zhihu,window),zhihuData,zhihuLogin)
+    handler=createFlows(new ProductTools(providers.llm,providers.zhihu,capabilities),zhihuData,zhihuLogin)
   }
   const worker=new DurableWorker(store,handler),app=await createProductApp({store,worker,providersReady:config.ok,zhihuData,zhihuLogin,trustedProxies:env.THREADPEAK_TRUSTED_PROXIES?.split(',').map(value=>value.trim()).filter(Boolean),identity:{production,origin:env.THREADPEAK_PUBLIC_ORIGIN,jwtSecret:env.THREADPEAK_IDENTITY_SECRET,issuer:env.THREADPEAK_IDENTITY_ISSUER,audience:env.THREADPEAK_IDENTITY_AUDIENCE,loginUrl:env.THREADPEAK_LOGIN_URL}})
   app.addHook('onClose',()=>db.close())

@@ -4,7 +4,7 @@
 
 ## 配置与启动
 
-1. 将 `.env.example` 复制为 `.env.production`，填写 provider、身份和公开源；不要提交该文件。`NODE_ENV=production` 下缺数据库、公开源、身份密钥/签发方/受众或模型窗口时拒绝启动。
+1. 将 `.env.example` 复制为 `.env.production`，填写 provider、身份和公开源；不要提交该文件。`NODE_ENV=production` 下缺数据库、公开源、身份密钥/签发方/受众或六个模型/直答窗口与输出字段时拒绝启动。
 2. 设置 `SITE_ADDRESS` 为实际域名，DNS 指向服务器；`THREADPEAK_PUBLIC_ORIGIN` 为同一 `https://域名`。开放 80/443 以签发证书。`POSTGRES_PASSWORD` 使用随机十六进制密码，避免数据库 URL 转义问题。
 3. `THREADPEAK_IDENTITY_SECRET` 至少 32 字符，签发方通过 HS256 JWT 提供 `iss/aud/sub/exp`，可包含 `nbf`。身份网关在受信登录回调向 `/api/v2/session` 带 Bearer JWT，得到 Secure/HttpOnly cookie；浏览器不保存令牌。会话有效期不超过 JWT 过期时间和 1 小时。另有知乎 OAuth start/callback 实现；生产需要真实 OAuth 配置和独立联调验收，本地 mock 不能用于生产。`THREADPEAK_LOGIN_URL` 必须是已部署身份服务的 HTTPS 地址。网关须验证自身用户身份，不能信任浏览器自报 subject/owner。
 4. 生产服务不提供匿名绕过。Cookie 与 Bearer 都按服务端身份隔离，跨源请求拒绝。采用知乎登录时应配置并验收真实授权回调映射，不把本地工作区当正式登录。
@@ -22,7 +22,7 @@ Node 24 镜像不安装已无调用方的 Poppler。PDF 资料使用知乎解析
 - `/health` 只表示进程可响应；`/api/ready` 检查数据库连接与必需 provider 配置，不主动调用收费 provider，不能等同外部服务健康。
 - 用 `docker compose --env-file .env.production exec api npm run ops:queue` 查看状态与待处理错误计数。监控 waiting 数、过期租约、各阶段 p50/p95 时延、429/鉴权/预算错误和外部费用；实际容量阈值需压测制定。
 - worker 5 秒续租、90 秒租约；进程崩溃后新 worker 接管。并发池在 PostgreSQL 中跨副本共享；PGlite 只允许一个目录所有者进程。正常停机会按 job/fence 立即交回队列，保留检查点和重试预算，并阻断迟到提交；忽略 abort 的 handler 最多等待 10 秒。数据库失联仍需租约恢复；已完成步骤不重跑。外部生成仍可能因断电重试，不能承诺收费调用恰好一次。
-- 自动恢复以实际失败计数，最多四次失败；配置错误等保留待继续状态。手动恢复每任务最多四次、间隔至少 30 秒并占用账号额度；ops:queue 报告耗尽恢复预算的任务。排除根因后用户继续同一任务，勿清空检查点伪造恢复。旧工作流版本的待处理任务应在旧镜像完成/停止，或编写显式迁移后再升级。
+- 自动恢复以实际失败计数，最多四次失败；配置错误等保留待继续状态。手动恢复每任务最多四次、间隔至少 30 秒并占用账号额度；ops:queue 报告耗尽恢复预算的任务。排除根因后用户继续同一任务，勿清空检查点伪造恢复。旧工作流版本的待处理任务应在旧镜像完成/停止，或编写显式迁移后再升级。结构化步骤与直答检查点包含实际 prompt、provider 能力和正式输出策略身份；摘要另含完整策略与模型命名空间。本次升级不删除历史检查点：同身份复用；受影响步骤按保存的原始输入重新校验/执行，检索原始分支可复用。受影响模型调用可能重新计费。若输入 hash 冲突则保留任务并报告 CHECKPOINT_VERSION_CONFLICT，须按具体合同迁移，不能清空数据库绕过。
 
 ## 备份与恢复演练
 
@@ -41,6 +41,8 @@ docker compose --env-file .env.production exec -T db pg_restore -U threadpeak -d
 ## 上线门槛
 
 真实身份和退出/过期/多设备流程；实际域名与 TLS；按目标并发量压测；真实长材料和多轮对话的摘要保真评测；内容及备份保留/删除政策；provider 配额/计费告警；原有数据迁移或只读归档说明。完成这些门槛前，只能称已完成相应本地集成切片。
+
+ops:queue 按最近 24 小时输出 provider/阶段的 P50/P95、失败数、检查点/响应缓存命中及上游实际 usage；未知 usage 保持 null。摘要、步骤和任务是嵌套时间段，不能相加当总时长。队列指标为实际名额等待，任务 ageAtStartMs 含此前恢复等待。维护日志单独报告各类清理数量、是否满批与耗时。
 
 内部诊断事件保留 7 天；公共 events 路由已移除，前端使用 revision 快照轮询。完成任务 30 天后压缩重复输入和检查点，保留已发布资源与幂等回执。等待/取消任务仍保存恢复所需内容。机制见[工程设计](../docs/engineering.md)，执行证据见 [QA](../qa/README.md)。
 

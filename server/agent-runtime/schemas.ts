@@ -737,18 +737,18 @@ function eachJsonObject(text: string, visit: (value: unknown) => void) {
   }
 }
 
-export function extractStructuredJson(...texts: string[]): unknown | undefined {
+/** Extract only from the formal response body; reasoning is not an input channel. */
+export function extractStructuredJson(formalContent: string): unknown | undefined {
   let best: { value: unknown; score: number } | undefined
   const consider = (value: unknown) => {
     if (value === undefined || value === null || typeof value !== 'object') return
     const score = structureScore(value)
     if (!best || score > best.score) best = { value, score }
   }
-  for (const text of texts) {
-    if (!text?.trim()) continue
-    const parsed = parseAgentJson(text)
+  if (formalContent?.trim()) {
+    const parsed = parseAgentJson(formalContent)
     if (parsed.ok) consider(parsed.value)
-    eachJsonObject(text, consider)
+    eachJsonObject(formalContent, consider)
   }
   return best?.value
 }

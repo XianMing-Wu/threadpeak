@@ -26,6 +26,7 @@ export async function productRequest<T>(url:string,options:{method?:string;body?
       const data=await response.json()
       if(!response.ok)throw new ApiError(data.code??'UNAVAILABLE',response.status,data.message??'暂时没有连接上，已有内容仍然保留。')
       if(workspace!==localStorage.getItem('tp-server-workspace'))throw new ApiError('ACCOUNT_CHANGED',409,'账号已改变，请重新打开内容。')
+      if(!readOnly)window.dispatchEvent(new Event('threadpeak:resource-change'))
       return data as T
     }catch(error){
       if(options.signal?.aborted)throw error
@@ -36,9 +37,10 @@ export async function productRequest<T>(url:string,options:{method?:string;body?
   }
   throw new Error('暂时没有连接上。')
 }
-export function readLearning(value:unknown):LearningSnapshot{
+export function readLearning(value:unknown,previous?:LearningSnapshot|null):LearningSnapshot{
   const s=value as LearningSnapshot
   if(!s||s.kind!=='learning'||!Number.isInteger(s.revision)||typeof s.id!=='string')throw new Error('学习内容尚未读取完整。')
   if(s.dataRevision!==undefined&&(!Number.isInteger(s.dataRevision)||s.dataRevision<0||s.dataRevision>s.revision))throw new Error('学习内容版本无法读取。')
+  if(previous?.id===s.id&&s.dataRevision!==undefined&&previous.dataRevision===s.dataRevision)return {...s,data:previous.data}
   return {...s,data:LearningSchema.parse(s.data)}
 }

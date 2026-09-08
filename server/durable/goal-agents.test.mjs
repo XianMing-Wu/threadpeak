@@ -66,22 +66,32 @@ test('every new concept needs goal, depth, check and a grounded direct or prereq
 test('new interview calls repair non-three choices with the same prompt and freeze custom placeholder outside options',async t=>{
   const store=await fixture(t),ctx=await context(store),calls=[]
   const tools=new ProductTools({complete:async call=>{calls.push(call);const value=interview();if(calls.length===1)value.questions[0].options.pop();return {kind:'completed',text:JSON.stringify(value)}}},{})
-  const result=await tools.legacy(ctx,'R3',{goalContext:{rawGoal:'读论文',userStatements:[]},exploration:exploration()})
+  const result=await tools.planStep(ctx,'R3',{goalContext:{rawGoal:'读论文',userStatements:[]},exploration:exploration()})
   assert.equal(result.questions[0].options.length,3);assert.equal(calls.length,2)
   assert.equal(calls[0].messages[0].content,calls[1].messages[0].content)
 })
-test('routePlan salvages dumped R4 JSON instead of failing the path',async t=>{
-  const store=await fixture(t),ctx=await context(store)
-  const dumped={
-    version:'1.0',title:'线性代数入门',
-    carriers:[{id:'c1',title:'线性代数',description:'基础'}],
-    concepts:[{id:'n1',carrierId:'c1',title:'坐标',detailedDescription:'解释坐标表示基下的分量',hasDispute:false,attachmentSourceIds:['owned-file']}],
-    carrierEdges:[],conceptEdges:[],entryConceptIds:['n1'],terminalConceptIds:['n1'],
-  }
-  const tools=new ProductTools({complete:async()=>({kind:'completed',text:JSON.stringify(dumped)})},{})
-  const route=await tools.routePlan(ctx,{goal:'读懂收藏',goalContext:{rawGoal:'读懂收藏',userStatements:[]},exploration:exploration(),attachments:[material]},'user-path',['owned-file'])
-  assert.ok(route.concepts.some(concept=>concept.title==='坐标'))
-  assert.equal(projectRouteToDocument(route).ok,true)
+test('invalid R4 stays waiting after same-agent repairs and never fabricates a route or anchor',async t=>{
+ for(const output of ['{}','this is not JSON',JSON.stringify({version:'1.0',title:'旧图',carriers:[],concepts:[]})]){
+  const store=await fixture(t),calls=[]
+  const state={goal:'学习矩阵变换',attachments:[{...material,content:'这是与矩阵无关的园艺资料。植物需要阳光与水分。'}],depth:'deep',status:'awaiting_answers',conversation:[],exploration:exploration(),questionSets:[]}
+  appendQuestionSet(state,interview());const set=state.questionSets[0];for(const q of set.questions)set.selectedOptionIds[q.id]=q.options[0].id
+  const original=structuredClone(state),r=await store.create('owner','path','strict-route',state)
+  await store.enqueue('owner',r.id,'path.answer','answer',{depth:'deep'})
+  const tools=new ProductTools({complete:async input=>{calls.push(input);return {kind:'completed',text:output}}},{})
+  const worker=new DurableWorker(store,createFlows(tools),1,()=>{})
+  await worker.execute(await store.claim())
+  const result=await store.snapshot('owner',r.id)
+  assert.equal(calls.length,3);assert.equal(result.job.status,'waiting');assert.equal(result.data.route,undefined);assert.equal(result.data.document,undefined)
+  assert.deepEqual(result.data.attachments,original.attachments);assert.deepEqual(result.data.questionSets,original.questionSets)
+  assert.ok(calls.every(c=>c.messages[0].content===calls[0].messages[0].content&&c.thinkingDepth==='deep'))
+ }
+})
+test('R4 repairs missing fields with the planner and publishes only its validated response',async t=>{
+ const store=await fixture(t),ctx=await context(store),calls=[]
+ const tools=new ProductTools({complete:async input=>{calls.push(input);return {kind:'completed',text:JSON.stringify(calls.length===1?{}:plan())}}},{})
+ const route=await tools.routePlan(ctx,{goal:'读懂收藏',attachments:[material]},'scope',['owned-file'])
+ assert.equal(calls.length,2);assert.equal(projectRouteToDocument(route).ok,true)
+ assert.equal(route.concepts[0].goalAlignment.materialAnchors[0].quote,plan().stages[0][0].concepts[0].goalAlignment.materialAnchors[0].quote)
 })
 test('first teaching reviews every source without turning every source into another paragraph',async t=>{
   const store=await fixture(t),ctx=await context(store),calls=[]
@@ -136,7 +146,7 @@ test('old learning records recover only their own original route goal, never ano
 })
 test('HTTP custom submission survives reload, auto-plans, carries owned goal into learning and keeps it after new chat',async t=>{
   const store=await fixture(t),seen=[]
-  const tools={legacy:async(_ctx,agent,input)=>{if(agent==='R1')return {queries:[0,1,2,3].map(i=>({id:String(i),text:`坐标 ${i}`,angle:i<2?'normal_learning':'pitfall_or_dispute'}))};if(agent==='R2')return exploration();return interview()},search:async()=>[],routePlan:async(_ctx,input)=>{seen.push(input);const output=plan();output.learningGoal=goal('只看懂论文，不准备面试');return compileStagedPlan(output,'published',['owned-file'])}}
+  const tools={planStep:async(_ctx,agent,input)=>{if(agent==='R1')return {queries:[0,1,2,3].map(i=>({id:String(i),text:`坐标 ${i}`,angle:i<2?'normal_learning':'pitfall_or_dispute'}))};if(agent==='R2')return exploration();return interview()},search:async()=>[],routePlan:async(_ctx,input)=>{seen.push(input);const output=plan();output.learningGoal=goal('只看懂论文，不准备面试');return compileStagedPlan(output,'published',['owned-file'])}}
   const worker=new DurableWorker(store,createFlows(tools),1,()=>{})
   const app=await createProductApp({store,worker,providersReady:true,identity:{production:false}});t.after(async()=>{await worker.stop();await app.close()})
   const session=await app.inject({url:'/api/v2/session'}),headers={cookie:session.headers['set-cookie'].split(';')[0]}

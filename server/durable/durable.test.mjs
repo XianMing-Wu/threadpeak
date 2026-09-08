@@ -65,14 +65,15 @@ test('interrupted stream and reasoning-only content cannot be committed as a rep
   const complete=new ReadableStream({start(c){for(const x of ['data: {"choices":[{"delta":{"content":"完整正文"}}]}\n\n','data: {"choices":[{"finish_reason":"stop","delta":{}}]}\n\n','data: [DONE]\n\n'])c.enqueue(encoder.encode(x));c.close()}})
   assert.equal((await readCompletionStream(complete,input)).content,'完整正文')
 })
-test('json completions recover the route object from reasoning when content is empty',async()=>{
-  const config={deepseekBaseUrl:'https://example.com/v1',deepseekModelName:'configured',deepseekApiKey:'test'}
-  const plan={title:'路线',stages:[[{title:'入门',description:'基础',concepts:[{title:'坐标',description:'范围',hasDispute:false}]}]]}
-  const provider=createAgentLlmProvider({config,http:async()=>({ok:true,status:200,text:async()=>JSON.stringify({choices:[{finish_reason:'stop',message:{content:'',reasoning_content:`先整理结构 ${JSON.stringify(plan)}`}}]})})})
-  const result=await provider.complete({messages:[],thinkingDepth:'deep',json:true})
-  assert.equal(result.kind,'completed')
-  assert.equal(JSON.parse(result.text).title,'路线')
-  assert.equal(JSON.parse(result.text).stages[0][0].title,'入门')
+test('JSON completions require formal content in both streaming and non-streaming responses',async()=>{
+ const config={deepseekBaseUrl:'https://example.com/v1',deepseekModelName:'configured',deepseekApiKey:'test'},encoder=new TextEncoder()
+ for(const streaming of [false,true])for(const content of ['',JSON.stringify({answer:'正式答案'})]){
+  const reasoning=JSON.stringify({answer:'未提交的思考'})
+  const provider=createAgentLlmProvider({config,http:async()=>({ok:true,status:200,text:async()=>JSON.stringify({choices:[{finish_reason:'stop',message:{content,reasoning_content:reasoning}}]}),...(streaming?{body:new ReadableStream({start(c){c.enqueue(encoder.encode('data: '+JSON.stringify({choices:[{delta:{content,reasoning_content:reasoning},finish_reason:'stop'}]})+'\n\ndata: [DONE]\n\n'));c.close()}})}:{})})})
+  const result=await provider.complete({messages:[],thinkingDepth:'deep',json:true,...(streaming?{onText:()=>{}}:{})})
+  assert.equal(result.kind,content?'completed':'failed')
+  if(content)assert.equal(JSON.parse(result.text).answer,'正式答案')
+ }
 })
 test('tree forbids multi-parent, cycles and a mismatched paragraph basis',()=>{
   const root={id:'root',type:'root',parents:[],sources:[],title:'概念',text:''},a={id:'a',type:'article',parents:['root'],sources:['a'],title:'文章',text:''}
@@ -110,6 +111,14 @@ test('real HTTP composition with isolated providers: three searches, persisted t
   const modified=snapshot.data.nodes.map(n=>n.id==='article-1'?{...n,text:'用户修改的副本'}:n)
   const edit=await app.inject({method:'PATCH',url:`/api/v2/learning/${id}/nodes`,headers,payload:{revision:snapshot.revision,nodes:modified}})
   assert.equal(edit.statusCode,200);assert.equal(edit.json().data.articles[0].summary,original)
+  const baseNode=snapshot.data.nodes.find(n=>n.id==='article-1')
+  const patch={baseNodes:[baseNode],nodes:[{...baseNode,color:'#123456'}]}
+  const incremental=await app.inject({method:'PATCH',url:`/api/v2/learning/${id}/nodes`,headers,payload:{revision:snapshot.revision,patch}})
+  assert.equal(incremental.statusCode,200);assert.equal(incremental.json().data.nodes.find(n=>n.id==='article-1').text,'用户修改的副本');assert.equal(incremental.json().data.nodes.find(n=>n.id==='article-1').color,'#123456')
+  const conflict=await app.inject({method:'PATCH',url:`/api/v2/learning/${id}/nodes`,headers,payload:{revision:snapshot.revision,patch:{baseNodes:[baseNode],nodes:[{...baseNode,text:'竞争编辑'}]}}})
+  assert.equal(conflict.statusCode,409);assert.equal(conflict.json().code,'NODE_EDIT_CONFLICT')
+  const forged=await app.inject({method:'PATCH',url:`/api/v2/learning/${id}/nodes`,headers,payload:{revision:snapshot.revision,patch:{baseNodes:[baseNode],nodes:[{...baseNode,id:'forged'}]}}})
+  assert.equal(forged.statusCode,409)
   const fresh=await app.inject({method:'POST',url:`/api/v2/learning/${id}/commands`,headers,payload:{kind:'new-conversation',conversationId:'new-chat'}})
   assert.equal(fresh.statusCode,200);assert.equal(fresh.json().data.nodes.length,3);assert.equal(fresh.json().data.conversations.at(-1).messages.length,0)
   const replay=await app.inject({method:'POST',url:'/api/v2/learning/enter',headers,payload:{routeId:'route-doc',conceptId:'concept'}})
@@ -204,8 +213,8 @@ test('route selection survives refresh and R4 recovery publishes exactly once wi
   const r1={queries:[{id:'q1',text:'测试解释',angle:'normal_learning'},{id:'q2',text:'测试入门',angle:'normal_learning'},{id:'q3',text:'测试误区',angle:'pitfall_or_dispute'},{id:'q4',text:'测试应用',angle:'pitfall_or_dispute'}]}
   const r3={round:1,status:'active',questions:[1,2].map(i=>({id:'q'+i,prompt:'目标 '+i,options:[{id:'a',label:'先看例子',routeEffect:'examples'},{id:'b',label:'先看定义',routeEffect:'definitions'}]}))}
   const r4={version:'1.0',routeId:'test-route',title:'测试路线',carriers:[{id:'c',title:'测试载体',description:'基础'}],concepts:[{id:'n',carrierId:'c',title:'测试概念',hasDispute:false,detailedDescription:'讲解',attachmentSourceIds:[]}],carrierEdges:[],conceptEdges:[],entryConceptIds:['n'],terminalConceptIds:['n']}
-  const fixtureTools={legacy:async(ctx,id,input)=>ctx.step(id,input,async()=>{calls.push(id);if(id==='R4'&&failR4){failR4=false;throw new ToolError('TEMPORARY_GATE',false)}if(id==='R4'){assert.equal(input.questionSets[0].selectedOptions.length,2);assert.equal(input.questionSets[0].selectedOptions[1].routeEffect,'definitions')}return {R1:r1,R2:{测试载体:{测试概念:{争议:false}}},R3:r3,R4:r4}[id]}),search:async(ctx,name,q)=>ctx.step(name,{q},async()=>{searches.push(q);return []})}
-  fixtureTools.routePlan=(ctx,input)=>fixtureTools.legacy(ctx,'R4',input)
+  const fixtureTools={planStep:async(ctx,id,input)=>ctx.step(id,input,async()=>{calls.push(id);if(id==='R4'&&failR4){failR4=false;throw new ToolError('TEMPORARY_GATE',false)}if(id==='R4'){assert.equal(input.questionSets[0].selectedOptions.length,2);assert.equal(input.questionSets[0].selectedOptions[1].routeEffect,'definitions')}return {R1:r1,R2:{测试载体:{测试概念:{争议:false}}},R3:r3,R4:r4}[id]}),search:async(ctx,name,q)=>ctx.step(name,{q},async()=>{searches.push(q);return []})}
+  fixtureTools.routePlan=(ctx,input)=>fixtureTools.planStep(ctx,'R4',input)
   const worker=new DurableWorker(s,createFlows(fixtureTools),1,quiet),app=await createProductApp({store:s,worker,providersReady:true,identity:{production:false}});t.after(()=>app.close())
   const cookie=(await app.inject({url:'/api/v2/session'})).headers['set-cookie'].split(';')[0],headers={cookie,'idempotency-key':'route-request'},owner=(await s.db.query('SELECT owner_id FROM tp_sessions'))[0].owner_id
   const started=await app.inject({method:'POST',url:'/api/path-runs',headers,payload:{goal:'测试路线'}}),id=started.json().runId
@@ -290,7 +299,7 @@ test('same-agent repairs wrong evidence before chat/tree commit and never reuses
   assert.equal(answer.paragraphs[0].basisId,'history');assert.equal(calls.length,3)
   assert.match(calls[2].messages.at(-1).content,/不在 C2/)
   assert.equal(calls[1].messages[0].content,calls[2].messages[0].content);assert.equal(calls[1].thinkingDepth,'deep')
-  assert.equal(job.checkpoints['L-answer:compose-v3@goal-v1'].value.answer.sections[0].after,'C2')
+  assert.equal(Object.entries(job.checkpoints).find(([key])=>key.startsWith('L-answer:compose-v3@goal-v1:'))[1].value.answer.sections[0].after,'C2')
   assert.deepEqual((await s.snapshot('owner',r.id)).data,{})
 })
 test('citation evidence uses the delivered compressed material version without relabelling it as original',async t=>{
@@ -307,8 +316,8 @@ test('citation evidence uses the delivered compressed material version without r
   const original='变量用于表示未知的数量。'.repeat(6000)
   const result=await new ProductTools(llm,{},32000).answerCards(ctx,{allowedCards:[{id:'long-article',title:'变量',content:original}]})
   assert.equal(result.paragraphs[0].basisId,'long-article');assert.match(modelView.cards[0].content,/上下文摘要/)
-  assert.match(job.checkpoints['L-answer:compose-v3@goal-v1'].value.view.cards[0].content,/上下文摘要/)
-  assert.match(job.checkpoints['L-answer:attach-v3@goal-v1'].value.catalog[0].excerpts[1].text,/上下文摘要/)
+  assert.match(Object.entries(job.checkpoints).find(([key])=>key.startsWith('L-answer:compose-v3@goal-v1:'))[1].value.view.cards[0].content,/上下文摘要/)
+  assert.match(Object.entries(job.checkpoints).find(([key])=>key.startsWith('L-answer:attach-v3@goal-v1:'))[1].value.catalog[0].excerpts[1].text,/上下文摘要/)
 })
 
 test('first entry repairs citation batching and mismatched evidence before publishing chat and the single-parent tree',async t=>{

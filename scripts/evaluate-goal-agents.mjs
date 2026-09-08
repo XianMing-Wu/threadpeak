@@ -9,6 +9,8 @@ import {createAgentZhihuProvider} from '../server/agent-runtime/zhihu-provider.t
 import {openDatabase,migrate} from '../server/durable/database.ts'
 import {DurableStore} from '../server/durable/store.ts'
 import {TaskContext} from '../server/durable/worker.ts'
+import {resolveCapabilities} from '../server/durable/capabilities.ts'
+import {createZhihuGate,limitZhihuProvider} from '../server/durable/zhihu-gate.ts'
 import {ProductTools} from '../server/durable/tools.ts'
 import {createFlows,selectPathCustomAnswer} from '../server/durable/flows.ts'
 import {pathGoalContext} from '../server/durable/learning-goal.ts'
@@ -22,18 +24,19 @@ const scenarios=[
  {id:'minimal-3d',goal:'我想在电脑上画一个可以用鼠标旋转的3D图像，只学完成这件事需要的最小路线。',answer:'我会一点 HTML 和 JavaScript，想在浏览器里画一个彩色立方体，鼠标拖动可以旋转视角就够了。可以使用现成库，不想先学完整线性代数、着色器或引擎开发。',learning:true},
  {id:'llm-job',goal:'我想找到大模型相关的工作，但不知道应该一步步学什么。',answer:'我有两年 Python 后端经验，目标是大模型应用开发岗位，偏 RAG 和 Agent 应用；不是研究算法或训练基础模型。想做一个能展示检索评测、工具调用和上线维护能力的求职作品，没有给自己限定时间。'},
 ]
-const args=process.argv.slice(2),chosen=args.length?scenarios.filter(s=>args.includes(s.id)):scenarios
+const args=process.argv.slice(2),names=args.filter(a=>scenarios.some(s=>s.id===a)),chosen=names.length?scenarios.filter(s=>names.includes(s.id)):scenarios
 const env=serverEnvironment(),config=resolveProviderConfig(env)
 if(!config.ok)throw new Error('真实 provider 未配置')
-const rawLlm=createAgentLlmProvider({config:config.config,http}),rawZhihu=createAgentZhihuProvider({config:config.config,http,clock:{now:()=>new Date(),unixSeconds:()=>Math.floor(Date.now()/1000)}})
-const permitDb=await openDatabase();await migrate(permitDb)
-const zhihu={search:(q,n,signal)=>withPermit(permitDb,'zhihu',3,signal,next=>rawZhihu.search(q,n,next)),direct:input=>withPermit(permitDb,'direct',2,input.signal,next=>withPermit(permitDb,'zhihu',3,next,signal=>rawZhihu.direct({...input,signal})))}
-const directory=resolve('qa/evidence/goal-agents/raw');await mkdir(directory,{recursive:true})
+const rawLlm=createAgentLlmProvider({config:config.config,http}),capabilities=resolveCapabilities(env)
+const permitDb=await openDatabase();await migrate(permitDb);const gate=createZhihuGate(permitDb)
+const rawZhihu=createAgentZhihuProvider({config:config.config,http:async(url,init)=>{const response=await http(url,init);await gate.observe(response);return response},clock:{now:()=>new Date(),unixSeconds:()=>Math.floor(Date.now()/1000)}})
+const zhihu=limitZhihuProvider(rawZhihu,gate)
+const directory=resolve(args.find(a=>a.startsWith('--out='))?.slice(6)??'qa/evidence/goal-agents/raw');await mkdir(directory,{recursive:true})
 async function run(scenario){
  const db=await openDatabase();await migrate(db);const store=new DurableStore(db)
  const calls=[]
- const llm={complete:async input=>{const time=Date.now();const r=await withPermit(permitDb,'llm',4,input.signal,signal=>rawLlm.complete({...input,signal}));calls.push({channel:'llm',input:input.messages.map(m=>({role:m.role,content:m.content})),output:r.kind==='completed'?r.text:undefined,milliseconds:Date.now()-time,json:input.json,kind:r.kind,...(r.kind==='failed'?{code:r.code}:{})});return r}}
- const tools=new ProductTools(llm,zhihu,Number(env.DEEPSEEK_CONTEXT_TOKENS??64000)),handler=createFlows(tools)
+ const llm={complete:async input=>{const time=Date.now();const r=await withPermit(permitDb,'llm',4,input.signal,signal=>rawLlm.complete({...input,signal}));calls.push({channel:'llm',input:input.messages.map(m=>({role:m.role,content:m.content})),output:r.kind==='completed'?r.text:undefined,usage:r.usage,milliseconds:Date.now()-time,json:input.json,kind:r.kind,...(r.kind==='failed'?{code:r.code}:{})});return r}}
+ const tools=new ProductTools(llm,zhihu,capabilities),handler=createFlows(tools)
  const attachments=scenario.content?[{sourceId:'synthetic-material',ref:'F1',fileName:'合成测试材料.md',mimeType:'text/markdown',origin:'upload',content:scenario.content}]:[]
  const prior=args.includes('--learning-only')?JSON.parse(await readFile(resolve(directory,scenario.id+'.json'),'utf8')):undefined
  if(prior)calls.push(...prior.calls)
@@ -46,7 +49,7 @@ async function run(scenario){
      const heartbeat=setInterval(()=>void store.renew(claimed,120000),10000)
      try{await handler(ctx);break}catch(error){
        if(!error.retryable||attempt===3)throw error
-       await store.recover(claimed,error.code,false);await pause(Math.min(30000,3000*2**attempt));await store.resume('evaluation',resource)
+       await store.recover(claimed,error.code,false);await pause(31000);await store.resume('evaluation',resource)
        process.stdout.write(`${scenario.id}: 恢复临时故障 ${error.code}\n`)
      }finally{clearInterval(heartbeat)}
    }
@@ -56,7 +59,7 @@ async function run(scenario){
    process.stdout.write(`${scenario.id}: R1 → 搜索 → R2 → R3\n`)
    let state=prior?.path??await job(path.id,'path.start')
    for(const question of prior?[]:state.questionSets.at(-1).questions){state=await job(path.id,'path.answer',{questionId:question.id,customAnswer:scenario.answer},r=>selectPathCustomAnswer(r,question.id,scenario.answer))}
-   result={scenario,provider:config.config.deepseekModelName,syntheticInput:true,realProviders:true,path:state,calls}
+   result={scenario,provider:config.config.deepseekModelName,capabilities,syntheticInput:true,realProviders:true,path:state,calls}
    process.stdout.write(`${scenario.id}: 路线已生成，${state.route.concepts.length} 个概念\n`)
    if(scenario.learning&&!args.includes('--route-only')){
      const concept=state.route.concepts[0],articles=inheritedArticles(attachments),conversationId='learning-first'
@@ -66,6 +69,8 @@ async function run(scenario){
    }
    result.status='completed'
  }catch(error){result={...result,scenario,status:'failed',error:error.code??error.message,calls,path:(await store.resource('evaluation',path.id)).body};process.stdout.write(`${scenario.id}: ${result.error}\n`)}
+ result.capabilities=capabilities
+ result.metrics=await db.query('SELECT step,provider,body FROM tp_provider_calls ORDER BY created_at')
  result.checkpoints=[...(prior?.checkpoints??[]),...await store.db.query('SELECT kind,checkpoints FROM tp_jobs WHERE owner_id=$1',['evaluation'])]
  await writeFile(resolve(directory,scenario.id+'.json'),JSON.stringify(result,null,2)+'\n');await db.close()
 }

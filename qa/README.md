@@ -44,6 +44,8 @@ THREADPEAK_API_TARGET=http://127.0.0.1:4412 npm run dev -- --port 4404 --strictP
 
 | 目录 / 文件 | 时间与范围 |
 | --- | --- |
+| [审查修复与验收](project-audit-fixes-2026-09-08.md) | 2026-09-08，修复 F01–F06、落实 O1–O8 的工程改进；离线回归、真实 PostgreSQL、浏览器、合成性能测量与真实路线内容审阅分别记录，尚不代表生产验收 |
+| [前端、后端与 AI 后端审查](project-audit-2026-09-08.md) | 2026-09-08，基于 `2b50e48`：6 处已复现问题、8 组优化建议与命令账本；业务修复和真实 provider/生产验收另行进行 |
 | [架构验证](evidence/architecture-review/validation.json) | 2026-09-07 第三轮：371 项 Node、17 项 UI、7 项真实 PostgreSQL；旁存命令输出。这是该版本结果，不是永久测试基线 |
 | [目标样本](evidence/goal-agents/samples.json) | 2026-09-07 合成目标情境的真实 provider 样本；含路线与讲解，仍有质量边界 |
 | [搜索清单](evidence/showcase/search-inventory.json) | 2026-09-07 的 24 个真实知乎查询、120 条候选记录 |

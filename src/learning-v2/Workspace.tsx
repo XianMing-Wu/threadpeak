@@ -1,4 +1,5 @@
-import {pollResource} from './poll'
+import {editEntry,applyEditEntry,type EditEntry} from './edit-history'
+import {pollResource,taskPollInterval,foregroundDelay} from './poll'
 import {mergeLearningSnapshot} from './snapshot'
 import {SHOWCASE_VERSION} from '../showcase/content'
 import { useEffect, useRef, useState } from 'react'
@@ -12,6 +13,7 @@ import type { GraphNode, Phase } from './model'
 import { productRequest, readLearning, ApiError, type LearningSnapshot } from './client'
 import { refreshProductLibrary } from './library'
 import {LearningSchema,validateTree,type LearningState} from '@threadpeak/contracts/learning-v2'
+import {nodeFieldPatch} from '@threadpeak/contracts/node-edits'
 import './learning.css'
 
 export function LearningWorkspace({routeId,conceptId,initialView='research',resourceId,example,onBack}:{routeId:string;conceptId:string;initialView?:'research'|'graph';resourceId?:string;example?:LearningState;onBack?:()=>void}){
@@ -19,10 +21,10 @@ export function LearningWorkspace({routeId,conceptId,initialView='research',reso
   const [view,setView]=useState(initialView),[depth,setDepth]=useState<'fast'|'deep'>('fast'),[selected,setSelected]=useState<string[]>([]),[detail,setDetail]=useState<string|null>(null)
   const [saveState,setSaveState]=useState<'idle'|'saving'|'saved'|'error'>('idle')
   const [history,setHistory]=useState(false),[split,setSplit]=useState(53),[phonePane,setPhonePane]=useState('material'),[focusNode,setFocusNode]=useState<string|null>(()=>new URLSearchParams(location.hash.split('?')[1]??'').get('node'))
-  const [editingNodes,setEditingNodes]=useState<GraphNode[]|null>(null),[past,setPast]=useState<GraphNode[][]>([]),[future,setFuture]=useState<GraphNode[][]>([]),[sending,setSending]=useState(false)
+  const [editingNodes,setEditingNodes]=useState<GraphNode[]|null>(null),[past,setPast]=useState<EditEntry[]>([]),[future,setFuture]=useState<EditEntry[]>([]),[sending,setSending]=useState(false)
   const body=useRef<HTMLDivElement>(null),live=useRef(snapshot),saveChain=useRef(Promise.resolve()),mounted=useRef(true),lastCompleted=useRef(''),sendingRef=useRef(false),unsaved=useRef<GraphNode[]|null>(null)
   const [reconnect,setReconnect]=useState(0)
-  function accept(raw:unknown){const next=mergeLearningSnapshot(live.current,readLearning(raw));if(mounted.current){live.current=next;setSnapshot(next);setOffline(false)}return next}
+  function accept(raw:unknown){const next=mergeLearningSnapshot(live.current,readLearning(raw,live.current));if(mounted.current){live.current=next;setSnapshot(next);setOffline(false)}return next}
   useEffect(()=>{
     const abort=new AbortController();mounted.current=true
     if(example){
@@ -35,7 +37,7 @@ export function LearningWorkspace({routeId,conceptId,initialView='research',reso
       const update=await productRequest<LearningSnapshot|{unchanged:true}>(`/api/v2/resources/${encodeURIComponent(id)}?after=${live.current?.revision??0}`,{signal:abort.signal})
       if(abort.signal.aborted)return false
       if(!('unchanged' in update))accept(update);else setOffline(false)
-    },{signal:abort.signal,onError:(_error,stopped)=>{setOffline(true);if(stopped)setNotice('连接暂停，已有内容仍然保留。点击重新连接继续。')}})
+    },{signal:abort.signal,intervalMs:()=>taskPollInterval(live.current?.job?.status),wait:foregroundDelay,onError:(_error,stopped)=>{setOffline(true);if(stopped)setNotice('连接暂停，已有内容仍然保留。点击重新连接继续。')}})
     void (async()=>{
       try{const raw=resourceId?await productRequest(`/api/v2/resources/${encodeURIComponent(resourceId)}`,{signal:abort.signal}):await productRequest('/api/v2/learning/enter',{method:'POST',body:{routeId,conceptId,depth:'fast'},key:`enter:${routeId}:${conceptId}`,signal:abort.signal});if(abort.signal.aborted)return;const s=accept(raw);void poll(s.id)}catch(e){if(!abort.signal.aborted)setNotice(e instanceof ApiError&&e.status===404?'找不到这个概念。':e instanceof Error?e.message:'暂时未连接，请稍后刷新。')}
     })()
@@ -96,16 +98,17 @@ export function LearningWorkspace({routeId,conceptId,initialView='research',reso
     unsaved.current=next;setEditingNodes(next);setSaveState('saving')
     saveChain.current=saveChain.current.then(async()=>{
       const s=live.current;if(!s)return
-      try{const saved=accept(await productRequest(`/api/v2/learning/${s.id}/nodes`,{method:'PATCH',body:{nodes:next,baseNodes:base,revision:s.revision}}));if(unsaved.current===next){unsaved.current=null;if(mounted.current)setSaveState('saved')}if(mounted.current)setEditingNodes(current=>current===next?null:current)}catch(e){
+      const patch=nodeFieldPatch(base,next)
+      try{const saved=accept(await productRequest(`/api/v2/learning/${s.id}/nodes`,{method:'PATCH',body:{...(patch?{patch}:{nodes:next,baseNodes:base}),revision:s.revision}}));if(unsaved.current===next){unsaved.current=null;if(mounted.current)setSaveState('saved')}if(mounted.current)setEditingNodes(current=>current===next?null:current)}catch(e){
         if(mounted.current)setSaveState('error')
         // Keep the unsaved edit visible; never overwrite a concurrent server edit silently.
         if(mounted.current)setNotice(e instanceof ApiError&&['REVISION_CONFLICT','NODE_EDIT_CONFLICT'].includes(e.code)?'这张卡片已在另一处更新。你的编辑还在，请保留当前版本或使用已保存版本。':e instanceof Error?e.message:'编辑还没保存，请保持页面打开。')
       }
     })
   }
-  function changeGraph(next:GraphNode[],_label?:string){if(busy)return;setPast(p=>[...p.slice(-39),nodes]);setFuture([]);saveNodes(normalizeCustom(next))}
-  function undo(){const previous=past.at(-1);if(!previous)return;setFuture(f=>[nodes,...f]);setPast(p=>p.slice(0,-1));saveNodes(previous)}
-  function redo(){const next=future[0];if(!next)return;setPast(p=>[...p,nodes]);setFuture(f=>f.slice(1));saveNodes(next)}
+  function changeGraph(next:GraphNode[],_label?:string){if(busy)return;const normalized=normalizeCustom(next);setPast(p=>[...p.slice(-39),editEntry(nodes,normalized)]);setFuture([]);saveNodes(normalized)}
+  function undo(){const entry=past.at(-1);if(!entry)return;try{const previous=applyEditEntry(entry,nodes,true);setFuture(f=>[entry,...f]);setPast(p=>p.slice(0,-1));saveNodes(previous)}catch{setNotice('这次编辑涉及的卡片已在另一处改变，无法自动撤销。当前内容仍然保留。')}}
+  function redo(){const entry=future[0];if(!entry)return;try{const next=applyEditEntry(entry,nodes);setPast(p=>[...p.slice(-39),entry]);setFuture(f=>f.slice(1));saveNodes(next)}catch{setNotice('这次编辑涉及的卡片已在另一处改变，无法自动重做。当前内容仍然保留。')}}
   async function copy(text:string){try{await navigator.clipboard.writeText(text)}catch{setNotice('可以选中文字手动复制。')}}
   const pending:PendingReply[]=running&&job?.kind!=='learning.enter'&&job?.kind!=='learning.import'&&job?.basisIds?.length===1&&nodes.some(n=>n.id===job.basisIds[0])?[{id:`pending-${job.id}`,mode:job.kind==='learning.author'?'author':'ai',question:'',parents:[job.basisIds[0]!],text:'',status:job.phase}]:[]
   const phase:Phase=state?.phase??'searching'

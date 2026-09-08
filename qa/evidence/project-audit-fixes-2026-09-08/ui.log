@@ -1,0 +1,13 @@
+
+> threadpeak-ux-ui@2.0.0 test:ui
+> NODE_OPTIONS=--no-experimental-webstorage vitest run
+
+
+ RUN  v4.1.11 /Users/wxm/project/FullStack/学习理念/知乎项目/threadpeak/threadpeak
+
+
+ Test Files  9 passed (9)
+      Tests  52 passed (52)
+   Start at  07:10:34
+   Duration  7.86s (transform 596ms, setup 121ms, import 1.22s, tests 3.32s, environment 2.32s)
+

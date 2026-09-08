@@ -11,7 +11,7 @@ const statusOf=(job:Pick<Job,'status'>,done:boolean):Step['status']=>done?'done'
 export function pathTrace(jobs:Pick<Job,'id'|'kind'|'status'|'checkpoints'>[],path:{status:string;questionSets:any[];searchScope?:{kind:string}}):Step[]{
   const result:Step[]=[]
   for(const job of jobs){
-    const checkpoint=(key:string)=>job.checkpoints[`${key}@goal-v1`]??job.checkpoints[key]
+    const checkpoint=(key:string)=>Object.entries(job.checkpoints).find(([name])=>name.startsWith(`${key}@goal-v1:`))?.[1]??job.checkpoints[`${key}@goal-v1`]??job.checkpoints[key]
     const has=(key:string)=>!!checkpoint(key)
     if(job.kind==='path.start')for(const step of (path.searchScope?.kind==='collections'?[definitions[0],{key:'R-materials',title:'读取所选收藏资料',kind:'search' as const,after:['R1']},{...definitions[3],after:['R-materials']},definitions[4]]:definitions)){
       if(!has(step.key)&&!step.after.every(has))continue
@@ -23,7 +23,7 @@ export function pathTrace(jobs:Pick<Job,'id'|'kind'|'status'|'checkpoints'>[],pa
   const count=path.questionSets.reduce((n,set)=>n+Object.keys(set.selectedOptionIds??{}).length+Object.keys(set.customAnswers??{}).length,0)
   if(count)result.push({id:'route:choices',kind:'confirm',status:'done',title:'已记下你的想法',extra:`${count} 条回答`})
   const build=jobs.filter(j=>j.kind==='path.answer').at(-1),active=path.questionSets.find(s=>s.status==='active'),answered=active&&active.questions.every((q:any)=>active.selectedOptionIds[q.id]||active.customAnswers?.[q.id])
-  if(build&&(answered||build.checkpoints.R4||build.checkpoints['R4-plan'])){
+  if(build&&(answered||Object.keys(build.checkpoints).some(key=>/^(R4@|R4-plan)/.test(key)))){
     const done=path.status==='published',status=statusOf(build,done)
     result.push({id:`${build.id}:plan`,kind:'agent',status,title:done?'已安排顺序与并列阶段':'正在安排顺序与并列阶段'})
     if(done)result.push({id:`${build.id}:publish`,kind:'confirm',status:'done',title:'学习路线已生成'})

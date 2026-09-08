@@ -2,7 +2,7 @@ import {sharedHttpRateLimitStore} from './http-rate-limit.ts'
 import helmet from '@fastify/helmet'
 import rateLimit, {normalizeIP} from '@fastify/rate-limit'
 import {isIP} from 'node:net'
-import {ProductLibrarySchema} from '@threadpeak/contracts/product-library'
+import {readLibraryPage} from './library.ts'
 import { pathGoalContext, hydrateLearningGoal } from './learning-goal.ts'
 import { SearchScopeSchema } from '@threadpeak/contracts/search-scope'
 import {registerSourcePresentation} from './source-presentation.ts'
@@ -11,7 +11,7 @@ import Fastify, { type FastifyRequest } from 'fastify'
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import { NodeSchema, paragraphNode, validateTree, type LearningState } from '@threadpeak/contracts/learning-v2'
-import { mergeNodeEdits, NodeEditConflict } from '@threadpeak/contracts/node-edits'
+import { mergeNodeEdits, mergeNodeFieldPatch, NodeEditConflict } from '@threadpeak/contracts/node-edits'
 import { createIdentity, type IdentityConfig } from './auth.ts'
 import { CommandError, digest, type DurableStore, type Resource } from './store.ts'
 import type { DurableWorker } from './worker.ts'
@@ -144,10 +144,8 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     });ports.worker.wake();return ports.store.snapshot(own,id)
   })
   app.get('/api/v2/library',async request=>{
-    const own=owner(request)
-    const [paths,knowledge,chats]=await Promise.all([ports.store.list(own,'path'),ports.store.list(own,'learning'),ports.store.list(own,'chat')])
-    return ProductLibrarySchema.parse({paths:paths.filter(p=>p.body.status==='published').map(p=>({id:p.id,goal:p.body.goal,document:p.body.document,updatedAt:p.updated_at})),knowledge:knowledge.filter(k=>k.body.nodes.length).map(k=>({id:k.id,routeId:k.body.routeId,conceptId:k.body.conceptId,title:k.body.title})),
-      conversations:[...paths,...chats].map(r=>({id:r.kind==='chat'?r.scope:r.id,resourceId:r.id,kind:r.kind,title:r.body.goal??r.body.title??'对话',query:r.body.goal??r.body.title??'',updatedAt:r.updated_at,routeId:r.kind==='path'&&r.body.document?r.id:undefined})).concat(knowledge.flatMap(r=>r.body.conversations.map((c:any)=>({id:c.id,resourceId:r.id,kind:'learning',title:c.title,query:r.body.title,updatedAt:r.updated_at,routeId:r.body.routeId,conceptId:r.body.conceptId}))))})
+    const query=z.object({cursor:z.string().max(1000).optional()}).parse(request.query)
+    return readLibraryPage(ports.store.db,owner(request),query.cursor)
   })
   async function pathByDocument(own:string,documentId:string){
     const paths=await ports.store.db.query<Resource>("SELECT * FROM tp_resources WHERE owner_id=$1 AND kind='path' AND (id=$2 OR body->'document'->>'id'=$2)",[own,documentId])
@@ -259,20 +257,22 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     });ports.worker.wake();return ports.store.snapshot(own,id)
   })
   app.patch('/api/v2/learning/:id/nodes',{bodyLimit:20_000_000},async request=>{
-    const input=z.object({revision:z.number().int().min(0),nodes:z.array(NodeSchema).max(20_000),baseNodes:z.array(NodeSchema).max(20_000).optional()}).parse(bodyOf(request)),own=owner(request),id=resourceId(request)
-    try{validateTree(input.nodes)}catch{throw new CommandError('INVALID_TREE',400)}
-    await ports.store.edit(own,id,input.baseNodes?undefined:input.revision,r=>{
+    const nodeList=z.array(NodeSchema).max(20_000)
+    const input=z.object({revision:z.number().int().min(0),nodes:nodeList.optional(),baseNodes:nodeList.optional(),patch:z.object({nodes:nodeList,baseNodes:nodeList}).optional()}).refine(v=>v.patch?!v.nodes&&!v.baseNodes:!!v.nodes).parse(bodyOf(request)),own=owner(request),id=resourceId(request)
+    try{if(input.nodes)validateTree(input.nodes)}catch{throw new CommandError('INVALID_TREE',400)}
+    await ports.store.edit(own,id,input.baseNodes||input.patch?undefined:input.revision,r=>{
       if(r.kind!=='learning')throw new CommandError('NOT_FOUND',404)
       const old=r.body.nodes as LearningState['nodes']
-      const nodes=input.baseNodes?mergeNodeEdits(input.baseNodes,input.nodes,old):input.nodes
+      const nodes=input.patch?mergeNodeFieldPatch(input.patch,old):input.baseNodes?mergeNodeEdits(input.baseNodes,input.nodes!,old):input.nodes!
       try{validateTree(nodes)}catch{throw new CommandError('INVALID_TREE',400)}
       const retained=(r.body as LearningState).conversations.flatMap(c=>c.messages.flatMap(m=>m.paragraphs??[])).map(paragraphNode)
+      const currentById=new Map(old.map(n=>[n.id,n])),nextById=new Map(nodes.map(n=>[n.id,n])),retainedById=new Map(retained.map(n=>[n.id,n]))
       for(const node of old.filter(n=>n.type==='root'||n.type==='article')){
-        const next=nodes.find(n=>n.id===node.id)
+        const next=nextById.get(node.id)
         if(!next||next.type!==node.type||JSON.stringify(next.parents)!==JSON.stringify(node.parents)||JSON.stringify(next.sources)!==JSON.stringify(node.sources))throw new CommandError('SOURCE_IMMUTABLE')
       }
       for(const node of nodes){
-        const before=old.find(n=>n.id===node.id)??retained.find(n=>n.id===node.id)
+        const before=currentById.get(node.id)??retainedById.get(node.id)
         if(!before&&node.type!=='custom')throw new CommandError('GENERATED_NODE_IMMUTABLE')
         if(before&&(before.type!==node.type||JSON.stringify(before.author)!==JSON.stringify(node.author)||JSON.stringify(before.sources)!==JSON.stringify(node.sources)||JSON.stringify(before.parents)!==JSON.stringify(node.parents)||before.basisId!==node.basisId||before.origin!==node.origin))throw new CommandError('NODE_PROVENANCE_IMMUTABLE')
       }

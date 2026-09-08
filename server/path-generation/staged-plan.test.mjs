@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict'
-import {compileStagedPlan,StagedPlanSchema,salvageGoalPlan,validateGoalPlan} from './staged-plan.ts'
+import {compileStagedPlan,StagedPlanSchema,validateGoalPlan} from './staged-plan.ts'
 import {projectRouteToDocument} from './project-document.ts'
 const item=name=>({title:name,description:'当前阶段的学习目的',concepts:[{title:name+'概念',description:'限定该概念的完整学习范围',hasDispute:false}]})
 test('A, (B,C), D compiles exact sequence and parallel edges without model-authored IDs',()=>{
@@ -16,28 +16,7 @@ test('attachment refs attach only relevant owned sources and cannot invent exter
  a.concepts[0].attachmentRefs=['F3'];assert.throws(()=>compileStagedPlan({title:'路线',stages:[[a]]},'scope',['owned-a','owned-b']))
  assert.equal(StagedPlanSchema.safeParse({title:'路线',stages:[[item('A')]],edges:[]}).success,false)
 })
-test('salvageGoalPlan turns dumped R4 JSON and missing alignment into a compilable plan',()=>{
-  const dumped={
-    version:'1.0',title:'线性代数入门',extra:true,
-    carriers:[{id:'c1',title:'线性代数',description:'基础'},{id:'c2',title:'矩阵',description:'表示'}],
-    concepts:[
-      {id:'n1',carrierId:'c1',title:'向量空间',detailedDescription:'先建立对象',hasDispute:false,attachmentSourceIds:[]},
-      {id:'n2',carrierId:'c1',title:'线性映射',detailedDescription:'保运算',hasDispute:true,attachmentSourceIds:['owned']},
-      {id:'n3',carrierId:'c2',title:'矩阵表示',detailedDescription:'坐标',hasDispute:false,attachmentSourceIds:[]},
-    ],
-    carrierEdges:[{fromCarrierId:'c1',toCarrierId:'c2'}],
-    conceptEdges:[{fromConceptId:'n1',toConceptId:'n2'},{fromConceptId:'n2',toConceptId:'n3'}],
-    entryConceptIds:['n1'],
-  }
-  const prepared={attachments:[{ref:'F1',sourceId:'owned',content:'坐标表示基下的分量。'}],goalContext:{rawGoal:'以学校考试为目标的线性代数入门',userStatements:[]}}
-  const plan=validateGoalPlan(salvageGoalPlan(dumped,prepared),prepared)
-  const route=compileStagedPlan(plan,'scope',['owned'])
-  assert.equal(projectRouteToDocument(route).ok,true)
-  assert.ok(plan.stages.flat().some(carrier=>carrier.title==='线性代数'))
-  assert.ok(plan.stages.flatMap(stage=>stage.flatMap(carrier=>carrier.concepts)).some(concept=>concept.title==='线性映射'))
-  const messy={title:'路线',stages:[[{title:'入门',concepts:[{title:'坐标'}]}]],learningGoal:{outcome:'读懂收藏',motivation:'我自己编的动机',successCriteria:['会举例'],startingPoint:'',constraints:[],nonGoals:[],assumptions:['收入稳定'],openQuestions:[]}}
-  const repaired=validateGoalPlan(salvageGoalPlan(messy,{goalContext:{rawGoal:'读懂收藏',userStatements:[]},attachments:[]}),{goalContext:{rawGoal:'读懂收藏',userStatements:[]},attachments:[]})
-  assert.equal(repaired.learningGoal.assumptions.length,0)
-  assert.equal(repaired.learningGoal.motivation,'')
-  assert.ok(repaired.stages[0][0].concepts[0].goalAlignment)
+test('new planning rejects old wire objects and incomplete stages without adding fields',()=>{
+ const input={goalContext:{rawGoal:'读懂收藏',userStatements:[]},attachments:[]}
+ for(const output of [{},{version:'1.0',title:'路线',carriers:[],concepts:[]},{title:'路线',stages:[[item('A')]]}])assert.throws(()=>validateGoalPlan(output,input))
 })

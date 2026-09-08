@@ -1,0 +1,21 @@
+
+> threadpeak-ux-ui@2.0.0 test:postgres
+> node --test server/durable/postgres.gate.mjs
+
+✔ PostgreSQL: two connections, concurrent migrations, idempotency, fencing, atomic commit and reconnect (1096.648167ms)
+✔ PostgreSQL shares the same nested transaction rollback contract (34.399375ms)
+✔ PostgreSQL permits are shared by three independent Node processes (395.038875ms)
+✔ PostgreSQL: graceful handoff is immediate, preserves checkpoints, and maintenance compacts safely (83.6505ms)
+✔ PostgreSQL: event CAS is atomic even when the caller omits its row lock (43.930375ms)
+✔ PostgreSQL: a snapshot reads the previous coherent commit while a writer holds resource/job locks (50.951459ms)
+✔ PostgreSQL: two actual HTTP instances and a restarted instance share one rate budget (90.929708ms)
+✔ PostgreSQL audit repair: library keyset pages retain tied IDs, isolate owners and exclude chat bodies (74.616083ms)
+✔ PostgreSQL audit repair: provider hot paths leave expired records for bounded maintenance and metrics preserve unknown usage (61.910416ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2157.053875

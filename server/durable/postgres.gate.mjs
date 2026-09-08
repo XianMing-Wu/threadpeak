@@ -116,3 +116,8 @@ test('PostgreSQL: two actual HTTP instances and a restarted instance share one r
   const again=await make(b);const denied=await again.inject({url:'/api/auth/config',remoteAddress:ip});assert.equal(denied.statusCode,429);assert.ok(Number(denied.headers['retry-after'])>0)
  }finally{await Promise.all(apps.map(app=>app.close()));await Promise.all([a.close(),b.close()])}
 })
+
+import {platformCases} from './audit-platform-cases.mjs'
+for(const [name,verify] of Object.entries(platformCases))test(`PostgreSQL audit repair: ${name}`,async()=>{
+ const db=await openDatabase({url});try{await migrate(db);await verify(db)}finally{await db.close()}
+})

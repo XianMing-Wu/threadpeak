@@ -1,3 +1,4 @@
+import {recordMetric} from './metrics.ts'
 import type {TaskActivity} from '@threadpeak/contracts/task-activity'
 import { createHash, randomUUID } from 'node:crypto'
 import type { Sql } from './database.ts'
@@ -21,7 +22,7 @@ export type JobView = Pick<Job, 'id'|'kind'|'status'|'phase'|'draft'|'attempts'|
 export function jobView(job?: Job, emptySearch = false): JobView|null {
   if (!job) return null
   const { id, kind, status, phase, draft, attempts, updated_at } = job
-  return { id, kind, status, phase, draft, attempts, updated_at, activities:job.activities??[], recoverable: (status === 'waiting'||status==='cancelled'||emptySearch&&status==='completed') && !job.compacted && (job.resume_count??0)<MAX_MANUAL_RESUMES, basisIds:job.input.context?.allowedCards?.map((c:any)=>c.id)??[], conversationId:job.input.conversationId }
+  return { id, kind, status, phase, draft, attempts, updated_at, activities:job.activities??[], recoverable: (status === 'waiting'||status==='cancelled'||emptySearch&&status==='completed') && !job.compacted && (job.resume_count??0)<MAX_MANUAL_RESUMES, basisIds:job.input.context?.allowedCards?.map((c:any)=>c.id)??[], conversationId:job.input.conversationId??undefined }
 }
 
 export const JOB_LEASE_MS = 90_000
@@ -48,7 +49,10 @@ export class DurableStore {
     // writer's row lock. Two independent READ COMMITTED queries could mix states.
     const [resource]=await this.db.query<Resource & {latest_job:Job|null}>(`SELECT r.*,to_jsonb(j) AS latest_job
       FROM tp_resources r LEFT JOIN LATERAL (
-        SELECT * FROM tp_jobs WHERE resource_id=r.id ORDER BY created_at DESC,id DESC LIMIT 1
+        SELECT id,kind,status,phase,draft,attempts,updated_at,activities,compacted,resume_count,
+          jsonb_build_object('conversationId',input->'conversationId','context',jsonb_build_object('allowedCards',
+            (SELECT COALESCE(jsonb_agg(jsonb_build_object('id',c->'id')),'[]'::jsonb) FROM jsonb_array_elements(COALESCE(input->'context'->'allowedCards','[]'::jsonb)) c))) AS input
+        FROM tp_jobs WHERE resource_id=r.id ORDER BY created_at DESC,id DESC LIMIT 1
       ) j ON true WHERE r.id=$1 AND r.owner_id=$2`,[id,owner])
     if(!resource)throw new CommandError('NOT_FOUND',404)
     return { id: resource.id, kind: resource.kind, revision: resource.revision, dataRevision: resource.data_revision??0, data: resource.body, job: jobView(resource.latest_job??undefined, resource.kind==='learning'&&resource.body.phase==='empty') }
@@ -169,6 +173,7 @@ export class DurableStore {
     })
   }
   async commit(job: Job, update: (resource: Resource, tx: Sql) => unknown|Promise<unknown>) {
+    const started=Date.now()
     await this.db.transaction(async tx => {
       const resource = await this.lockResource(tx, job.owner_id, job.resource_id)
       const live=await this.ownedJob(tx, job)
@@ -178,6 +183,7 @@ export class DurableStore {
       await tx.query("UPDATE tp_jobs SET status='completed',phase='已完成',draft='',lease_until=0,error_code=NULL,updated_at=$2 WHERE id=$1", [job.id, this.now()])
       await this.event(tx, resource, 'job.completed', { jobId: job.id }, body)
     })
+    await recordMetric(this.db,job,'commit',{kind:'commit',durationMs:Date.now()-started})
   }
   async recover(job: Job, code: string, retryable: boolean) {
     await this.db.transaction(async tx => {
@@ -266,7 +272,9 @@ export class DurableStore {
       const oauth=await tx.query('DELETE FROM tp_oauth_attempts WHERE state_hash IN (SELECT state_hash FROM tp_oauth_attempts WHERE expires_at<$1 LIMIT 1000 FOR UPDATE SKIP LOCKED) RETURNING state_hash',[this.now()])
       const resumes=await tx.query('DELETE FROM tp_job_resumes WHERE (job_id,resume_number) IN (SELECT job_id,resume_number FROM tp_job_resumes WHERE created_at<$1 LIMIT 1000 FOR UPDATE SKIP LOCKED) RETURNING job_id',[cutoff])
       const limits=await tx.query('DELETE FROM tp_http_limits WHERE key IN (SELECT key FROM tp_http_limits WHERE expires_at<(extract(epoch FROM clock_timestamp())*1000)::bigint ORDER BY expires_at LIMIT 1000 FOR UPDATE SKIP LOCKED) RETURNING key')
-      return {more:jobs.length===100||[removed,slots,sessions,oauth,resumes,limits].some(rows=>rows.length===1000)}
+      const cache=await tx.query('DELETE FROM tp_provider_cache WHERE (owner_id,cache_key) IN (SELECT owner_id,cache_key FROM tp_provider_cache WHERE expires_at<=$1 ORDER BY expires_at LIMIT 1000 FOR UPDATE SKIP LOCKED) RETURNING cache_key',[this.now()])
+      const calls=await tx.query('DELETE FROM tp_provider_calls WHERE id IN (SELECT id FROM tp_provider_calls WHERE created_at<$1 ORDER BY created_at LIMIT 1000 FOR UPDATE SKIP LOCKED) RETURNING id',[cutoff])
+      return {removed:{events:removed.length,jobs:jobs.length,slots:slots.length,sessions:sessions.length,oauth:oauth.length,resumes:resumes.length,limits:limits.length,cache:cache.length,calls:calls.length},more:jobs.length===100||[removed,slots,sessions,oauth,resumes,limits,cache,calls].some(rows=>rows.length===1000)}
     })
   }
   async events(owner: string, id: string, after: number) {

@@ -47,7 +47,7 @@ export async function readCompletionStream(stream: ReadableStream<Uint8Array>, i
     buffer += decoder.decode()
     if (buffer.trim()) consume(buffer)
     input.signal?.throwIfAborted()
-    const hasBody = content.trim() || (input.json && reasoning.trim())
+    const hasBody = content.trim()
     if (finish !== 'stop' || !ended || !hasBody) throw new Error(finish === 'length' ? 'OUTPUT_TRUNCATED' : finish==='insufficient_system_resource'?'PROVIDER_BUSY':'STREAM_INCOMPLETE')
     return { content, reasoning,usage,diagnostic }
   } catch(error) {
@@ -78,9 +78,10 @@ export function createAgentLlmProvider(ports: { config: ProviderConfig; http: Ht
         if (stream && response.body) {
           const result = await readCompletionStream(response.body, input)
           if (input.json) {
-            const extracted = extractStructuredJson(result.content, result.reasoning)
-            if (extracted === undefined) return {...failure('OUTPUT_EMPTY', true),usage:result.usage,diagnostic:result.diagnostic}
-            const text = JSON.stringify(extracted)
+            const extracted = extractStructuredJson(result.content)
+            // Transport completion is distinct from schema success; retain malformed formal
+            // text for the same Agent's bounded repair, never substitute reasoning.
+            const text = extracted === undefined ? result.content : JSON.stringify(extracted)
             input.onText?.(text)
             return { kind: 'completed', text, reasoning: result.reasoning,usage:result.usage,diagnostic:result.diagnostic }
           }
@@ -95,9 +96,9 @@ export function createAgentLlmProvider(ports: { config: ProviderConfig; http: Ht
         const content = typeof message.content === 'string' ? message.content : ''
         const reasoning = typeof message.reasoning_content === 'string' ? message.reasoning_content : typeof message.reasoning === 'string' ? message.reasoning : ''
         if (input.json) {
-          const extracted = extractStructuredJson(content, reasoning)
-          if (extracted === undefined) return {...failure('OUTPUT_EMPTY', true),...metadata}
-          const text = JSON.stringify(extracted)
+          const extracted = extractStructuredJson(content)
+          if (!content.trim()) return {...failure('OUTPUT_EMPTY', true),...metadata}
+          const text = extracted === undefined ? content : JSON.stringify(extracted)
           input.signal?.throwIfAborted()
           input.onText?.(text)
           return { kind: 'completed', text, reasoning,...metadata }

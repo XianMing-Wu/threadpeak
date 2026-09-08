@@ -1,6 +1,12 @@
 export const ZHIHU_SEARCH_QUERY_MAX = 200
 export const ZHIHU_SEARCH_PACKS = 2
 
+/** This same validated packing is used by the author planner and its dispatcher. */
+export function packAuthorSearchQueries(queries:readonly string[]):PackedSearchQuery[] {
+  if(queries.length<2||queries.length>3||queries.some(q=>!q.trim()||q.trim().length>90))throw new Error('请给出 2–3 条问法，每条不超过 90 字。')
+  return packZhihuSearchQueries(queries.map((text,i)=>({id:String(i),text})))
+}
+
 export type PackableSearchQuery = {
   id: string
   text: string

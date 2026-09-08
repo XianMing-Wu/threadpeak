@@ -1,0 +1,4687 @@
+{
+  "date": "2026-09-08",
+  "scope": "synthetic-input; real route providers, then R4-only replay of stored search evidence; no learning or author live evaluation",
+  "samples": [
+    {
+      "id": "collection",
+      "scenario": {
+        "id": "collection",
+        "goal": "我想系统学我第一个知乎收藏夹里的内容，但不知道顺序。",
+        "answer": "我只会基础四则运算，想把收藏中的矩阵知识串起来，能解释每篇之间的关系并做一个二维变换例子；不需要考试技巧，先只学这个收藏夹。",
+        "scope": {
+          "kind": "collections",
+          "folderIds": [
+            "synthetic-folder"
+          ]
+        },
+        "content": "测试收藏摘要（合成数据）：文章一：二维向量可看作带方向的位移，坐标依赖选定的基。文章二：矩阵作用在向量上表示线性变换，矩阵各列是基向量变换后的结果。文章三：两个变换连续执行对应矩阵相乘，顺序一般不能交换。文章四重复了文章二的矩阵与线性变换内容。"
+      },
+      "initial": {
+        "status": "completed",
+        "route": {
+          "title": "系统学习收藏夹中的线性代数基础",
+          "routeId": "pc244330634e0e8b1",
+          "version": "1.0",
+          "carriers": [
+            {
+              "id": "pc244330634e0e8b1-s1-1",
+              "title": "向量与基",
+              "description": "从基础四则运算出发，引入二维向量的概念，理解向量作为带方向的位移，以及坐标依赖于基的选择。"
+            },
+            {
+              "id": "pc244330634e0e8b1-s2-1",
+              "title": "矩阵与线性变换",
+              "description": "理解矩阵如何表示线性变换，矩阵的各列是基向量变换后的结果。通过具体例子（如旋转、缩放）建立直观。"
+            },
+            {
+              "id": "pc244330634e0e8b1-s3-1",
+              "title": "矩阵乘法与综合应用",
+              "description": "理解连续变换对应矩阵相乘，且顺序一般不能交换。最后综合运用向量、矩阵和乘法，完成一个二维变换的例子。"
+            }
+          ],
+          "concepts": [
+            {
+              "id": "pc244330634e0e8b1-s1-1-c1",
+              "title": "向量与基",
+              "carrierId": "pc244330634e0e8b1-s1-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "理解二维向量的几何意义和坐标表示，知道基的概念，不深入高维或抽象向量空间。",
+                "purpose": "理解向量是矩阵和线性变换的基础，为后续解释矩阵各列是基向量变换后的结果做铺垫。",
+                "successCheck": "给定一个二维向量（如 (3,2)），能画出其箭头，并解释坐标 (3,2) 在标准基下的含义。",
+                "materialAnchors": [
+                  {
+                    "role": "direct",
+                    "quote": "二维向量可看作带方向的位移，坐标依赖选定的基。",
+                    "sourceId": "synthetic-material",
+                    "connection": "该引文直接定义了向量的核心概念，是学习本概念的直接材料。",
+                    "evidenceKind": "material"
+                  }
+                ]
+              },
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "detailedDescription": "向量是带方向的位移，可以用坐标表示，但坐标依赖于选定的基。本概念将使用二维平面上的直观例子，如箭头表示位移，并说明标准基下的坐标。"
+            },
+            {
+              "id": "pc244330634e0e8b1-s2-1-c1",
+              "title": "矩阵与线性变换",
+              "carrierId": "pc244330634e0e8b1-s2-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "理解矩阵各列的含义，能计算矩阵乘以向量，并解释变换效果（如旋转、缩放），不深入一般线性变换的性质。",
+                "purpose": "理解矩阵的几何意义，是连接向量和矩阵乘法的桥梁，也是完成二维变换例子的核心。",
+                "successCheck": "给定一个 2x2 矩阵（如旋转矩阵），计算它作用于向量 (1,0) 和 (0,1) 的结果，并说明变换后的基向量。",
+                "materialAnchors": [
+                  {
+                    "role": "direct",
+                    "quote": "矩阵作用在向量上表示线性变换，矩阵各列是基向量变换后的结果。",
+                    "sourceId": "synthetic-material",
+                    "connection": "该引文直接解释了矩阵与线性变换的关系，是学习本概念的直接材料。",
+                    "evidenceKind": "material"
+                  }
+                ]
+              },
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "detailedDescription": "矩阵作用于向量表示一种线性变换，矩阵的列是基向量变换后的坐标。本概念将用二维矩阵乘以向量的例子，展示变换效果。"
+            },
+            {
+              "id": "pc244330634e0e8b1-s3-1-c1",
+              "title": "矩阵乘法",
+              "carrierId": "pc244330634e0e8b1-s3-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "理解矩阵乘法的定义和几何意义，能计算两个 2x2 矩阵的乘积，并解释顺序不可交换，不深入矩阵乘法的代数性质。",
+                "purpose": "理解矩阵乘法的意义和顺序效应，是解释收藏夹中文章关系的关键，也是完成综合例子的必要步骤。",
+                "successCheck": "给定两个矩阵 A 和 B，分别计算 AB 和 BA 作用于某个向量的结果，并说明顺序不同导致变换结果不同。",
+                "materialAnchors": [
+                  {
+                    "role": "direct",
+                    "quote": "两个变换连续执行对应矩阵相乘，顺序一般不能交换。",
+                    "sourceId": "synthetic-material",
+                    "connection": "该引文直接说明了矩阵乘法的核心性质，是学习本概念的直接材料。",
+                    "evidenceKind": "material"
+                  }
+                ]
+              },
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "detailedDescription": "两个变换连续执行对应矩阵相乘，矩阵乘法不满足交换律。本概念将用两个具体变换（如先旋转后缩放）演示顺序的影响。"
+            },
+            {
+              "id": "pc244330634e0e8b1-s3-1-c2",
+              "title": "综合应用：二维变换例子",
+              "carrierId": "pc244330634e0e8b1-s3-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够独立设计并计算一个二维变换例子，展示矩阵乘法的顺序效应，不涉及复杂应用。",
+                "purpose": "将所学概念串联起来，实现用户的目标：能解释每篇之间的关系并做一个二维变换例子。",
+                "successCheck": "选择一个向量（如 (1,1)），应用旋转矩阵和缩放矩阵，分别计算先旋转后缩放与先缩放后旋转的结果，并解释差异。",
+                "materialAnchors": [
+                  {
+                    "role": "prerequisite",
+                    "quote": "矩阵作用在向量上表示线性变换，矩阵各列是基向量变换后的结果。",
+                    "sourceId": "synthetic-material",
+                    "connection": "为了完成综合例子，需要先理解矩阵如何表示变换，因此本概念是读懂该引文并应用它的前置。",
+                    "evidenceKind": "material"
+                  },
+                  {
+                    "role": "direct",
+                    "quote": "两个变换连续执行对应矩阵相乘，顺序一般不能交换。",
+                    "sourceId": "synthetic-material",
+                    "connection": "综合例子直接应用矩阵乘法的顺序效应，因此该引文是直接材料。",
+                    "evidenceKind": "material"
+                  }
+                ]
+              },
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "detailedDescription": "综合运用向量、矩阵与线性变换、矩阵乘法的知识，完成一个具体的二维变换例子，例如将图形旋转后缩放，并验证顺序的影响。"
+            }
+          ],
+          "carrierEdges": [
+            {
+              "id": "ce-1",
+              "reason": "完成上一阶段后进入下一阶段",
+              "toCarrierId": "pc244330634e0e8b1-s2-1",
+              "fromCarrierId": "pc244330634e0e8b1-s1-1"
+            },
+            {
+              "id": "ce-2",
+              "reason": "完成上一阶段后进入下一阶段",
+              "toCarrierId": "pc244330634e0e8b1-s3-1",
+              "fromCarrierId": "pc244330634e0e8b1-s2-1"
+            }
+          ],
+          "conceptEdges": [
+            {
+              "id": "pc244330634e0e8b1-s3-1-e1",
+              "reason": "按该载体中的推荐顺序学习",
+              "toConceptId": "pc244330634e0e8b1-s3-1-c2",
+              "fromConceptId": "pc244330634e0e8b1-s3-1-c1"
+            },
+            {
+              "id": "ne-2",
+              "reason": "按阶段衔接，当前阶段内的方向并列",
+              "toConceptId": "pc244330634e0e8b1-s2-1-c1",
+              "fromConceptId": "pc244330634e0e8b1-s1-1-c1"
+            },
+            {
+              "id": "ne-3",
+              "reason": "按阶段衔接，当前阶段内的方向并列",
+              "toConceptId": "pc244330634e0e8b1-s3-1-c1",
+              "fromConceptId": "pc244330634e0e8b1-s2-1-c1"
+            }
+          ],
+          "learningGoal": {
+            "outcome": "能够按合理顺序学习收藏夹中的材料，理解向量、矩阵与线性变换、矩阵乘法之间的关系，并完成一个二维变换的例子",
+            "nonGoals": [],
+            "motivation": "我想系统学我第一个知乎收藏夹里的内容，但不知道顺序。",
+            "assumptions": [],
+            "constraints": [
+              "不需要考试技巧",
+              "先只学这个收藏夹"
+            ],
+            "openQuestions": [
+              "收藏夹具体包含哪些材料？当前仅提供了一份合成摘要，实际收藏夹内容可能更广。",
+              "用户当前数学基础如何？已说明只会四则运算，但未明确是否了解坐标系、函数等概念。",
+              "用户学习这些内容的最终目的是什么？已说明想系统学习并做二维变换例子，但未说明具体应用场景。"
+            ],
+            "startingPoint": "我只会基础四则运算",
+            "successCriteria": [
+              "解释收藏夹中每篇文章之间的关系，说明向量、矩阵与线性变换、矩阵乘法的逻辑顺序",
+              "用二维向量和矩阵完成一个具体的线性变换例子（如旋转或缩放），并展示矩阵乘法的顺序效应"
+            ]
+          },
+          "entryConceptIds": [
+            "pc244330634e0e8b1-s1-1-c1"
+          ],
+          "terminalConceptIds": [
+            "pc244330634e0e8b1-s3-1-c2"
+          ]
+        },
+        "provider": "deepseek-v4-flash",
+        "metrics": [
+          {
+            "step": "R1@goal-v1:f2f344eacbdf8634",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 1,
+              "inputBytes": 788,
+              "outputBytes": 788,
+              "compressions": 0,
+              "outputReserve": 2048
+            }
+          },
+          {
+            "step": "R1@goal-v1:f2f344eacbdf8634",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 1979
+            }
+          },
+          {
+            "step": "R-materials",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2
+            }
+          },
+          {
+            "step": "R2@goal-v1:1dff353659fcab8d",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 1,
+              "inputBytes": 937,
+              "outputBytes": 937,
+              "compressions": 0,
+              "outputReserve": 16384
+            }
+          },
+          {
+            "step": "R2@goal-v1:1dff353659fcab8d",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 4341
+            }
+          },
+          {
+            "step": "R3@goal-v1:62fd8c83ce030838",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 0,
+              "inputBytes": 3024,
+              "outputBytes": 3024,
+              "compressions": 0,
+              "outputReserve": 3072
+            }
+          },
+          {
+            "step": "R3@goal-v1:62fd8c83ce030838",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2876
+            }
+          },
+          {
+            "step": "commit",
+            "provider": "workflow",
+            "body": {
+              "kind": "commit",
+              "result": "completed",
+              "durationMs": 4
+            }
+          },
+          {
+            "step": "R4-plan:strict-v2@goal-v1:2a0e6db48cde18ed",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 0,
+              "inputBytes": 4644,
+              "outputBytes": 4644,
+              "compressions": 0,
+              "outputReserve": 16384
+            }
+          },
+          {
+            "step": "R4-plan:strict-v2@goal-v1:2a0e6db48cde18ed",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 18051
+            }
+          },
+          {
+            "step": "commit",
+            "provider": "workflow",
+            "body": {
+              "kind": "commit",
+              "result": "completed",
+              "durationMs": 5
+            }
+          }
+        ]
+      },
+      "refined": {
+        "date": "2026-09-08T14:06:13.756Z",
+        "status": "completed",
+        "route": {
+          "version": "1.0",
+          "routeId": "p98d59f8cf05cf870",
+          "learningGoal": {
+            "outcome": "能够按合理顺序学习收藏夹中的材料，理解向量、矩阵与线性变换、矩阵乘法之间的关系，并完成一个二维变换的例子",
+            "motivation": "我想系统学我第一个知乎收藏夹里的内容，但不知道顺序。",
+            "successCriteria": [
+              "解释收藏夹中每篇文章之间的关系，说明向量、矩阵与线性变换、矩阵乘法的逻辑顺序",
+              "用二维向量和矩阵完成一个具体的线性变换例子（如旋转或缩放），并展示矩阵乘法对应连续变换"
+            ],
+            "startingPoint": "我只会基础四则运算",
+            "constraints": [
+              "不需要考试技巧",
+              "先只学这个收藏夹"
+            ],
+            "nonGoals": [
+              "不需要考试技巧",
+              "先只学这个收藏夹"
+            ],
+            "assumptions": [],
+            "openQuestions": [
+              "收藏夹具体包含哪些材料？"
+            ]
+          },
+          "title": "系统学习收藏夹中的线性代数基础",
+          "carriers": [
+            {
+              "id": "p98d59f8cf05cf870-s1-1",
+              "title": "向量与基",
+              "description": "学习二维向量的基本概念，理解向量是带方向的位移，坐标依赖于基的选择。"
+            },
+            {
+              "id": "p98d59f8cf05cf870-s2-1",
+              "title": "矩阵与线性变换",
+              "description": "学习矩阵如何表示线性变换，理解矩阵各列是基向量变换后的结果。"
+            },
+            {
+              "id": "p98d59f8cf05cf870-s3-1",
+              "title": "矩阵乘法与连续变换",
+              "description": "学习两个变换连续执行对应矩阵相乘，理解顺序不可交换。"
+            },
+            {
+              "id": "p98d59f8cf05cf870-s4-1",
+              "title": "综合应用：二维变换例子",
+              "description": "综合运用向量、矩阵和矩阵乘法，完成一个具体的二维变换例子，并解释各篇材料的关系。"
+            }
+          ],
+          "concepts": [
+            {
+              "id": "p98d59f8cf05cf870-s1-1-c1",
+              "carrierId": "p98d59f8cf05cf870-s1-1",
+              "title": "向量与基",
+              "hasDispute": false,
+              "detailedDescription": "向量可以看作带方向的位移，其坐标依赖于选定的基。本概念将介绍二维向量的表示、基的概念，以及为什么坐标是相对的。",
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "goalAlignment": {
+                "purpose": "为理解矩阵和线性变换打下基础，因为矩阵的列是基向量变换后的结果。",
+                "depth": "理解二维向量的几何意义和坐标依赖基，不深入高维或内积空间。",
+                "successCheck": "给定一个二维向量和一组基，能写出该向量的坐标，并解释如果基改变，坐标会如何变化。",
+                "materialAnchors": [
+                  {
+                    "sourceId": "synthetic-material",
+                    "quote": "二维向量可看作带方向的位移，坐标依赖选定的基。",
+                    "role": "direct",
+                    "connection": "本概念直接学习该引文内容。",
+                    "evidenceKind": "material"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "p98d59f8cf05cf870-s2-1-c1",
+              "carrierId": "p98d59f8cf05cf870-s2-1",
+              "title": "矩阵与线性变换",
+              "hasDispute": false,
+              "detailedDescription": "矩阵作用在向量上表示线性变换，矩阵的各列是基向量变换后的结果。本概念将建立矩阵与变换的对应关系。",
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "goalAlignment": {
+                "purpose": "理解矩阵的本质，为后续矩阵乘法（连续变换）提供直观。",
+                "depth": "掌握二维矩阵如何变换向量，理解列的含义，不深入一般线性空间。",
+                "successCheck": "给定一个2x2矩阵，能说出它对应的变换效果（如旋转、缩放），并解释为什么矩阵的列是基向量变换后的结果。",
+                "materialAnchors": [
+                  {
+                    "sourceId": "synthetic-material",
+                    "quote": "矩阵作用在向量上表示线性变换，矩阵各列是基向量变换后的结果。",
+                    "role": "direct",
+                    "connection": "本概念直接学习该引文内容。",
+                    "evidenceKind": "material"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "p98d59f8cf05cf870-s3-1-c1",
+              "carrierId": "p98d59f8cf05cf870-s3-1",
+              "title": "矩阵乘法",
+              "hasDispute": false,
+              "detailedDescription": "两个变换连续执行对应矩阵相乘，顺序一般不能交换。本概念将解释矩阵乘法的意义和顺序敏感性。",
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "goalAlignment": {
+                "purpose": "理解矩阵乘法对应连续变换，是完成二维变换例子的关键。",
+                "depth": "掌握两个2x2矩阵相乘的规则和几何意义，理解顺序不可交换，不涉及高维或算法优化。",
+                "successCheck": "给定两个2x2矩阵，计算它们的乘积，并解释为什么先旋转后缩放与先缩放后旋转的结果可能不同。",
+                "materialAnchors": [
+                  {
+                    "sourceId": "synthetic-material",
+                    "quote": "两个变换连续执行对应矩阵相乘，顺序一般不能交换。",
+                    "role": "direct",
+                    "connection": "本概念直接学习该引文内容。",
+                    "evidenceKind": "material"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "p98d59f8cf05cf870-s4-1-c1",
+              "carrierId": "p98d59f8cf05cf870-s4-1",
+              "title": "综合应用",
+              "hasDispute": false,
+              "detailedDescription": "选择一个二维向量，应用两个线性变换（如旋转和缩放），通过矩阵乘法得到复合变换，并验证结果。同时梳理收藏夹中文章的逻辑顺序。",
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "goalAlignment": {
+                "purpose": "将所学概念串联起来，实现最终成果：能解释每篇之间的关系并做一个二维变换例子。",
+                "depth": "能够独立完成一个具体的二维变换计算，并口头解释每一步的几何意义。",
+                "successCheck": "选择一个向量，先旋转后缩放，计算最终结果；再交换顺序计算，比较结果并解释差异。",
+                "materialAnchors": [
+                  {
+                    "sourceId": "synthetic-material",
+                    "quote": "两个变换连续执行对应矩阵相乘，顺序一般不能交换。",
+                    "role": "direct",
+                    "connection": "本应用直接使用该引文中的矩阵乘法概念。",
+                    "evidenceKind": "material"
+                  }
+                ]
+              }
+            }
+          ],
+          "carrierEdges": [
+            {
+              "id": "ce-1",
+              "fromCarrierId": "p98d59f8cf05cf870-s1-1",
+              "toCarrierId": "p98d59f8cf05cf870-s2-1",
+              "reason": "完成上一阶段后进入下一阶段"
+            },
+            {
+              "id": "ce-2",
+              "fromCarrierId": "p98d59f8cf05cf870-s2-1",
+              "toCarrierId": "p98d59f8cf05cf870-s3-1",
+              "reason": "完成上一阶段后进入下一阶段"
+            },
+            {
+              "id": "ce-3",
+              "fromCarrierId": "p98d59f8cf05cf870-s3-1",
+              "toCarrierId": "p98d59f8cf05cf870-s4-1",
+              "reason": "完成上一阶段后进入下一阶段"
+            }
+          ],
+          "conceptEdges": [
+            {
+              "id": "ne-1",
+              "fromConceptId": "p98d59f8cf05cf870-s1-1-c1",
+              "toConceptId": "p98d59f8cf05cf870-s2-1-c1",
+              "reason": "按阶段衔接，当前阶段内的方向并列"
+            },
+            {
+              "id": "ne-2",
+              "fromConceptId": "p98d59f8cf05cf870-s2-1-c1",
+              "toConceptId": "p98d59f8cf05cf870-s3-1-c1",
+              "reason": "按阶段衔接，当前阶段内的方向并列"
+            },
+            {
+              "id": "ne-3",
+              "fromConceptId": "p98d59f8cf05cf870-s3-1-c1",
+              "toConceptId": "p98d59f8cf05cf870-s4-1-c1",
+              "reason": "按阶段衔接，当前阶段内的方向并列"
+            }
+          ],
+          "entryConceptIds": [
+            "p98d59f8cf05cf870-s1-1-c1"
+          ],
+          "terminalConceptIds": [
+            "p98d59f8cf05cf870-s4-1-c1"
+          ]
+        },
+        "promptHash": "057759255152b57ec19491d3d81ad8b12b207b3fa50f09a7fbf806e9dc765866",
+        "model": "deepseek-v4-flash",
+        "capabilities": {
+          "llm": {
+            "window": 64000,
+            "output": 16384,
+            "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3"
+          },
+          "zhihu": {
+            "fast": {
+              "window": 32000,
+              "output": 8192,
+              "namespace": "dfb88144267f3ed492e01a52817a55d671dedfed3728c98063e37603c491c3ce"
+            },
+            "deep": {
+              "window": 32000,
+              "output": 8192,
+              "namespace": "01009364ab10c3cae624383ae88f146508f9a5ecc26986704acbffbc8e630254"
+            }
+          }
+        },
+        "callCount": 2,
+        "durationMs": 16685
+      },
+      "rawHashes": {
+        "live/collection.json": "c25f2b03c4ee783d28771ac8d6dcfdba4b2ad0b121a171d5d631071bcb40ffae",
+        "live-refined/collection.json": "96c043f5b1e3a4f3d51beddb3545ae3efe9c02562fa3c2428a2d163688ce2a51"
+      }
+    },
+    {
+      "id": "finance",
+      "scenario": {
+        "id": "finance",
+        "goal": "我想系统学习理财，但网上教法各不相同，我不知道怎么学。",
+        "answer": "我是零基础，先学会管理家庭现金流、判断风险和读懂常见金融产品；不是为了短期炒股，也不要荐股。希望最后能写一份自己的收支预算和风险检查清单。"
+      },
+      "initial": {
+        "status": "completed",
+        "route": {
+          "title": "系统学习个人理财：从现金流管理到风险判断",
+          "routeId": "p73084b77deb24a88",
+          "version": "1.0",
+          "carriers": [
+            {
+              "id": "p73084b77deb24a88-s1-1",
+              "title": "建立理财观念与目标",
+              "description": "理解理财的本质是管理现金流和风险，而非短期投机，为后续学习奠定正确方向。"
+            },
+            {
+              "id": "p73084b77deb24a88-s2-1",
+              "title": "管理家庭现金流",
+              "description": "通过记账和预算掌握收支情况，为投资积累本金，并识别不必要的支出。"
+            },
+            {
+              "id": "p73084b77deb24a88-s3-1",
+              "title": "识别风险与骗局",
+              "description": "学会辨别网上理财信息的真伪，识别常见骗局，选择正规平台。"
+            },
+            {
+              "id": "p73084b77deb24a88-s4-1",
+              "title": "读懂常见金融产品",
+              "description": "学习货币基金、债券基金、指数基金等低风险产品的特点，为实践打基础。"
+            },
+            {
+              "id": "p73084b77deb24a88-s5-1",
+              "title": "综合实践：制定预算与风险清单",
+              "description": "将所学应用于实际，制定个人收支预算和风险检查清单，完成最终成果。"
+            }
+          ],
+          "concepts": [
+            {
+              "id": "p73084b77deb24a88-s1-1-c1",
+              "title": "理财与投资、投机的区别",
+              "carrierId": "p73084b77deb24a88-s1-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够用自己的话解释三者的区别，并举例说明。",
+                "purpose": "帮助用户建立正确认知，避免被网上高收益宣传误导，聚焦于长期稳健的财务健康。",
+                "successCheck": "写一段话说明理财、投资、投机的区别，并各举一个生活中的例子。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "明确理财是全面规划财务生活，投资是其中一部分，投机是短期高风险行为。"
+            },
+            {
+              "id": "p73084b77deb24a88-s1-1-c2",
+              "title": "风险与收益匹配、闲钱投资、应急金",
+              "carrierId": "p73084b77deb24a88-s1-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "理解概念并能解释为什么需要应急金，以及闲钱投资的意义。",
+                "purpose": "这是理财的核心原则，帮助用户后续判断产品时能评估风险，并避免因应急需求被迫卖出投资。",
+                "successCheck": "向家人或朋友解释为什么投资要用闲钱，并说明应急金应覆盖多长时间的生活支出。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "理解风险与收益成正比，投资只能用闲钱，并需先准备应急金以应对突发情况。"
+            },
+            {
+              "id": "p73084b77deb24a88-s2-1-c1",
+              "title": "记账与预算制定",
+              "carrierId": "p73084b77deb24a88-s2-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够使用记账工具或表格记录一个月收支，并制定下月预算。",
+                "purpose": "用户希望写出收支预算，这是直接技能，也是理财的基础。",
+                "successCheck": "用手机应用或电子表格记录一周的收支，并制定一份月度预算表。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "学习如何记录日常收支，分类统计，并制定月度预算，控制支出。"
+            },
+            {
+              "id": "p73084b77deb24a88-s2-1-c2",
+              "title": "债务管理与应急金建立",
+              "carrierId": "p73084b77deb24a88-s2-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够区分良性债务和不良债务，并制定应急金储蓄计划。",
+                "purpose": "确保财务稳健，避免债务危机，为投资提供安全垫。",
+                "successCheck": "列出自己或家庭可能的负债类型，并制定一个应急金储蓄目标（如每月存X元）。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "识别高息债务并优先偿还，同时建立3-6个月生活支出的应急金。"
+            },
+            {
+              "id": "p73084b77deb24a88-s3-1-c1",
+              "title": "常见理财骗局识别",
+              "carrierId": "p73084b77deb24a88-s3-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够识别至少三种骗局模式，并解释其风险。",
+                "purpose": "用户提到网上教法不一，需要辨别能力，避免踩坑。",
+                "successCheck": "收集三个理财骗局的案例，分析其共同特征，并写一篇短文提醒他人。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "学习高收益承诺、传销式拉人头、虚拟货币炒作等常见骗局的特征。"
+            },
+            {
+              "id": "p73084b77deb24a88-s3-1-c2",
+              "title": "选择正规平台与产品",
+              "carrierId": "p73084b77deb24a88-s3-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够判断一个平台是否正规，并读懂产品说明书中的关键风险提示。",
+                "purpose": "确保用户实践时选择安全渠道，避免资金损失。",
+                "successCheck": "选择一个理财产品，查看其发行机构、风险等级和费用，并说明是否适合自己。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "了解银行、持牌基金公司等正规渠道，学会查看产品风险等级和费用。"
+            },
+            {
+              "id": "p73084b77deb24a88-s4-1-c1",
+              "title": "货币基金与债券基金",
+              "carrierId": "p73084b77deb24a88-s4-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够比较两者的风险、收益和流动性，并说明各自适合的资金类型。",
+                "purpose": "用户需要读懂常见金融产品，这是直接目标。",
+                "successCheck": "用表格比较货币基金和债券基金在风险、收益、流动性上的差异，并各举一个例子。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "理解货币基金（如余额宝）和债券基金的风险收益特征、流动性、适合场景。"
+            },
+            {
+              "id": "p73084b77deb24a88-s4-1-c2",
+              "title": "指数基金",
+              "carrierId": "p73084b77deb24a88-s4-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够解释什么是指数基金，并说明其风险与收益特征。",
+                "purpose": "指数基金是常见投资工具，理解其原理有助于判断风险。",
+                "successCheck": "向朋友解释指数基金是什么，并说明为什么它比单只股票风险分散。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "了解指数基金的概念、分散风险的特点，以及定投的适用性。"
+            },
+            {
+              "id": "p73084b77deb24a88-s5-1-c1",
+              "title": "制定个人收支预算",
+              "carrierId": "p73084b77deb24a88-s5-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够独立制定一份预算，并解释其合理性。",
+                "purpose": "这是用户明确希望达成的成果之一。",
+                "successCheck": "根据自己一个月的收支记录，制定下个月的预算表，并列出储蓄和应急金计划。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "结合记账数据，制定一份实际可执行的月度预算，包括收入、固定支出、储蓄和投资计划。"
+            },
+            {
+              "id": "p73084b77deb24a88-s5-1-c2",
+              "title": "编写风险检查清单",
+              "carrierId": "p73084b77deb24a88-s5-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够列出清单项目，并说明每项的风险点和应对措施。",
+                "purpose": "这是用户明确希望达成的成果之一，用于持续监控财务健康。",
+                "successCheck": "写出一份包含至少五项的风险检查清单，每项注明检查频率和健康标准。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "整合应急金、负债、保险、投资风险等要素，形成个人风险检查清单。"
+            }
+          ],
+          "carrierEdges": [
+            {
+              "id": "ce-1",
+              "reason": "完成上一阶段后进入下一阶段",
+              "toCarrierId": "p73084b77deb24a88-s2-1",
+              "fromCarrierId": "p73084b77deb24a88-s1-1"
+            },
+            {
+              "id": "ce-2",
+              "reason": "完成上一阶段后进入下一阶段",
+              "toCarrierId": "p73084b77deb24a88-s3-1",
+              "fromCarrierId": "p73084b77deb24a88-s2-1"
+            },
+            {
+              "id": "ce-3",
+              "reason": "完成上一阶段后进入下一阶段",
+              "toCarrierId": "p73084b77deb24a88-s4-1",
+              "fromCarrierId": "p73084b77deb24a88-s3-1"
+            },
+            {
+              "id": "ce-4",
+              "reason": "完成上一阶段后进入下一阶段",
+              "toCarrierId": "p73084b77deb24a88-s5-1",
+              "fromCarrierId": "p73084b77deb24a88-s4-1"
+            }
+          ],
+          "conceptEdges": [
+            {
+              "id": "p73084b77deb24a88-s1-1-e1",
+              "reason": "按该载体中的推荐顺序学习",
+              "toConceptId": "p73084b77deb24a88-s1-1-c2",
+              "fromConceptId": "p73084b77deb24a88-s1-1-c1"
+            },
+            {
+              "id": "p73084b77deb24a88-s2-1-e1",
+              "reason": "按该载体中的推荐顺序学习",
+              "toConceptId": "p73084b77deb24a88-s2-1-c2",
+              "fromConceptId": "p73084b77deb24a88-s2-1-c1"
+            },
+            {
+              "id": "p73084b77deb24a88-s3-1-e1",
+              "reason": "按该载体中的推荐顺序学习",
+              "toConceptId": "p73084b77deb24a88-s3-1-c2",
+              "fromConceptId": "p73084b77deb24a88-s3-1-c1"
+            },
+            {
+              "id": "p73084b77deb24a88-s4-1-e1",
+              "reason": "按该载体中的推荐顺序学习",
+              "toConceptId": "p73084b77deb24a88-s4-1-c2",
+              "fromConceptId": "p73084b77deb24a88-s4-1-c1"
+            },
+            {
+              "id": "p73084b77deb24a88-s5-1-e1",
+              "reason": "按该载体中的推荐顺序学习",
+              "toConceptId": "p73084b77deb24a88-s5-1-c2",
+              "fromConceptId": "p73084b77deb24a88-s5-1-c1"
+            },
+            {
+              "id": "ne-6",
+              "reason": "按阶段衔接，当前阶段内的方向并列",
+              "toConceptId": "p73084b77deb24a88-s2-1-c1",
+              "fromConceptId": "p73084b77deb24a88-s1-1-c2"
+            },
+            {
+              "id": "ne-7",
+              "reason": "按阶段衔接，当前阶段内的方向并列",
+              "toConceptId": "p73084b77deb24a88-s3-1-c1",
+              "fromConceptId": "p73084b77deb24a88-s2-1-c2"
+            },
+            {
+              "id": "ne-8",
+              "reason": "按阶段衔接，当前阶段内的方向并列",
+              "toConceptId": "p73084b77deb24a88-s4-1-c1",
+              "fromConceptId": "p73084b77deb24a88-s3-1-c2"
+            },
+            {
+              "id": "ne-9",
+              "reason": "按阶段衔接，当前阶段内的方向并列",
+              "toConceptId": "p73084b77deb24a88-s5-1-c1",
+              "fromConceptId": "p73084b77deb24a88-s4-1-c2"
+            }
+          ],
+          "learningGoal": {
+            "outcome": "能够管理家庭现金流、判断风险、读懂常见金融产品，并写出一份自己的收支预算和风险检查清单",
+            "nonGoals": [],
+            "motivation": "我想系统学习理财，但网上教法各不相同，我不知道怎么学。",
+            "assumptions": [],
+            "constraints": [],
+            "openQuestions": [
+              "用户目前的收入、储蓄和负债具体数额未知，可能影响预算和风险清单的个性化程度",
+              "用户可投入的学习时间和资金量未知，可能影响实践深度",
+              "用户的风险承受能力未知，可能影响产品比较的侧重"
+            ],
+            "startingPoint": "我是零基础",
+            "successCriteria": [
+              "能制定一份个人或家庭收支预算，并持续记录至少一个月",
+              "能列出至少三种常见金融产品（如货币基金、债券基金、指数基金）的风险和收益特征，并解释其适用场景",
+              "能识别至少三种常见的理财骗局或高风险陷阱，并说明辨别方法",
+              "能根据自身情况写出一份风险检查清单，涵盖应急金、负债、保险和投资风险"
+            ]
+          },
+          "entryConceptIds": [
+            "p73084b77deb24a88-s1-1-c1"
+          ],
+          "terminalConceptIds": [
+            "p73084b77deb24a88-s5-1-c2"
+          ]
+        },
+        "provider": "deepseek-v4-flash",
+        "metrics": [
+          {
+            "step": "R1@goal-v1:f2f344eacbdf8634",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 0,
+              "inputBytes": 270,
+              "outputBytes": 270,
+              "compressions": 0,
+              "outputReserve": 2048
+            }
+          },
+          {
+            "step": "R1@goal-v1:f2f344eacbdf8634",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 1864
+            }
+          },
+          {
+            "step": "R-S:0@goal-v1",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 1529
+            }
+          },
+          {
+            "step": "R-S:1@goal-v1",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3249
+            }
+          },
+          {
+            "step": "memory-part:18843894c0fc897b39a03581b127632bed6259b4e5f655f094c3f00a2c83d221:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3221
+            }
+          },
+          {
+            "step": "memory:18843894c0fc897b39a03581b127632bed6259b4e5f655f094c3f00a2c83d221",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1268,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 3231,
+              "inputBytes": 3170,
+              "modelCalls": 1,
+              "outputBytes": 702
+            }
+          },
+          {
+            "step": "memory:18843894c0fc897b39a03581b127632bed6259b4e5f655f094c3f00a2c83d221",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3237
+            }
+          },
+          {
+            "step": "memory-part:86c6ec697cbbda03934d69fdd53a171fe30539ac05272cba2b1cbd887997fe55:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2381
+            }
+          },
+          {
+            "step": "memory:86c6ec697cbbda03934d69fdd53a171fe30539ac05272cba2b1cbd887997fe55",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1242,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2390,
+              "inputBytes": 3106,
+              "modelCalls": 1,
+              "outputBytes": 271
+            }
+          },
+          {
+            "step": "memory:86c6ec697cbbda03934d69fdd53a171fe30539ac05272cba2b1cbd887997fe55",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2395
+            }
+          },
+          {
+            "step": "memory-part:4852c1d9c900e619f2a44b3ff170bb48f2da1d3c92fb3561d9cf21645a534cd3:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2905
+            }
+          },
+          {
+            "step": "memory:4852c1d9c900e619f2a44b3ff170bb48f2da1d3c92fb3561d9cf21645a534cd3",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1210,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2913,
+              "inputBytes": 3027,
+              "modelCalls": 1,
+              "outputBytes": 556
+            }
+          },
+          {
+            "step": "memory:4852c1d9c900e619f2a44b3ff170bb48f2da1d3c92fb3561d9cf21645a534cd3",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2919
+            }
+          },
+          {
+            "step": "memory-part:2d6115225bb2ded17830a444d844bca919cfebe4689b1a97750429069093cb97:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2482
+            }
+          },
+          {
+            "step": "memory:2d6115225bb2ded17830a444d844bca919cfebe4689b1a97750429069093cb97",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1205,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2491,
+              "inputBytes": 3013,
+              "modelCalls": 1,
+              "outputBytes": 304
+            }
+          },
+          {
+            "step": "memory:2d6115225bb2ded17830a444d844bca919cfebe4689b1a97750429069093cb97",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2496
+            }
+          },
+          {
+            "step": "memory-part:1f15fb2680d9730ab81b398f295fbd86648b0d4b72e481cc64ea0beb376846e2:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2965
+            }
+          },
+          {
+            "step": "memory:1f15fb2680d9730ab81b398f295fbd86648b0d4b72e481cc64ea0beb376846e2",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1190,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2973,
+              "inputBytes": 2976,
+              "modelCalls": 1,
+              "outputBytes": 686
+            }
+          },
+          {
+            "step": "memory:1f15fb2680d9730ab81b398f295fbd86648b0d4b72e481cc64ea0beb376846e2",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2979
+            }
+          },
+          {
+            "step": "memory-part:fd8ce1a180256eb358af249db383c9520d19357a83a845b9b6bccca782390118:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 4211
+            }
+          },
+          {
+            "step": "memory-part:fd8ce1a180256eb358af249db383c9520d19357a83a845b9b6bccca782390118:1:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3113
+            }
+          },
+          {
+            "step": "memory-part:fd8ce1a180256eb358af249db383c9520d19357a83a845b9b6bccca782390118:2:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3377
+            }
+          },
+          {
+            "step": "memory-part:fd8ce1a180256eb358af249db383c9520d19357a83a845b9b6bccca782390118:3:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3225
+            }
+          },
+          {
+            "step": "memory-part:fd8ce1a180256eb358af249db383c9520d19357a83a845b9b6bccca782390118:4:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3209
+            }
+          },
+          {
+            "step": "memory-part:fd8ce1a180256eb358af249db383c9520d19357a83a845b9b6bccca782390118:5:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3156
+            }
+          },
+          {
+            "step": "memory-part:fd8ce1a180256eb358af249db383c9520d19357a83a845b9b6bccca782390118:6:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3162
+            }
+          },
+          {
+            "step": "memory-part:fd8ce1a180256eb358af249db383c9520d19357a83a845b9b6bccca782390118:7:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2998
+            }
+          },
+          {
+            "step": "memory:fd8ce1a180256eb358af249db383c9520d19357a83a845b9b6bccca782390118",
+            "provider": "workflow",
+            "body": {
+              "code": "SUMMARY_NOT_REDUCED",
+              "kind": "step",
+              "cache": "miss",
+              "result": "failed",
+              "durationMs": 26467
+            }
+          },
+          {
+            "step": "memory-part:1380fada8ca310b0ac4788b7a2a3324e2a9be9910f1a0915a7575423cec6b3f5:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2343
+            }
+          },
+          {
+            "step": "memory:1380fada8ca310b0ac4788b7a2a3324e2a9be9910f1a0915a7575423cec6b3f5",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1155,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2355,
+              "inputBytes": 2888,
+              "modelCalls": 1,
+              "outputBytes": 373
+            }
+          },
+          {
+            "step": "memory:1380fada8ca310b0ac4788b7a2a3324e2a9be9910f1a0915a7575423cec6b3f5",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2361
+            }
+          },
+          {
+            "step": "memory-part:76d6d88c77f8b02bdf012fe9f8a94c790c09a69aa2c9ecf92f57907a125fb38d:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3521
+            }
+          },
+          {
+            "step": "memory:76d6d88c77f8b02bdf012fe9f8a94c790c09a69aa2c9ecf92f57907a125fb38d",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1142,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 3531,
+              "inputBytes": 2855,
+              "modelCalls": 1,
+              "outputBytes": 792
+            }
+          },
+          {
+            "step": "memory:76d6d88c77f8b02bdf012fe9f8a94c790c09a69aa2c9ecf92f57907a125fb38d",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3537
+            }
+          },
+          {
+            "step": "memory-part:df1061350cc31836d232e8bdc1c5ae3304dcf11887a0b34e4abdacc0ee2b1945:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2822
+            }
+          },
+          {
+            "step": "memory:df1061350cc31836d232e8bdc1c5ae3304dcf11887a0b34e4abdacc0ee2b1945",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1126,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2832,
+              "inputBytes": 2816,
+              "modelCalls": 1,
+              "outputBytes": 433
+            }
+          },
+          {
+            "step": "memory:df1061350cc31836d232e8bdc1c5ae3304dcf11887a0b34e4abdacc0ee2b1945",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2838
+            }
+          },
+          {
+            "step": "R2@goal-v1:1dff353659fcab8d",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 49238,
+              "inputBytes": 58759,
+              "outputBytes": 38995,
+              "compressions": 9,
+              "outputReserve": 16384
+            }
+          },
+          {
+            "step": "R2@goal-v1:1dff353659fcab8d",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 82088
+            }
+          },
+          {
+            "step": "R3@goal-v1:62fd8c83ce030838",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 0,
+              "inputBytes": 6090,
+              "outputBytes": 6090,
+              "compressions": 0,
+              "outputReserve": 3072
+            }
+          },
+          {
+            "step": "R3@goal-v1:62fd8c83ce030838",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3147
+            }
+          },
+          {
+            "step": "commit",
+            "provider": "workflow",
+            "body": {
+              "kind": "commit",
+              "result": "completed",
+              "durationMs": 7
+            }
+          },
+          {
+            "step": "R4-plan:strict-v2@goal-v1:2a0e6db48cde18ed",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 0,
+              "inputBytes": 7719,
+              "outputBytes": 7719,
+              "compressions": 0,
+              "outputReserve": 16384
+            }
+          },
+          {
+            "step": "R4-plan:strict-v2@goal-v1:2a0e6db48cde18ed",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 14397
+            }
+          },
+          {
+            "step": "commit",
+            "provider": "workflow",
+            "body": {
+              "kind": "commit",
+              "result": "completed",
+              "durationMs": 4
+            }
+          }
+        ]
+      },
+      "refined": {
+        "date": "2026-09-08T14:06:28.057Z",
+        "status": "completed",
+        "route": {
+          "version": "1.0",
+          "routeId": "p08a834a56f772722",
+          "learningGoal": {
+            "outcome": "能够管理家庭现金流、判断常见金融产品风险，并写出一份自己的收支预算和风险检查清单",
+            "motivation": "我想系统学习理财，但网上教法各不相同，我不知道怎么学。",
+            "successCriteria": [
+              "能制定一份个人或家庭收支预算，并持续记录至少一个月",
+              "能识别常见金融产品的风险特征，并解释其与收益的关系",
+              "能写出一份针对自身情况的风险检查清单，涵盖应急金、负债、保险和投资风险",
+              "能辨别常见的理财骗局和误导性宣传"
+            ],
+            "startingPoint": "我是零基础",
+            "constraints": [],
+            "nonGoals": [],
+            "assumptions": [],
+            "openQuestions": [
+              "用户目前的收入、储蓄和负债具体数额未知，但不影响学习现金流管理的基础方法",
+              "用户可投入的学习时间未知，但学习路径不依赖特定时间投入",
+              "用户的风险承受能力未知，但学习内容以风险认知为主，不涉及具体配置建议"
+            ]
+          },
+          "title": "系统学习个人理财：从现金流管理到风险判断",
+          "carriers": [
+            {
+              "id": "p08a834a56f772722-s1-1",
+              "title": "理财基础观念",
+              "description": "建立正确的理财观念，理解风险与收益匹配、闲钱投资和应急金的重要性，为后续学习打下基础。"
+            },
+            {
+              "id": "p08a834a56f772722-s2-1",
+              "title": "家庭现金流管理",
+              "description": "学习记账和预算制定，理清收入与支出，为投资和风险判断提供财务基础。"
+            },
+            {
+              "id": "p08a834a56f772722-s3-1",
+              "title": "常见金融产品风险识别",
+              "description": "学习读懂常见金融产品（如存款、货币基金、债券基金、股票）的基本特征和风险，为风险判断提供工具。"
+            },
+            {
+              "id": "p08a834a56f772722-s4-1",
+              "title": "风险检查与信息辨别",
+              "description": "综合运用所学，形成风险检查清单，并学会辨别理财骗局和误导信息。"
+            }
+          ],
+          "concepts": [
+            {
+              "id": "p08a834a56f772722-s1-1-c1",
+              "carrierId": "p08a834a56f772722-s1-1",
+              "title": "风险与收益匹配",
+              "hasDispute": false,
+              "detailedDescription": "理解投资中风险与收益的基本关系：高收益通常伴随高风险，低风险产品收益相对较低。学习如何评估自身风险承受能力，避免被高收益承诺诱惑。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "为判断风险和读懂金融产品提供基础认知，避免陷入高收益陷阱。",
+                "depth": "理解风险与收益的基本关系，能举例说明不同产品的风险水平，不涉及复杂量化分析。",
+                "successCheck": "列举三种常见金融产品（如银行存款、债券基金、股票），并说明各自的风险和收益特征。",
+                "materialAnchors": []
+              }
+            },
+            {
+              "id": "p08a834a56f772722-s1-1-c2",
+              "carrierId": "p08a834a56f772722-s1-1",
+              "title": "闲钱投资与应急金",
+              "hasDispute": false,
+              "detailedDescription": "学习区分生活备用金和可投资资金，理解应急金（通常为3-6个月支出）的重要性，确保投资只用闲钱，避免因急需用钱而被迫亏损。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "为制定收支预算和风险检查清单提供核心原则，确保财务稳健。",
+                "depth": "理解应急金的用途和金额估算方法，能根据自身情况计算大致应急金需求。",
+                "successCheck": "根据自己每月必要支出，估算应急金目标金额，并说明为何需要这笔钱。",
+                "materialAnchors": []
+              }
+            },
+            {
+              "id": "p08a834a56f772722-s2-1-c1",
+              "carrierId": "p08a834a56f772722-s2-1",
+              "title": "记账与预算制定",
+              "hasDispute": false,
+              "detailedDescription": "学习如何记录日常收支，分类固定支出和可变支出，制定月度预算，并分析实际与预算的差异，从而控制现金流。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "直接服务于最终成果中的收支预算，是管理家庭现金流的基础技能。",
+                "depth": "掌握记账方法和预算制定步骤，能制作简单的月度预算表，不涉及复杂财务分析。",
+                "successCheck": "为自己制定一份下个月的收支预算表，包含收入、固定支出、可变支出和储蓄目标。",
+                "materialAnchors": []
+              }
+            },
+            {
+              "id": "p08a834a56f772722-s2-1-c2",
+              "carrierId": "p08a834a56f772722-s2-1",
+              "title": "债务管理",
+              "hasDispute": false,
+              "detailedDescription": "了解常见债务类型（如信用卡、消费贷）的利率和还款方式，学习优先偿还高息债务，避免债务滚雪球。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "帮助识别负债风险，是风险检查清单的重要组成部分。",
+                "depth": "能区分好债与坏债，理解高息债务的危害，不涉及具体债务重组策略。",
+                "successCheck": "列出自己或家庭可能的债务类型，并说明哪种债务应优先偿还及原因。",
+                "materialAnchors": []
+              }
+            },
+            {
+              "id": "p08a834a56f772722-s3-1-c1",
+              "carrierId": "p08a834a56f772722-s3-1",
+              "title": "存款与货币基金",
+              "hasDispute": false,
+              "detailedDescription": "学习银行存款和货币基金的特点：安全性高、流动性好、收益较低。理解存款保险制度，以及货币基金的投资范围（如短期国债、银行存款）。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "作为低风险产品的代表，帮助建立风险与收益的直观认识，也是应急金存放的常见选择。",
+                "depth": "能区分存款和货币基金的风险差异，理解其收益水平，不涉及具体产品选择。",
+                "successCheck": "解释存款和货币基金的主要区别，并说明为什么它们适合存放应急金。",
+                "materialAnchors": []
+              }
+            },
+            {
+              "id": "p08a834a56f772722-s3-1-c2",
+              "carrierId": "p08a834a56f772722-s3-1",
+              "title": "债券基金与股票",
+              "hasDispute": false,
+              "detailedDescription": "学习债券基金和股票的基本风险特征：债券基金受利率影响，股票波动大。理解分散投资的概念，但不过度深入。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "帮助识别中高风险产品的风险来源，为风险检查清单提供依据。",
+                "depth": "能解释债券基金和股票的主要风险因素，理解分散化降低风险的基本原理，不涉及个股分析。",
+                "successCheck": "用通俗语言解释为什么股票比债券基金风险高，并说明分散投资如何降低风险。",
+                "materialAnchors": []
+              }
+            },
+            {
+              "id": "p08a834a56f772722-s4-1-c1",
+              "carrierId": "p08a834a56f772722-s4-1",
+              "title": "风险检查清单",
+              "hasDispute": false,
+              "detailedDescription": "学习如何从应急金、负债、保险、投资风险等维度评估自身财务健康，并制定个人风险检查清单。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "直接实现最终成果中的风险检查清单，是综合应用。",
+                "depth": "能列出检查项目并说明每项的意义，不涉及具体保险产品推荐。",
+                "successCheck": "写出一份包含至少5个项目的风险检查清单，并对照自身情况逐项评估。",
+                "materialAnchors": []
+              }
+            },
+            {
+              "id": "p08a834a56f772722-s4-1-c2",
+              "carrierId": "p08a834a56f772722-s4-1",
+              "title": "识别理财骗局与误导",
+              "hasDispute": false,
+              "detailedDescription": "学习常见理财骗局的特征（如高收益承诺、紧急投资、无资质平台），掌握辨别正规平台和产品的方法。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "帮助用户自主判断网上各种理财建议的优劣，避免踩坑。",
+                "depth": "能识别常见骗局套路，知道如何验证平台资质，不涉及深入法律分析。",
+                "successCheck": "列举三种常见的理财骗局特征，并说明如何验证一个理财平台是否正规。",
+                "materialAnchors": []
+              }
+            }
+          ],
+          "carrierEdges": [
+            {
+              "id": "ce-1",
+              "fromCarrierId": "p08a834a56f772722-s1-1",
+              "toCarrierId": "p08a834a56f772722-s2-1",
+              "reason": "完成上一阶段后进入下一阶段"
+            },
+            {
+              "id": "ce-2",
+              "fromCarrierId": "p08a834a56f772722-s2-1",
+              "toCarrierId": "p08a834a56f772722-s3-1",
+              "reason": "完成上一阶段后进入下一阶段"
+            },
+            {
+              "id": "ce-3",
+              "fromCarrierId": "p08a834a56f772722-s3-1",
+              "toCarrierId": "p08a834a56f772722-s4-1",
+              "reason": "完成上一阶段后进入下一阶段"
+            }
+          ],
+          "conceptEdges": [
+            {
+              "id": "p08a834a56f772722-s1-1-e1",
+              "fromConceptId": "p08a834a56f772722-s1-1-c1",
+              "toConceptId": "p08a834a56f772722-s1-1-c2",
+              "reason": "按该载体中的推荐顺序学习"
+            },
+            {
+              "id": "p08a834a56f772722-s2-1-e1",
+              "fromConceptId": "p08a834a56f772722-s2-1-c1",
+              "toConceptId": "p08a834a56f772722-s2-1-c2",
+              "reason": "按该载体中的推荐顺序学习"
+            },
+            {
+              "id": "p08a834a56f772722-s3-1-e1",
+              "fromConceptId": "p08a834a56f772722-s3-1-c1",
+              "toConceptId": "p08a834a56f772722-s3-1-c2",
+              "reason": "按该载体中的推荐顺序学习"
+            },
+            {
+              "id": "p08a834a56f772722-s4-1-e1",
+              "fromConceptId": "p08a834a56f772722-s4-1-c1",
+              "toConceptId": "p08a834a56f772722-s4-1-c2",
+              "reason": "按该载体中的推荐顺序学习"
+            },
+            {
+              "id": "ne-5",
+              "fromConceptId": "p08a834a56f772722-s1-1-c2",
+              "toConceptId": "p08a834a56f772722-s2-1-c1",
+              "reason": "按阶段衔接，当前阶段内的方向并列"
+            },
+            {
+              "id": "ne-6",
+              "fromConceptId": "p08a834a56f772722-s2-1-c2",
+              "toConceptId": "p08a834a56f772722-s3-1-c1",
+              "reason": "按阶段衔接，当前阶段内的方向并列"
+            },
+            {
+              "id": "ne-7",
+              "fromConceptId": "p08a834a56f772722-s3-1-c2",
+              "toConceptId": "p08a834a56f772722-s4-1-c1",
+              "reason": "按阶段衔接，当前阶段内的方向并列"
+            }
+          ],
+          "entryConceptIds": [
+            "p08a834a56f772722-s1-1-c1"
+          ],
+          "terminalConceptIds": [
+            "p08a834a56f772722-s4-1-c2"
+          ]
+        },
+        "promptHash": "057759255152b57ec19491d3d81ad8b12b207b3fa50f09a7fbf806e9dc765866",
+        "model": "deepseek-v4-flash",
+        "capabilities": {
+          "llm": {
+            "window": 64000,
+            "output": 16384,
+            "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3"
+          },
+          "zhihu": {
+            "fast": {
+              "window": 32000,
+              "output": 8192,
+              "namespace": "dfb88144267f3ed492e01a52817a55d671dedfed3728c98063e37603c491c3ce"
+            },
+            "deep": {
+              "window": 32000,
+              "output": 8192,
+              "namespace": "01009364ab10c3cae624383ae88f146508f9a5ecc26986704acbffbc8e630254"
+            }
+          }
+        },
+        "callCount": 1,
+        "durationMs": 13977
+      },
+      "rawHashes": {
+        "live/finance.json": "f1b5c5eca7626d6fc0e8fe2f98e66df795604685448c12d8dd3e6bbe5b2aec0a",
+        "live-refined/finance.json": "8db8fa31a5177d99c33f9feeed8374628a41ec591c0fd7e31aaabb957c02de4e"
+      }
+    },
+    {
+      "id": "llm-job",
+      "scenario": {
+        "id": "llm-job",
+        "goal": "我想找到大模型相关的工作，但不知道应该一步步学什么。",
+        "answer": "我有两年 Python 后端经验，目标是大模型应用开发岗位，偏 RAG 和 Agent 应用；不是研究算法或训练基础模型。想做一个能展示检索评测、工具调用和上线维护能力的求职作品，没有给自己限定时间。"
+      },
+      "initial": {
+        "status": "completed",
+        "route": {
+          "title": "大模型应用开发求职学习路线",
+          "routeId": "pcd133824fd412020",
+          "version": "1.0",
+          "carriers": [
+            {
+              "id": "pcd133824fd412020-s1-1",
+              "title": "大模型应用基础与API调用",
+              "description": "基于已有的Python后端经验，快速掌握大模型API的使用和提示词工程，为后续RAG和Agent开发打下基础。"
+            },
+            {
+              "id": "pcd133824fd412020-s2-1",
+              "title": "RAG应用开发",
+              "description": "学习构建检索增强生成应用，包括文档处理、向量化、检索和生成，并掌握评测方法，为求职作品的核心功能做准备。"
+            },
+            {
+              "id": "pcd133824fd412020-s3-1",
+              "title": "Agent开发与工具调用",
+              "description": "学习如何让大模型调用外部工具，实现任务规划和执行，为作品增加Agent能力。"
+            },
+            {
+              "id": "pcd133824fd412020-s4-1",
+              "title": "作品整合与上线维护",
+              "description": "将RAG和Agent功能整合为一个完整的应用，并部署上线，展示上线维护能力。"
+            },
+            {
+              "id": "pcd133824fd412020-s5-1",
+              "title": "面试准备与作品打磨",
+              "description": "针对大模型应用开发岗位的面试，梳理知识体系，打磨作品展示，并练习常见问题。"
+            }
+          ],
+          "concepts": [
+            {
+              "id": "pcd133824fd412020-s1-1-c1",
+              "title": "大模型API调用与提示词工程",
+              "carrierId": "pcd133824fd412020-s1-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够熟练使用API进行对话补全，理解关键参数对输出的影响，能设计有效的提示词完成特定任务。暂不涉及底层模型原理。",
+                "purpose": "这是构建任何大模型应用的基础，直接用于后续RAG和Agent的交互。",
+                "successCheck": "编写一个Python脚本，调用大模型API实现一个简单的问答功能，并调整温度等参数观察输出变化。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "学习如何调用大模型API（如OpenAI、智谱等），理解token、温度、上下文窗口等参数，掌握提示词设计的基本技巧，包括角色设定、指令清晰、示例引导等。"
+            },
+            {
+              "id": "pcd133824fd412020-s2-1-c1",
+              "title": "文档加载与切块",
+              "carrierId": "pcd133824fd412020-s2-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够使用常见库（如LangChain）加载文档并实现切块，理解不同切块策略的优劣。",
+                "purpose": "RAG应用的第一步，将原始文档转化为可检索的文本块。",
+                "successCheck": "给定一份PDF文档，编写代码将其加载并切分为多个文本块，并输出每个块的长度和内容预览。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "学习如何加载不同格式的文档（PDF、Markdown等），并进行合理的文本切块，考虑块大小、重叠等策略对检索效果的影响。"
+            },
+            {
+              "id": "pcd133824fd412020-s2-1-c2",
+              "title": "向量化与向量数据库",
+              "carrierId": "pcd133824fd412020-s2-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够使用嵌入模型将文本向量化，并存入向量数据库，执行相似度查询。理解不同嵌入模型和数据库的选型。",
+                "purpose": "实现RAG的检索部分，是作品的核心组件。",
+                "successCheck": "将切分好的文本块向量化并存入Chroma，然后对一个查询返回最相关的3个文本块。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "学习将文本块转换为向量嵌入，并存储到向量数据库（如Chroma、FAISS）中，实现相似度检索。"
+            },
+            {
+              "id": "pcd133824fd412020-s2-1-c3",
+              "title": "检索增强生成流程与评测",
+              "carrierId": "pcd133824fd412020-s2-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够实现完整的RAG流程，并设计简单的评测集，计算检索的召回率等指标，根据结果调整切块或检索策略。",
+                "purpose": "完成RAG的生成部分，并能够量化检索效果，体现作品的专业性。",
+                "successCheck": "构建一个简单的问答系统，对一组测试问题计算检索召回率，并尝试调整一个参数（如切块大小）观察指标变化。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "学习将检索到的文本块与用户问题拼接，调用大模型生成回答，并设计评测指标（如召回率、准确率）来评估检索质量。"
+            },
+            {
+              "id": "pcd133824fd412020-s3-1-c1",
+              "title": "Function Calling与工具调用",
+              "carrierId": "pcd133824fd412020-s3-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够使用OpenAI等API的function calling功能，定义工具并让模型调用。",
+                "purpose": "实现Agent的基础能力，使应用能够执行具体操作。",
+                "successCheck": "定义一个查询天气的工具，让模型根据用户问题调用该工具并返回结果。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "学习如何定义工具函数，让模型在对话中决定调用哪个工具，并处理工具返回结果。"
+            },
+            {
+              "id": "pcd133824fd412020-s3-1-c2",
+              "title": "Agent任务规划与ReAct模式",
+              "carrierId": "pcd133824fd412020-s3-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够使用LangChain等框架实现一个简单的ReAct Agent，执行多步任务。",
+                "purpose": "提升Agent的智能性，使其能处理需要多步操作的任务。",
+                "successCheck": "实现一个Agent，能够根据用户指令（如'查找某公司最新财报并总结要点'）自动规划步骤并调用工具完成。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "学习如何让模型进行多步推理和规划，使用ReAct模式（推理+行动）完成复杂任务。"
+            },
+            {
+              "id": "pcd133824fd412020-s4-1-c1",
+              "title": "应用整合与部署",
+              "carrierId": "pcd133824fd412020-s4-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够将代码封装为API服务，使用Docker部署，并配置基本的环境变量。",
+                "purpose": "形成可展示的求职作品，并证明具备上线能力。",
+                "successCheck": "将你的RAG+Agent应用打包为Docker镜像，并在本地运行，通过HTTP请求测试功能。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "学习如何将RAG和Agent模块整合为一个Web应用（如使用FastAPI），并部署到云服务器或容器平台。"
+            },
+            {
+              "id": "pcd133824fd412020-s4-1-c2",
+              "title": "监控与日志",
+              "carrierId": "pcd133824fd412020-s4-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够使用日志库记录关键操作，设置简单的错误告警（如邮件通知）。",
+                "purpose": "满足作品要求中的'上线维护能力'，展示工程化素养。",
+                "successCheck": "为你的应用添加日志，模拟一次错误并查看日志输出，配置一个简单的错误通知。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "学习如何为应用添加日志记录、错误追踪和性能监控，以便上线后维护。"
+            },
+            {
+              "id": "pcd133824fd412020-s5-1-c1",
+              "title": "技术栈梳理与面试题准备",
+              "carrierId": "pcd133824fd412020-s5-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "能够清晰解释RAG流程、Agent设计、技术选型理由，并应对追问。",
+                "purpose": "通过面试检验学习成果，获得工作机会。",
+                "successCheck": "模拟一次面试，向他人或自己讲解你的作品，并回答关于RAG和Agent的5个问题。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "系统回顾RAG、Agent、API调用等核心知识，准备常见面试问题，如'如何解决幻觉'、'RAG与微调的区别'等。"
+            }
+          ],
+          "carrierEdges": [
+            {
+              "id": "ce-1",
+              "reason": "完成上一阶段后进入下一阶段",
+              "toCarrierId": "pcd133824fd412020-s2-1",
+              "fromCarrierId": "pcd133824fd412020-s1-1"
+            },
+            {
+              "id": "ce-2",
+              "reason": "完成上一阶段后进入下一阶段",
+              "toCarrierId": "pcd133824fd412020-s3-1",
+              "fromCarrierId": "pcd133824fd412020-s2-1"
+            },
+            {
+              "id": "ce-3",
+              "reason": "完成上一阶段后进入下一阶段",
+              "toCarrierId": "pcd133824fd412020-s4-1",
+              "fromCarrierId": "pcd133824fd412020-s3-1"
+            },
+            {
+              "id": "ce-4",
+              "reason": "完成上一阶段后进入下一阶段",
+              "toCarrierId": "pcd133824fd412020-s5-1",
+              "fromCarrierId": "pcd133824fd412020-s4-1"
+            }
+          ],
+          "conceptEdges": [
+            {
+              "id": "pcd133824fd412020-s2-1-e1",
+              "reason": "按该载体中的推荐顺序学习",
+              "toConceptId": "pcd133824fd412020-s2-1-c2",
+              "fromConceptId": "pcd133824fd412020-s2-1-c1"
+            },
+            {
+              "id": "pcd133824fd412020-s2-1-e2",
+              "reason": "按该载体中的推荐顺序学习",
+              "toConceptId": "pcd133824fd412020-s2-1-c3",
+              "fromConceptId": "pcd133824fd412020-s2-1-c2"
+            },
+            {
+              "id": "pcd133824fd412020-s3-1-e1",
+              "reason": "按该载体中的推荐顺序学习",
+              "toConceptId": "pcd133824fd412020-s3-1-c2",
+              "fromConceptId": "pcd133824fd412020-s3-1-c1"
+            },
+            {
+              "id": "pcd133824fd412020-s4-1-e1",
+              "reason": "按该载体中的推荐顺序学习",
+              "toConceptId": "pcd133824fd412020-s4-1-c2",
+              "fromConceptId": "pcd133824fd412020-s4-1-c1"
+            },
+            {
+              "id": "ne-5",
+              "reason": "按阶段衔接，当前阶段内的方向并列",
+              "toConceptId": "pcd133824fd412020-s2-1-c1",
+              "fromConceptId": "pcd133824fd412020-s1-1-c1"
+            },
+            {
+              "id": "ne-6",
+              "reason": "按阶段衔接，当前阶段内的方向并列",
+              "toConceptId": "pcd133824fd412020-s3-1-c1",
+              "fromConceptId": "pcd133824fd412020-s2-1-c3"
+            },
+            {
+              "id": "ne-7",
+              "reason": "按阶段衔接，当前阶段内的方向并列",
+              "toConceptId": "pcd133824fd412020-s4-1-c1",
+              "fromConceptId": "pcd133824fd412020-s3-1-c2"
+            },
+            {
+              "id": "ne-8",
+              "reason": "按阶段衔接，当前阶段内的方向并列",
+              "toConceptId": "pcd133824fd412020-s5-1-c1",
+              "fromConceptId": "pcd133824fd412020-s4-1-c2"
+            }
+          ],
+          "learningGoal": {
+            "outcome": "能够独立完成并展示一个体现检索评测、工具调用和上线维护能力的大模型应用求职作品，并具备通过大模型应用开发岗位面试的能力。",
+            "nonGoals": [],
+            "motivation": "我想找到大模型相关的工作，但不知道应该一步步学什么。",
+            "assumptions": [],
+            "constraints": [],
+            "openQuestions": [
+              "用户未说明具体的学习时间安排，但表示没有给自己限定时间。",
+              "用户未说明是否熟悉向量数据库、前端部署等具体技术，需在实践过程中确认。"
+            ],
+            "startingPoint": "我有两年 Python 后端经验",
+            "successCriteria": [
+              "完成一个可展示的RAG应用，包含文档处理、向量检索、召回评测，并展示检索质量改进过程。",
+              "在作品中集成至少一个工具调用（如API调用或数据库查询），展示Agent的任务规划与执行。",
+              "将作品部署上线，并展示基本的监控和维护能力（如日志、错误追踪）。",
+              "能够解释作品中的技术选型、RAG流程、Agent设计，并回答面试中的相关问题。"
+            ]
+          },
+          "entryConceptIds": [
+            "pcd133824fd412020-s1-1-c1"
+          ],
+          "terminalConceptIds": [
+            "pcd133824fd412020-s5-1-c1"
+          ]
+        },
+        "provider": "deepseek-v4-flash",
+        "metrics": [
+          {
+            "step": "R1@goal-v1:f2f344eacbdf8634",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 0,
+              "inputBytes": 264,
+              "outputBytes": 264,
+              "compressions": 0,
+              "outputReserve": 2048
+            }
+          },
+          {
+            "step": "R1@goal-v1:f2f344eacbdf8634",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2182
+            }
+          },
+          {
+            "step": "R-S:0@goal-v1",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 1419
+            }
+          },
+          {
+            "step": "R-S:1@goal-v1",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2910
+            }
+          },
+          {
+            "step": "memory-part:ddd2239099ea9c4c8e1bf69d8b86825741cf126fce93029b0e034765da641408:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2790
+            }
+          },
+          {
+            "step": "memory:ddd2239099ea9c4c8e1bf69d8b86825741cf126fce93029b0e034765da641408",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1378,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2799,
+              "inputBytes": 3447,
+              "modelCalls": 1,
+              "outputBytes": 915
+            }
+          },
+          {
+            "step": "memory:ddd2239099ea9c4c8e1bf69d8b86825741cf126fce93029b0e034765da641408",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2805
+            }
+          },
+          {
+            "step": "memory-part:19514e80f70fd6ddf34434849beca8255c4fd07c19ccf17d4519b76877a98b03:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2103
+            }
+          },
+          {
+            "step": "memory:19514e80f70fd6ddf34434849beca8255c4fd07c19ccf17d4519b76877a98b03",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1148,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2111,
+              "inputBytes": 2872,
+              "modelCalls": 1,
+              "outputBytes": 578
+            }
+          },
+          {
+            "step": "memory:19514e80f70fd6ddf34434849beca8255c4fd07c19ccf17d4519b76877a98b03",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2116
+            }
+          },
+          {
+            "step": "memory-part:66eae9f1ff95a813bf73de00c759ef6f473285b277ab883f0ba447b34483bfeb:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2796
+            }
+          },
+          {
+            "step": "memory:66eae9f1ff95a813bf73de00c759ef6f473285b277ab883f0ba447b34483bfeb",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1128,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2806,
+              "inputBytes": 2821,
+              "modelCalls": 1,
+              "outputBytes": 968
+            }
+          },
+          {
+            "step": "memory:66eae9f1ff95a813bf73de00c759ef6f473285b277ab883f0ba447b34483bfeb",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2812
+            }
+          },
+          {
+            "step": "memory-part:fd272a6bf58677445fbcbf838716789291bc498732669940f2e9bdd30c304445:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2211
+            }
+          },
+          {
+            "step": "memory:fd272a6bf58677445fbcbf838716789291bc498732669940f2e9bdd30c304445",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1128,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2219,
+              "inputBytes": 2820,
+              "modelCalls": 1,
+              "outputBytes": 589
+            }
+          },
+          {
+            "step": "memory:fd272a6bf58677445fbcbf838716789291bc498732669940f2e9bdd30c304445",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2224
+            }
+          },
+          {
+            "step": "memory-part:65d9405f14deffe65ecb2efabb2f3b91ed27bd8b46fe6e3d616181a24ebf5f2c:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2158
+            }
+          },
+          {
+            "step": "memory:65d9405f14deffe65ecb2efabb2f3b91ed27bd8b46fe6e3d616181a24ebf5f2c",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1117,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2166,
+              "inputBytes": 2794,
+              "modelCalls": 1,
+              "outputBytes": 487
+            }
+          },
+          {
+            "step": "memory:65d9405f14deffe65ecb2efabb2f3b91ed27bd8b46fe6e3d616181a24ebf5f2c",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2172
+            }
+          },
+          {
+            "step": "memory-part:6e557d7a632c146946286e77bf692c20cce4760e2e46806bde43c916ed740371:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2875
+            }
+          },
+          {
+            "step": "memory:6e557d7a632c146946286e77bf692c20cce4760e2e46806bde43c916ed740371",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1116,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2883,
+              "inputBytes": 2790,
+              "modelCalls": 1,
+              "outputBytes": 784
+            }
+          },
+          {
+            "step": "memory:6e557d7a632c146946286e77bf692c20cce4760e2e46806bde43c916ed740371",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2890
+            }
+          },
+          {
+            "step": "memory-part:a08c77c07f0d5968a4aedca49e25424f2aca1e2ec394593fd1e5656bcbadfbba:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3253
+            }
+          },
+          {
+            "step": "memory-part:a08c77c07f0d5968a4aedca49e25424f2aca1e2ec394593fd1e5656bcbadfbba:1:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3356
+            }
+          },
+          {
+            "step": "memory-part:a08c77c07f0d5968a4aedca49e25424f2aca1e2ec394593fd1e5656bcbadfbba:2:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3301
+            }
+          },
+          {
+            "step": "memory:a08c77c07f0d5968a4aedca49e25424f2aca1e2ec394593fd1e5656bcbadfbba",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1114,
+              "passes": 3,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 3,
+              "durationMs": 9921,
+              "inputBytes": 2785,
+              "modelCalls": 3,
+              "outputBytes": 916
+            }
+          },
+          {
+            "step": "memory:a08c77c07f0d5968a4aedca49e25424f2aca1e2ec394593fd1e5656bcbadfbba",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 9927
+            }
+          },
+          {
+            "step": "memory-part:8a6ebf0c5e68ad47e211b3333c6e663b04429ca57d32ca96d158d9fc553e331d:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2503
+            }
+          },
+          {
+            "step": "memory:8a6ebf0c5e68ad47e211b3333c6e663b04429ca57d32ca96d158d9fc553e331d",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1105,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2513,
+              "inputBytes": 2764,
+              "modelCalls": 1,
+              "outputBytes": 884
+            }
+          },
+          {
+            "step": "memory:8a6ebf0c5e68ad47e211b3333c6e663b04429ca57d32ca96d158d9fc553e331d",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2519
+            }
+          },
+          {
+            "step": "memory-part:c34083666637b0784e0830b92dc1cb27c3e1ee89adb14083c7a27ce0ceb6ed81:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3361
+            }
+          },
+          {
+            "step": "memory:c34083666637b0784e0830b92dc1cb27c3e1ee89adb14083c7a27ce0ceb6ed81",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1104,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 3371,
+              "inputBytes": 2762,
+              "modelCalls": 1,
+              "outputBytes": 793
+            }
+          },
+          {
+            "step": "memory:c34083666637b0784e0830b92dc1cb27c3e1ee89adb14083c7a27ce0ceb6ed81",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3377
+            }
+          },
+          {
+            "step": "memory-part:efbcb4985ea58a8b0f37f2d173cefa4eef4cd647d0d184110af634b028d2875c:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2316
+            }
+          },
+          {
+            "step": "memory:efbcb4985ea58a8b0f37f2d173cefa4eef4cd647d0d184110af634b028d2875c",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1064,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2325,
+              "inputBytes": 2661,
+              "modelCalls": 1,
+              "outputBytes": 536
+            }
+          },
+          {
+            "step": "memory:efbcb4985ea58a8b0f37f2d173cefa4eef4cd647d0d184110af634b028d2875c",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2332
+            }
+          },
+          {
+            "step": "memory-part:934d2163f025b5c3220ef5c465fe752a64e5d0491063a6710dbf59a3d7d10b7a:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2513
+            }
+          },
+          {
+            "step": "memory:934d2163f025b5c3220ef5c465fe752a64e5d0491063a6710dbf59a3d7d10b7a",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1054,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2523,
+              "inputBytes": 2636,
+              "modelCalls": 1,
+              "outputBytes": 932
+            }
+          },
+          {
+            "step": "memory:934d2163f025b5c3220ef5c465fe752a64e5d0491063a6710dbf59a3d7d10b7a",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2530
+            }
+          },
+          {
+            "step": "memory-part:ed9b385b14e2ef98ca740f4e7a5a523cfe73f9dec3cb4592825b1337b7be81d4:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3116
+            }
+          },
+          {
+            "step": "memory-part:ed9b385b14e2ef98ca740f4e7a5a523cfe73f9dec3cb4592825b1337b7be81d4:1:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2451
+            }
+          },
+          {
+            "step": "memory:ed9b385b14e2ef98ca740f4e7a5a523cfe73f9dec3cb4592825b1337b7be81d4",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1048,
+              "passes": 2,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 2,
+              "durationMs": 5579,
+              "inputBytes": 2620,
+              "modelCalls": 2,
+              "outputBytes": 885
+            }
+          },
+          {
+            "step": "memory:ed9b385b14e2ef98ca740f4e7a5a523cfe73f9dec3cb4592825b1337b7be81d4",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 5585
+            }
+          },
+          {
+            "step": "R2@goal-v1:1dff353659fcab8d",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 41303,
+              "inputBytes": 64292,
+              "outputBytes": 39778,
+              "compressions": 12,
+              "outputReserve": 16384
+            }
+          },
+          {
+            "step": "R2@goal-v1:1dff353659fcab8d",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 52200
+            }
+          },
+          {
+            "step": "R3@goal-v1:62fd8c83ce030838",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 0,
+              "inputBytes": 5286,
+              "outputBytes": 5286,
+              "compressions": 0,
+              "outputReserve": 3072
+            }
+          },
+          {
+            "step": "R3@goal-v1:62fd8c83ce030838",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2687
+            }
+          },
+          {
+            "step": "commit",
+            "provider": "workflow",
+            "body": {
+              "kind": "commit",
+              "result": "completed",
+              "durationMs": 7
+            }
+          },
+          {
+            "step": "R4-plan:strict-v2@goal-v1:2a0e6db48cde18ed",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 0,
+              "inputBytes": 6841,
+              "outputBytes": 6841,
+              "compressions": 0,
+              "outputReserve": 16384
+            }
+          },
+          {
+            "step": "R4-plan:strict-v2@goal-v1:2a0e6db48cde18ed",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 15698
+            }
+          },
+          {
+            "step": "commit",
+            "provider": "workflow",
+            "body": {
+              "kind": "commit",
+              "result": "completed",
+              "durationMs": 5
+            }
+          }
+        ]
+      },
+      "refined": {
+        "date": "2026-09-08T14:06:44.080Z",
+        "status": "completed",
+        "route": {
+          "version": "1.0",
+          "routeId": "pf9c3c41c228dcd2f",
+          "learningGoal": {
+            "outcome": "能够独立完成并展示一个体现检索评测、工具调用和上线维护能力的大模型应用求职作品，并具备通过大模型应用开发岗位面试的能力。",
+            "motivation": "我想找到大模型相关的工作，但不知道应该一步步学什么。",
+            "successCriteria": [
+              "完成一个可展示的 RAG 应用，包含文档处理、向量检索、生成回答，并实现检索质量评测（如召回率、准确率）",
+              "在作品中实现至少两个工具调用（如搜索、计算），并展示 Agent 如何规划任务和调用工具",
+              "将作品部署上线（如使用云服务或 Docker），并提供维护文档（如日志、监控、更新流程）",
+              "能解释 RAG 和 Agent 的核心概念、架构和 trade-off，并通过模拟面试问答"
+            ],
+            "startingPoint": "我有两年 Python 后端经验",
+            "constraints": [],
+            "nonGoals": [],
+            "assumptions": [],
+            "openQuestions": [
+              "用户未说明具体的学习时间安排，但表示没有给自己限定时间。",
+              "用户未说明是否已有云服务或部署经验，但两年后端经验可能包含部署。"
+            ]
+          },
+          "title": "大模型应用开发求职路线：从 Python 后端到 RAG/Agent 作品",
+          "carriers": [
+            {
+              "id": "pf9c3c41c228dcd2f-s1-1",
+              "title": "大模型应用开发基础",
+              "description": "掌握调用大模型 API 的核心概念和技能，为后续 RAG 和 Agent 开发打下基础。"
+            },
+            {
+              "id": "pf9c3c41c228dcd2f-s2-1",
+              "title": "RAG 应用开发",
+              "description": "学习构建检索增强生成应用，解决模型幻觉问题，并实现检索质量评测。"
+            },
+            {
+              "id": "pf9c3c41c228dcd2f-s3-1",
+              "title": "Agent 应用开发",
+              "description": "学习构建能自主规划并调用工具的 Agent，实现复杂任务。"
+            },
+            {
+              "id": "pf9c3c41c228dcd2f-s4-1",
+              "title": "作品整合与上线",
+              "description": "将 RAG 和 Agent 功能整合为一个完整的应用，并部署上线，展示上线维护能力。"
+            },
+            {
+              "id": "pf9c3c41c228dcd2f-s5-1",
+              "title": "面试准备与作品打磨",
+              "description": "针对大模型应用开发岗位的面试进行准备，并完善作品细节。"
+            }
+          ],
+          "concepts": [
+            {
+              "id": "pf9c3c41c228dcd2f-s1-1-c1",
+              "carrierId": "pf9c3c41c228dcd2f-s1-1",
+              "title": "提示词工程与 API 调用",
+              "hasDispute": false,
+              "detailedDescription": "学习如何与 GPT 等大模型交互，理解 token、温度、上下文窗口等参数，掌握通过 API 发送请求和处理响应的方法。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "这是构建任何大模型应用的直接基础，用于实现对话、文本生成等功能。",
+                "depth": "能够熟练使用 API 进行文本生成，理解并调整 temperature、max_tokens 等参数，掌握 system/user/assistant 消息结构。",
+                "successCheck": "编写一个 Python 脚本，调用 API 实现一个简单的问答机器人，并调整 temperature 观察输出变化。",
+                "materialAnchors": []
+              }
+            },
+            {
+              "id": "pf9c3c41c228dcd2f-s1-1-c2",
+              "carrierId": "pf9c3c41c228dcd2f-s1-1",
+              "title": "Function Calling 基础",
+              "hasDispute": false,
+              "detailedDescription": "学习如何让模型在需要时调用外部函数，理解 function calling 的机制和 JSON 格式。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "这是实现 Agent 工具调用的核心机制，也是求职作品的关键能力。",
+                "depth": "能够定义函数 schema，让模型在对话中返回调用请求，并执行函数后将结果返回给模型。",
+                "successCheck": "实现一个天气查询函数，通过 function calling 让模型根据用户问题调用该函数并返回天气信息。",
+                "materialAnchors": []
+              }
+            },
+            {
+              "id": "pf9c3c41c228dcd2f-s2-1-c1",
+              "carrierId": "pf9c3c41c228dcd2f-s2-1",
+              "title": "文档处理与向量化",
+              "hasDispute": false,
+              "detailedDescription": "学习如何将文档切块、使用嵌入模型向量化，并存储到向量数据库。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "RAG 的基础，用于将外部知识库转化为可检索的向量。",
+                "depth": "能够使用常见的文档加载器、文本分割器，调用嵌入 API 生成向量，并存入向量数据库（如 Chroma、FAISS）。",
+                "successCheck": "将一个 PDF 文档切块并向量化，存入向量数据库，并执行一次相似性搜索。",
+                "materialAnchors": []
+              }
+            },
+            {
+              "id": "pf9c3c41c228dcd2f-s2-1-c2",
+              "carrierId": "pf9c3c41c228dcd2f-s2-1",
+              "title": "检索与生成",
+              "hasDispute": false,
+              "detailedDescription": "学习如何根据用户问题检索相关文档片段，并将其与问题一起输入给大模型生成回答。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "实现 RAG 的核心流程，使模型能基于外部知识回答。",
+                "depth": "能够实现完整的 RAG 流程：问题向量化、检索 top-k、拼接上下文、调用模型生成，并返回引用来源。",
+                "successCheck": "构建一个简单的知识库问答系统，能回答基于文档的问题，并附上引用来源。",
+                "materialAnchors": []
+              }
+            },
+            {
+              "id": "pf9c3c41c228dcd2f-s2-1-c3",
+              "carrierId": "pf9c3c41c228dcd2f-s2-1",
+              "title": "检索质量评测",
+              "hasDispute": false,
+              "detailedDescription": "学习如何评估 RAG 系统的检索效果，包括召回率、准确率等指标。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "求职作品需要展示检索评测能力，这是区别于简单 RAG 应用的关键。",
+                "depth": "能够构建测试集，计算检索结果的召回率、准确率等指标，并分析失败案例。",
+                "successCheck": "为你的知识库问答系统创建 10 个测试问题，计算检索的召回率，并分析错误原因。",
+                "materialAnchors": []
+              }
+            },
+            {
+              "id": "pf9c3c41c228dcd2f-s3-1-c1",
+              "carrierId": "pf9c3c41c228dcd2f-s3-1",
+              "title": "Agent 架构与 ReAct 模式",
+              "hasDispute": false,
+              "detailedDescription": "学习 Agent 的基本架构，理解 ReAct（推理+行动）模式，以及如何让模型循环思考、调用工具、观察结果。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "Agent 是求职作品的核心，ReAct 模式是实现复杂任务规划的基础。",
+                "depth": "能够理解 Agent 的循环过程，使用 LangChain 或直接 API 实现一个简单的 ReAct Agent。",
+                "successCheck": "实现一个能回答需要多步推理问题的 Agent，例如“北京和上海哪个城市人口更多？”，并展示其思考过程。",
+                "materialAnchors": []
+              }
+            },
+            {
+              "id": "pf9c3c41c228dcd2f-s3-1-c2",
+              "carrierId": "pf9c3c41c228dcd2f-s3-1",
+              "title": "工具调用与集成",
+              "hasDispute": false,
+              "detailedDescription": "学习如何定义和集成多个工具（如搜索、计算、数据库查询），并让 Agent 根据任务选择合适的工具。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "作品需要展示工具调用能力，集成多个工具能体现工程能力。",
+                "depth": "能够为 Agent 添加至少两个工具，并处理工具调用中的错误和边界情况。",
+                "successCheck": "为你的 Agent 添加一个计算器工具和一个搜索工具，并让它完成一个需要两者结合的任务。",
+                "materialAnchors": []
+              }
+            },
+            {
+              "id": "pf9c3c41c228dcd2f-s4-1-c1",
+              "carrierId": "pf9c3c41c228dcd2f-s4-1",
+              "title": "应用整合与 API 设计",
+              "hasDispute": false,
+              "detailedDescription": "将 RAG 和 Agent 功能封装为 Web 服务，设计清晰的 API 接口。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "求职作品需要是一个可用的应用，整合和 API 设计是后端工程师的核心技能。",
+                "depth": "能够使用 FastAPI 或 Flask 构建 REST API，将 RAG 和 Agent 功能暴露为接口，并处理请求验证和错误。",
+                "successCheck": "将你的 RAG 和 Agent 功能封装为两个 API 端点，并用 curl 测试。",
+                "materialAnchors": []
+              }
+            },
+            {
+              "id": "pf9c3c41c228dcd2f-s4-1-c2",
+              "carrierId": "pf9c3c41c228dcd2f-s4-1",
+              "title": "部署与维护",
+              "hasDispute": false,
+              "detailedDescription": "学习如何将应用部署到云服务器，并配置日志、监控和更新流程。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "作品需要展示上线维护能力，这是岗位要求的重要部分。",
+                "depth": "能够使用 Docker 容器化应用，部署到云服务器（如 AWS、阿里云），并设置基本日志和监控。",
+                "successCheck": "将你的应用 Docker 化并部署到云服务器，提供访问 URL，并配置日志记录。",
+                "materialAnchors": []
+              }
+            },
+            {
+              "id": "pf9c3c41c228dcd2f-s5-1-c1",
+              "carrierId": "pf9c3c41c228dcd2f-s5-1",
+              "title": "核心概念与项目复盘",
+              "hasDispute": false,
+              "detailedDescription": "复习 RAG、Agent、Function Calling 等核心概念，并准备项目介绍和常见面试问题。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "通过面试需要清晰表达项目思路和技术细节。",
+                "depth": "能够用 STAR 法则介绍项目，解释技术选型、遇到的挑战和解决方案，并回答关于 RAG 和 Agent 的深入问题。",
+                "successCheck": "模拟一次面试，向他人介绍你的项目，并回答关于 RAG 检索质量、Agent 规划等追问。",
+                "materialAnchors": []
+              }
+            }
+          ],
+          "carrierEdges": [
+            {
+              "id": "ce-1",
+              "fromCarrierId": "pf9c3c41c228dcd2f-s1-1",
+              "toCarrierId": "pf9c3c41c228dcd2f-s2-1",
+              "reason": "完成上一阶段后进入下一阶段"
+            },
+            {
+              "id": "ce-2",
+              "fromCarrierId": "pf9c3c41c228dcd2f-s2-1",
+              "toCarrierId": "pf9c3c41c228dcd2f-s3-1",
+              "reason": "完成上一阶段后进入下一阶段"
+            },
+            {
+              "id": "ce-3",
+              "fromCarrierId": "pf9c3c41c228dcd2f-s3-1",
+              "toCarrierId": "pf9c3c41c228dcd2f-s4-1",
+              "reason": "完成上一阶段后进入下一阶段"
+            },
+            {
+              "id": "ce-4",
+              "fromCarrierId": "pf9c3c41c228dcd2f-s4-1",
+              "toCarrierId": "pf9c3c41c228dcd2f-s5-1",
+              "reason": "完成上一阶段后进入下一阶段"
+            }
+          ],
+          "conceptEdges": [
+            {
+              "id": "pf9c3c41c228dcd2f-s1-1-e1",
+              "fromConceptId": "pf9c3c41c228dcd2f-s1-1-c1",
+              "toConceptId": "pf9c3c41c228dcd2f-s1-1-c2",
+              "reason": "按该载体中的推荐顺序学习"
+            },
+            {
+              "id": "pf9c3c41c228dcd2f-s2-1-e1",
+              "fromConceptId": "pf9c3c41c228dcd2f-s2-1-c1",
+              "toConceptId": "pf9c3c41c228dcd2f-s2-1-c2",
+              "reason": "按该载体中的推荐顺序学习"
+            },
+            {
+              "id": "pf9c3c41c228dcd2f-s2-1-e2",
+              "fromConceptId": "pf9c3c41c228dcd2f-s2-1-c2",
+              "toConceptId": "pf9c3c41c228dcd2f-s2-1-c3",
+              "reason": "按该载体中的推荐顺序学习"
+            },
+            {
+              "id": "pf9c3c41c228dcd2f-s3-1-e1",
+              "fromConceptId": "pf9c3c41c228dcd2f-s3-1-c1",
+              "toConceptId": "pf9c3c41c228dcd2f-s3-1-c2",
+              "reason": "按该载体中的推荐顺序学习"
+            },
+            {
+              "id": "pf9c3c41c228dcd2f-s4-1-e1",
+              "fromConceptId": "pf9c3c41c228dcd2f-s4-1-c1",
+              "toConceptId": "pf9c3c41c228dcd2f-s4-1-c2",
+              "reason": "按该载体中的推荐顺序学习"
+            },
+            {
+              "id": "ne-6",
+              "fromConceptId": "pf9c3c41c228dcd2f-s1-1-c2",
+              "toConceptId": "pf9c3c41c228dcd2f-s2-1-c1",
+              "reason": "按阶段衔接，当前阶段内的方向并列"
+            },
+            {
+              "id": "ne-7",
+              "fromConceptId": "pf9c3c41c228dcd2f-s2-1-c3",
+              "toConceptId": "pf9c3c41c228dcd2f-s3-1-c1",
+              "reason": "按阶段衔接，当前阶段内的方向并列"
+            },
+            {
+              "id": "ne-8",
+              "fromConceptId": "pf9c3c41c228dcd2f-s3-1-c2",
+              "toConceptId": "pf9c3c41c228dcd2f-s4-1-c1",
+              "reason": "按阶段衔接，当前阶段内的方向并列"
+            },
+            {
+              "id": "ne-9",
+              "fromConceptId": "pf9c3c41c228dcd2f-s4-1-c2",
+              "toConceptId": "pf9c3c41c228dcd2f-s5-1-c1",
+              "reason": "按阶段衔接，当前阶段内的方向并列"
+            }
+          ],
+          "entryConceptIds": [
+            "pf9c3c41c228dcd2f-s1-1-c1"
+          ],
+          "terminalConceptIds": [
+            "pf9c3c41c228dcd2f-s5-1-c1"
+          ]
+        },
+        "promptHash": "057759255152b57ec19491d3d81ad8b12b207b3fa50f09a7fbf806e9dc765866",
+        "model": "deepseek-v4-flash",
+        "capabilities": {
+          "llm": {
+            "window": 64000,
+            "output": 16384,
+            "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3"
+          },
+          "zhihu": {
+            "fast": {
+              "window": 32000,
+              "output": 8192,
+              "namespace": "dfb88144267f3ed492e01a52817a55d671dedfed3728c98063e37603c491c3ce"
+            },
+            "deep": {
+              "window": 32000,
+              "output": 8192,
+              "namespace": "01009364ab10c3cae624383ae88f146508f9a5ecc26986704acbffbc8e630254"
+            }
+          }
+        },
+        "callCount": 1,
+        "durationMs": 15714
+      },
+      "rawHashes": {
+        "live/llm-job.json": "0fba2d38cfe97e8f32ff82e3966ca0611ece127352982db0f1007902ff6b8747",
+        "live-refined/llm-job.json": "cc5fe3750bda4e26e902ce3b6191187f2535a626d4216c4decb5865914089644"
+      }
+    },
+    {
+      "id": "minimal-3d",
+      "scenario": {
+        "id": "minimal-3d",
+        "goal": "我想在电脑上画一个可以用鼠标旋转的3D图像，只学完成这件事需要的最小路线。",
+        "answer": "我会一点 HTML 和 JavaScript，想在浏览器里画一个彩色立方体，鼠标拖动可以旋转视角就够了。可以使用现成库，不想先学完整线性代数、着色器或引擎开发。",
+        "learning": true
+      },
+      "initial": {
+        "status": "completed",
+        "route": {
+          "title": "用 Three.js 在浏览器中绘制可鼠标旋转的彩色立方体",
+          "routeId": "p72305c1fd1d1df38",
+          "version": "1.0",
+          "carriers": [
+            {
+              "id": "p72305c1fd1d1df38-s1-1",
+              "title": "搭建 Three.js 基础场景",
+              "description": "创建 HTML 页面，引入 Three.js，建立场景、相机和渲染器，并显示一个彩色立方体。"
+            },
+            {
+              "id": "p72305c1fd1d1df38-s2-1",
+              "title": "添加鼠标旋转控制",
+              "description": "引入 OrbitControls，使鼠标拖拽能够旋转视角。"
+            }
+          ],
+          "concepts": [
+            {
+              "id": "p72305c1fd1d1df38-s1-1-c1",
+              "title": "Three.js 场景、相机、渲染器",
+              "carrierId": "p72305c1fd1d1df38-s1-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "只需掌握创建场景、相机、渲染器并渲染一个立方体的基本步骤，不深入相机参数细节。",
+                "purpose": "这是使用 Three.js 显示任何 3D 物体的基础，没有这些就无法在浏览器中呈现立方体。",
+                "successCheck": "创建一个 HTML 文件，在浏览器中显示一个静态的彩色立方体。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "学习如何创建一个 Three.js 场景，设置透视相机，创建 WebGL 渲染器，并将渲染结果添加到网页中。"
+            },
+            {
+              "id": "p72305c1fd1d1df38-s1-1-c2",
+              "title": "创建彩色立方体",
+              "carrierId": "p72305c1fd1d1df38-s1-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "只需创建 BoxGeometry 和一种带颜色的材质，不需要学习纹理或光照细节。",
+                "purpose": "立方体是目标中的具体物体，需要知道如何创建几何体并赋予颜色。",
+                "successCheck": "在场景中添加一个彩色立方体，并调整相机位置使其可见。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "使用 BoxGeometry 和 MeshStandardMaterial 创建立方体，并设置颜色，使其可见。"
+            },
+            {
+              "id": "p72305c1fd1d1df38-s2-1-c1",
+              "title": "OrbitControls 控件",
+              "carrierId": "p72305c1fd1d1df38-s2-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "只需掌握导入和启用 OrbitControls 的基本用法，不深入其内部实现。",
+                "purpose": "这是实现鼠标旋转的核心组件，直接满足目标需求。",
+                "successCheck": "在现有场景中添加 OrbitControls，运行后能用鼠标拖拽旋转立方体。",
+                "materialAnchors": []
+              },
+              "attachmentSourceIds": [],
+              "detailedDescription": "学习如何引入 OrbitControls，并将其绑定到相机和渲染器上，实现鼠标拖拽旋转。"
+            }
+          ],
+          "carrierEdges": [
+            {
+              "id": "ce-1",
+              "reason": "完成上一阶段后进入下一阶段",
+              "toCarrierId": "p72305c1fd1d1df38-s2-1",
+              "fromCarrierId": "p72305c1fd1d1df38-s1-1"
+            }
+          ],
+          "conceptEdges": [
+            {
+              "id": "p72305c1fd1d1df38-s1-1-e1",
+              "reason": "按该载体中的推荐顺序学习",
+              "toConceptId": "p72305c1fd1d1df38-s1-1-c2",
+              "fromConceptId": "p72305c1fd1d1df38-s1-1-c1"
+            },
+            {
+              "id": "ne-2",
+              "reason": "按阶段衔接，当前阶段内的方向并列",
+              "toConceptId": "p72305c1fd1d1df38-s2-1-c1",
+              "fromConceptId": "p72305c1fd1d1df38-s1-1-c2"
+            }
+          ],
+          "learningGoal": {
+            "outcome": "在浏览器中显示一个彩色立方体，并能用鼠标拖拽旋转视角",
+            "nonGoals": [],
+            "motivation": "我想在电脑上画一个可以用鼠标旋转的3D图像，只学完成这件事需要的最小路线。",
+            "assumptions": [],
+            "constraints": [
+              "想在浏览器里画一个彩色立方体，鼠标拖动可以旋转视角就够了",
+              "可以使用现成库",
+              "不想先学完整线性代数、着色器或引擎开发"
+            ],
+            "openQuestions": [],
+            "startingPoint": "我会一点 HTML 和 JavaScript",
+            "successCriteria": [
+              "运行一个 HTML 文件，在浏览器中显示一个彩色立方体",
+              "用鼠标拖拽立方体，视角随之旋转"
+            ]
+          },
+          "entryConceptIds": [
+            "p72305c1fd1d1df38-s1-1-c1"
+          ],
+          "terminalConceptIds": [
+            "p72305c1fd1d1df38-s2-1-c1"
+          ]
+        },
+        "provider": "deepseek-v4-flash",
+        "metrics": [
+          {
+            "step": "R1@goal-v1:f2f344eacbdf8634",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 0,
+              "inputBytes": 322,
+              "outputBytes": 322,
+              "compressions": 0,
+              "outputReserve": 2048
+            }
+          },
+          {
+            "step": "R1@goal-v1:f2f344eacbdf8634",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2877
+            }
+          },
+          {
+            "step": "R-S:0@goal-v1",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2013
+            }
+          },
+          {
+            "step": "R-S:1@goal-v1",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3025
+            }
+          },
+          {
+            "step": "memory-part:d7554387661d02ca1c02d18d6e6b5bf093bcd2e2dc90422331794d29a6e40b21:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2510
+            }
+          },
+          {
+            "step": "memory:d7554387661d02ca1c02d18d6e6b5bf093bcd2e2dc90422331794d29a6e40b21",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1115,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2519,
+              "inputBytes": 2788,
+              "modelCalls": 1,
+              "outputBytes": 431
+            }
+          },
+          {
+            "step": "memory:d7554387661d02ca1c02d18d6e6b5bf093bcd2e2dc90422331794d29a6e40b21",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2524
+            }
+          },
+          {
+            "step": "memory-part:84115a6c619d7b416d6d19b73eba3a5a84414b8a2c2f175d27587c5b22dfd6e7:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 1713
+            }
+          },
+          {
+            "step": "memory:84115a6c619d7b416d6d19b73eba3a5a84414b8a2c2f175d27587c5b22dfd6e7",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 986,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 1723,
+              "inputBytes": 2465,
+              "modelCalls": 1,
+              "outputBytes": 246
+            }
+          },
+          {
+            "step": "memory:84115a6c619d7b416d6d19b73eba3a5a84414b8a2c2f175d27587c5b22dfd6e7",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 1729
+            }
+          },
+          {
+            "step": "memory-part:00db40a926551c68f016125cfab16359cdfd4dbdcad58ac5d1bfce81105e85a3:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 1625
+            }
+          },
+          {
+            "step": "memory:00db40a926551c68f016125cfab16359cdfd4dbdcad58ac5d1bfce81105e85a3",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 956,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 1634,
+              "inputBytes": 2392,
+              "modelCalls": 1,
+              "outputBytes": 157
+            }
+          },
+          {
+            "step": "memory:00db40a926551c68f016125cfab16359cdfd4dbdcad58ac5d1bfce81105e85a3",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 1641
+            }
+          },
+          {
+            "step": "memory-part:226b84915f0755be6aacbee95f81aae3924d7f9b707d8afbbd032136416549bc:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2217
+            }
+          },
+          {
+            "step": "memory:226b84915f0755be6aacbee95f81aae3924d7f9b707d8afbbd032136416549bc",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 942,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2227,
+              "inputBytes": 2355,
+              "modelCalls": 1,
+              "outputBytes": 442
+            }
+          },
+          {
+            "step": "memory:226b84915f0755be6aacbee95f81aae3924d7f9b707d8afbbd032136416549bc",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2232
+            }
+          },
+          {
+            "step": "memory-part:0afbea5ed0dca40d7df675cb570e31122fc85ef4431fa4a1bf775fd9bf8d3098:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 1855
+            }
+          },
+          {
+            "step": "memory:0afbea5ed0dca40d7df675cb570e31122fc85ef4431fa4a1bf775fd9bf8d3098",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 884,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 1863,
+              "inputBytes": 2212,
+              "modelCalls": 1,
+              "outputBytes": 153
+            }
+          },
+          {
+            "step": "memory:0afbea5ed0dca40d7df675cb570e31122fc85ef4431fa4a1bf775fd9bf8d3098",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 1868
+            }
+          },
+          {
+            "step": "memory-part:aabf34a3e099ade1fe4858b3a1414168c1728824ba5414993016e8252d6cfd21:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2269
+            }
+          },
+          {
+            "step": "memory:aabf34a3e099ade1fe4858b3a1414168c1728824ba5414993016e8252d6cfd21",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 840,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2275,
+              "inputBytes": 2102,
+              "modelCalls": 1,
+              "outputBytes": 345
+            }
+          },
+          {
+            "step": "memory:aabf34a3e099ade1fe4858b3a1414168c1728824ba5414993016e8252d6cfd21",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2278
+            }
+          },
+          {
+            "step": "R2@goal-v1:1dff353659fcab8d",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 12279,
+              "inputBytes": 52001,
+              "outputBytes": 39419,
+              "compressions": 6,
+              "outputReserve": 16384
+            }
+          },
+          {
+            "step": "R2@goal-v1:1dff353659fcab8d",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 19157
+            }
+          },
+          {
+            "step": "R3@goal-v1:62fd8c83ce030838",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 0,
+              "inputBytes": 3491,
+              "outputBytes": 3491,
+              "compressions": 0,
+              "outputReserve": 3072
+            }
+          },
+          {
+            "step": "R3@goal-v1:62fd8c83ce030838",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3471
+            }
+          },
+          {
+            "step": "commit",
+            "provider": "workflow",
+            "body": {
+              "kind": "commit",
+              "result": "completed",
+              "durationMs": 6
+            }
+          },
+          {
+            "step": "R4-plan:strict-v2@goal-v1:2a0e6db48cde18ed",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 1,
+              "inputBytes": 5023,
+              "outputBytes": 5023,
+              "compressions": 0,
+              "outputReserve": 16384
+            }
+          },
+          {
+            "step": "R4-plan:strict-v2@goal-v1:2a0e6db48cde18ed",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 9251
+            }
+          },
+          {
+            "step": "commit",
+            "provider": "workflow",
+            "body": {
+              "kind": "commit",
+              "result": "completed",
+              "durationMs": 2
+            }
+          }
+        ]
+      },
+      "refined": {
+        "date": "2026-09-08T14:06:53.364Z",
+        "status": "completed",
+        "route": {
+          "version": "1.0",
+          "routeId": "p9b3f7b386f7d364b",
+          "learningGoal": {
+            "outcome": "在浏览器中显示一个彩色立方体，并能用鼠标拖拽旋转视角",
+            "motivation": "我想在电脑上画一个可以用鼠标旋转的3D图像，只学完成这件事需要的最小路线。",
+            "successCriteria": [
+              "运行一个 HTML 文件，在浏览器中显示一个彩色立方体",
+              "用鼠标拖拽能够旋转视角，观察立方体的不同面"
+            ],
+            "startingPoint": "我会一点 HTML 和 JavaScript",
+            "constraints": [
+              "可以使用现成库",
+              "不想先学完整线性代数、着色器或引擎开发"
+            ],
+            "nonGoals": [],
+            "assumptions": [],
+            "openQuestions": []
+          },
+          "title": "用 Three.js 在浏览器中绘制可鼠标旋转的彩色立方体",
+          "carriers": [
+            {
+              "id": "p9b3f7b386f7d364b-s1-1",
+              "title": "Three.js 基础场景搭建",
+              "description": "创建包含场景、相机和渲染器的基本 Three.js 应用，并显示一个彩色立方体。"
+            },
+            {
+              "id": "p9b3f7b386f7d364b-s2-1",
+              "title": "添加鼠标旋转控制",
+              "description": "使用 OrbitControls 实现鼠标拖拽旋转视角，完成最终目标。"
+            }
+          ],
+          "concepts": [
+            {
+              "id": "p9b3f7b386f7d364b-s1-1-c1",
+              "carrierId": "p9b3f7b386f7d364b-s1-1",
+              "title": "Three.js 场景、相机、渲染器",
+              "hasDispute": false,
+              "detailedDescription": "了解 Three.js 中 Scene、PerspectiveCamera、WebGLRenderer 的基本用法，以及如何将立方体添加到场景中。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "这是使用 Three.js 显示任何 3D 物体的基础，也是后续添加 OrbitControls 的前提。",
+                "depth": "只需掌握创建场景、相机、渲染器并渲染一个立方体的最小代码，不深入光照、材质、动画等细节。",
+                "successCheck": "创建一个 HTML 文件，引入 Three.js，在浏览器中显示一个静态的彩色立方体。",
+                "materialAnchors": []
+              }
+            },
+            {
+              "id": "p9b3f7b386f7d364b-s1-1-c2",
+              "carrierId": "p9b3f7b386f7d364b-s1-1",
+              "title": "添加彩色立方体",
+              "hasDispute": false,
+              "detailedDescription": "使用 BoxGeometry 和 MeshBasicMaterial（或 MeshPhongMaterial）创建彩色立方体，并添加到场景中。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "立方体是目标中的具体对象，需要知道如何创建和显示它。",
+                "depth": "只需创建一个立方体并赋予颜色，不涉及纹理、光照等高级效果。",
+                "successCheck": "在场景中成功显示一个彩色立方体。",
+                "materialAnchors": []
+              }
+            },
+            {
+              "id": "p9b3f7b386f7d364b-s2-1-c1",
+              "carrierId": "p9b3f7b386f7d364b-s2-1",
+              "title": "OrbitControls 的使用",
+              "hasDispute": false,
+              "detailedDescription": "引入 OrbitControls，将其绑定到相机，并更新动画循环，使鼠标拖拽能够旋转视角。",
+              "attachmentSourceIds": [],
+              "goalAlignment": {
+                "purpose": "这是实现鼠标旋转的核心组件，直接满足目标需求。",
+                "depth": "只需掌握导入、创建和基本配置（如 enableDamping），不深入自定义控制逻辑。",
+                "successCheck": "在已有立方体的页面中添加 OrbitControls，运行后能用鼠标拖拽旋转视角。",
+                "materialAnchors": []
+              }
+            }
+          ],
+          "carrierEdges": [
+            {
+              "id": "ce-1",
+              "fromCarrierId": "p9b3f7b386f7d364b-s1-1",
+              "toCarrierId": "p9b3f7b386f7d364b-s2-1",
+              "reason": "完成上一阶段后进入下一阶段"
+            }
+          ],
+          "conceptEdges": [
+            {
+              "id": "p9b3f7b386f7d364b-s1-1-e1",
+              "fromConceptId": "p9b3f7b386f7d364b-s1-1-c1",
+              "toConceptId": "p9b3f7b386f7d364b-s1-1-c2",
+              "reason": "按该载体中的推荐顺序学习"
+            },
+            {
+              "id": "ne-2",
+              "fromConceptId": "p9b3f7b386f7d364b-s1-1-c2",
+              "toConceptId": "p9b3f7b386f7d364b-s2-1-c1",
+              "reason": "按阶段衔接，当前阶段内的方向并列"
+            }
+          ],
+          "entryConceptIds": [
+            "p9b3f7b386f7d364b-s1-1-c1"
+          ],
+          "terminalConceptIds": [
+            "p9b3f7b386f7d364b-s2-1-c1"
+          ]
+        },
+        "promptHash": "057759255152b57ec19491d3d81ad8b12b207b3fa50f09a7fbf806e9dc765866",
+        "model": "deepseek-v4-flash",
+        "capabilities": {
+          "llm": {
+            "window": 64000,
+            "output": 16384,
+            "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3"
+          },
+          "zhihu": {
+            "fast": {
+              "window": 32000,
+              "output": 8192,
+              "namespace": "dfb88144267f3ed492e01a52817a55d671dedfed3728c98063e37603c491c3ce"
+            },
+            "deep": {
+              "window": 32000,
+              "output": 8192,
+              "namespace": "01009364ab10c3cae624383ae88f146508f9a5ecc26986704acbffbc8e630254"
+            }
+          }
+        },
+        "callCount": 2,
+        "durationMs": 8983
+      },
+      "rawHashes": {
+        "live/minimal-3d.json": "de64eed6acf27ca058cfaac965fe1d835c3e4c3c4e4f8cfbfc166a7f1f40e72b",
+        "live-refined/minimal-3d.json": "075a8225d0950c0440124c745dbc4960245277ef28b1c9e2011ca14b1c186813"
+      }
+    },
+    {
+      "id": "paper-math",
+      "scenario": {
+        "id": "paper-math",
+        "goal": "我上传了一段论文，想学懂其中的数学理论，但不知道从哪开始。",
+        "answer": "我会矩阵乘法和一元求导。我希望能自己解释每个公式为何成立，不需要复现代码，也不为求职；最后能向同学推一遍注意力公式就够了。",
+        "content": "测试论文摘录（合成材料，非真实论文）：设输入 X 的每一行是一个词向量，Q=XW_Q，K=XW_K，V=XW_V。注意力为 Attention(Q,K,V)=softmax(QK^T/sqrt(d_k))V，其中 softmax 按行归一化。需要理解矩阵形状、内积相似度、缩放以及归一化后权重的加权求和。本文不涉及优化器和训练过程。",
+        "learning": true
+      },
+      "initial": {
+        "status": "completed",
+        "route": {
+          "title": "理解注意力机制数学原理的学习路线",
+          "routeId": "p2b89ecbe7f56e1f3",
+          "version": "1.0",
+          "carriers": [
+            {
+              "id": "p2b89ecbe7f56e1f3-s1-1",
+              "title": "线性代数基础",
+              "description": "巩固理解注意力公式所需的线性代数知识，包括矩阵乘法、向量内积和矩阵形状。"
+            },
+            {
+              "id": "p2b89ecbe7f56e1f3-s2-1",
+              "title": "概率与统计基础",
+              "description": "理解为什么点积的方差会随维度增长，从而需要除以 √d_k 进行缩放。"
+            },
+            {
+              "id": "p2b89ecbe7f56e1f3-s3-1",
+              "title": "注意力机制核心",
+              "description": "直接学习注意力公式的各个组成部分，包括缩放点积、softmax 归一化和加权求和。"
+            }
+          ],
+          "concepts": [
+            {
+              "id": "p2b89ecbe7f56e1f3-s1-1-c1",
+              "title": "矩阵乘法与形状",
+              "carrierId": "p2b89ecbe7f56e1f3-s1-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "掌握矩阵乘法的维度规则，能确定给定矩阵相乘后的形状，不涉及更复杂的线性变换性质。",
+                "purpose": "理解 Q=XW_Q 等矩阵乘法的维度关系，为推导注意力公式奠定基础。",
+                "successCheck": "给定 X 形状 (n, d) 和 W_Q 形状 (d, d_k)，写出 Q 的形状并解释为什么。",
+                "materialAnchors": [
+                  {
+                    "role": "direct",
+                    "quote": "设输入 X 的每一行是一个词向量，Q=XW_Q，K=XW_K，V=XW_V。",
+                    "sourceId": "synthetic-material",
+                    "connection": "该引文直接使用矩阵乘法，理解矩阵形状是读懂它的前提。",
+                    "evidenceKind": "material"
+                  }
+                ]
+              },
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "detailedDescription": "理解矩阵乘法的定义、维度匹配规则，以及 X、W_Q、W_K、W_V 相乘后 Q、K、V 的形状。"
+            },
+            {
+              "id": "p2b89ecbe7f56e1f3-s1-1-c2",
+              "title": "向量内积与相似度",
+              "carrierId": "p2b89ecbe7f56e1f3-s1-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "掌握内积的计算和相似度含义，能解释点积越大表示向量越相似。",
+                "purpose": "理解 QK^T 中每个元素是查询与键的点积，反映相似度，这是注意力权重的核心。",
+                "successCheck": "给定两个二维向量，计算它们的点积并解释其相似度含义。",
+                "materialAnchors": [
+                  {
+                    "role": "prerequisite",
+                    "quote": "注意力为 Attention(Q,K,V)=softmax(QK^T/sqrt(d_k))V",
+                    "sourceId": "synthetic-material",
+                    "connection": "要理解 QK^T 的含义，必须先掌握向量内积与相似度。",
+                    "evidenceKind": "material"
+                  }
+                ]
+              },
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "detailedDescription": "理解向量内积的定义、几何意义（投影与相似度），以及 QK^T 中每个元素如何表示两个向量的点积。"
+            },
+            {
+              "id": "p2b89ecbe7f56e1f3-s2-1-c1",
+              "title": "方差与随机变量",
+              "carrierId": "p2b89ecbe7f56e1f3-s2-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "掌握方差的基本性质，能推导独立同分布随机变量点积的方差与维度 d_k 成正比。",
+                "purpose": "理解缩放因子 √d_k 的由来，解释为什么点积需要缩放。",
+                "successCheck": "假设 q 和 k 的每个分量独立且方差为 1，推导 q·k 的方差为 d_k。",
+                "materialAnchors": [
+                  {
+                    "role": "prerequisite",
+                    "quote": "注意力为 Attention(Q,K,V)=softmax(QK^T/sqrt(d_k))V",
+                    "sourceId": "synthetic-material",
+                    "connection": "要理解除以 sqrt(d_k) 的原因，需要先掌握方差与随机变量的知识。",
+                    "evidenceKind": "material"
+                  }
+                ]
+              },
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "detailedDescription": "理解随机变量的方差概念，以及独立随机变量和的方差性质，用于解释点积方差随维度增长。"
+            },
+            {
+              "id": "p2b89ecbe7f56e1f3-s3-1-c1",
+              "title": "缩放点积注意力公式",
+              "carrierId": "p2b89ecbe7f56e1f3-s3-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "掌握公式的完整计算流程，能手动计算一个小例子的中间结果，不涉及多头注意力的变体。",
+                "purpose": "直接理解论文中的核心公式，能够逐步解释每个运算的作用。",
+                "successCheck": "给定小矩阵 Q、K、V，手动计算 QK^T、除以 √d_k、softmax 和加权求和，得到最终输出。",
+                "materialAnchors": [
+                  {
+                    "role": "direct",
+                    "quote": "注意力为 Attention(Q,K,V)=softmax(QK^T/sqrt(d_k))V，其中 softmax 按行归一化。",
+                    "sourceId": "synthetic-material",
+                    "connection": "该引文直接给出注意力公式，是学习的核心内容。",
+                    "evidenceKind": "material"
+                  }
+                ]
+              },
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "detailedDescription": "理解 Attention(Q,K,V)=softmax(QK^T/√d_k)V 的整体结构，包括 Q、K、V 的生成和计算步骤。"
+            },
+            {
+              "id": "p2b89ecbe7f56e1f3-s3-1-c2",
+              "title": "softmax 归一化",
+              "carrierId": "p2b89ecbe7f56e1f3-s3-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "掌握 softmax 的计算和性质，能解释为什么需要归一化。",
+                "purpose": "理解注意力权重如何从原始分数变为总和为 1 的权重。",
+                "successCheck": "给定一个向量，计算其 softmax 并验证各分量之和为 1。",
+                "materialAnchors": [
+                  {
+                    "role": "direct",
+                    "quote": "其中 softmax 按行归一化。",
+                    "sourceId": "synthetic-material",
+                    "connection": "该引文直接说明 softmax 按行归一化，是理解注意力权重的关键。",
+                    "evidenceKind": "material"
+                  }
+                ]
+              },
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "detailedDescription": "理解 softmax 函数如何将相似度分数转换为概率分布，以及按行归一化的含义。"
+            },
+            {
+              "id": "p2b89ecbe7f56e1f3-s3-1-c3",
+              "title": "加权求和",
+              "carrierId": "p2b89ecbe7f56e1f3-s3-1",
+              "hasDispute": false,
+              "goalAlignment": {
+                "depth": "掌握加权求和的计算，能解释权重的作用。",
+                "purpose": "理解注意力机制如何通过加权求和融合上下文信息，完成从输入到输出的变换。",
+                "successCheck": "给定权重向量和 V 矩阵，计算加权和并解释结果的含义。",
+                "materialAnchors": [
+                  {
+                    "role": "direct",
+                    "quote": "注意力为 Attention(Q,K,V)=softmax(QK^T/sqrt(d_k))V",
+                    "sourceId": "synthetic-material",
+                    "connection": "该引文中的乘法 V 就是加权求和，理解加权求和是掌握公式的最后一步。",
+                    "evidenceKind": "material"
+                  }
+                ]
+              },
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "detailedDescription": "理解注意力输出是 V 的加权和，每个 token 的新表示融合了上下文信息。"
+            }
+          ],
+          "carrierEdges": [
+            {
+              "id": "ce-1",
+              "reason": "完成上一阶段后进入下一阶段",
+              "toCarrierId": "p2b89ecbe7f56e1f3-s2-1",
+              "fromCarrierId": "p2b89ecbe7f56e1f3-s1-1"
+            },
+            {
+              "id": "ce-2",
+              "reason": "完成上一阶段后进入下一阶段",
+              "toCarrierId": "p2b89ecbe7f56e1f3-s3-1",
+              "fromCarrierId": "p2b89ecbe7f56e1f3-s2-1"
+            }
+          ],
+          "conceptEdges": [
+            {
+              "id": "p2b89ecbe7f56e1f3-s1-1-e1",
+              "reason": "按该载体中的推荐顺序学习",
+              "toConceptId": "p2b89ecbe7f56e1f3-s1-1-c2",
+              "fromConceptId": "p2b89ecbe7f56e1f3-s1-1-c1"
+            },
+            {
+              "id": "p2b89ecbe7f56e1f3-s3-1-e1",
+              "reason": "按该载体中的推荐顺序学习",
+              "toConceptId": "p2b89ecbe7f56e1f3-s3-1-c2",
+              "fromConceptId": "p2b89ecbe7f56e1f3-s3-1-c1"
+            },
+            {
+              "id": "p2b89ecbe7f56e1f3-s3-1-e2",
+              "reason": "按该载体中的推荐顺序学习",
+              "toConceptId": "p2b89ecbe7f56e1f3-s3-1-c3",
+              "fromConceptId": "p2b89ecbe7f56e1f3-s3-1-c2"
+            },
+            {
+              "id": "ne-4",
+              "reason": "按阶段衔接，当前阶段内的方向并列",
+              "toConceptId": "p2b89ecbe7f56e1f3-s2-1-c1",
+              "fromConceptId": "p2b89ecbe7f56e1f3-s1-1-c2"
+            },
+            {
+              "id": "ne-5",
+              "reason": "按阶段衔接，当前阶段内的方向并列",
+              "toConceptId": "p2b89ecbe7f56e1f3-s3-1-c1",
+              "fromConceptId": "p2b89ecbe7f56e1f3-s2-1-c1"
+            }
+          ],
+          "learningGoal": {
+            "outcome": "能够独立推导并解释注意力公式 Attention(Q,K,V)=softmax(QK^T/√d_k)V 的每一步，并能向同学讲解",
+            "nonGoals": [],
+            "motivation": "我上传了一段论文，想学懂其中的数学理论，但不知道从哪开始。",
+            "assumptions": [],
+            "constraints": [],
+            "openQuestions": [
+              "用户当前的线性代数和概率论基础如何？",
+              "用户的学习目的是为了复现论文、做研究还是应用？",
+              "用户希望学习到多深（仅理解公式还是能推导证明）？"
+            ],
+            "startingPoint": "我会矩阵乘法和一元求导。",
+            "successCriteria": [
+              "能独立推导注意力公式 Attention(Q,K,V)=softmax(QK^T/√d_k)V 的每一步",
+              "能解释 Q、K、V 矩阵的维度来源及含义",
+              "能说明为什么除以 √d_k 以及不除的后果",
+              "能理解 softmax 归一化后权重如何对 V 加权求和"
+            ]
+          },
+          "entryConceptIds": [
+            "p2b89ecbe7f56e1f3-s1-1-c1"
+          ],
+          "terminalConceptIds": [
+            "p2b89ecbe7f56e1f3-s3-1-c3"
+          ]
+        },
+        "provider": "deepseek-v4-flash",
+        "metrics": [
+          {
+            "step": "R1@goal-v1:f2f344eacbdf8634",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 6,
+              "inputBytes": 755,
+              "outputBytes": 755,
+              "compressions": 0,
+              "outputReserve": 2048
+            }
+          },
+          {
+            "step": "R1@goal-v1:f2f344eacbdf8634",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2941
+            }
+          },
+          {
+            "step": "R-S:0@goal-v1",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 1608
+            }
+          },
+          {
+            "step": "R-S:1@goal-v1",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2876
+            }
+          },
+          {
+            "step": "memory-part:0f3453d5e286aafcbd70fd7227fe5efc75f3c195df0b8a7f6e53a9020a155a8d:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3063
+            }
+          },
+          {
+            "step": "memory:0f3453d5e286aafcbd70fd7227fe5efc75f3c195df0b8a7f6e53a9020a155a8d",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1203,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 3068,
+              "inputBytes": 3008,
+              "modelCalls": 1,
+              "outputBytes": 592
+            }
+          },
+          {
+            "step": "memory:0f3453d5e286aafcbd70fd7227fe5efc75f3c195df0b8a7f6e53a9020a155a8d",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3071
+            }
+          },
+          {
+            "step": "memory-part:836e386acb31da84b35d690e0e082994f5b5c2cf4ab3b133492cd23609d728f1:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2035
+            }
+          },
+          {
+            "step": "memory:836e386acb31da84b35d690e0e082994f5b5c2cf4ab3b133492cd23609d728f1",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1074,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2042,
+              "inputBytes": 2687,
+              "modelCalls": 1,
+              "outputBytes": 441
+            }
+          },
+          {
+            "step": "memory:836e386acb31da84b35d690e0e082994f5b5c2cf4ab3b133492cd23609d728f1",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2048
+            }
+          },
+          {
+            "step": "memory-part:e02c17f6c94d7bbd756473974e7e744defeaa35a77afba7eea7606ab26b64e26:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 4056
+            }
+          },
+          {
+            "step": "memory-part:e02c17f6c94d7bbd756473974e7e744defeaa35a77afba7eea7606ab26b64e26:1:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2309
+            }
+          },
+          {
+            "step": "memory:e02c17f6c94d7bbd756473974e7e744defeaa35a77afba7eea7606ab26b64e26",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1074,
+              "passes": 2,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 2,
+              "durationMs": 6373,
+              "inputBytes": 2686,
+              "modelCalls": 2,
+              "outputBytes": 488
+            }
+          },
+          {
+            "step": "memory:e02c17f6c94d7bbd756473974e7e744defeaa35a77afba7eea7606ab26b64e26",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 6376
+            }
+          },
+          {
+            "step": "memory-part:ac2a12c430af50565acf28367c7d8bbb3f9518650460bb4d8b76900ff5a3e784:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2279
+            }
+          },
+          {
+            "step": "memory:ac2a12c430af50565acf28367c7d8bbb3f9518650460bb4d8b76900ff5a3e784",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1068,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2284,
+              "inputBytes": 2672,
+              "modelCalls": 1,
+              "outputBytes": 845
+            }
+          },
+          {
+            "step": "memory:ac2a12c430af50565acf28367c7d8bbb3f9518650460bb4d8b76900ff5a3e784",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2291
+            }
+          },
+          {
+            "step": "memory-part:62dea9e6eed367687253b2db5cc0fbb39dbed23fddc225fb244ca42cf046e9fb:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2475
+            }
+          },
+          {
+            "step": "memory:62dea9e6eed367687253b2db5cc0fbb39dbed23fddc225fb244ca42cf046e9fb",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1064,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2483,
+              "inputBytes": 2662,
+              "modelCalls": 1,
+              "outputBytes": 773
+            }
+          },
+          {
+            "step": "memory:62dea9e6eed367687253b2db5cc0fbb39dbed23fddc225fb244ca42cf046e9fb",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2488
+            }
+          },
+          {
+            "step": "memory-part:8670f9b8e9454f86ca43fc8cd7ab2989fb70c74cbb6a956916a046ed8c8ac53a:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3004
+            }
+          },
+          {
+            "step": "memory:8670f9b8e9454f86ca43fc8cd7ab2989fb70c74cbb6a956916a046ed8c8ac53a",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1033,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 3010,
+              "inputBytes": 2583,
+              "modelCalls": 1,
+              "outputBytes": 680
+            }
+          },
+          {
+            "step": "memory:8670f9b8e9454f86ca43fc8cd7ab2989fb70c74cbb6a956916a046ed8c8ac53a",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3014
+            }
+          },
+          {
+            "step": "memory-part:acfa5cabfd0e189d970cfbd6b359be41b85b6a540880fd798ce42ea235b951c0:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2110
+            }
+          },
+          {
+            "step": "memory:acfa5cabfd0e189d970cfbd6b359be41b85b6a540880fd798ce42ea235b951c0",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1004,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2117,
+              "inputBytes": 2510,
+              "modelCalls": 1,
+              "outputBytes": 532
+            }
+          },
+          {
+            "step": "memory:acfa5cabfd0e189d970cfbd6b359be41b85b6a540880fd798ce42ea235b951c0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2121
+            }
+          },
+          {
+            "step": "memory-part:93778aea9e283e9d6853938cd8036db14a0f0c6312c82c921ec08ec678e0dc34:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2788
+            }
+          },
+          {
+            "step": "memory:93778aea9e283e9d6853938cd8036db14a0f0c6312c82c921ec08ec678e0dc34",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 1000,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2796,
+              "inputBytes": 2502,
+              "modelCalls": 1,
+              "outputBytes": 629
+            }
+          },
+          {
+            "step": "memory:93778aea9e283e9d6853938cd8036db14a0f0c6312c82c921ec08ec678e0dc34",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2803
+            }
+          },
+          {
+            "step": "memory-part:5ef9c56ea4037214b5d482d3aef0a85ea7e1fdd65b1edde05b102ff2fd6a2052:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 3166
+            }
+          },
+          {
+            "step": "memory-part:5ef9c56ea4037214b5d482d3aef0a85ea7e1fdd65b1edde05b102ff2fd6a2052:1:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2530
+            }
+          },
+          {
+            "step": "memory-part:5ef9c56ea4037214b5d482d3aef0a85ea7e1fdd65b1edde05b102ff2fd6a2052:2:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2455
+            }
+          },
+          {
+            "step": "memory-part:5ef9c56ea4037214b5d482d3aef0a85ea7e1fdd65b1edde05b102ff2fd6a2052:3:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2485
+            }
+          },
+          {
+            "step": "memory-part:5ef9c56ea4037214b5d482d3aef0a85ea7e1fdd65b1edde05b102ff2fd6a2052:4:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2728
+            }
+          },
+          {
+            "step": "memory-part:5ef9c56ea4037214b5d482d3aef0a85ea7e1fdd65b1edde05b102ff2fd6a2052:5:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2548
+            }
+          },
+          {
+            "step": "memory-part:5ef9c56ea4037214b5d482d3aef0a85ea7e1fdd65b1edde05b102ff2fd6a2052:6:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2606
+            }
+          },
+          {
+            "step": "memory-part:5ef9c56ea4037214b5d482d3aef0a85ea7e1fdd65b1edde05b102ff2fd6a2052:7:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 1960
+            }
+          },
+          {
+            "step": "memory:5ef9c56ea4037214b5d482d3aef0a85ea7e1fdd65b1edde05b102ff2fd6a2052",
+            "provider": "workflow",
+            "body": {
+              "code": "SUMMARY_NOT_REDUCED",
+              "kind": "step",
+              "cache": "miss",
+              "result": "failed",
+              "durationMs": 20490
+            }
+          },
+          {
+            "step": "memory-part:b1eff192ab575005f77284cb48c99ab6093d2d0ae2098ae90178c33dcbc134c1:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2368
+            }
+          },
+          {
+            "step": "memory:b1eff192ab575005f77284cb48c99ab6093d2d0ae2098ae90178c33dcbc134c1",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 932,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2378,
+              "inputBytes": 2330,
+              "modelCalls": 1,
+              "outputBytes": 609
+            }
+          },
+          {
+            "step": "memory:b1eff192ab575005f77284cb48c99ab6093d2d0ae2098ae90178c33dcbc134c1",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2384
+            }
+          },
+          {
+            "step": "memory-part:96396621590d4da1408d2cbd469d94d9ea5387c22a9eefc0c0049fbe60124f90:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 1998
+            }
+          },
+          {
+            "step": "memory:96396621590d4da1408d2cbd469d94d9ea5387c22a9eefc0c0049fbe60124f90",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 926,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2008,
+              "inputBytes": 2317,
+              "modelCalls": 1,
+              "outputBytes": 522
+            }
+          },
+          {
+            "step": "memory:96396621590d4da1408d2cbd469d94d9ea5387c22a9eefc0c0049fbe60124f90",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2014
+            }
+          },
+          {
+            "step": "memory-part:004471a3c8d9765db509693f7495f0f43bf596e5a09cd4e3c4a0b3603e3f1c0d:0:0",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2696
+            }
+          },
+          {
+            "step": "memory:004471a3c8d9765db509693f7495f0f43bf596e5a09cd4e3c4a0b3603e3f1c0d",
+            "provider": "context",
+            "body": {
+              "kind": "summary",
+              "cache": "miss",
+              "budget": 916,
+              "passes": 1,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "chunkCount": 1,
+              "durationMs": 2703,
+              "inputBytes": 2290,
+              "modelCalls": 1,
+              "outputBytes": 624
+            }
+          },
+          {
+            "step": "memory:004471a3c8d9765db509693f7495f0f43bf596e5a09cd4e3c4a0b3603e3f1c0d",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2708
+            }
+          },
+          {
+            "step": "R2@goal-v1:1dff353659fcab8d",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 51818,
+              "inputBytes": 61697,
+              "outputBytes": 40071,
+              "compressions": 12,
+              "outputReserve": 16384
+            }
+          },
+          {
+            "step": "R2@goal-v1:1dff353659fcab8d",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 63064
+            }
+          },
+          {
+            "step": "R3@goal-v1:62fd8c83ce030838",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 0,
+              "inputBytes": 6061,
+              "outputBytes": 6061,
+              "compressions": 0,
+              "outputReserve": 3072
+            }
+          },
+          {
+            "step": "R3@goal-v1:62fd8c83ce030838",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 2475
+            }
+          },
+          {
+            "step": "commit",
+            "provider": "workflow",
+            "body": {
+              "kind": "commit",
+              "result": "completed",
+              "durationMs": 7
+            }
+          },
+          {
+            "step": "R4-plan:strict-v2@goal-v1:2a0e6db48cde18ed",
+            "provider": "context",
+            "body": {
+              "kind": "context",
+              "margin": 2048,
+              "result": "completed",
+              "window": 64000,
+              "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3",
+              "durationMs": 0,
+              "inputBytes": 7529,
+              "outputBytes": 7529,
+              "compressions": 0,
+              "outputReserve": 16384
+            }
+          },
+          {
+            "step": "R4-plan:strict-v2@goal-v1:2a0e6db48cde18ed",
+            "provider": "workflow",
+            "body": {
+              "kind": "step",
+              "cache": "miss",
+              "result": "completed",
+              "durationMs": 19576
+            }
+          },
+          {
+            "step": "commit",
+            "provider": "workflow",
+            "body": {
+              "kind": "commit",
+              "result": "completed",
+              "durationMs": 4
+            }
+          }
+        ]
+      },
+      "refined": {
+        "date": "2026-09-08T14:07:27.231Z",
+        "status": "completed",
+        "route": {
+          "version": "1.0",
+          "routeId": "p5d7cded816a6457b",
+          "learningGoal": {
+            "outcome": "能够独立推导并解释注意力公式 Attention(Q,K,V)=softmax(QK^T/√d_k)V 的每一步，向同学讲清楚每个公式为何成立",
+            "motivation": "我上传了一段论文，想学懂其中的数学理论，但不知道从哪开始。",
+            "successCriteria": [
+              "能独立推导注意力公式 Attention(Q,K,V)=softmax(QK^T/√d_k)V 的每一步，并解释每一步的输入输出",
+              "能解释 Q、K、V 矩阵的维度来源及含义，说明 XW_Q、XW_K、XW_V 的形状变化",
+              "能说明为什么除以 √d_k（在假设各分量独立、均值为0、方差为1时，点积方差为 d_k），以及不除的后果",
+              "能解释 softmax 归一化后权重如何对 V 加权求和，并说明输出是上下文的融合"
+            ],
+            "startingPoint": "我会矩阵乘法和一元求导。",
+            "constraints": [
+              "不需要复现代码",
+              "不为求职"
+            ],
+            "nonGoals": [],
+            "assumptions": [],
+            "openQuestions": []
+          },
+          "title": "理解注意力机制数学原理的学习路线",
+          "carriers": [
+            {
+              "id": "p5d7cded816a6457b-s1-1",
+              "title": "线性代数基础：矩阵乘法与形状",
+              "description": "复习矩阵乘法规则，理解 X、W_Q、W_K、W_V 的维度关系，以及 QK^T 的结果形状。"
+            },
+            {
+              "id": "p5d7cded816a6457b-s2-1",
+              "title": "概率与统计基础：方差与随机变量",
+              "description": "理解随机变量的方差概念，以及独立随机变量和的方差性质。在假设 Q、K 各分量独立、均值为0、方差为1时，点积的方差等于维度 d_k，因此除以 √d_k 可以稳定数值。"
+            },
+            {
+              "id": "p5d7cded816a6457b-s3-1",
+              "title": "注意力机制核心：公式推导",
+              "description": "围绕注意力公式，逐步推导 QK^T、缩放、softmax、加权求和，理解每一步的输入输出和目的。"
+            }
+          ],
+          "concepts": [
+            {
+              "id": "p5d7cded816a6457b-s1-1-c1",
+              "carrierId": "p5d7cded816a6457b-s1-1",
+              "title": "矩阵乘法与形状",
+              "hasDispute": false,
+              "detailedDescription": "掌握矩阵乘法的维度匹配规则：若 A 为 m×n，B 为 n×p，则 AB 为 m×p。理解输入 X（假设为 n×d_model）与权重矩阵 W_Q（d_model×d_k）相乘得到 Q（n×d_k），同理 K、V。理解 QK^T 的形状为 n×n，每个元素是两个向量的点积。",
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "goalAlignment": {
+                "purpose": "理解公式中所有矩阵的维度来源，是推导公式的第一步",
+                "depth": "能根据给定维度推出结果形状，不涉及更复杂的矩阵性质",
+                "successCheck": "给定 X 为 3×4，W_Q 为 4×5，写出 Q 的形状，并说明 QK^T 的形状（假设 K 同 Q）",
+                "materialAnchors": [
+                  {
+                    "sourceId": "synthetic-material",
+                    "quote": "设输入 X 的每一行是一个词向量，Q=XW_Q，K=XW_K，V=XW_V。",
+                    "role": "direct",
+                    "connection": "该引文直接定义了 Q、K、V 的生成方式，需要矩阵乘法知识来理解维度",
+                    "evidenceKind": "material"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "p5d7cded816a6457b-s1-1-c2",
+              "carrierId": "p5d7cded816a6457b-s1-1",
+              "title": "向量内积与相似度",
+              "hasDispute": false,
+              "detailedDescription": "复习向量内积的定义：a·b = Σ a_i b_i。内积结果受向量长度影响，未归一化时不能无条件说越大越相似。在注意力中，QK^T 的每个元素是查询向量与键向量的点积，反映它们的相似程度（但需注意长度影响）。",
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "goalAlignment": {
+                "purpose": "理解 QK^T 中每个元素的含义，为后续 softmax 和加权求和打基础",
+                "depth": "理解内积定义和基本性质，知道它受长度影响，不深入几何意义",
+                "successCheck": "计算两个向量 [1,2] 和 [3,4] 的内积，并解释结果表示什么",
+                "materialAnchors": [
+                  {
+                    "sourceId": "synthetic-material",
+                    "quote": "注意力为 Attention(Q,K,V)=softmax(QK^T/sqrt(d_k))V",
+                    "role": "prerequisite",
+                    "connection": "要理解 QK^T 的含义，必须先掌握向量内积",
+                    "evidenceKind": "material"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "p5d7cded816a6457b-s2-1-c1",
+              "carrierId": "p5d7cded816a6457b-s2-1",
+              "title": "方差与随机变量",
+              "hasDispute": false,
+              "detailedDescription": "复习方差定义 Var(X)=E[(X-μ)^2]。若 X_1,...,X_d 独立且方差为1，则 Var(Σ X_i Y_i) = d（当 Y_i 也独立且方差为1时）。在注意力中，点积是 d_k 个乘积的和，因此方差随 d_k 增长，除以 √d_k 使方差保持为1。注意这是说明性假设，实际训练中不一定严格成立。",
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "goalAlignment": {
+                "purpose": "理解缩放因子 √d_k 的由来，能解释为什么需要缩放",
+                "depth": "理解方差的基本性质和独立随机变量和的方差公式，不深入概率论其他内容",
+                "successCheck": "假设两个独立随机变量 X 和 Y 方差均为1，写出 X+Y 的方差，并解释若 d_k=64，点积方差约为多少",
+                "materialAnchors": [
+                  {
+                    "sourceId": "synthetic-material",
+                    "quote": "softmax(QK^T/sqrt(d_k))",
+                    "role": "prerequisite",
+                    "connection": "要理解为什么除以 sqrt(d_k)，需要先掌握方差概念",
+                    "evidenceKind": "material"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "p5d7cded816a6457b-s3-1-c1",
+              "carrierId": "p5d7cded816a6457b-s3-1",
+              "title": "缩放点积注意力公式",
+              "hasDispute": false,
+              "detailedDescription": "理解完整公式 Attention(Q,K,V)=softmax(QK^T/√d_k)V。步骤：1) 计算 QK^T 得到相似度矩阵；2) 除以 √d_k 缩放；3) 对每一行做 softmax 得到权重；4) 用权重对 V 加权求和。通过小矩阵例子逐步计算，理解每一步的形状和含义。",
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "goalAlignment": {
+                "purpose": "直接理解论文中的核心公式，是最终目标",
+                "depth": "能独立推导公式的每一步，理解每个运算的作用，不涉及多头注意力等变体",
+                "successCheck": "给定一个 2×2 的 Q、K、V 例子，手动计算注意力输出，并解释每一步",
+                "materialAnchors": [
+                  {
+                    "sourceId": "synthetic-material",
+                    "quote": "注意力为 Attention(Q,K,V)=softmax(QK^T/sqrt(d_k))V，其中 softmax 按行归一化。",
+                    "role": "direct",
+                    "connection": "该引文是核心公式，需要逐步拆解学习",
+                    "evidenceKind": "material"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "p5d7cded816a6457b-s3-1-c2",
+              "carrierId": "p5d7cded816a6457b-s3-1",
+              "title": "softmax 归一化",
+              "hasDispute": false,
+              "detailedDescription": "理解 softmax 函数：对向量 z，softmax(z)_i = exp(z_i)/Σ_j exp(z_j)。它将任意实数向量转换为概率分布（非负且和为1）。在注意力中，对 QK^T/√d_k 的每一行做 softmax，得到每个键对查询的注意力权重。",
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "goalAlignment": {
+                "purpose": "理解如何将相似度分数转换为权重，为加权求和做准备",
+                "depth": "理解 softmax 的定义和性质，能手动计算简单例子的 softmax",
+                "successCheck": "计算向量 [1,2,3] 的 softmax 输出，并验证和为1",
+                "materialAnchors": [
+                  {
+                    "sourceId": "synthetic-material",
+                    "quote": "softmax 按行归一化",
+                    "role": "direct",
+                    "connection": "该引文直接说明 softmax 的作用，需要学习其定义",
+                    "evidenceKind": "material"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "p5d7cded816a6457b-s3-1-c3",
+              "carrierId": "p5d7cded816a6457b-s3-1",
+              "title": "加权求和",
+              "hasDispute": false,
+              "detailedDescription": "理解注意力输出是 V 的加权和：输出 = Σ_i α_i V_i，其中 α_i 是 softmax 权重。每个 token 的新表示是 V 中所有 token 的加权平均，权重由查询与键的相似度决定，从而融合上下文信息。",
+              "attachmentSourceIds": [
+                "synthetic-material"
+              ],
+              "goalAlignment": {
+                "purpose": "理解注意力输出的含义，完成公式的最终解释",
+                "depth": "理解加权求和如何产生上下文相关的表示，不深入多头机制",
+                "successCheck": "用一个小例子（如两个 token）说明加权求和如何融合信息",
+                "materialAnchors": [
+                  {
+                    "sourceId": "synthetic-material",
+                    "quote": "softmax(QK^T/sqrt(d_k))V",
+                    "role": "direct",
+                    "connection": "该引文中的乘法就是加权求和，需要理解其含义",
+                    "evidenceKind": "material"
+                  }
+                ]
+              }
+            }
+          ],
+          "carrierEdges": [
+            {
+              "id": "ce-1",
+              "fromCarrierId": "p5d7cded816a6457b-s1-1",
+              "toCarrierId": "p5d7cded816a6457b-s2-1",
+              "reason": "完成上一阶段后进入下一阶段"
+            },
+            {
+              "id": "ce-2",
+              "fromCarrierId": "p5d7cded816a6457b-s2-1",
+              "toCarrierId": "p5d7cded816a6457b-s3-1",
+              "reason": "完成上一阶段后进入下一阶段"
+            }
+          ],
+          "conceptEdges": [
+            {
+              "id": "p5d7cded816a6457b-s1-1-e1",
+              "fromConceptId": "p5d7cded816a6457b-s1-1-c1",
+              "toConceptId": "p5d7cded816a6457b-s1-1-c2",
+              "reason": "按该载体中的推荐顺序学习"
+            },
+            {
+              "id": "p5d7cded816a6457b-s3-1-e1",
+              "fromConceptId": "p5d7cded816a6457b-s3-1-c1",
+              "toConceptId": "p5d7cded816a6457b-s3-1-c2",
+              "reason": "按该载体中的推荐顺序学习"
+            },
+            {
+              "id": "p5d7cded816a6457b-s3-1-e2",
+              "fromConceptId": "p5d7cded816a6457b-s3-1-c2",
+              "toConceptId": "p5d7cded816a6457b-s3-1-c3",
+              "reason": "按该载体中的推荐顺序学习"
+            },
+            {
+              "id": "ne-4",
+              "fromConceptId": "p5d7cded816a6457b-s1-1-c2",
+              "toConceptId": "p5d7cded816a6457b-s2-1-c1",
+              "reason": "按阶段衔接，当前阶段内的方向并列"
+            },
+            {
+              "id": "ne-5",
+              "fromConceptId": "p5d7cded816a6457b-s2-1-c1",
+              "toConceptId": "p5d7cded816a6457b-s3-1-c1",
+              "reason": "按阶段衔接，当前阶段内的方向并列"
+            }
+          ],
+          "entryConceptIds": [
+            "p5d7cded816a6457b-s1-1-c1"
+          ],
+          "terminalConceptIds": [
+            "p5d7cded816a6457b-s3-1-c3"
+          ]
+        },
+        "promptHash": "057759255152b57ec19491d3d81ad8b12b207b3fa50f09a7fbf806e9dc765866",
+        "model": "deepseek-v4-flash",
+        "capabilities": {
+          "llm": {
+            "window": 64000,
+            "output": 16384,
+            "namespace": "9c094e9c0371e10f410783bd50ef985144849e4ab11557dbe8edddc9bfd494b3"
+          },
+          "zhihu": {
+            "fast": {
+              "window": 32000,
+              "output": 8192,
+              "namespace": "dfb88144267f3ed492e01a52817a55d671dedfed3728c98063e37603c491c3ce"
+            },
+            "deep": {
+              "window": 32000,
+              "output": 8192,
+              "namespace": "01009364ab10c3cae624383ae88f146508f9a5ecc26986704acbffbc8e630254"
+            }
+          }
+        },
+        "callCount": 3,
+        "durationMs": 33548
+      },
+      "rawHashes": {
+        "live/paper-math.json": "019246ccbc37f13fee4337c4d68dfa31f44ba50938179170015719aaf4f12037",
+        "live-refined/paper-math.json": "8d4cbf8f181f30ffd3ca80b0bf38b4a2e6e37c6be5091838f3009c58193b7f32"
+      }
+    }
+  ]
+}

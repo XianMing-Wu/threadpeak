@@ -12,6 +12,7 @@ server/.data/
 # Local provider evaluation payloads; reviewed summaries live beside this directory.
 qa/evidence/goal-agents/raw/
 qa/evidence/showcase/raw/
+qa/evidence/project-audit-fixes-2026-09-08/raw/
 
 coverage/
 *.threadpeak-owner

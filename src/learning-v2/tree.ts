@@ -1,24 +1,42 @@
 import type { GraphNode } from './model'
+import {validateTree} from '@threadpeak/contracts/learning-v2'
 
 export type Placement = { x:number; y:number; w:number; h:number }
 export const cardColors = ['#ffffff','#fff2f2','#fff9e9','#ffffe9','#effbf5','#eefbff','#f3f2ff','#fbf0ff','#f1f2f4','#fce5e5','#ffedcb','#fcf5c4','#dff1e5','#d9f0f8','#e9e3fa','#f5ddf3','#e0e3e6','#f4cbcb','#ffe0ad','#f6e9a7','#bcdcc7','#b8e0ef','#d1c6f0','#e8bde3']
 
 export function assertTree(nodes:GraphNode[]) {
   if(!nodes.length)return
-  const byId=new Map(nodes.map(n=>[n.id,n]))
-  if(byId.size!==nodes.length||nodes.filter(n=>!n.parents.length).length!==1||!byId.has('root'))throw Error('知识脉络需要一个根节点')
-  for(const node of nodes){
-    if(node.id==='root'){if(node.parents.length)throw Error('根节点不能有父节点');continue}
-    if(node.parents.length!==1||!byId.has(node.parents[0]))throw Error('每张卡片必须且只能连接一个父卡片')
-    const seen=new Set([node.id]);let parent=node.parents[0]
-    while(parent){if(seen.has(parent))throw Error('知识脉络不能循环连接');seen.add(parent);parent=byId.get(parent)?.parents[0]??''}
-  }
+  if(!nodes.some(n=>n.id==='root'&&n.type==='root'))throw Error('知识脉络需要一个根节点')
+  validateTree(nodes)
 }
 
-export function descendants(nodes:GraphNode[],id:string):string[]{
-  const result:string[]=[];const queue=[id]
-  while(queue.length){const current=queue.shift()!;if(result.includes(current))continue;result.push(current);queue.push(...nodes.filter(n=>n.parents[0]===current).map(n=>n.id))}
+export function childrenByParent(nodes:GraphNode[]){
+  const children=new Map<string,GraphNode[]>()
+  for(const node of nodes){const parent=node.parents[0];if(!parent)continue;let list=children.get(parent);if(!list){list=[];children.set(parent,list)}list.push(node)}
+  return children
+}
+export function descendants(nodes:GraphNode[],id:string,children=childrenByParent(nodes)):string[]{
+  const result:string[]=[],queue=[id],seen=new Set<string>()
+  for(let i=0;i<queue.length;i++){const current=queue[i];if(seen.has(current))continue;seen.add(current);result.push(current);for(const child of children.get(current)??[])queue.push(child.id)}
   return result
+}
+
+export function documentOrder(nodes:GraphNode[],collapsed:readonly string[]=[]){
+  const children=childrenByParent(nodes),hidden=new Set(collapsed),stack=(children.get('root')??[]).map(node=>({node,depth:0})).reverse(),rows:{node:GraphNode;depth:number}[]=[]
+  const seen=new Set<string>()
+  while(stack.length){const row=stack.pop()!;if(seen.has(row.node.id))continue;seen.add(row.node.id);rows.push(row);if(!hidden.has(row.node.id)){const kids=children.get(row.node.id)??[];for(let i=kids.length-1;i>=0;i--)stack.push({node:kids[i],depth:row.depth+1})}}
+  return {rows,children}
+}
+
+export function offsetTree(base:Record<string,Placement>,children:Map<string,GraphNode[]>,offsets:Record<string,{x:number;y:number}>){
+  const placed:Record<string,Placement>={},queue=[{id:'root',x:0,y:0}]
+  for(let i=0;i<queue.length;i++){
+    const current=queue[i],box=base[current.id];if(!box)continue
+    const x=current.x+(offsets[current.id]?.x??0),y=current.y+(offsets[current.id]?.y??0)
+    placed[current.id]={...box,x:box.x+x,y:box.y+y}
+    for(const child of children.get(current.id)??[])queue.push({id:child.id,x,y})
+  }
+  return placed
 }
 
 export function appendCustom(nodes:GraphNode[],anchorId:string,kind:'child'|'sibling',title:string,text:string){
@@ -41,24 +59,22 @@ export function removeBranch(nodes:GraphNode[],id:string){
 // Each subtree owns its vertical space; branches grow without merging or crossing.
 export function layoutTree(nodes:GraphNode[],collapsed:string[],expanded:string[],pendingIds:string[]=[]){
   assertTree(nodes)
-  const map:Record<string,Placement>={},byId=new Map(nodes.map(n=>[n.id,n]))
-  const children=new Map<string,GraphNode[]>()
-  nodes.forEach(n=>{if(n.parents[0])children.set(n.parents[0],[...(children.get(n.parents[0])??[]),n])})
-  const sizes=new Map<string,number>()
-  const height=(n:GraphNode)=>pendingIds.includes(n.id)?238:n.id==='root'?108:expanded.includes(n.id)?Math.min(560,Math.max(260,Math.ceil(n.text.length/22)*21+160)):n.type==='author'?276:n.type==='custom'?Math.max(64,Math.ceil(n.title.length/20)*22+32+(n.text?90:0)):240
-  function measure(id:string):number{
-    const n=byId.get(id)!;const kids=collapsed.includes(id)?[]:children.get(id)??[]
-    const total=kids.reduce((sum,c)=>sum+measure(c.id),0)+Math.max(0,kids.length-1)*48
-    const size=Math.max(height(n),total);sizes.set(id,size);return size
+  const map:Record<string,Placement>={},byId=new Map(nodes.map(n=>[n.id,n])),children=childrenByParent(nodes)
+  const hidden=new Set(collapsed),open=new Set(expanded),pending=new Set(pendingIds),sizes=new Map<string,number>(),heights=new Map<string,number>()
+  const height=(n:GraphNode)=>pending.has(n.id)?238:n.id==='root'?108:open.has(n.id)?Math.min(560,Math.max(260,Math.ceil(n.text.length/22)*21+160)):n.type==='author'?276:n.type==='custom'?Math.max(64,Math.ceil(n.title.length/20)*22+32+(n.text?90:0)):240
+  const order:string[]=byId.has('root')?['root']:[]
+  for(let i=0;i<order.length;i++)if(!hidden.has(order[i]))for(const child of children.get(order[i])??[])order.push(child.id)
+  for(let i=order.length-1;i>=0;i--){
+    const id=order[i],h=height(byId.get(id)!),kids=hidden.has(id)?[]:children.get(id)??[]
+    heights.set(id,h);sizes.set(id,Math.max(h,kids.reduce((sum,c)=>sum+sizes.get(c.id)!,0)+Math.max(0,kids.length-1)*48))
   }
-  function place(id:string,x:number,top:number){
-    const n=byId.get(id)!,h=height(n),w=id==='root'?218:300
+  const positions=new Map([['root',{x:30,top:36}]])
+  for(const id of order){
+    const {x,top}=positions.get(id)!,h=heights.get(id)!,w=id==='root'?218:300
     map[id]={x,y:top+(sizes.get(id)!-h)/2,w,h}
-    const kids=collapsed.includes(id)?[]:children.get(id)??[]
-    const total=kids.reduce((sum,c)=>sum+sizes.get(c.id)!,0)+Math.max(0,kids.length-1)*48
+    const kids=hidden.has(id)?[]:children.get(id)??[],total=kids.reduce((sum,c)=>sum+sizes.get(c.id)!,0)+Math.max(0,kids.length-1)*48
     let nextTop=top+(sizes.get(id)!-total)/2
-    for(const child of kids){place(child.id,x+w+76,nextTop);nextTop+=sizes.get(child.id)!+48}
+    for(const child of kids){positions.set(child.id,{x:x+w+76,top:nextTop});nextTop+=sizes.get(child.id)!+48}
   }
-  if(byId.has('root')){measure('root');place('root',30,36)}
   return map
 }

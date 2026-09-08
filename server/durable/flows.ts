@@ -13,7 +13,8 @@ import { recordAuthorUse } from './authors-network.ts'
 import { randomUUID } from 'node:crypto'
 import type { R1Output, R2Output, R3Output, R3bOutput, R4Output } from '../agent-runtime/schemas.ts'
 import type { SearchEvidence } from '../agent-runtime/types.ts'
-import { packZhihuSearchQueries } from '../agent-runtime/pack-search.ts'
+import { packZhihuSearchQueries,packAuthorSearchQueries } from '../agent-runtime/pack-search.ts'
+import {evidenceUrlKey} from '../agent-runtime/evidence-url.ts'
 import { projectRouteToDocument } from '../path-generation/project-document.ts'
 import type { LearningState, GraphNode, Paragraph, Article } from '@threadpeak/contracts/learning-v2'
 import { paragraphNode, validateTree } from '@threadpeak/contracts/learning-v2'
@@ -58,7 +59,7 @@ export function selectPathCustomAnswer(resource:Resource,questionId:string,custo
 }
 function uniqueEvidence(groups:SearchEvidence[][]):SearchEvidence[]{
   const byUrl=new Map<string,SearchEvidence>()
-  for(const e of groups.flat()){const u=new URL(e.url);u.search='';u.hash='';const old=byUrl.get(u.href);if(!old||old.sourceKind==='web'&&e.sourceKind!=='web')byUrl.set(u.href,e)}
+  for(const e of groups.flat()){const key=evidenceUrlKey(e.url),old=byUrl.get(key);if(!old||old.sourceKind==='web'&&e.sourceKind!=='web')byUrl.set(key,e)}
   return [...byUrl.values()]
 }
 function articleOf(e:SearchEvidence):Article{return {...e,id:e.evidenceId,title:e.title,summary:e.summary,author:e.sourceKind==='web'?(e.site??new URL(e.url).hostname):e.authorName??'作者信息未提供',authorId:e.sourceKind==='web'?null:e.authorId,authorUrl:e.sourceKind==='web'?null:e.authorUrl,likes:e.likes??null,url:e.url,topic:e.sourceKind==='web'?'全网资料':'知乎文章',sourceKind:e.sourceKind??'zhihu'}}
@@ -91,21 +92,21 @@ export function createFlows(tools:ProductTools,api?:ZhihuDataClient,login?:Zhihu
     const goalContext=pathGoalContext(state)
     if(kind==='path.start'){
       await ctx.progress('正在理解学习目标')
-      const r1=await tools.legacy<R1Output>(ctx,'R1',{goalContext,goal:state.goal,searchScope,attachments})
+      const r1=await tools.planStep<R1Output>(ctx,'R1',{goalContext,goal:state.goal,searchScope,attachments})
       await ctx.progress(searchScope.kind==='collections'?'正在读取所选收藏夹':'正在查找学习资料')
       const packed=packZhihuSearchQueries(r1.queries)
       const groups=searchScope.kind==='collections'
         ? [{queryId:'route-materials',query:state.goal,results:await ctx.step('R-materials',{sourceIds:state.attachments.map(a=>a.sourceId)},async()=>inheritedArticles(state.attachments).filter(a=>a.url).map(a=>({evidenceId:a.id,title:a.title,summary:a.summary,url:a.url!,authorId:a.authorId,authorName:a.author,sourceKind:'zhihu' as const})))}]
         : await settledParallel(packed.map(async(q,index)=>({queryId:`route-search-${index}`,query:q.query,results:await tools.search(ctx,`R-S:${index}`,q.query,searchScope)})))
       await ctx.progress('正在整理适合你的方向')
-      state.exploration=await tools.legacy<GoalExploration>(ctx,'R2',{goalContext,goal:state.goal,searchScope,searchGroups:groups,attachments})
+      state.exploration=await tools.planStep<GoalExploration>(ctx,'R2',{goalContext,goal:state.goal,searchScope,searchGroups:groups,attachments})
       await ctx.progress('正在准备几个简单问题')
-      const r3=await tools.legacy<R3Output>(ctx,'R3',{goalContext,goal:state.goal,searchScope,exploration:state.exploration,attachments})
+      const r3=await tools.planStep<R3Output>(ctx,'R3',{goalContext,goal:state.goal,searchScope,exploration:state.exploration,attachments})
       appendQuestionSet(state,r3)
     }else if(kind==='path.clarify'){
       const active=activeSet(state)
       if(!active||state.status!=='awaiting_answers')throw new CommandError('QUESTION_NOT_ACTIVE')
-      const answer=await tools.legacy<R3bOutput>(ctx,'R3b',{goalContext,goal:state.goal,searchScope,exploration:state.exploration,followUpMessage:ctx.job.input.question,activeRound:active.round,questionSets:state.questionSets,attachments},{activeRound:active.round})
+      const answer=await tools.planStep<R3bOutput>(ctx,'R3b',{goalContext,goal:state.goal,searchScope,exploration:state.exploration,followUpMessage:ctx.job.input.question,activeRound:active.round,questionSets:state.questionSets,attachments},{activeRound:active.round})
       state.conversation.push({messageId:ctx.job.id,role:'assistant',kind:'text',content:answer.message})
       if(answer.kind==='replace_questions'){
         // The retired set is retained with all selections; it never disappears.
@@ -198,7 +199,7 @@ export function createFlows(tools:ProductTools,api?:ZhihuDataClient,login?:Zhihu
       const host=input.cards[0]!,excluded=ctx.job.input.excludedAuthorIds as string[]
       await ctx.progress('正在换几种问法寻找博主')
       const plan=await tools.learning(ctx,'A-card-plan',{goalContext:input.goalContext,concept:input.concept,host:input.allowedCards[0],question:input.currentQuestion})
-      const queries=plan.queries.length===3?[plan.queries[0]!,`${plan.queries[1]} ${plan.queries[2]}`]:plan.queries
+      const queries=packAuthorSearchQueries(plan.queries).map(p=>p.query)
       const evidence=uniqueEvidence(await settledParallel(queries.map((q,i)=>tools.search(ctx,`A-search:${i}`,q)))).filter(e=>e.authorId&&e.authorName&&!excluded.includes(e.authorId))
       await ctx.progress('正在阅读相关博主的解读')
       const catalog=authorCardCandidates(evidence)

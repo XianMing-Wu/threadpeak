@@ -1,5 +1,6 @@
 import { MarkdownMath } from '../lib/MarkdownMath'
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import {documentOrder} from './tree'
 import type { GraphNode } from './model'
 import { Glyph } from './atoms'
 
@@ -25,12 +26,11 @@ function DocumentCard({node,selected,busy,onSelect,onSave,toolbar,hasChildren,co
   </section>
 }
 
-// The reference's renderDocument(): one ordered document, nested sections mirror children.
+// Preserve tree preorder and depth without recursively nesting DOM sections.
 export function KnowledgeDocument({nodes,selected,focusId,busy=false,onSelect,onSave,renderToolbar,onScroll}:{nodes:GraphNode[];selected:string[];focusId:string|null;busy?:boolean;onSelect:(id:string)=>void;onSave:(id:string,title:string,text:string)=>void;renderToolbar:(node:GraphNode)=>ReactNode;onScroll:()=>void}){
   const doc=useRef<HTMLDivElement>(null),[collapsed,setCollapsed]=useState<string[]>([])
-  const byParent=new Map<string,GraphNode[]>();nodes.forEach(n=>{if(n.parents[0])byParent.set(n.parents[0],[...(byParent.get(n.parents[0])??[]),n])})
+  const {rows,children}=useMemo(()=>documentOrder(nodes,collapsed),[nodes,collapsed])
   useEffect(()=>{if(!focusId)return;setCollapsed([])},[focusId])
   useEffect(()=>{if(!focusId||collapsed.length)return;const el=Array.from(doc.current?.querySelectorAll<HTMLElement>('[data-doc-id]')??[]).find(e=>e.dataset.docId===focusId);if(!el)return;el.scrollIntoView({block:'center',behavior:'instant'});el.querySelector<HTMLElement>('.lp-doc-read')?.click();el.querySelector<HTMLElement>('.lp-doc-text')?.focus({preventScroll:true})},[focusId,collapsed.length])
-  function branch(node:GraphNode):ReactNode{const children=byParent.get(node.id)??[];return <div key={node.id} className="lp-doc-branch"><DocumentCard node={node} selected={selected.includes(node.id)} busy={busy} onSelect={()=>onSelect(node.id)} onSave={(title,text)=>onSave(node.id,title,text)} toolbar={renderToolbar(node)} hasChildren={!!children.length} collapsed={collapsed.includes(node.id)} onCollapse={()=>setCollapsed(old=>old.includes(node.id)?old.filter(id=>id!==node.id):[...old,node.id])}/>{children.length>0&&!collapsed.includes(node.id)&&<div className="lp-doc-children">{children.map(branch)}</div>}</div>}
-  return <div className="lp-doc-view" ref={doc} onScroll={onScroll} aria-label="知识脉络文档" onPointerDown={e=>e.stopPropagation()} onWheel={e=>e.stopPropagation()}><h2>{nodes.find(n=>n.id==='root')?.title}</h2>{(byParent.get('root')??[]).map(branch)}<div className="lp-doc-overview"/></div>
+  return <div className="lp-doc-view" ref={doc} onScroll={onScroll} aria-label="知识脉络文档" onPointerDown={e=>e.stopPropagation()} onWheel={e=>e.stopPropagation()}><h2>{nodes.find(n=>n.id==='root')?.title}</h2>{rows.map(({node,depth})=><div key={node.id} className="lp-doc-branch lp-doc-flat" data-depth={depth} style={{marginInlineStart:Math.min(depth,6)*23}}><DocumentCard node={node} selected={selected.includes(node.id)} busy={busy} onSelect={()=>onSelect(node.id)} onSave={(title,text)=>onSave(node.id,title,text)} toolbar={renderToolbar(node)} hasChildren={!!children.get(node.id)?.length} collapsed={collapsed.includes(node.id)} onCollapse={()=>setCollapsed(old=>old.includes(node.id)?old.filter(id=>id!==node.id):[...old,node.id])}/></div>)}<div className="lp-doc-overview"/></div>
 }

@@ -1,4 +1,5 @@
 import type {TaskActivity} from '@threadpeak/contracts/task-activity'
+import {recordMetric} from './metrics.ts'
 import { providerScope } from './provider-scope.ts'
 import { CommandError, digest, type DurableStore, type Job, type Resource } from './store.ts'
 
@@ -24,9 +25,11 @@ export class TaskContext {
     this.signal.throwIfAborted()
     const hash = digest({ version: '2026-09-06.1', input })
     const old = this.job.checkpoints[name]
-    if (old) { if (old.hash !== hash) throw new ToolError('CHECKPOINT_VERSION_CONFLICT', false); return structuredClone(old.value) as T }
+    if (old) { if (old.hash !== hash) throw new ToolError('CHECKPOINT_VERSION_CONFLICT', false); await recordMetric(this.store.db,this.job,name,{kind:'step',durationMs:0,cache:'checkpoint'});return structuredClone(old.value) as T }
     const pending = this.pending.get(name)
     if (pending) return pending as Promise<T>
+    const started=Date.now()
+    let outcome='completed',failureCode:string|undefined
     const task = (async () => {
       const value = await providerScope.run({ownerId:this.job.owner_id,jobId:this.job.id,step:name,queue:async detail=>{
         const activity=this.job.activities?.find(a=>a.id===name.split('@')[0])
@@ -38,6 +41,7 @@ export class TaskContext {
     })()
     this.pending.set(name, task)
     try { return await task } catch(error) {
+      outcome='failed';failureCode=classifyTaskError(error,this.signal.aborted).code
       const id=name.startsWith('L-answer:attach')?'answer:attach':name.startsWith('L-answer:compose')?'answer:write':name.startsWith('memory:')?`context:summary:${name.slice('memory:'.length)}`:name.split('@')[0]
       const activity=this.job.activities?.find(a=>a.id===id)
       if(activity&&!this.signal.aborted&&error instanceof ToolError){
@@ -45,7 +49,7 @@ export class TaskContext {
         await this.activity(activity.id,activity.kind,activity.title,'waiting',detail)
       }
       throw error
-    } finally { this.pending.delete(name) }
+    } finally { this.pending.delete(name);await recordMetric(this.store.db,this.job,name,{kind:'step',durationMs:Date.now()-started,result:outcome,code:failureCode,cache:'miss'}) }
   }
   async progress(phase: string, draft?: string, update?: (resource: Resource) => unknown) {
     this.signal.throwIfAborted()
@@ -109,7 +113,7 @@ export class DurableWorker {
   }
   private async maintain() {
     let delay=3_600_000
-    try { const result=await this.store.maintain();if(result?.more)delay=60_000;this.maintenanceFailures=0 }
+    try { const started=Date.now(),result=await this.store.maintain();this.log({event:'worker.maintenance',durationMs:Date.now()-started,...result});if(result?.more)delay=60_000;this.maintenanceFailures=0 }
     catch(error) {
       delay=Math.min(900_000,this.timing.maintenanceRetryMs*2**Math.min(this.maintenanceFailures++,4))
       this.log({event:'worker.maintenance_failed',...storageFailure(error),retryInMs:delay})
@@ -142,6 +146,7 @@ export class DurableWorker {
     const heartbeat = setInterval(() => { void this.store.renew(job).then(ok => { if (!ok) controller.abort() }).catch(() => controller.abort()) }, 5000)
     controller.signal.addEventListener('abort',()=>{clearInterval(heartbeat);unsubscribe()},{once:true})
     const ctx = new TaskContext(this.store, job, controller.signal)
+    let outcome='completed',failureCode:string|undefined
     try {
       // Cancellation or takeover may occur between claim and handler dispatch.
       if(!await this.store.renew(job))controller.abort()
@@ -151,12 +156,13 @@ export class DurableWorker {
       this.log({ event: 'task.completed', jobId: job.id, kind: job.kind, durationMs: Date.now()-start, attempt: job.attempts })
     } catch (error) {
       const {code,retryable} = classifyTaskError(error,controller.signal.aborted)
+      outcome=controller.signal.aborted?'cancelled':'failed';failureCode=code
       if (!controller.signal.aborted && code !== 'LEASE_LOST') {
         try { await ctx.flush() } catch { /* storage recovery below */ }
         try { await this.store.recover(job, code, retryable) } catch { /* expired lease is recovered by the next worker */ }
       }
       this.log({ event: 'task.interrupted', jobId: job.id, kind: job.kind, code, durationMs: Date.now()-start, attempt: job.attempts })
-    } finally { clearInterval(heartbeat); unsubscribe(); this.controllers.delete(job.id); this.jobs.delete(job.id) }
+    } finally { clearInterval(heartbeat); unsubscribe(); this.controllers.delete(job.id); this.jobs.delete(job.id);await recordMetric(this.store.db,job,job.kind,{kind:'task',durationMs:Date.now()-start,ageAtStartMs:Math.max(0,start-job.created_at),attempt:job.attempts,result:outcome,code:failureCode}) }
   }
   async stop() {
     this.stopped = true; if (this.timer) clearTimeout(this.timer)

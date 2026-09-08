@@ -1,0 +1,68 @@
+{
+  "date": "2026-09-08",
+  "baseline": "main / 2b50e48",
+  "workspace": "uncommitted audit repair",
+  "node": "v25.5.0",
+  "status": "passed within recorded scope",
+  "completed": {
+    "check": {
+      "exitCode": 0,
+      "log": "check.log"
+    },
+    "lint": {
+      "exitCode": 0,
+      "log": "lint.log"
+    },
+    "build": {
+      "exitCode": 0,
+      "log": "build.log"
+    },
+    "postgres": {
+      "command": "TEST_DATABASE_URL=<isolated threadpeak_test URL> npm run test:postgres",
+      "passed": 9,
+      "exitCode": 0,
+      "log": "postgres.log"
+    },
+    "ui": {
+      "passed": 52,
+      "exitCode": 0,
+      "log": "ui.log"
+    },
+    "docs": {
+      "command": "npm run check:docs",
+      "passed": 6,
+      "exitCode": 0,
+      "log": "docs.log"
+    },
+    "fullTest": {
+      "command": "npm test",
+      "nodePassed": 400,
+      "uiPassed": 52,
+      "exitCode": 0,
+      "log": "test.log"
+    },
+    "diffCheck": {
+      "command": "git diff --check",
+      "exitCode": 0
+    }
+  },
+  "evidence": {
+    "benchmark": "benchmarks.json",
+    "browser": "browser.json",
+    "realRoutes": "samples.json",
+    "qualitativeReview": "quality-review.md"
+  },
+  "productionReady": false,
+  "environmentNotes": [
+    "A sandboxed final npm test attempt could not bind localhost (EPERM); rerun with local HTTP listening permission."
+  ],
+  "completedAtUtc": "2026-09-08T14:33:32.783832+00:00",
+  "cleanup": {
+    "qaViteStopped": true,
+    "qaApiStopped": true,
+    "temporaryPostgresContainerStopped": true,
+    "userDataTouched": false,
+    "browserViewportReset": true,
+    "temporaryBrowserTabClosed": true
+  }
+}

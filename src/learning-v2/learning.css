@@ -2906,6 +2906,15 @@
   padding-left: 13px;
 }
 
+.lp-doc-flat {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 200px;
+}
+
+.lp-doc-flat:focus-within {
+  content-visibility: visible;
+}
+
 .lp-doc-collapse {
   position: absolute;
   color: var(--ink-3);

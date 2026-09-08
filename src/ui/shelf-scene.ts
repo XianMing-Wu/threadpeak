@@ -6,7 +6,7 @@ import { shelfDepth, shelfPlatform } from './shelf-platform'
 
 type Status = 'three' | 'unavailable'
 type BookModel = { element: HTMLElement; group: THREE.Group; x: number; baseY: number; amount: number }
-type RowModel = { viewport: HTMLElement; books: BookModel[] }
+type RowModel = { viewport: HTMLElement; books: BookModel[];group:THREE.Group;floor:number }
 
 /** Architectural orthographic view, looking slightly down into a open metal shelving unit.
  * Layout is measured from native controls. One pixel at the front plane is one scene unit;
@@ -42,40 +42,46 @@ export function mountShelfScene(cabinet: HTMLElement, canvas: HTMLCanvasElement,
   key.shadow.camera.near = 1; key.shadow.camera.far = 4000
   scene.add(hemisphere, fill, key, key.target)
   const model = new THREE.Group(); model.name = 'open-knowledge-shelves'; scene.add(model)
-  let rows: RowModel[] = [], disposers: (() => void)[] = [], frame = 0, disposed = false, contextLost = false, needsLayout = true, ready = false
+  let rows: RowModel[] = [], frame = 0, disposed = false, contextLost = false, needsLayout = true, ready = false
+  const geometryCache=new Map<string,THREE.BufferGeometry>(),usedGeometry=new Set<string>()
+  const prints=new Map<HTMLElement,{key:string;print:ReturnType<typeof bookPrint>}>()
+  const metalTexture=brushedMetal(),pageTexture=paperEdges()
+  let printBuilds=0,layoutPasses=0,fontRevision=0
+  function geometry(key:string,create:()=>THREE.BufferGeometry){usedGeometry.add(key);let value=geometryCache.get(key);if(!value){value=create();geometryCache.set(key,value)}return value}
   let width = 0, height = 0, viewHeight = 0, previousTime = 0
   let active: HTMLElement | null = null
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
   const material = (color: THREE.ColorRepresentation, extra: THREE.MeshStandardMaterialParameters = {}) => new THREE.MeshStandardMaterial({ color, roughness: .68, metalness: .03, ...extra })
   const box = (parent: THREE.Object3D, name: string, size: [number, number, number], position: [number, number, number], paint: THREE.Material, radius = 1) => {
-    const geometry = new RoundedBoxGeometry(...size, 2, Math.min(radius, Math.min(...size) / 3))
-    const mesh = new THREE.Mesh(geometry, paint); mesh.name = name; mesh.position.set(...position)
+    const shape = geometry(`box:${size.join(',')}:${radius}`,()=>new RoundedBoxGeometry(...size, 2, Math.min(radius, Math.min(...size) / 3)))
+    const mesh = new THREE.Mesh(shape, paint); mesh.name = name; mesh.position.set(...position)
     mesh.castShadow = true; mesh.receiveShadow = true; parent.add(mesh)
     return mesh
   }
   function releaseModel() {
-    disposers.forEach(dispose => dispose()); disposers = []
+    const sharedGeometry=new Set(geometryCache.values()),sharedTextures=new Set<THREE.Texture>([reflections,metalTexture,pageTexture,...[...prints.values()].map(p=>p.print.texture)])
     const geometries = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>(), textures = new Set<THREE.Texture>()
     model.traverse(object => {
       if (!(object instanceof THREE.Mesh)) return
       geometries.add(object.geometry)
       for (const paint of Array.isArray(object.material) ? object.material : [object.material]) {
         materials.add(paint)
-        for (const value of Object.values(paint)) if (value instanceof THREE.Texture && value !== reflections) textures.add(value)
+        for (const value of Object.values(paint)) if (value instanceof THREE.Texture && !sharedTextures.has(value)) textures.add(value)
       }
     })
-    geometries.forEach(value => value.dispose()); materials.forEach(value => value.dispose()); textures.forEach(value => value.dispose())
+    geometries.forEach(value => {if(!sharedGeometry.has(value))value.dispose()}); materials.forEach(value => value.dispose()); textures.forEach(value => value.dispose())
     model.clear(); rows = []
   }
   function invalidate() { if (!disposed && !frame && !document.hidden) frame = requestAnimationFrame(render) }
   function layout() {
     releaseModel()
+    usedGeometry.clear();const usedPrints=new Set<HTMLElement>();layoutPasses++
     const bounds = cabinet.getBoundingClientRect(), dark = document.documentElement.dataset.theme === 'dark'
     width = bounds.width; height = bounds.height; viewHeight = Math.min(root.clientHeight, height)
     renderer.setSize(width, viewHeight, false); canvas.style.height = `${viewHeight}px`
     const side = parseFloat(getComputedStyle(cabinet).paddingLeft)
     const depth = shelfDepth(width)
-    const metal = new THREE.MeshPhysicalMaterial({ color: dark ? '#b6b7b9' : '#eeeeee', map: brushedMetal(), metalness: .85, roughness: .22, anisotropy: .7, envMap: reflections, envMapIntensity: 1.6 })
+    const metal = new THREE.MeshPhysicalMaterial({ color: dark ? '#b6b7b9' : '#eeeeee', map: metalTexture, metalness: .85, roughness: .22, anisotropy: .7, envMap: reflections, envMapIntensity: 1.6 })
     const top = material(dark ? '#8e9296' : '#c4c6c8', { roughness: .64, metalness: .32, envMap: reflections, envMapIntensity: .9 })
     const edge = material('#ececec', { roughness: .18, metalness: .9, envMap: reflections, envMapIntensity: 1.5 })
     // Transparent shadow catcher: there is no visible cabinet back, side or frame.
@@ -84,7 +90,6 @@ export function mountShelfScene(cabinet: HTMLElement, canvas: HTMLCanvasElement,
     const opening = cabinet.querySelector('.knowledge-shelf-viewport')!.getBoundingClientRect()
     const leftLimit = opening.left - bounds.left - width / 2, rightLimit = opening.right - bounds.left - width / 2
     const clips = [new THREE.Plane(new THREE.Vector3(1, 0, 0), -leftLimit), new THREE.Plane(new THREE.Vector3(-1, 0, 0), rightLimit)]
-    const pageTexture = paperEdges()
     const pages = material('#ffffff', { map: pageTexture, roughness: 1, clippingPlanes: clips, clipShadows: true })
     const binding = material('#b3c1c9', { roughness: .78, clippingPlanes: clips, clipShadows: true })
     rows = Array.from(cabinet.querySelectorAll<HTMLElement>('.knowledge-shelf')).map((element, rowIndex) => {
@@ -92,12 +97,16 @@ export function mountShelfScene(cabinet: HTMLElement, canvas: HTMLCanvasElement,
       const plank = element.querySelector<HTMLElement>('.knowledge-shelf-plank')!, beamRect = plank.getBoundingClientRect()
       const floor = -(beamRect.top - bounds.top) / cos, beamHeight = beamRect.height / cos
       const row = new THREE.Group(); row.name = `route:${element.dataset.shelfId}`; model.add(row)
-      const platform = new THREE.Mesh(shelfPlatform(width - side * 2, beamHeight, depth), [top, metal])
+      const platform = new THREE.Mesh(geometry(`shelf:${width-side*2}:${beamHeight}:${depth}`,()=>shelfPlatform(width - side * 2, beamHeight, depth)), [top, metal])
       platform.name = 'metal-shelf'; platform.position.y = floor; platform.castShadow = true; platform.receiveShadow = true; row.add(platform)
       box(row, 'polished-front-edge', [width - side * 2 - 1, 1.2, 1], [0, floor - .7, .35], edge, .25)
       const books = Array.from(element.querySelectorAll<HTMLElement>('.knowledge-book')).map((button, bookIndex) => {
         const slot = button.parentElement!, rect = slot.getBoundingClientRect(), bookWidth = rect.width, bookHeight = rect.height / cos
-        const print = bookPrint(button, invalidate); disposers.push(print.dispose)
+        usedPrints.add(button)
+        const key=JSON.stringify([fontRevision,button.offsetWidth,button.offsetHeight,getComputedStyle(button).fontFamily,button.textContent,button.querySelector('img')?.currentSrc||button.querySelector('img')?.src])
+        let cached=prints.get(button)
+        if(cached?.key!==key){cached?.print.dispose();cached={key,print:bookPrint(button,invalidate)};prints.set(button,cached);printBuilds++}
+        const print=cached.print
         print.texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy())
         const group = new THREE.Group(); group.name = `concept:${button.dataset.bookId}`
         const x = rect.left - bounds.left + rect.width / 2 - width / 2 + viewport.scrollLeft
@@ -112,12 +121,12 @@ export function mountShelfScene(cabinet: HTMLElement, canvas: HTMLCanvasElement,
         // Printed sRGB artwork already contains its own lighting. Studio light and tone mapping
         // belong to the modeled book edges and metal, otherwise the print becomes overexposed.
         const ink = new THREE.MeshBasicMaterial({ map: print.texture, toneMapped: false, clippingPlanes: clips, clipShadows: true })
-        const face = new THREE.Mesh(new THREE.PlaneGeometry(bookWidth - 1, bookHeight - 1), ink)
+        const face = new THREE.Mesh(geometry(`cover:${bookWidth}:${bookHeight}`,()=>new THREE.PlaneGeometry(bookWidth - 1, bookHeight - 1)), ink)
         face.name = 'printed-cover'; face.position.z = 1; face.castShadow = true; group.add(face)
         return { element: button, group, x, baseY: group.position.y, amount: 0 }
       })
       row.userData.index = rowIndex
-      return { viewport, books }
+      return { viewport, books,group:row,floor }
     })
     let bookCount = 0, shelfCount = 0
     model.traverse(object => {
@@ -126,7 +135,10 @@ export function mountShelfScene(cabinet: HTMLElement, canvas: HTMLCanvasElement,
     })
     canvas.dataset.models = String(bookCount)
     canvas.dataset.shelves = String(shelfCount)
-    if (!bookCount) { pageTexture.dispose(); pages.dispose(); binding.dispose() }
+    for(const [element,cached] of prints)if(!usedPrints.has(element)){cached.print.dispose();prints.delete(element)}
+    for(const [key,shape] of geometryCache)if(!usedGeometry.has(key)){shape.dispose();geometryCache.delete(key)}
+    canvas.dataset.geometries=String(geometryCache.size);canvas.dataset.printBuilds=String(printBuilds);canvas.dataset.layoutPasses=String(layoutPasses)
+    if (!bookCount) { pages.dispose(); binding.dispose() }
     needsLayout = false
   }
   function render(time: number) {
@@ -143,6 +155,8 @@ export function mountShelfScene(cabinet: HTMLElement, canvas: HTMLCanvasElement,
     const delta = Math.min(.05, (time - previousTime) / 1000 || .016); previousTime = time
     let moving = false
     for (const row of rows) {
+      row.group.visible=row.floor>centerY-viewHeight/2-500&&row.floor<centerY+viewHeight/2+200
+      if(!row.group.visible)continue
       for (const book of row.books) {
         const target = !reduced.matches && active === book.element && !row.viewport.classList.contains('is-dragging') ? 1 : 0
         book.amount += (target - book.amount) * Math.min(1, delta * 14)
@@ -178,7 +192,7 @@ export function mountShelfScene(cabinet: HTMLElement, canvas: HTMLCanvasElement,
   document.addEventListener('visibilitychange', invalidate)
   reduced.addEventListener('change', invalidate)
   canvas.addEventListener('webglcontextlost', lost); canvas.addEventListener('webglcontextrestored', restored)
-  void document.fonts.ready.then(() => { if (!disposed) resize() })
+  void document.fonts.ready.then(() => { if (!disposed) {fontRevision++;resize()} })
   invalidate()
   return () => {
     disposed = true; cancelAnimationFrame(frame)
@@ -187,6 +201,6 @@ export function mountShelfScene(cabinet: HTMLElement, canvas: HTMLCanvasElement,
     for (const event of ['pointerover', 'pointerout', 'focusin', 'focusout']) cabinet.removeEventListener(event, interaction)
     document.removeEventListener('visibilitychange', invalidate); reduced.removeEventListener('change', invalidate)
     canvas.removeEventListener('webglcontextlost', lost); canvas.removeEventListener('webglcontextrestored', restored)
-    releaseModel(); reflections.dispose(); key.shadow.dispose(); renderer.dispose(); renderer.forceContextLoss()
+    releaseModel();prints.forEach(value=>value.print.dispose());prints.clear();geometryCache.forEach(value=>value.dispose());geometryCache.clear();metalTexture.dispose();pageTexture.dispose();reflections.dispose(); key.shadow.dispose(); renderer.dispose(); renderer.forceContextLoss()
   }
 }

@@ -6,6 +6,7 @@ import { zhidaModelFor } from '../agent-runtime/constants.ts'
 import { digest } from './store.ts'
 import type { Sql } from './database.ts'
 import { withPermit } from './limits.ts'
+import {classifyTaskError} from './worker.ts'
 import { providerScope } from './provider-scope.ts'
 
 export const DIRECT_CACHE_TTL_MS = 24*60*60*1000
@@ -32,7 +33,6 @@ export function cacheZhihuDirect(provider:ZhihuProvider,db:Sql,namespace:string,
       if(result.kind==='completed'&&result.cacheable===true&&result.text.trim()&&result.text.length<=200_000){
         await db.transaction(async tx=>{
           signal.throwIfAborted()
-          await tx.query('DELETE FROM tp_provider_cache WHERE expires_at<=$1',[Date.now()])
           await tx.query('INSERT INTO tp_provider_cache(owner_id,cache_key,body,expires_at) VALUES($1,$2,$3,$4) ON CONFLICT(owner_id,cache_key) DO UPDATE SET body=EXCLUDED.body,expires_at=EXCLUDED.expires_at',[owner,key,JSON.stringify({text:result.text}),Date.now()+ttlMs])
           signal.throwIfAborted()
         })
@@ -44,27 +44,24 @@ export function cacheZhihuDirect(provider:ZhihuProvider,db:Sql,namespace:string,
 
 async function recordCall(db:Sql,provider:string,model:string,start:number,result:ProviderMetadata&{kind:string;code?:string}) {
   const scope=providerScope.getStore();if(!scope)return
-  const body={model,result:result.kind,code:result.code,cache:result.cache,durationMs:Date.now()-start,usage:result.usage,diagnostic:result.diagnostic}
+  const body={model,result:result.kind,code:result.code,cache:result.cache,durationMs:Date.now()-start,queueMs:scope.queueMs,usage:result.usage,diagnostic:result.diagnostic}
   try{
     await db.query('INSERT INTO tp_provider_calls(id,owner_id,job_id,step,provider,body,created_at) VALUES($1,$2,$3,$4,$5,$6,$7)',[randomUUID(),scope.ownerId,scope.jobId,scope.step,provider,JSON.stringify(body),Date.now()])
-    await db.query('DELETE FROM tp_provider_calls WHERE created_at<$1',[Date.now()-7*24*60*60*1000])
   }catch{process.stderr.write(JSON.stringify({event:'provider.telemetry_unavailable',provider})+'\n')}
 }
 export function instrumentProviders(db:Sql,config:ProviderConfig,llm:LlmProvider,zhihu:ZhihuProvider) {
   const cached=cacheZhihuDirect(zhihu,db,digest({origin:config.zhihuApiBaseUrl,credential:config.zhihuAccessSecret}))
-  const search=async(q:string,count:number,signal?:AbortSignal,web=false)=>{
-    const start=Date.now(),result=await (web?cached.globalSearch!:cached.search)(q,count,signal)
-    await recordCall(db,web?'zhihu.globalSearch':'zhihu.search','search',start,result);return result
+  const measure=async<T extends ProviderMetadata&{kind:string;code?:string}>(provider:string,model:string,work:()=>Promise<T>):Promise<T>=>{
+    const parent=providerScope.getStore()
+    const run=async()=>{const start=Date.now();try{const result=await work();await recordCall(db,provider,model,start,result);return result}catch(error){await recordCall(db,provider,model,start,{kind:'failed',code:classifyTaskError(error).code});throw error}}
+    return parent?providerScope.run({...parent,queueMs:0},run):run()
   }
+  const search=(q:string,count:number,signal?:AbortSignal,web=false)=>measure(web?'zhihu.globalSearch':'zhihu.search','search',()=>(web?cached.globalSearch!:cached.search)(q,count,signal))
   return {
-    llm:{complete:async input=>{
-      const owner=providerScope.getStore()?.ownerId,start=Date.now()
-      const result=await llm.complete({...input,...(owner?{cacheUserId:cacheUserId(owner)}:{})})
-      await recordCall(db,'deepseek',config.deepseekModelName,start,result);return result
-    }} as LlmProvider,
-    zhihu:{search:(q,count,signal)=>search(q,count,signal),...(cached.globalSearch?{globalSearch:(q:string,count:number,signal?:AbortSignal)=>search(q,count,signal,true)}:{}),direct:async input=>{
-      const start=Date.now(),result=await cached.direct(input)
-      await recordCall(db,'zhihu.direct',zhidaModelFor(input.thinkingDepth),start,result);return result
-    }} as ZhihuProvider,
+    llm:{complete:input=>measure('deepseek',config.deepseekModelName,()=>{
+      const owner=providerScope.getStore()?.ownerId
+      return llm.complete({...input,...(owner?{cacheUserId:cacheUserId(owner)}:{})})
+    })} as LlmProvider,
+    zhihu:{search:(q,count,signal)=>search(q,count,signal),...(cached.globalSearch?{globalSearch:(q:string,count:number,signal?:AbortSignal)=>search(q,count,signal,true)}:{}),direct:input=>measure('zhihu.direct',zhidaModelFor(input.thinkingDepth),()=>cached.direct(input))} as ZhihuProvider,
   }
 }

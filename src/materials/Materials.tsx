@@ -98,9 +98,11 @@ export function MaterialScope({ model }: { model: MaterialsModel }) {
 }
 
 export function MaterialChips({ model }: { model: MaterialsModel }) {
-  const missing = model.searchScope.kind === 'collections' ? (model.searchScope.folderIds ?? []).filter(id => !model.folderMaterials[id]) : []
+  const unresolved=model.unresolved??[]
+  const missing = model.searchScope.kind === 'collections' ? (model.searchScope.folderIds ?? []).filter(id => !model.folderMaterials[id]&&!unresolved.some(a=>a.folderId===id)) : []
   return <>
-    {!!(model.items.length || model.uploads.length || missing.length) && <div className="material-inline-list" aria-label="本次学习资料">
+    {!!(model.items.length || model.uploads.length || missing.length || unresolved.length) && <div className="material-inline-list" aria-label="本次学习资料">
+      {unresolved.map((item,index)=><div className="material-inline" key={`restore-${item.sourceId}`}><Glyph name={item.folderId?'book':'document'} size={15}/><span className="material-inline-name">{item.folderId?'已选收藏夹':`已选文件 ${index+1}`}</span><span className="material-inline-status" role="status">暂未恢复</span><button type="button" className="material-inline-action" disabled={model.restoring} aria-label={`移除未恢复资料 ${index+1}`} onClick={()=>model.remove(item.sourceId)}><Glyph name="close" size={13}/></button></div>)}
       {model.items.map(item => <div className="material-inline" key={item.sourceId}>
         <Glyph name={item.origin === 'upload' ? 'document' : 'book'} size={15}/>
         <button type="button" className="material-inline-name" title={item.fileName} aria-label={`预览${item.fileName}`} onClick={() => model.setPreview(item)}>{item.fileName}</button>
@@ -111,6 +113,7 @@ export function MaterialChips({ model }: { model: MaterialsModel }) {
       {model.uploads.map(upload => <div className="material-inline" key={upload.id}><Glyph name="document" size={15}/><span className="material-inline-name" title={upload.error || upload.file.name}>{upload.file.name}</span><span className="material-inline-status" role="status">{upload.status === 'uploading' ? <><span className="material-spinner"/>正在上传</> : '上传未完成'}</span>{upload.status === 'failed' && <button type="button" className="material-inline-action" title={upload.error} aria-label={`重试上传${upload.file.name}`} onClick={() => void model.retryUpload(upload)}><Glyph name="refresh" size={14}/></button>}<button type="button" className="material-inline-action" aria-label={`移除${upload.file.name}`} onClick={() => model.removeUpload(upload.id)}><Glyph name="close" size={13}/></button></div>)}
       {missing.map(id => { const folder = model.folders.find(f => f.id === id) ?? { id, title: model.imports[id]?.title ?? '知乎收藏夹', description: '' }; const error = model.imports[id]?.error; return <div className="material-inline" key={id}><Glyph name="book" size={15}/><span className="material-inline-name">{folder.title}</span><span className="material-inline-status" role="status">{error ? '读取未完成' : <><span className="material-spinner"/>正在读取</>}</span>{error && <button type="button" className="material-inline-action" title={error} aria-label={`重试读取${folder.title}`} onClick={() => void model.importFolder(folder)}><Glyph name="refresh" size={14}/></button>}<button type="button" className="material-inline-action" aria-label={`移除${folder.title}`} onClick={() => model.toggleFolder(folder)}><Glyph name="close" size={13}/></button></div> })}
     </div>}
+    {(model.restoreError||unresolved.length>0)&&<div className="material-inline-notice" role="alert"><span>{model.restoreError||'部分已选资料暂未恢复，原选择仍然保留。请重新读取或明确移除后发送。'}</span><button type="button" disabled={model.restoring} onClick={model.retryRestore}>{model.restoring?'正在读取…':'重新读取资料'}</button></div>}
     {model.error && <div className="material-inline-notice" role="alert"><span>{model.error}</span><button type="button" aria-label="关闭资料提示" onClick={() => model.setError('')}><Glyph name="close" size={12}/></button></div>}
     {model.searchScope.kind === 'collections' && !model.searchScope.folderIds?.length && <p className="material-inline-guidance" role="status">请选择至少一个知乎收藏夹后发送。</p>}
   </>

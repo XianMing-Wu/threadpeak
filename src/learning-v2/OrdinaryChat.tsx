@@ -1,4 +1,4 @@
-import {pollResource} from './poll'
+import {pollResource,taskPollInterval,foregroundDelay} from './poll'
 import { useEffect, useRef, useState } from 'react'
 import { ProductWorkspace } from '../components/Shell'
 import { Composer } from '../components/Composer'
@@ -13,16 +13,17 @@ export function OrdinaryChat({chatId,question,initialDepth}:{chatId:string;quest
   const [snapshot,setSnapshot]=useState<Snapshot|null>(null),[value,setValue]=useState(''),[depth,setDepth]=useState(initialDepth),[notice,setNotice]=useState(''),[sending,setSending]=useState(false)
   const [reconnect,setReconnect]=useState(0)
   const mounted=useRef(true)
+  const live=useRef<Snapshot|null>(null)
   useEffect(()=>{mounted.current=true;return()=>{mounted.current=false}},[])
   const lock=useRef(false),scroll=useRef<HTMLDivElement>(null),follow=useRef(true)
-  const accept=(next:Snapshot)=>mounted.current&&setSnapshot(old=>old&&old.revision>next.revision?old:next)
+  const accept=(next:Snapshot)=>{if(mounted.current&&(!live.current||live.current.id!==next.id||live.current.revision<next.revision)){live.current=next;setSnapshot(next)}}
   useEffect(()=>{
     const abort=new AbortController()
     const poll=(id:string)=>pollResource(async()=>{
-      const next=await productRequest<Snapshot>(`/api/v2/resources/${id}`,{signal:abort.signal})
+      const next=await productRequest<Snapshot|{unchanged:true}>(`/api/v2/resources/${id}?after=${live.current?.id===id?live.current.revision:0}`,{signal:abort.signal})
       if(abort.signal.aborted)return false
-      accept(next);setNotice('')
-    },{signal:abort.signal,onError:(_error,stopped)=>setNotice(stopped?'连接暂停，点击重新连接继续。':'正在重新连接，内容仍然保留。')})
+      if(!('unchanged' in next))accept(next);setNotice('')
+    },{signal:abort.signal,intervalMs:()=>taskPollInterval(live.current?.job?.status),wait:foregroundDelay,onError:(_error,stopped)=>setNotice(stopped?'连接暂停，点击重新连接继续。':'正在重新连接，内容仍然保留。')})
     void productRequest<Snapshot>('/api/v2/chats/enter',{method:'POST',body:{chatId,question,depth:initialDepth,attachments:pathLaunchAttachments.get(chatId)??[]},key:`chat:${chatId}`,signal:abort.signal}).then(next=>{if(!abort.signal.aborted){accept(next);void poll(next.id);void refreshProductLibrary().catch(()=>{})}}).catch(e=>{if(!abort.signal.aborted)setNotice(e.message)})
     return()=>{abort.abort()}
   },[chatId,reconnect])

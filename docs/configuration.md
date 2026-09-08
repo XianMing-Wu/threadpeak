@@ -10,10 +10,15 @@
 | `DEEPSEEK_BASE_URL` | 模型服务地址；按所用服务的接口配置 |
 | `DEEPSEEK_MODEL_NAME` | 实际可用的模型标识 |
 | `DEEPSEEK_CONTEXT_TOKENS` | 已确认的上下文窗口；显式配置，不依据产品名称猜测 |
+| `DEEPSEEK_MAX_OUTPUT_TOKENS` | 模型单次最大输出；发送的 max_tokens 不超过此值 |
+| `ZHIHU_FAST_CONTEXT_TOKENS` / `ZHIHU_FAST_OUTPUT_TOKENS` | 快速直答的上下文窗口与输出预留 |
+| `ZHIHU_DEEP_CONTEXT_TOKENS` / `ZHIHU_DEEP_OUTPUT_TOKENS` | 深度直答的上下文窗口与输出预留 |
 | `ZHIHU_ACCESS_SECRET` | 知乎开发者 API 凭证 |
 | `ZHIHU_API_BASE_URL` | 知乎检索与直答服务地址 |
 
-五个 provider 连接字段必须完整，生成管线才进入就绪状态。窗口配置接受 32,000–2,000,000 token；每次调用还会扣除输出和安全余量，并应用业务上限。生产必须显式配置窗口。准确校验以 [config.ts](../server/config.ts) 和 [bootstrap.ts](../server/durable/bootstrap.ts) 为准。
+五个 provider 连接字段必须完整，生成管线才进入就绪状态。生产还必须显式填写上述六个窗口/输出字段；窗口接受 32,000–2,000,000，输出接受 1,024–131,072，输出加 4,096 必须小于有效窗口（业务上限 500,000）。配置依据应记录实际服务、模型、能力文档及核对日期，不按模型名字推测。
+
+本地未配置时使用应用保守默认：模型 64,000 / 16,384，知乎快速和深度直答均为 32,000 / 8,192。这些值不是厂商能力声明。模型摘要使用模型窗口，最终直答按对应直答窗口再次预检；UTF-8 字节上界用于保守估算，真实 usage 单独记录。知乎输出字段是上下文预算预留，当前 API 不发送 max_tokens；应填写所用服务已确认的输出上界。网关能力不同须显式调整。校验入口见 [capabilities.ts](../server/durable/capabilities.ts)、[config.ts](../server/config.ts) 和 [bootstrap.ts](../server/durable/bootstrap.ts)。
 
 PDF 使用知乎异步解析 API，默认管线不依赖本机 pdftotext。全网检索沿用知乎开发者服务中的站外检索能力。模型、检索、直答和 PDF 服务不可用时不会自动切换示例结果。
 

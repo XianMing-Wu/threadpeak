@@ -37,8 +37,16 @@ export function validateTree(nodes: GraphNode[]) {
     if (node.parents.length !== 1 || !byId.has(node.parents[0]!)) throw new Error('INVALID_PARENT')
     if (node.type === 'article' && node.parents[0] !== roots[0]!.id) throw new Error('ARTICLE_PARENT')
     if (node.basisId && node.basisId !== node.parents[0]) throw new Error('INVALID_BASIS')
-    const seen = new Set<string>([node.id]); let p: string|undefined = node.parents[0]
-    while (p) { if (seen.has(p)) throw new Error('TREE_CYCLE'); seen.add(p); p = byId.get(p)?.parents[0] }
+  }
+  // Mark complete ancestor paths once: linear time even for a long single-parent chain.
+  const complete=new Set<string>([roots[0]!.id])
+  for(const node of nodes){
+    const path:string[]=[],visiting=new Set<string>();let current=node.id
+    while(!complete.has(current)){
+      if(visiting.has(current))throw new Error('TREE_CYCLE')
+      visiting.add(current);path.push(current);current=byId.get(current)!.parents[0]!
+    }
+    for(const id of path)complete.add(id)
   }
 }
 export function paragraphNode(p: Paragraph): GraphNode { return { ...p, type: p.origin === 'author' ? 'author' : 'answer' } }

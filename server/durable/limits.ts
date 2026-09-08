@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { AsyncLocalStorage } from 'node:async_hooks'
 import type { Sql } from './database.ts'
+import {providerScope} from './provider-scope.ts'
 import { ToolError } from './worker.ts'
 
 export function pause(ms:number,signal?:AbortSignal){return new Promise<void>((resolve,reject)=>{
@@ -49,6 +50,7 @@ export async function withPermit<T>(db:Sql,pool:string,limit:number,signal:Abort
       delay=Math.min(2000,delay*1.5)
     }
   }
+  const scope=providerScope.getStore();if(scope)scope.queueMs=(scope.queueMs??0)+Math.max(0,now()-started)
   const heartbeat=setInterval(()=>{void db.query('UPDATE tp_provider_slots SET lease_until=$4 WHERE pool=$1 AND slot=$2 AND token=$3 RETURNING slot',[pool,slot,token,now()+leaseMs]).then(rows=>{if(!rows.length)controller.abort()}).catch(()=>controller.abort())},options.heartbeatMs??5000)
   try{combined.throwIfAborted();if(queued)await options.onQueue?.();return await heldPools.run([...held,pool],()=>work(combined))}finally{
     clearInterval(heartbeat)

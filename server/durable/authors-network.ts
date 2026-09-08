@@ -24,24 +24,32 @@ function validSource(raw:any,allowDemo=false):AuthorSource|undefined{
   if(!raw?.evidenceId||!raw.authorId||!raw.authorName||isLiuKanshanName(raw.authorName)||!safeZhihuUrl(raw.url,allowDemo))return
   return {...Object.fromEntries(['avatar','badge','badgeIcon','likes','commentCount','editedAt','contentType','contentId','authorityLevel','rankingScore','comments','sourceKind','site'].filter(k=>raw[k]!==undefined).map(k=>[k,raw[k]])),evidenceId:raw.evidenceId,authorId:raw.authorId,authorName:raw.authorName,title:raw.title||'知乎文章',summary:raw.summary??'',url:raw.url,authorUrl:safeZhihuUrl(raw.authorUrl,allowDemo)}
 }
-export function sourceForNode(state:LearningState,id:string,allowDemo=false):AuthorSource|undefined{
-  const byId=new Map(state.nodes.map(n=>[n.id,n])),seen=new Set<string>()
-  let node=byId.get(id)
-  while(node&&!seen.has(node.id)){
-    seen.add(node.id)
-    if(node.type==='custom'||node.type==='root')return
-    if(node.type==='article'){
-      const a=state.articles.find(a=>a.id===node!.id)
-      return a?validSource({...a,evidenceId:a.id,authorName:a.author},allowDemo):undefined
+/** One immutable-state lookup, with path compression; never cache across edits. */
+export function sourceLookup(state:LearningState,allowDemo=false){
+  const byId=new Map(state.nodes.map(n=>[n.id,n])),articles=new Map(state.articles.map(a=>[a.id,a]))
+  const originals=new Map(state.conversations.flatMap(c=>c.messages.flatMap(m=>m.paragraphs??[])).map(p=>[p.id,p]))
+  const cache=new Map<string,AuthorSource|undefined>()
+  return (id:string):AuthorSource|undefined=>{
+    const path:string[]=[],seen=new Set<string>();let node=byId.get(id),source:AuthorSource|undefined
+    while(node&&!seen.has(node.id)){
+      if(cache.has(node.id)){source=cache.get(node.id);break}
+      seen.add(node.id);path.push(node.id)
+      if(node.type==='custom'||node.type==='root')break
+      if(node.type==='article'){
+        const article=articles.get(node.id);source=article?validSource({...article,evidenceId:article.id,authorName:article.author},allowDemo):undefined;break
+      }
+      if(node.type==='author'&&node.author){
+        const original=originals.get(node.id)
+        source=validSource({evidenceId:node.author.evidenceId,authorId:node.author.id,authorName:node.author.name,title:original?.title??node.title,summary:original?.text??node.text,url:node.author.url,authorUrl:node.author.authorUrl,avatar:node.author.avatar,badge:node.author.badge},allowDemo);break
+      }
+      node=byId.get(node.parents[0]??'')
     }
-    if(node.type==='author'&&node.author){
-      // Generated messages retain the immutable original even if its visible card was edited.
-      const original=state.conversations.flatMap(c=>c.messages.flatMap(m=>m.paragraphs??[])).find(p=>p.id===node!.id)
-      return validSource({evidenceId:node.author.evidenceId,authorId:node.author.id,authorName:node.author.name,title:original?.title??node.title,summary:original?.text??node.text,url:node.author.url,authorUrl:node.author.authorUrl,avatar:node.author.avatar,badge:node.author.badge},allowDemo)
-    }
-    node=byId.get(node.parents[0]??'')
+    for(const key of path)cache.set(key,source)
+    return source
   }
 }
+export function sourceForNode(state:LearningState,id:string,allowDemo=false):AuthorSource|undefined{return sourceLookup(state,allowDemo)(id)}
+
 type Preference={author_id:string;topic_id:string;evidence_id:string;kind:'helpful'|'pinned'|'hidden';value:boolean}
 type Usage={author_id:string;topic_id:string;amount:number;created_at:number}
 
@@ -53,8 +61,8 @@ export async function readAuthorNetwork(db:Sql,owner:string):Promise<AuthorNetwo
     db.query<{body:any}>('SELECT body FROM tp_author_network WHERE owner_id=$1 UNION ALL SELECT body FROM tp_author_discoveries WHERE owner_id=$1',[owner]),
     db.query<Preference>('SELECT * FROM tp_author_preferences WHERE owner_id=$1',[owner]),
     db.query<Usage>('SELECT author_id,topic_id,amount,created_at FROM tp_author_usage WHERE owner_id=$1',[owner]),
-    db.query<Resource<any>>("SELECT * FROM tp_resources WHERE owner_id=$1 AND kind='path'",[owner]),
-    db.query<Resource<any>>("SELECT * FROM tp_resources WHERE owner_id=$1 AND kind='attachment' AND body->>'status'='ready'",[owner]),
+    db.query<Resource<any>>("SELECT id,jsonb_build_object('document',jsonb_build_object('id',body->'document'->'id'),'route',body->'route') AS body FROM tp_resources WHERE owner_id=$1 AND kind='path'",[owner]),
+    db.query<Resource<any>>("SELECT id,created_at,jsonb_build_object('fileName',body->'fileName','origin',body->'origin','entries',body->'entries') AS body FROM tp_resources WHERE owner_id=$1 AND kind='attachment' AND body->>'status'='ready'",[owner]),
   ])
   const authorities=new Map<string,any[]>()
   for(const material of materials)for(const entry of material.body.entries??[])if(entry.authorId&&safeZhihuUrl(entry.url,allowDemo)){const url=canonicalContentUrl(entry.url),list=authorities.get(url)??[];if(!list.some(e=>e.authorId===entry.authorId))list.push(entry);authorities.set(url,list)}
@@ -75,13 +83,13 @@ export async function readAuthorNetwork(db:Sql,owner:string):Promise<AuthorNetwo
     if(!author.topics.some(t=>t.id===use.topicId))author.topics.push({id:use.topicId,title:use.topic,uses:0,helpful:0,score:0,pinned:false,hidden:false})
   }
   for(const resource of learning){
-    const state=resource.body,topicId=learningTopic(resource.id)
+    const state=resource.body,topicId=learningTopic(resource.id),lookup=sourceLookup(state,allowDemo),nodesById=new Map(state.nodes.map(n=>[n.id,n]))
     const route=paths.find(p=>p.id===state.routeId||p.body.document?.id===state.routeId||p.body.route?.routeId===state.routeId)?.body.route
     const concept=route?.concepts?.find((c:any)=>c.id===state.conceptId),carrier=route?.carriers?.find((c:any)=>c.id===concept?.carrierId)
     const context={topicId,topic:state.title,resourceId:resource.id,carrierId:carrier?`${state.routeId}:${carrier.id}`:undefined,carrier:carrier?.title,discoveredAt:resource.created_at}
-    const titles=(ids:string[])=>Object.fromEntries(ids.map(id=>[id,state.nodes.find(n=>n.id===id)?.title??'知识卡片']))
+    const titles=(ids:string[])=>Object.fromEntries(ids.map(id=>[id,nodesById.get(id)?.title??'知识卡片']))
     const sources=new Map<string,{source:AuthorSource;nodes:string[]}>()
-    for(const node of state.nodes){const source=sourceForNode(state,node.id,allowDemo);if(!source)continue;const existing=sources.get(source.evidenceId);if(existing)existing.nodes.push(node.id);else sources.set(source.evidenceId,{source,nodes:[node.id]})}
+    for(const node of state.nodes){const source=lookup(node.id);if(!source)continue;const existing=sources.get(source.evidenceId);if(existing)existing.nodes.push(node.id);else sources.set(source.evidenceId,{source,nodes:[node.id]})}
     for(const {source,nodes} of sources.values())add(source,{...context,question:'',nodeIds:nodes,nodeTitles:titles(nodes),origin:state.articles.some(a=>a.id===source.evidenceId)?'learning':'author-card'})
     // Questions are relationships, not preference points. Include archived conversations,
     // but link only cards that still exist in the current tree.
@@ -91,7 +99,7 @@ export async function readAuthorNetwork(db:Sql,owner:string):Promise<AuthorNetwo
         if(message.role==='user'){question=message.text??'';continue}
         if(!question)continue
         for(const paragraph of message.paragraphs??[]){
-          const source=sourceForNode(state,paragraph.id,allowDemo)
+          const source=lookup(paragraph.id)
           if(source)add(source,{...context,question,nodeIds:[paragraph.id],nodeTitles:titles([paragraph.id]),origin:'conversation'})
         }
       }
@@ -137,10 +145,10 @@ export function sourceTopic(author:NetworkAuthor|undefined,evidenceId:string,top
 /** Exactly one successful explicitly scoped command, shared across the actual source authors. */
 export async function recordAuthorUse(tx:Sql,owner:string,resourceId:string,jobId:string,state:LearningState,selected:string[],paragraphs:{basisId:string}[]){
   if(!selected.length)return
-  const used=new Map<string,{evidenceIds:Set<string>;basisIds:Set<string>}>()
+  const used=new Map<string,{evidenceIds:Set<string>;basisIds:Set<string>}>(),lookup=sourceLookup(state,isMockZhihuOwner(owner))
   for(const p of paragraphs){
     if(!selected.includes(p.basisId))continue
-    const source=sourceForNode(state,p.basisId,isMockZhihuOwner(owner));if(!source)continue
+    const source=lookup(p.basisId);if(!source)continue
     const item=used.get(source.authorId)??{evidenceIds:new Set<string>(),basisIds:new Set<string>()}
     item.evidenceIds.add(source.evidenceId);item.basisIds.add(p.basisId);used.set(source.authorId,item)
   }
@@ -149,4 +157,4 @@ export async function recordAuthorUse(tx:Sql,owner:string,resourceId:string,jobI
 }
 
 /** Group in the existing carrier/concept/question/author visual vocabulary; IDs stay lossless. */
-export function nodeSources(state:LearningState,nodes:GraphNode[]){return nodes.map(n=>({nodeId:n.id,source:sourceForNode(state,n.id)})).filter(x=>x.source)}
+export function nodeSources(state:LearningState,nodes:GraphNode[]){const lookup=sourceLookup(state);return nodes.map(n=>({nodeId:n.id,source:lookup(n.id)})).filter(x=>x.source)}

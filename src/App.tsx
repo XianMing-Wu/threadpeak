@@ -4,6 +4,7 @@ import { IconSprite } from './icons'
 import { ensureSession } from './learning-v2/client'
 import { clearProductLibrary } from './learning-v2/library'
 import { requestAuthLogout,requestAuthSession } from './runtime/request-auth-session'
+import {PageBoundary} from './components/PageBoundary'
 
 
 const HomePage=lazy(()=>import('./pages/Home').then(m=>({default:m.HomePage})))
@@ -71,5 +72,5 @@ export function App(){
   const authorize=()=>{void ensureSession().then(()=>{localStorage.setItem(AUTH_KEY,'true');setAuthenticated(true);location.hash='home'}).catch(()=>{})}
   const pages={home:<HomePage/>,chat:<ChatPage/>,knowledge:<KnowledgePage/>,'knowledge-detail':<KnowledgeDetailPage/>,paths:<PathsPage/>,'path-3d':<Path3DPage/>,'session-learning':<SessionPage/>,authors:<AuthorsPage/>,'not-found':<NotFoundPage/>,settings:<SettingsPage theme={theme} onThemeChange={toggleTheme} onLogout={logout}/>}
   const page=pages[route]
-  return <><IconSprite/>{notice&&<div role="alert">{notice}<button onClick={()=>setNotice('')}>关闭</button></div>}<Suspense fallback={<p role="status">正在打开页面…</p>}>{!sessionReady?<main className="auth-landing"><p role="status">正在连接你的工作区…</p></main>:authenticated?<WideShell route={route} theme={theme} onThemeChange={toggleTheme} onLogout={logout}>{page}</WideShell>:<AuthLanding theme={theme} onThemeChange={toggleTheme} onAuthorize={authorize}/>}</Suspense></>
+  return <><IconSprite/>{notice&&<div role="alert">{notice}<button onClick={()=>setNotice('')}>关闭</button></div>}<Suspense fallback={<p role="status">正在打开页面…</p>}>{!sessionReady?<main className="auth-landing"><p role="status">正在连接你的工作区…</p></main>:authenticated?<WideShell route={route} theme={theme} onThemeChange={toggleTheme} onLogout={logout}><PageBoundary key={route}>{page}</PageBoundary></WideShell>:<AuthLanding theme={theme} onThemeChange={toggleTheme} onAuthorize={authorize}/>}</Suspense></>
 }

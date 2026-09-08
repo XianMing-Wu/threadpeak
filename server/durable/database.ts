@@ -132,6 +132,8 @@ export async function migrate(db: Sql) {
       id text PRIMARY KEY, owner_id text NOT NULL, job_id text NOT NULL, step text NOT NULL,
       provider text NOT NULL, body jsonb NOT NULL, created_at bigint NOT NULL)`)
     await tx.query(`CREATE INDEX IF NOT EXISTS tp_provider_calls_owner ON tp_provider_calls(owner_id,created_at)`)
+    await tx.query(`CREATE INDEX IF NOT EXISTS tp_library_page ON tp_resources(owner_id,updated_at DESC,id DESC) WHERE kind IN ('path','chat','learning')`)
+    await tx.query(`CREATE INDEX IF NOT EXISTS tp_provider_calls_created ON tp_provider_calls(created_at)`)
     await tx.query(`CREATE TABLE IF NOT EXISTS tp_provider_slots (
       pool text NOT NULL, slot integer NOT NULL, token text, lease_until bigint NOT NULL,
       PRIMARY KEY(pool,slot))`)
