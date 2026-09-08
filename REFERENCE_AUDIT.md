@@ -12,8 +12,10 @@
 
 默认入口为 server/durable。首次回复按文章拆成单依据段落，新对话清空聊天但保留树；问博主找 1–3 位新作者，最多 3 位，不声称实际向作者发信；刘看山不是博主。真实 provider/真实数据要求适用于全部用户触发的请求，旧示例只作示例。
 
-配置权威是 [.env.example](.env.example) 与 [部署手册](deploy/README.md)。服务端 provider 字段为 DEEPSEEK_API_KEY、DEEPSEEK_BASE_URL、DEEPSEEK_MODEL_NAME、DEEPSEEK_CONTEXT_TOKENS、ZHIHU_ACCESS_SECRET、ZHIHU_API_BASE_URL。旧 ZHIHU_OAUTH_APP_ID、ZHIHU_OAUTH_APP_KEY、ZHIHU_OAUTH_REDIRECT_URI 仅归档参考，不代表新生产身份已经接通。
+配置权威是 [.env.example](.env.example) 与 [部署手册](deploy/README.md)。服务端 provider 字段为 DEEPSEEK_API_KEY、DEEPSEEK_BASE_URL、DEEPSEEK_MODEL_NAME、DEEPSEEK_CONTEXT_TOKENS、ZHIHU_ACCESS_SECRET、ZHIHU_API_BASE_URL。ZHIHU_OAUTH_APP_ID、ZHIHU_OAUTH_APP_KEY、ZHIHU_OAUTH_REDIRECT_URI 用于当前可配置 OAuth 适配器；本地演示允许显式 mock，真实授权仍须验收。
 
 ## 当前未达到的完成条件
 
 本地真实 provider 链路、PGlite 和 PostgreSQL 验收分别记录于[执行记录](docs/backend-rebuild-2026-09-06.md)。它们不能证明生产身份、实际域名、真实用户负载与内容质量已经达到上线要求。原审计保留在 [历史记录](docs/archive/before-learning-v2-REFERENCE_AUDIT.md)，其中旧 canonical 根/G1/G2/批注段落不再是当前合同。
+
+旧源码的并行实现和客户端图生成已在[本轮架构审查修复](docs/architecture-review-fixes-2026-09-07.md)删除。历史兼容备忘移至 `docs/archive/compatibility/`，不再放在活动源码目录。

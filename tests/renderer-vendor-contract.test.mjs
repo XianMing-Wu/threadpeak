@@ -43,6 +43,8 @@ async function loadExactVendorContract() {
     /from "(\.\/[^\"]+\.js)";/g,
     (_, dependency) => `from "${pathToFileURL(path.resolve(vendorRoot, dependency)).href}";`,
   )
+  // The instrumented in-memory module has no directory for a relative source map.
+  source=source.replace(/^\/\/# sourceMappingURL=.*$/gm,'')
   source += `\nexport { ${[...contracts].map(([name, symbol]) => `${symbol} as ${name}`).join(', ')} };\n`
   const moduleUrl = `data:text/javascript;base64,${Buffer.from(source).toString('base64')}`
   return import(moduleUrl)

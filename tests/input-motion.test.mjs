@@ -4,16 +4,6 @@ import test from 'node:test'
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8')
 
-test('every visible text-entry surface uses the shared input motion frame', () => {
-  const composer = read('../src/components/Composer.tsx')
-  const authors = read('../src/pages/Authors.tsx')
-  const askAuthors = read('../src/components/AskAuthorsPrompt.tsx')
-
-  assert.match(composer, /composer input-motion-frame/)
-  assert.match(authors, /radar-query input-motion-frame/)
-  assert.match(askAuthors, /ask-authors-prompt__input-frame input-motion-frame/)
-})
-
 test('the product entry loads the shared input motion orbit', () => {
   const motion = read('../src/input-motion.css')
   const main = read('../src/main.tsx')

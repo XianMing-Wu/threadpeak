@@ -16,7 +16,7 @@ export function pathTrace(jobs:Pick<Job,'id'|'kind'|'status'|'checkpoints'>[],pa
     if(job.kind==='path.start')for(const step of (path.searchScope?.kind==='collections'?[definitions[0],{key:'R-materials',title:'读取所选收藏资料',kind:'search' as const,after:['R1']},{...definitions[3],after:['R-materials']},definitions[4]]:definitions)){
       if(!has(step.key)&&!step.after.every(has))continue
       const status=statusOf(job,has(step.key));const value=checkpoint(step.key)?.value
-      result.push({id:`${job.id}:${step.key}`,kind:step.kind,status,title:(status==='running'?'正在':'')+step.title,...(step.kind==='search'&&Array.isArray(value)?{extra:`${value.length} 条资料`}:{})})
+      result.push({id:`${job.id}:${step.key}`,kind:step.kind,status,title:(status==='running'?'正在':'')+step.title,...(step.kind==='search'&&(Array.isArray(value)||value&&typeof value==='object'&&'count' in value)?{extra:`${Array.isArray(value)?value.length:(value as {count:number}).count} 条资料`}:{})})
     }
     if(job.kind==='path.clarify')result.push({id:`${job.id}:clarify`,kind:'agent',status:statusOf(job,has('R3b')),title:has('R3b')?'已回应你的补充':'正在回应你的补充'})
   }

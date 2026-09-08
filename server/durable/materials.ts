@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { Article } from '../../packages/contracts/src/learning-v2.ts'
+import type { Article } from '@threadpeak/contracts/learning-v2'
 import { boundedSummary } from './context.ts'
 import { CommandError, digest, type Resource } from './store.ts'
 import { ToolError, type TaskContext } from './worker.ts'

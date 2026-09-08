@@ -1,5 +1,5 @@
-import { GoalContextSchema, type GoalContext } from '../../packages/contracts/src/learning-goal.ts'
-import type { LearningState } from '../../packages/contracts/src/learning-v2.ts'
+import { GoalContextSchema, type GoalContext } from '@threadpeak/contracts/learning-goal'
+import type { LearningState } from '@threadpeak/contracts/learning-v2'
 import type { DurableStore } from './store.ts'
 type GoalPath={goal?:string;conversation?:any[];questionSets?:{questions:{id:string;prompt:string}[]}[];route?:{learningGoal?:GoalContext['interpretation'];concepts:{id:string;goalAlignment?:GoalContext['conceptAlignment']}[]}}
 

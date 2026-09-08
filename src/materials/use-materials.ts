@@ -1,3 +1,4 @@
+import {pollResource} from '../learning-v2/poll'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError, ensureSession, productRequest } from '../learning-v2/client'
 import { materialsReady, normalizeScope, selectedMaterials, type MaterialView, type SearchScope } from './selection'
@@ -60,20 +61,19 @@ export function useMaterials() {
   }, [files, folderMaterials, searchScope, loaded])
 
   useEffect(() => {
-    let stopped = false, timer: ReturnType<typeof setTimeout>
-    async function poll() {
-      const state = current.current
-      const pending = selectedMaterials(state.files, state.folderMaterials, state.searchScope).filter(item => item.status === 'processing')
-      await Promise.allSettled(pending.map(async item => {
-        const next = await productRequest<MaterialView>(`/api/v2/materials/${encodeURIComponent(item.sourceId)}`)
-        if (stopped) return
-        if (item.origin === 'upload') setFiles(old => old.map(a => a.sourceId === next.sourceId ? next : a))
-        else setFolderMaterials(old => Object.fromEntries(Object.entries(old).map(([id, a]) => [id, a.sourceId === next.sourceId ? { ...next, folderId: id } : a])))
+    const abort=new AbortController()
+    void pollResource(async()=>{
+      const state=current.current
+      const pending=selectedMaterials(state.files,state.folderMaterials,state.searchScope).filter(item=>item.status==='processing')
+      const results=await Promise.allSettled(pending.map(async item=>{
+        const next=await productRequest<MaterialView>(`/api/v2/materials/${encodeURIComponent(item.sourceId)}`,{signal:abort.signal})
+        if(abort.signal.aborted)return
+        if(item.origin==='upload')setFiles(old=>old.map(a=>a.sourceId===next.sourceId?next:a))
+        else setFolderMaterials(old=>Object.fromEntries(Object.entries(old).map(([id,a])=>[id,a.sourceId===next.sourceId?{...next,folderId:id}:a])))
       }))
-      if (!stopped) timer = setTimeout(() => void poll(), 2000)
-    }
-    timer = setTimeout(() => void poll(), 1000)
-    return () => { stopped = true; clearTimeout(timer) }
+      const failure=results.find(r=>r.status==='rejected');if(failure?.status==='rejected')throw failure.reason
+    },{signal:abort.signal,intervalMs:2000,onError:(_error,stopped)=>{if(stopped)setError('资料连接暂停，请刷新后继续。已上传内容仍然保留。')}})
+    return()=>abort.abort()
   }, [])
 
   const loadFolders = useCallback(() => {

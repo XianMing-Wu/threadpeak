@@ -1,7 +1,7 @@
 import { CompositionSchema,ANSWER_COMPLETENESS,COMPOSE_PROMPT,COMPOSE_OUTPUT,ATTACH_PROMPT,ATTACH_OUTPUT,validateComposition,citationCatalog,attachComposition } from '../knowledge/answer-composition.ts'
 import { GOAL_POLICY, AGENT_CONTRACT_VERSION } from '../agent-runtime/goal-policy.ts'
 import { validateGoalExploration, GOAL_EXPLORATION_PROMPT, GOAL_EXPLORATION_OUTPUT } from '../path-generation/goal-exploration.ts'
-import type {SearchScope} from '../../packages/contracts/src/search-scope.ts'
+import type {SearchScope} from '@threadpeak/contracts/search-scope'
 import {validateAnswerMath} from './math-output.ts'
 import {CardScopeSchema,GOAL_ANSWER_FOCUS,readCardScope,type CardMaterial} from '../knowledge/card-tools.ts'
 import {digest} from './store.ts'

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { AuthorBrief } from '../../packages/contracts/src/authors'
+import type { AuthorBrief } from '@threadpeak/contracts/authors'
 import { Composer } from '../components/Composer'
 import { FloatingPanel } from '../components/FloatingPanel'
 import { Glyph } from './atoms'

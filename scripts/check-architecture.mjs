@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs'
 import assert from 'node:assert/strict'
 import { readFile, readdir, stat } from 'node:fs/promises'
 import path from 'node:path'
@@ -64,14 +65,20 @@ function stripResourceQuery(specifier) {
   return specifier.replace(/[?#].*$/, '')
 }
 
-function resolveSpecifier(fromFile, specifier) {
+export function resolveSpecifier(fromFile, specifier) {
   const bare = stripResourceQuery(specifier)
   if (bare.startsWith('node:') || bare.startsWith('data:')) return null
   if (bare.startsWith('.') || bare.startsWith('/')) {
-    return path.resolve(path.dirname(fromFile), bare)
+    const target=path.resolve(path.dirname(fromFile),bare)
+    const packageRoot=path.join(repoRoot,'packages/contracts')
+    if(target.startsWith(packageRoot+path.sep+'src'+path.sep)&&!fromFile.startsWith(packageRoot+path.sep))throw new Error('Use the public contracts package exports')
+    return target
   }
   if (bare === '@threadpeak/contracts' || bare.startsWith('@threadpeak/contracts/')) {
-    return path.join(repoRoot, 'packages/contracts/src/index.ts')
+    const subpath='.'+bare.slice('@threadpeak/contracts'.length)
+    const entry=JSON.parse(readFileSync(path.join(repoRoot,'packages/contracts/package.json'),'utf8')).exports[subpath]
+    if(typeof entry!=='string')throw Error('Use the public contracts package exports')
+    return path.resolve(repoRoot,'packages/contracts',entry)
   }
   if (bare === '@threadpeak/api-client' || bare.startsWith('@threadpeak/api-client/')) {
     return path.join(repoRoot, 'packages/api-client/src/index.ts')
@@ -189,7 +196,7 @@ export async function checkArchitecture() {
         assert.equal(edge.resolved.startsWith(`server${path.sep}`), false, `${relative} cannot import server`)
       }
     }
-    if (specifierIsDeepPackage(source)) {
+    if (edges.some(edge=>specifierIsDeepPackage(edge.specifier))) {
       throw new Error(`${relative} uses a deep @threadpeak import`)
     }
     if (relative.startsWith(`src${path.sep}`)) {

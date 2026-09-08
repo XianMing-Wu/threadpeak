@@ -7,12 +7,12 @@ import {openDatabase,migrate} from './database.ts'
 import {cacheZhihuDirect,instrumentProviders,cacheUserId} from './provider-runtime.ts'
 import {providerScope} from './provider-scope.ts'
 import {createZhihuGate,limitZhihuProvider,ZHIHU_START_INTERVAL_MS} from './zhihu-gate.ts'
-import {pause} from './limits.ts'
+import {pause,withPermit} from './limits.ts'
 import {createAgentLlmProvider} from '../agent-runtime/llm-provider.ts'
 import {createAgentZhihuProvider} from '../agent-runtime/zhihu-provider.ts'
 import {contextJson} from './context.ts'
 import {validateAnswerMath} from './math-output.ts'
-import {prepareMarkdown} from '../../packages/contracts/src/markdown-source.ts'
+import {prepareMarkdown} from '@threadpeak/contracts/markdown-source'
 
 const config={zhihuAccessSecret:'test-secret',zhihuApiBaseUrl:'https://developer.zhihu.com/api/v1',deepseekApiKey:'test-key',deepseekBaseUrl:'https://api.deepseek.com',deepseekModelName:'deepseek-v4-flash'}
 const input={messages:[{role:'system',content:'同一合同'},{role:'user',content:'目标：读懂公式。材料版本：v1'}],thinkingDepth:'fast'}
@@ -20,13 +20,20 @@ const scope=(owner,fn)=>providerScope.run({ownerId:owner,jobId:'test-job',step:'
 const good={kind:'completed',text:'真实适配器形状的离线测试响应',cacheable:true}
 async function fixture(t){const db=await openDatabase();await migrate(db);t.after(()=>db.close());return db}
 
-test('shared scheduler separates request starts while allowing two bodies in flight',async t=>{
-  const db=await fixture(t),starts=[];let active=0,max=0
+test('shared scheduler separates starts and queues the third request with two bodies in flight',async t=>{
+  const db=await fixture(t),starts=[];let now=100,active=0,max=0
   assert.equal(ZHIHU_START_INTERVAL_MS,2100)
-  const work=async()=>{starts.push(Date.now());active++;max=Math.max(max,active);await pause(430);active--}
-  await Promise.all(Array.from({length:4},()=>createZhihuGate(db,60).run(undefined,work)))
-  assert.equal(max,2);assert.equal(starts.length,4)
-  for(let i=1;i<starts.length;i++)assert.ok(starts[i]-starts[i-1]>=60)
+  const entered=Array.from({length:3},()=>Promise.withResolvers()),release=Array.from({length:3},()=>Promise.withResolvers())
+  const blocked=Promise.withResolvers(),wake=Promise.withResolvers()
+  const work=i=>async()=>{starts.push(now);active++;max=Math.max(max,active);entered[i].resolve();await release[i].promise;active--}
+  const options={now:()=>now,intervalMs:60,wait:async ms=>{if(ms===60)now+=ms;else{blocked.resolve();await wake.promise}}}
+  const a=withPermit(db,'zhihu',2,undefined,work(0),options);await entered[0].promise
+  const b=withPermit(db,'zhihu',2,undefined,work(1),options);await entered[1].promise
+  const c=withPermit(db,'zhihu',2,undefined,work(2),options);await blocked.promise
+  assert.equal(active,2);assert.equal(starts.length,2)
+  release[0].resolve();await a;wake.resolve();await entered[2].promise
+  release[1].resolve();release[2].resolve();await Promise.all([b,c])
+  assert.equal(max,2);assert.deepEqual(starts,[100,160,220])
   const abort=new AbortController();abort.abort()
   await assert.rejects(createZhihuGate(db,60).run(abort.signal,()=>assert.fail('cancelled request sent')))
 })
@@ -46,7 +53,7 @@ test('direct cache merges identical calls across wrappers and reuses only within
   await a.search('same',10);await a.search('same',10);assert.equal(searches,2)
   await db.query('UPDATE tp_provider_cache SET expires_at=0')
   assert.equal((await scope('alice',()=>b.direct(input))).cache,'miss');assert.equal(calls,6)
-  assert.equal((await db.query("SELECT * FROM tp_provider_slots WHERE pool LIKE 'direct-cache:%'")).length,0)
+  assert.ok((await db.query("SELECT * FROM tp_provider_slots WHERE pool LIKE 'direct-cache:%'")).every(row=>row.token===null))
 })
 
 test('failed, incomplete and cancelled direct calls never become cache hits',async t=>{

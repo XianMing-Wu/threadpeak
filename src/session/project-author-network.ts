@@ -1,5 +1,5 @@
 import type { PathLayerDocument } from './layer-title.ts'
-import type { AuthorNetworkMember } from './request-author-network.ts'
+export type AuthorNetworkMember = {authorId:string;name:string;weight:'high'|'low';carrierId?:string;carrierTitle?:string;conceptId?:string;conceptTitle?:string;question:string}
 import { resolveNetworkCarrierTitle, resolveNetworkLayerTitle } from './resolve-layer-title.ts'
 
 export type AuthorNetworkKind = 'carrier' | 'concept' | 'question' | 'author'

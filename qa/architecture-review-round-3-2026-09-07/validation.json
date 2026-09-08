@@ -1,0 +1,116 @@
+{
+  "date": "2026-09-07",
+  "scope": "architecture review round 3; local checkout; no deployment or real provider calls",
+  "checks": {
+    "typecheck": "passed",
+    "lint": "passed",
+    "build": "passed",
+    "unit": {
+      "passed": 371,
+      "failed": 0,
+      "skipped": 0
+    },
+    "ui": {
+      "passed": 17,
+      "failed": 0
+    },
+    "postgres": {
+      "passed": 7,
+      "failed": 0,
+      "database": "isolated threadpeak_test",
+      "engine": "PostgreSQL 17"
+    },
+    "linuxLock": {
+      "passed": 2,
+      "failed": 0,
+      "image": "node:24-bookworm-slim",
+      "digest": "sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e"
+    },
+    "coverage": {
+      "nodeLoadedMatchingTsLinePercent": 90.98,
+      "frontendSourceFileCount": 116,
+      "frontend": {
+        "lines": {
+          "total": 3240,
+          "covered": 833,
+          "skipped": 0,
+          "pct": 25.7
+        },
+        "statements": {
+          "total": 5625,
+          "covered": 1231,
+          "skipped": 0,
+          "pct": 21.88
+        },
+        "functions": {
+          "total": 1708,
+          "covered": 355,
+          "skipped": 0,
+          "pct": 20.78
+        },
+        "branches": {
+          "total": 4920,
+          "covered": 871,
+          "skipped": 0,
+          "pct": 17.7
+        },
+        "branchesTrue": {
+          "total": 0,
+          "covered": 0,
+          "skipped": 0,
+          "pct": 100
+        }
+      }
+    },
+    "buildChunksKB": {
+      "main": 375.23,
+      "CharacterRig": 704.11,
+      "MarkdownMath": 440.64,
+      "path3dStage": 363.86
+    },
+    "documentation": {
+      "passed": true,
+      "files": 8,
+      "localLinks": 72,
+      "frontmatterRules": 10
+    },
+    "architecture": {
+      "passed": true,
+      "vendorManifestEntries": 19
+    },
+    "diffWhitespace": "passed"
+  },
+  "browser": {
+    "origin": "http://127.0.0.1:54429",
+    "apiTarget": "http://127.0.0.1:54428 (no listener)",
+    "realBrowserStorage": true,
+    "syntheticDataOnly": true,
+    "appEntry": "/#knowledge",
+    "observations": [
+      "API session connection fails and real App shows AuthLanding",
+      "Persisted IndexedDB pending draft yields recovery alert and export button",
+      "Closing the app tab and reopening in a new tab preserves the alert",
+      "QA readback confirms pendingLocal tp-private-draft and complete export content; draft not in localStorage",
+      "Only synthetic account data removed and test tabs closed"
+    ],
+    "limits": [
+      "No real provider calls",
+      "No complete canvas, author or mobile interaction matrix",
+      "Export content checked through actual export data function; browser download itself not exercised"
+    ]
+  },
+  "remaining": [
+    "Unbounded idempotency receipt count and retention/expired-command protocol",
+    "Production load/capacity measurements",
+    "Production identity/OAuth and backup/deletion policy",
+    "Incomplete frontend interaction coverage",
+    "Legacy live PID markers require conservative migration verification"
+  ],
+  "cleanup": {
+    "isolatedPostgresStopped": true,
+    "isolatedViteStopped": true,
+    "testTabsClosed": true,
+    "syntheticAccountRecordRemoved": true,
+    "existingAcceptanceContainersUntouched": true
+  }
+}

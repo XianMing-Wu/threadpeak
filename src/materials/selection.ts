@@ -1,7 +1,7 @@
 import type { PathAttachment } from '../path-planning/path-run-client.ts'
-import type { SearchScope } from '../../packages/contracts/src/search-scope.ts'
+import type { SearchScope } from '@threadpeak/contracts/search-scope'
 
-export type { SearchScope } from '../../packages/contracts/src/search-scope.ts'
+export type { SearchScope } from '@threadpeak/contracts/search-scope'
 export type MaterialView = PathAttachment & {
   status: 'processing' | 'ready'
   origin: 'upload' | 'collection' | 'creation'

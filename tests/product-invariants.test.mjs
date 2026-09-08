@@ -1,149 +1,67 @@
-import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
 import test from 'node:test'
-import { resolveLearningEntry } from '../src/session/resolve-learning-entry.ts'
-import { validateRendererDocument } from '../src/path-3d/validate-renderer-document.ts'
-import { decideCommittedApply } from '../packages/runtime-store/src/runtime-store.ts'
+import assert from 'node:assert/strict'
+import {createHmac} from 'node:crypto'
+import {openDatabase,migrate} from '../server/durable/database.ts'
+import {DurableStore} from '../server/durable/store.ts'
+import {DurableWorker} from '../server/durable/worker.ts'
+import {createProductApp} from '../server/durable/http.ts'
+import {verifyIdentityToken} from '../server/durable/auth.ts'
+import {validateTree} from '@threadpeak/contracts/learning-v2'
 
-const appPage = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
-const session = await readFile(new URL('../src/pages/Session.tsx', import.meta.url), 'utf8')
-const notFound = await readFile(new URL('../src/pages/NotFound.tsx', import.meta.url), 'utf8')
-const store = await readFile(new URL('../src/workspace/store.ts', import.meta.url), 'utf8')
-const catalog = await readFile(new URL('../src/workspace/catalog.ts', import.meta.url), 'utf8')
-const canvas = await readFile(new URL('../src/pages/KnowledgeCanvas.tsx', import.meta.url), 'utf8')
-const authors = await readFile(new URL('../src/pages/Authors.tsx', import.meta.url), 'utf8')
-const useAnnotations = await readFile(new URL('../src/session/useAnnotations.ts', import.meta.url), 'utf8')
-const askAuthors = await readFile(new URL('../src/session/ask-authors.ts', import.meta.url), 'utf8')
-const annotationPanel = await readFile(new URL('../src/components/AnnotationPanel.tsx', import.meta.url), 'utf8')
-const mineGraph = await readFile(new URL('../src/knowledge-canvas/mine-graph-canvas.tsx', import.meta.url), 'utf8')
-const bootstrapped = await readFile(new URL('../src/knowledge-canvas/project-bootstrapped-graph.ts', import.meta.url), 'utf8')
-const authorsOrchestrator = await readFile(new URL('../server/authors/orchestrator.ts', import.meta.url), 'utf8')
-const canonical = await readFile(new URL('../server/knowledge/canonical-answer.ts', import.meta.url), 'utf8')
-const surgeon = await readFile(new URL('../server/knowledge/graph-surgeon.ts', import.meta.url), 'utf8')
-const http = await readFile(new URL('../server/http.ts', import.meta.url), 'utf8')
-const pkg = await readFile(new URL('../package.json', import.meta.url), 'utf8')
+const config={production:true,origin:'https://threadpeak.test',jwtSecret:'test-only-secret-with-at-least-32-characters',issuer:'test-issuer',audience:'threadpeak'}
+function token(sub,extra={}){const h=Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url'),p=Buffer.from(JSON.stringify({sub,iss:config.issuer,aud:config.audience,exp:Date.now()/1000+600,...extra})).toString('base64url');return `${h}.${p}.${createHmac('sha256',config.jwtSecret).update(`${h}.${p}`).digest('base64url')}`}
+const fixture=async t=>{const db=await openDatabase();await migrate(db);const store=new DurableStore(db),worker=new DurableWorker(store,async()=>{},1,()=>{});const app=await createProductApp({store,worker,providersReady:true,identity:config});t.after(async()=>{await app.close();await db.close()});return {db,store,app}}
 
-test('routes do not create knowledge and failed session turns do not write graphs', () => {
-  assert.match(session, /requestFirstEntry/)
-  assert.match(session, /requestFirstEntrySnapshot/)
-  assert.doesNotMatch(session, /requestGraphBootstrap/)
-  assert.doesNotMatch(session, /正在创建知识脉络根节点/)
-  assert.match(session, /NotFoundPage/)
-  assert.match(appPage, /not-found/)
-  assert.match(notFound, /页面不存在/)
-  assert.doesNotMatch(notFound, /无法进入这次学习/)
-  assert.match(canonical, /reused: true/)
-  assert.match(canonical, /inflight/)
-  assert.doesNotMatch(canonical, /KnowledgeGraph/)
-  assert.match(surgeon, /CANONICAL_MISSING/)
-  assert.match(surgeon, /role: 'root'/)
-  assert.match(surgeon, /revision: 1/)
-  assert.doesNotMatch(surgeon, /ordinaryAnswer|generateStructured|growGraph/)
-  assert.match(http, /LISTEN_PORT = 4312/)
-  assert.doesNotMatch(http, /5033/)
-  assert.match(pkg, /vite --host 127\.0\.0\.1 --port 4301/)
-  assert.doesNotMatch(pkg, /port 5032/)
-  assert.match(session, /requestFollowUp/)
-  assert.match(session, /appendFollowUpTurn/)
-  assert.doesNotMatch(session, /requestOrdinaryAnswerStream/)
-  assert.match(session, /failed:true/)
-  assert.doesNotMatch(session, /coachReply/)
-  assert.doesNotMatch(catalog, /export function coachReply/)
-  assert.match(store, /isFailureSentinel/)
-  assert.doesNotMatch(store, /user\.mode === 'visual' \|\| assistant\.mode === 'visual'/)
-  assert.doesNotMatch(store, /这次把问题交给相关作者/)
-  assert.doesNotMatch(store, /这次用图把刚才引用的关系摊开/)
+test('production HTTP: signed login cookie, owner isolation, CSRF, expiry and logout compose with real storage',async t=>{
+ const {app,store}=await fixture(t)
+ assert.equal((await app.inject({url:'/api/v2/library'})).statusCode,401)
+ for(const jwt of [token('alice',{exp:0}),token('alice',{aud:'wrong'}),token('alice')+'bad'])assert.equal((await app.inject({url:'/api/v2/session',headers:{authorization:`Bearer ${jwt}`}})).statusCode,401)
+ const jwt=token('alice'),session=await app.inject({url:'/api/v2/session',headers:{authorization:`Bearer ${jwt}`,origin:config.origin}})
+ assert.equal(session.statusCode,200);assert.match(session.headers['set-cookie'],/HttpOnly; Secure; SameSite=Lax/)
+ const cookie=session.headers['set-cookie'].split(';')[0],owner=verifyIdentityToken(jwt,config),r=await store.create(owner,'test','test',{retained:'content'})
+ assert.equal((await app.inject({url:`/api/v2/resources/${r.id}`,headers:{cookie}})).json().data.retained,'content')
+ assert.equal((await app.inject({url:`/api/v2/resources/${r.id}`,headers:{authorization:`Bearer ${token('bob')}`}})).statusCode,404)
+ assert.equal((await app.inject({method:'POST',url:`/api/v2/resources/${r.id}/cancel`,headers:{cookie,origin:'https://evil.test'},payload:{}})).statusCode,403)
+ assert.equal((await app.inject({method:'POST',url:'/api/auth/logout',headers:{cookie,origin:config.origin},payload:{}})).statusCode,200)
+ assert.equal((await app.inject({url:'/api/v2/library',headers:{cookie}})).statusCode,401)
+})
+test('production HTTP enforces small unauthenticated bodies, security headers, and request limits',async t=>{
+ const {app}=await fixture(t)
+ assert.equal((await app.inject({url:'/health'})).headers['x-content-type-options'],'nosniff')
+ assert.equal((await app.inject({method:'POST',url:'/api/v2/learning/enter',payload:{junk:'x'.repeat(1_000_010)}})).statusCode,401)
+ const large=await app.inject({method:'POST',url:'/api/v2/learning/enter',headers:{authorization:`Bearer ${token('alice')}`},payload:{junk:'x'.repeat(1_000_010)}})
+ assert.equal(large.statusCode,413)
+ const db=await openDatabase();await migrate(db);const store=new DurableStore(db),worker=new DurableWorker(store,async()=>{},1,()=>{}),limited=await createProductApp({store,worker,providersReady:true,identity:config,requestLimit:2});t.after(async()=>{await limited.close();await db.close()})
+ await limited.inject({url:'/api/auth/config'});await limited.inject({url:'/api/auth/config'});const response=await limited.inject({url:'/api/auth/config'});assert.equal(response.statusCode,429);assert.ok(response.headers['retry-after'])
+})
+test('single-parent cards reject merges and wrong basis bindings',()=>{
+ const root={id:'root',type:'root',parents:[],sources:[],title:'concept',text:''},article={id:'a',type:'article',parents:['root'],sources:['a'],title:'article',text:'source'}
+ validateTree([root,article])
+ assert.throws(()=>validateTree([root,article,{...article,id:'b',type:'answer',parents:['a','root']}] ))
+ assert.throws(()=>validateTree([root,article,{...article,id:'b',type:'answer',parents:['a'],basisId:'root'}]))
 })
 
-test('concept membership is required and canvas does not write another conversation', () => {
-  const crossed = resolveLearningEntry({
-    routeId: 'critical-thinking',
-    conceptId: 'linear-map',
-    conceptIds: ['argument'],
-    route: { id: 'critical-thinking' },
-  })
-  assert.equal(crossed.kind, 'unavailable')
-  assert.match(store, /\^g\\d\+\$/)
-  assert.match(canvas, /latestLearningConversation/)
-  assert.match(canvas, /requestFollowUp/)
-  assert.match(canvas, /appendFollowUpTurn/)
+test('trusted proxy distinguishes clients and accounts, while untrusted forwarded headers cannot rotate buckets',async t=>{
+ const db=await openDatabase();await migrate(db);const store=new DurableStore(db),worker=new DurableWorker(store,async()=>{},1,()=>{})
+ const app=await createProductApp({store,worker,identity:config,providersReady:true,requestLimit:2,trustedProxies:['172.30.84.2/32']})
+ t.after(async()=>{await app.close();await db.close()})
+ const request=(ip,sub,remoteAddress='172.30.84.2')=>app.inject({url:sub?'/api/v2/library':'/api/auth/config',remoteAddress,headers:{'x-forwarded-for':ip,...(sub?{authorization:`Bearer ${token(sub)}`}:{})}})
+ for(let n=0;n<2;n++)assert.equal((await request('203.0.113.1','alice')).statusCode,200)
+ assert.equal((await request('203.0.113.1','alice')).statusCode,429)
+ assert.equal((await request('203.0.113.2','alice')).statusCode,200)
+ assert.equal((await request('203.0.113.1','bob')).statusCode,200)
+ for(let n=0;n<2;n++)assert.equal((await request('203.0.113.10')).statusCode,200)
+ assert.equal((await request('203.0.113.10')).statusCode,429)
+ assert.equal((await request('203.0.113.11')).statusCode,200)
+ for(let n=1;n<=3;n++)assert.equal((await request(`198.51.100.${n}`,undefined,'192.0.2.99')).statusCode,n<3?200:429)
+ // Failed credentials also consume the anonymous IP bucket.
+ for(let n=1;n<=3;n++)assert.equal((await app.inject({url:'/api/v2/library',remoteAddress:'192.0.2.100'})).statusCode,n<3?401:429)
 })
 
-test('stale 马同学 annotations are not live replies and failures are not persisted as success', () => {
-  assert.match(useAnnotations, /persistReady/)
-  assert.match(useAnnotations, /requestAskAuthor/)
-  assert.match(useAnnotations, /applyAskAuthorResult/)
-  assert.match(useAnnotations, /liu-kanshan-direct/)
-  assert.match(useAnnotations, /onSettled/)
-  assert.doesNotMatch(useAnnotations, /没有可信作者时刘看山直达不能写入博主批注/)
-  assert.match(askAuthors, /isPersistedAnnotation/)
-  assert.match(askAuthors, /findQuoteSpan/)
-  assert.match(askAuthors, /panelOpen: false/)
-  assert.match(useAnnotations, /current\.panelOpen/)
-  assert.match(canvas, /annotations\.close\(\)/)
-  assert.match(askAuthors, /马同学/)
-  assert.match(askAuthors, /liu-kanshan-direct/)
-  assert.match(askAuthors, /liuKanshanDirectReply/)
-  assert.match(canvas, /knowledge\?\.routeId \|\| knowledgeId/)
-  assert.match(canvas, /ensureLearningConversation/)
-  assert.match(canvas, /conversationGraphView\(nodes, edges\)/)
-  assert.doesNotMatch(canvas, /conversationGraphView\(nodes, edges, sessionConversationId/)
-  assert.match(session, /annotationScopeId\(routeId, conceptId\)/)
-  assert.match(askAuthors, /annotationScopeId/)
-  assert.match(annotationPanel, /刘看山直达/)
-  assert.match(annotationPanel, /不是博主身份/)
-  assert.match(annotationPanel, /MarkdownMath source=\{item\.text/)
-  assert.match(annotationPanel, />详细内容可以阅读我的文章</)
-  assert.doesNotMatch(annotationPanel, /<p className="annotation-card__reply">\{item\.text/)
-  assert.doesNotMatch(annotationPanel, /<strong>\{item\.title\}/)
-  assert.doesNotMatch(annotationPanel, /annotation-card__avatar[\s\S]{0,80}刘看山/)
-})
-
-test('mine canvas projects the settled first answer onto the unique GraphSurgeon root', () => {
-  assert.match(mineGraph, /requestGraphSnapshot/)
-  assert.match(mineGraph, /requestCanonicalSnapshot/)
-  assert.match(mineGraph, /ensureMineKnowledgeFromCanonical/)
-  assert.match(mineGraph, /KnowledgeCanvasPage/)
-  assert.match(mineGraph, /dropMineConceptGraph/)
-  assert.match(mineGraph, /closeConceptKnowledge/)
-  assert.doesNotMatch(mineGraph, /requestCanonicalAnswer/)
-  assert.doesNotMatch(mineGraph, /growGraph/)
-  assert.doesNotMatch(mineGraph, /无法打开这次知识脉络/)
-  assert.doesNotMatch(mineGraph, /GraphSurgeon/)
-  assert.match(bootstrapped, /lessonFromCanonical/)
-  assert.match(bootstrapped, /canonicalContentHash/)
-  assert.doesNotMatch(bootstrapped, /结构锚点/)
-  assert.doesNotMatch(surgeon, /ordinaryAnswer|generateStructured|growGraph/)
-})
-
-test('Liu Kanshan cannot become an author identity and author search fails closed without a network', () => {
-  assert.match(authorsOrchestrator, /isLiuKanshanName/)
-  assert.match(authors, /看看已经和你建立联系的博主/)
-  assert.match(authors, /还没有关注的博主/)
-  assert.match(authors, /requestAuthorNetwork/)
-  assert.match(authors, /AuthorNetworkGraph/)
-  assert.match(store, /titleFromPathLayer/)
-  assert.doesNotMatch(authors, /seedAuthorNetwork|hydrateNetworkFromAnnotations/)
-})
-
-test('stream cursors start at sequence 1 and incomplete path documents fail', () => {
-  assert.equal(decideCommittedApply(undefined, {
-    eventId: '11111111-1111-4111-8111-111111111111',
-    resourceId: 'agg',
-    sequence: 0,
-    traceId: 't',
-  }), 'gap')
-  assert.equal(decideCommittedApply(undefined, {
-    eventId: '11111111-1111-4111-8111-111111111111',
-    resourceId: 'agg',
-    sequence: 1,
-    traceId: 't',
-  }), 'apply')
-  assert.equal(validateRendererDocument({
-    protocol: 'learning-path',
-    version: '1.0',
-    id: 'generated-path',
-    metadata: { title: 'x', locale: 'zh-CN' },
-    structure: { subjects: [{ id: 's' }], flowGroups: [{ id: 'g' }] },
-  }).ok, false)
+test('login is limited before creating session records and cannot rotate anonymous buckets',async t=>{
+ const db=await openDatabase();await migrate(db);const store=new DurableStore(db),worker=new DurableWorker(store,async()=>{},1,()=>{})
+ const app=await createProductApp({store,worker,identity:config,providersReady:true,requestLimit:2})
+ t.after(async()=>{await app.close();await db.close()})
+ for(let n=1;n<=3;n++)assert.equal((await app.inject({url:'/api/v2/session',remoteAddress:'192.0.2.201',headers:{authorization:`Bearer ${token('user-'+n)}`}})).statusCode,n<=2?200:429)
+ assert.equal((await db.query('SELECT * FROM tp_sessions')).length,2)
 })

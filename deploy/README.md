@@ -6,8 +6,8 @@
 
 1. 将 `.env.example` 复制为 `.env.production`，填写 provider、身份和公开源；不要提交该文件。`NODE_ENV=production` 下缺数据库、公开源、身份密钥/签发方/受众或模型窗口时拒绝启动。
 2. 设置 `SITE_ADDRESS` 为实际域名，DNS 指向服务器；`THREADPEAK_PUBLIC_ORIGIN` 为同一 `https://域名`。开放 80/443 以签发证书。`POSTGRES_PASSWORD` 使用随机十六进制密码，避免数据库 URL 转义问题。
-3. `THREADPEAK_IDENTITY_SECRET` 至少 32 字符，签发方通过 HS256 JWT 提供 `iss/aud/sub/exp`，可包含 `nbf`。身份网关在受信登录回调向 `/api/v2/session` 带 Bearer JWT，得到 Secure/HttpOnly cookie；浏览器不保存令牌。会话有效期不超过 JWT 过期时间和 1 小时。当前实现为受信网关合同，尚无开箱即用知乎 OAuth callback。`THREADPEAK_LOGIN_URL` 必须是已部署身份服务的 HTTPS 地址。网关须验证自身用户身份，不能信任浏览器自报 subject/owner。
-4. 生产服务不提供匿名绕过。Cookie 与 Bearer 都按服务端身份隔离，跨源请求拒绝。若要继续知乎登录，应先实现并验收真实授权回调映射，不把本地工作区当正式登录。
+3. `THREADPEAK_IDENTITY_SECRET` 至少 32 字符，签发方通过 HS256 JWT 提供 `iss/aud/sub/exp`，可包含 `nbf`。身份网关在受信登录回调向 `/api/v2/session` 带 Bearer JWT，得到 Secure/HttpOnly cookie；浏览器不保存令牌。会话有效期不超过 JWT 过期时间和 1 小时。另有知乎 OAuth start/callback 实现；生产需要真实 OAuth 配置和独立联调验收，本地 mock 不能用于生产。`THREADPEAK_LOGIN_URL` 必须是已部署身份服务的 HTTPS 地址。网关须验证自身用户身份，不能信任浏览器自报 subject/owner。
+4. 生产服务不提供匿名绕过。Cookie 与 Bearer 都按服务端身份隔离，跨源请求拒绝。采用知乎登录时应配置并验收真实授权回调映射，不把本地工作区当正式登录。
 
 ```sh
 docker compose --env-file .env.production build
@@ -21,8 +21,8 @@ Node 24 镜像含供旧隔离测试使用的 pdftotext；默认 PDF 资料使用
 
 - `/health` 只表示进程可响应；`/api/ready` 检查数据库连接与必需 provider 配置，不主动调用收费 provider，不能等同外部服务健康。
 - 用 `docker compose --env-file .env.production exec api npm run ops:queue` 查看状态与待处理错误计数。监控 waiting 数、过期租约、各阶段 p50/p95 时延、429/鉴权/预算错误和外部费用；实际容量阈值需压测制定。
-- worker 5 秒续租、30 秒租约；进程崩溃后新 worker 接管。并发池在数据库中共享。停止阻断迟到提交；已完成步骤不重跑。外部生成仍可能因断电重试，不能承诺收费调用恰好一次。
-- 临时错误最多四次自动尝试；配置错误等保留待继续状态。排除根因后用户继续同一任务，勿清空检查点伪造恢复。旧工作流版本的待处理任务应在旧镜像完成/停止，或编写显式迁移后再升级。
+- worker 5 秒续租、90 秒租约；进程崩溃后新 worker 接管。并发池在 PostgreSQL 中跨副本共享；PGlite 只允许一个目录所有者进程。正常停机会按 job/fence 立即交回队列，保留检查点和重试预算，并阻断迟到提交；忽略 abort 的 handler 最多等待 10 秒。数据库失联仍需租约恢复；已完成步骤不重跑。外部生成仍可能因断电重试，不能承诺收费调用恰好一次。
+- 自动恢复以实际失败计数，最多四次失败；配置错误等保留待继续状态。手动恢复每任务最多四次、间隔至少 30 秒并占用账号额度；ops:queue 报告耗尽恢复预算的任务。排除根因后用户继续同一任务，勿清空检查点伪造恢复。旧工作流版本的待处理任务应在旧镜像完成/停止，或编写显式迁移后再升级。
 
 ## 备份与恢复演练
 
@@ -41,3 +41,18 @@ docker compose --env-file .env.production exec -T db pg_restore -U threadpeak -d
 ## 上线门槛
 
 真实身份和退出/过期/多设备流程；实际域名与 TLS；按目标并发量压测；真实长材料和多轮对话的摘要保真评测；内容及备份保留/删除政策；provider 配额/计费告警；原有数据迁移或只读归档说明。完成这些门槛前，只能称已完成相应本地集成切片。
+
+内部诊断事件保留 7 天；公共 events 路由已移除，前端使用 revision 快照轮询。完成任务 30 天后压缩重复输入和检查点，保留已发布资源与幂等收据。等待/取消任务仍保存恢复所需内容。完整工程策略及本轮验证见 [架构修复](../docs/architecture-review-fixes-2026-09-07.md)。
+
+
+## 代理、维护与浏览器备份
+
+Compose 使用独立 proxy 网段 172.30.84.0/24，Caddy 固定为 172.30.84.2；API 的 THREADPEAK_TRUSTED_PROXIES 仅信任该 /32。该网段如与目标主机冲突，需同时修改网络、Caddy 地址和可信地址。独立部署默认为不信任转发头，可用逗号分隔 IP/CIDR 设置可信代理，禁止直接信任全部来源。已认证请求按 owner/IP 分桶；登录/公开入口与认证失败按 IP 分桶，IPv6 规范化到 /64。默认每桶 600 次/分钟，由同一数据库的 tp_http_limits 原子计数，所有 API 副本及重启后的实例共用。桶键只存摘要；窗口与过期清理均采用数据库时间。数据库另执行账号任务额度。
+
+所有 API 路由在限速存储故障时返回 503/HTTP_LIMIT_UNAVAILABLE，不降级成放行或进程内独立额度；/health 只返回进程存活，不访问数据库，也不计入该额度。共享计数每次请求增加一次 SQL 写入，正式吞吐和数据库容量仍需压测，不能把多实例功能测试当作抗攻击容量证明。
+
+维护首次延迟 60 秒，成功后一小时重跑；满批次一分钟后续跑，失败退避至多 15 分钟。监控 worker.maintenance_failed 和 worker.release_failed 的错误码。每类删除最多 1000 行、任务压缩最多 100 行，锁超时 1 秒、语句超时 5 秒。任务回执仍随命令数增长，不能把压缩视为账号删除政策。
+
+浏览器账号备份主要存入 IndexedDB，与 localStorage 的小容量限制分开。只有持久备份成功后才清理旧账号键；恢复不下的草稿可在“我的”页面导出。恢复提示独立读取持久元数据；重新打开页面或登录服务离线时，登录页仍提供本机备份导出。两种存储都不可写时保留原字节并提示导出/释放空间，不静默丢弃草稿。详细裁决与实测见[第三轮修复](../docs/architecture-review-round-3-2026-09-07.md)。
+
+本地 PGlite 使用 fs-native-extensions 的内核描述符锁；进程退出或被杀后锁自动释放，新所有者不靠 PID 判断。相邻 .threadpeak-lock 文件必须保留稳定 inode，运行期间不得删除/替换。v2 所有权标记用于兼容迁移；旧 PID 标记若仍有存活/不可判断的进程则拒绝接管，需要核对旧进程后再迁移。该保证用于支持文件锁的本地文件系统，不是网络文件系统分布式锁；多副本部署使用 PostgreSQL。

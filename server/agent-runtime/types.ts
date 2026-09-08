@@ -1,4 +1,4 @@
-import type { SearchMetadata } from '../../packages/contracts/src/search-scope.ts'
+import type { SearchMetadata } from '@threadpeak/contracts/search-scope'
 export const STRUCTURED_AGENT_IDS = [
   'R1',
   'R2',

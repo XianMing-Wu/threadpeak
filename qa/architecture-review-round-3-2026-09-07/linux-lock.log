@@ -1,0 +1,14 @@
+Unable to find image 'node:24-bookworm-slim' locally
+24-bookworm-slim: Pulling from library/node
+Digest: sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e
+Status: Downloaded newer image for node:24-bookworm-slim
+✔ kernel lock has one winner across processes and crash releases it without inspecting a PID (121.680541ms)
+✔ legacy live PID is not stolen during migration; stale v2 markers do not lock out a new process (4.237833ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 205.614667

@@ -1,6 +1,6 @@
 import {isMockZhihuOwner,isMockZhihuUrl} from './zhihu-oauth-mock.ts'
-import type { AuthorNetwork, AuthorSource, AuthorTopic, NetworkAuthor, SourceUse } from '../../packages/contracts/src/authors.ts'
-import type { GraphNode, LearningState } from '../../packages/contracts/src/learning-v2.ts'
+import type { AuthorNetwork, AuthorSource, AuthorTopic, NetworkAuthor, SourceUse } from '@threadpeak/contracts/authors'
+import type { GraphNode, LearningState } from '@threadpeak/contracts/learning-v2'
 import { isLiuKanshanName } from '../ports.ts'
 import type { Sql } from './database.ts'
 import { digest, type Resource } from './store.ts'

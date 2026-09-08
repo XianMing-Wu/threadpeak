@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {prepareMarkdown} from './markdown-source.ts'
-import {renderMath,normalizeTex} from '../../packages/contracts/src/math-normalize.ts'
-import {hasMissingSourceExcerptMath} from '../../packages/contracts/src/source-image.ts'
+import {renderMath,normalizeTex} from '@threadpeak/contracts/math-normalize'
+import {hasMissingSourceExcerptMath} from '@threadpeak/contracts/source-image'
 const samples=[
   ['standard inline',String.raw`关系为 $E=mc^2$。`],
   ['display',String.raw`$$\frac{1}{2}+x^2$$`],
@@ -104,7 +104,7 @@ test('an HTML matrix image remains in the same inline equation as its left hand 
 })
 
 test('strict image URL validation rejects privileged schemes, local targets and URL ambiguity',async()=>{
-  const {safeSourceImageUrl}=await import('../../packages/contracts/src/source-image.ts')
+  const {safeSourceImageUrl}=await import('@threadpeak/contracts/source-image')
   for(const url of ['javascript:alert(1)','data:image/svg+xml;base64,AAA','file:///etc/passwd','blob:https://example.com/id','http://example.com/img.png','//example.com/img.png','https://example.com@localhost/a','https://u:p@example.com/a','https://127.0.0.1/a','https://0x7f000001/a','https://2130706433/a','https://[::1]/a','https://internal/a','https://router.local/a','https://example.com:4304/a','https:\\example.com/a','https://example.com/a\nb','https://example.com/%zz'])assert.equal(safeSourceImageUrl(url),undefined,url)
   for(const url of ['https://pic1.zhimg.com/v2-a_b.png','https://www.zhihu.com/equation?tex=x%5E2%3D1','https://cdn.example.com/a(b).png?sig=abc%2B12&size=2'])assert.ok(safeSourceImageUrl(url),url)
 })
@@ -358,8 +358,8 @@ print(C)
  assert.equal(prepareMarkdown('公式：C = A + B。').math.length,1)
 })
 
-const {readingCorpus}=await import('../../packages/contracts/src/reading-corpus.ts')
-const {prepareReading}=await import('../../packages/contracts/src/reading-policy.ts')
+const {readingCorpus}=await import('@threadpeak/contracts/reading-corpus')
+const {prepareReading}=await import('@threadpeak/contracts/reading-policy')
 for(const sample of readingCorpus)test(`reading corpus ${sample.id}: ${sample.label}`,async()=>{
  const reading=prepareReading(sample.source,true),html=await renderActual(sample.source,{sourceExcerpt:true})
  if(sample.math!==undefined)assert.equal(reading.math.length,sample.math,JSON.stringify(reading))

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { normalizeScope, selectedMaterials, materialsReady } from './selection.ts'
-import { SearchScopeSchema } from '../../packages/contracts/src/search-scope.ts'
+import { SearchScopeSchema } from '@threadpeak/contracts/search-scope'
 const file={sourceId:'file-1',fileName:'notes.md',content:'学习笔记',status:'ready',origin:'upload'}
 const first={sourceId:'folder-1',folderId:'101',fileName:'线性代数',content:'第一份收藏',status:'ready',origin:'collection'}
 const second={...first,sourceId:'folder-2',folderId:'102',fileName:'机器学习'}

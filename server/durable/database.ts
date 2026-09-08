@@ -1,3 +1,4 @@
+import {ownPGliteDirectory} from './pglite-owner.ts'
 import { mkdir } from 'node:fs/promises'
 import { PGlite } from '@electric-sql/pglite'
 import postgres from 'postgres'
@@ -11,23 +12,50 @@ export type Sql = {
 export async function openDatabase(options: { url?: string; directory?: string } = {}): Promise<Sql> {
   if (options.url) {
     const client = postgres(options.url, { max: 10, onnotice: () => {}, types: { serializedJson: { to: 3802, from: [114,3802], serialize: (value: unknown) => typeof value==='string'?value:JSON.stringify(value), parse: (value: string) => JSON.parse(value) }, safeInteger: { to: 20, from: [20], serialize: (value: number) => String(value), parse: (value: string) => { const result=Number(value); if(!Number.isSafeInteger(result))throw new Error('DATABASE_INTEGER_RANGE'); return result } } } })
-    function wrap(connection: any): Sql {
+    function wrap(connection: any, nested = false): Sql {
+      let pending: Promise<unknown> = Promise.resolve()
       return {
         async query<T>(sql: string, params: unknown[] = []) { return [...await connection.unsafe(sql, params)] as T[] },
-        transaction: (fn) => connection.begin((tx: any) => fn(wrap(tx))),
+        transaction: (fn) => {
+          if(!nested)return connection.begin((tx:any)=>fn(wrap(tx,true)))
+          const task=pending.then(()=>connection.savepoint((tx:any)=>fn(wrap(tx,true))))
+          pending=task.catch(()=>{});return task
+        },
         close: () => client.end(),
       }
     }
     return wrap(client)
   }
   if (options.directory) await mkdir(options.directory, { recursive: true, mode: 0o700 })
+  const release=options.directory?await ownPGliteDirectory(options.directory):async()=>{}
   const db = new PGlite(options.directory)
-  await db.waitReady
-  function wrap(connection: Pick<PGlite, 'query'>): Sql {
+  try{await db.waitReady}catch(error){await release();throw error}
+  let savepointId = 0
+  function wrap(connection: Pick<PGlite, 'query'>, nested = false): Sql {
+    let pending: Promise<unknown> = Promise.resolve()
     return {
       async query<T>(sql: string, params: unknown[] = []) { return (await connection.query<T>(sql, params)).rows },
-      transaction: (fn) => db.transaction((tx) => fn(wrap(tx))),
-      close: () => db.close(),
+      transaction: (fn) => {
+        if (!nested) return db.transaction(tx => fn(wrap(tx, true)))
+        // Nested work stays on the transaction connection. Serialize sibling
+        // savepoints so one rollback cannot erase another sibling's result.
+        const task = pending.then(async () => {
+          const name = `tp_savepoint_${++savepointId}`
+          await connection.query(`SAVEPOINT ${name}`)
+          try {
+            const value = await fn(wrap(connection, true))
+            await connection.query(`RELEASE SAVEPOINT ${name}`)
+            return value
+          } catch (error) {
+            await connection.query(`ROLLBACK TO SAVEPOINT ${name}`)
+            await connection.query(`RELEASE SAVEPOINT ${name}`)
+            throw error
+          }
+        })
+        pending = task.catch(() => {})
+        return task
+      },
+      close: async () => {try{await db.close()}finally{await release()}},
     }
   }
   return wrap(db)
@@ -43,6 +71,7 @@ export async function migrate(db: Sql) {
       revision integer NOT NULL DEFAULT 0, body jsonb NOT NULL,
       created_at bigint NOT NULL, updated_at bigint NOT NULL,
       UNIQUE(owner_id, kind, scope))`)
+    await tx.query('ALTER TABLE tp_resources ADD COLUMN IF NOT EXISTS data_revision integer NOT NULL DEFAULT 0')
     await tx.query(`CREATE TABLE IF NOT EXISTS tp_jobs (
       id text PRIMARY KEY, owner_id text NOT NULL, resource_id text NOT NULL REFERENCES tp_resources(id),
       command_key text NOT NULL, input_hash text NOT NULL, kind text NOT NULL, input jsonb NOT NULL,
@@ -54,16 +83,41 @@ export async function migrate(db: Sql) {
       UNIQUE(owner_id, command_key))`)
     await tx.query(`CREATE UNIQUE INDEX IF NOT EXISTS tp_one_active_job ON tp_jobs(resource_id)
       WHERE status IN ('queued','running','waiting')`)
+    await tx.query(`CREATE INDEX IF NOT EXISTS tp_jobs_resource_latest ON tp_jobs(resource_id,created_at DESC,id DESC)`)
+    await tx.query(`CREATE INDEX IF NOT EXISTS tp_jobs_owner_recent ON tp_jobs(owner_id,created_at)`)
+    await tx.query(`CREATE INDEX IF NOT EXISTS tp_jobs_owner_active ON tp_jobs(owner_id) WHERE status IN ('queued','running')`)
     await tx.query(`CREATE INDEX IF NOT EXISTS tp_jobs_queue ON tp_jobs(status,next_at,lease_until)`)
+    await tx.query('ALTER TABLE tp_jobs ADD COLUMN IF NOT EXISTS compacted boolean NOT NULL DEFAULT false')
+    await tx.query("CREATE INDEX IF NOT EXISTS tp_jobs_retention ON tp_jobs(updated_at) WHERE status='completed' AND compacted=false")
+    await tx.query('ALTER TABLE tp_jobs ADD COLUMN IF NOT EXISTS resume_count integer NOT NULL DEFAULT 0')
+    await tx.query('ALTER TABLE tp_jobs ADD COLUMN IF NOT EXISTS resumed_at bigint NOT NULL DEFAULT 0')
+    await tx.query('CREATE INDEX IF NOT EXISTS tp_jobs_owner_resumed ON tp_jobs(owner_id,resumed_at) WHERE resumed_at>0')
+    await tx.query(`CREATE TABLE IF NOT EXISTS tp_job_resumes (
+      job_id text NOT NULL REFERENCES tp_jobs(id), resume_number integer NOT NULL,
+      owner_id text NOT NULL, created_at bigint NOT NULL, PRIMARY KEY(job_id,resume_number))`)
+    await tx.query('CREATE INDEX IF NOT EXISTS tp_job_resumes_owner_recent ON tp_job_resumes(owner_id,created_at)')
+    await tx.query('CREATE INDEX IF NOT EXISTS tp_job_resumes_retention ON tp_job_resumes(created_at)')
+    const [resumeLedger]=await tx.query("SELECT version FROM tp_schema_migrations WHERE version='2026-09-07.resume-ledger'")
+    if(!resumeLedger){
+      // Only the most recent legacy timestamp is known; never invent dates for
+      // lifetime counts. All subsequent admissions are recorded individually.
+      await tx.query('INSERT INTO tp_job_resumes(job_id,resume_number,owner_id,created_at) SELECT id,resume_count,owner_id,resumed_at FROM tp_jobs WHERE resumed_at>0 AND resume_count>0 ON CONFLICT DO NOTHING')
+      await tx.query("INSERT INTO tp_schema_migrations(version,applied_at) VALUES('2026-09-07.resume-ledger',$1)",[Date.now()])
+    }
     await tx.query("ALTER TABLE tp_jobs ADD COLUMN IF NOT EXISTS activities jsonb NOT NULL DEFAULT '[]'")
     await tx.query(`CREATE TABLE IF NOT EXISTS tp_events (
       resource_id text NOT NULL REFERENCES tp_resources(id), sequence integer NOT NULL,
       kind text NOT NULL, payload jsonb NOT NULL, created_at bigint NOT NULL,
       PRIMARY KEY(resource_id,sequence))`)
+    await tx.query('CREATE INDEX IF NOT EXISTS tp_events_retention ON tp_events(created_at)')
+    await tx.query('CREATE TABLE IF NOT EXISTS tp_http_limits (key text PRIMARY KEY,hits bigint NOT NULL,expires_at bigint NOT NULL)')
+    await tx.query('CREATE INDEX IF NOT EXISTS tp_http_limits_expiry ON tp_http_limits(expires_at)')
     await tx.query(`CREATE TABLE IF NOT EXISTS tp_sessions (
       token_hash text PRIMARY KEY, owner_id text NOT NULL, expires_at bigint NOT NULL)`)
+    await tx.query('CREATE INDEX IF NOT EXISTS tp_sessions_expiry ON tp_sessions(expires_at)')
     await tx.query(`CREATE TABLE IF NOT EXISTS tp_material_uploads (resource_id text PRIMARY KEY REFERENCES tp_resources(id),base64 text NOT NULL)`)
     await tx.query(`CREATE TABLE IF NOT EXISTS tp_oauth_attempts (state_hash text PRIMARY KEY,binding_hash text NOT NULL,expires_at bigint NOT NULL)`)
+    await tx.query('CREATE INDEX IF NOT EXISTS tp_oauth_attempts_expiry ON tp_oauth_attempts(expires_at)')
     await tx.query(`CREATE TABLE IF NOT EXISTS tp_zhihu_accounts (owner_id text PRIMARY KEY,token_cipher text NOT NULL,token_expires_at bigint NOT NULL,profile jsonb NOT NULL)`)
     await tx.query(`CREATE TABLE IF NOT EXISTS tp_memories (
       owner_id text NOT NULL, source_hash text NOT NULL, summary text NOT NULL,

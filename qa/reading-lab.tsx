@@ -1,7 +1,7 @@
 import {createRoot} from 'react-dom/client'
 import {useState} from 'react'
 import {MarkdownMath} from '../src/lib/MarkdownMath'
-import {readingCorpus} from '../packages/contracts/src/reading-corpus'
+import {readingCorpus} from '@threadpeak/contracts/reading-corpus'
 import 'katex/dist/katex.min.css'
 import '../src/styles.css'
 import '../src/ui/flowith-product.css'

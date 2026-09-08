@@ -1,6 +1,6 @@
 import {showcaseRoutes,showcaseRoute,SHOWCASE_VERSION} from './content.ts'
 import sourceData from './sources.json' with {type:'json'}
-import {ArticleSchema,LearningSchema,validateTree,type Article,type LearningState,type Paragraph,type GraphNode} from '../../packages/contracts/src/learning-v2.ts'
+import {ArticleSchema,LearningSchema,validateTree,type Article,type LearningState,type Paragraph,type GraphNode} from '@threadpeak/contracts/learning-v2'
 import type {RouteBlueprint,FirstLesson} from '../workspace/types.ts'
 
 export const showcaseSources:Record<string,Article[]>=Object.fromEntries(Object.entries(sourceData).map(([id,items])=>[id,items.map(a=>ArticleSchema.parse(a))]))

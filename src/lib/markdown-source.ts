@@ -1,1 +1,1 @@
-export * from '../../packages/contracts/src/markdown-source.ts'
+export * from '@threadpeak/contracts/markdown-source'

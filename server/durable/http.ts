@@ -1,12 +1,17 @@
+import {sharedHttpRateLimitStore} from './http-rate-limit.ts'
+import helmet from '@fastify/helmet'
+import rateLimit, {normalizeIP} from '@fastify/rate-limit'
+import {isIP} from 'node:net'
+import {ProductLibrarySchema} from '@threadpeak/contracts/product-library'
 import { pathGoalContext, hydrateLearningGoal } from './learning-goal.ts'
-import { SearchScopeSchema } from '../../packages/contracts/src/search-scope.ts'
+import { SearchScopeSchema } from '@threadpeak/contracts/search-scope'
 import {registerSourcePresentation} from './source-presentation.ts'
 import { registerAuthorRoutes } from './authors-http.ts'
 import Fastify, { type FastifyRequest } from 'fastify'
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
-import { NodeSchema, paragraphNode, validateTree, type LearningState } from '../../packages/contracts/src/learning-v2.ts'
-import { mergeNodeEdits, NodeEditConflict } from '../../packages/contracts/src/node-edits.ts'
+import { NodeSchema, paragraphNode, validateTree, type LearningState } from '@threadpeak/contracts/learning-v2'
+import { mergeNodeEdits, NodeEditConflict } from '@threadpeak/contracts/node-edits'
 import { createIdentity, type IdentityConfig } from './auth.ts'
 import { CommandError, digest, type DurableStore, type Resource } from './store.ts'
 import type { DurableWorker } from './worker.ts'
@@ -26,18 +31,40 @@ function requestKey(request:FastifyRequest){const key=request.headers['idempoten
 const bodyOf=(request:FastifyRequest)=>request.body??{}
 const resourceId=(request:FastifyRequest)=>(request.params as {id:string}).id
 
-export async function createProductApp(ports:{store:DurableStore;worker:DurableWorker;identity:IdentityConfig;providersReady:boolean;zhihuData?:ZhihuDataClient;zhihuLogin?:ZhihuLogin}){
-  const app=Fastify({logger:false,bodyLimit:20_000_000,requestTimeout:30_000})
+export function trustedProxies(value:string[]=[]):string[] {
+  for(const address of value){
+    const [ip,prefix,...extra]=address.split('/'),version=isIP(ip!)
+    if(!version||extra.length||prefix!==undefined&&(!/^\d+$/.test(prefix)||Number(prefix)<1||Number(prefix)>(version===4?32:128)))throw new Error('TRUSTED_PROXY_CONFIG_INVALID')
+  }
+  return value
+}
+export async function createProductApp(ports:{store:DurableStore;worker:DurableWorker;identity:IdentityConfig;providersReady:boolean;requestLimit?:number;trustedProxies?:string[];zhihuData?:ZhihuDataClient;zhihuLogin?:ZhihuLogin}){
+  const app=Fastify({logger:false,bodyLimit:1_000_000,requestTimeout:30_000,trustProxy:trustedProxies(ports.trustedProxies)})
+  await app.register(helmet)
+  await app.register(rateLimit,{global:false,max:ports.requestLimit??600,timeWindow:60_000,store:sharedHttpRateLimitStore(ports.store.db),skipOnError:false})
   const identity=createIdentity(ports.store,ports.identity),owners=new WeakMap<FastifyRequest,string>()
   const owner=(request:FastifyRequest)=>owners.get(request)!
+  const limit=app.rateLimit({keyGenerator:request=>JSON.stringify([owner(request)??'anonymous',normalizeIP(request.ip,64)])})
+  const entryRoutes=new Set(['/health','/api/ready','/api/auth/config','/api/auth/zhihu/start','/api/auth/zhihu/callback','/api/v2/session','/api/auth/session'])
   app.addHook('onRequest',async(request,reply)=>{
     reply.header('Cache-Control','no-store').header('X-Content-Type-Options','nosniff')
-    if(request.url.startsWith('/api/')&&!['/api/ready','/api/auth/config','/api/auth/zhihu/start','/api/auth/zhihu/callback'].includes(request.url.split('?')[0]!))owners.set(request,await identity.resolve(request,reply))
+    // Liveness must remain available during a database outage. Readiness and
+    // every API route still use the shared limiter and fail closed on failure.
+    if(request.url.split('?')[0]==='/health')return
+    const entry=entryRoutes.has(request.url.split('?')[0]!)
+    // Login and public routes are limited before session/OAuth writes. Their
+    // bucket cannot be rotated by requesting a fresh development identity.
+    if(entry)await limit.call(app,request,reply)
+    let failure:unknown
+    try{if(request.url.startsWith('/api/')&&!['/api/ready','/api/auth/config','/api/auth/zhihu/start','/api/auth/zhihu/callback'].includes(request.url.split('?')[0]!))owners.set(request,await identity.resolve(request,reply))}catch(error){failure=error}
+    if(!entry)await limit.call(app,request,reply)
+    if(failure)throw failure
   })
   app.setErrorHandler((error,_request,reply)=>{
-    const status=error instanceof CommandError?error.status:error instanceof NodeEditConflict?409:error instanceof z.ZodError?400:500
-    const code=error instanceof CommandError?error.code:error instanceof NodeEditConflict?'NODE_EDIT_CONFLICT':status===400?'INVALID_INPUT':'SERVICE_UNAVAILABLE'
-    const notices:Record<string,string>={COLLECTION_SCOPE_INVALID:'请先选择收藏夹并等待内容读取完成。',ZHIHU_LOGIN_REQUIRED:'连接账号后即可选择你的收藏夹。',ZHIHU_NOT_CONFIGURED:'知乎账号连接暂未开放，仍可添加文件开始学习。',ZHIHU_REAUTHORIZE:'知乎授权已到期，请重新连接账号。',PDF_NOT_CONFIGURED:'PDF 解析服务尚未连接，请先添加 Markdown 或文本文件。',MATERIAL_PROCESSING:'资料还在整理，完成后即可生成路线。',COLLECTION_EMPTY:'这个收藏夹还没有可读取的公开内容。'}
+    const httpStatus=(error as {statusCode?:number})?.statusCode??500
+    const status=error instanceof CommandError?error.status:error instanceof NodeEditConflict?409:error instanceof z.ZodError?400:[413,429].includes(httpStatus)?httpStatus:500
+    const code=error instanceof CommandError?error.code:error instanceof NodeEditConflict?'NODE_EDIT_CONFLICT':status===400?'INVALID_INPUT':status===429?'REQUEST_RATE_LIMITED':status===413?'REQUEST_TOO_LARGE':'SERVICE_UNAVAILABLE'
+    const notices:Record<string,string>={RETRY_BUDGET_EXHAUSTED:'这次任务已达到继续次数上限，已有内容仍然保留。',RETRY_EXPIRED:'这次任务已归档，已有内容仍然保留。',RETRY_COOLDOWN:'请稍后再继续这次任务。',REQUEST_RATE_LIMITED:'请求较多，请稍后再试。',REQUEST_TOO_LARGE:'提交的内容较大，请减少后重试。',COLLECTION_SCOPE_INVALID:'请先选择收藏夹并等待内容读取完成。',ZHIHU_LOGIN_REQUIRED:'连接账号后即可选择你的收藏夹。',ZHIHU_NOT_CONFIGURED:'知乎账号连接暂未开放，仍可添加文件开始学习。',ZHIHU_REAUTHORIZE:'知乎授权已到期，请重新连接账号。',PDF_NOT_CONFIGURED:'PDF 解析服务尚未连接，请先添加 Markdown 或文本文件。',MATERIAL_PROCESSING:'资料还在整理，完成后即可生成路线。',COLLECTION_EMPTY:'这个收藏夹还没有可读取的公开内容。'}
     const message=notices[code]??(code==='ACCOUNT_BUSY'?'正在处理的任务较多，请稍后继续。':code==='PDF_UNREADABLE'||code==='ATTACHMENT_EMPTY'?'这份 PDF 没有可读取的文字，请换成含文字的 PDF、Markdown 或文本文件。':code==='ATTACHMENT_SIZE'||code==='ATTACHMENT_TEXT_SIZE'?'附件较大，请拆成较小的文件再添加。':code==='TEXT_ENCODING'?'请将文本另存为 UTF-8 后添加。':code==='NODE_EDIT_CONFLICT'?'这张卡片的同一内容已在另一处编辑，你的版本仍保留，请选择要保存的版本。':code==='REVISION_CONFLICT'?'内容已在另一处更新，正在读取最新版本。':code==='BUSY'?'当前任务还在进行。':status===404?'找不到这项内容。':status===401?'请先登录。':status===400?'请检查这次输入。':'这次操作暂时还没完成，已有内容已保留。')
     reply.code(status).send({code,message})
   })
@@ -96,10 +123,6 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     await hydrateLearningGoal(ports.store,owner(request),resourceId(request))
     return ports.store.snapshot(owner(request),resourceId(request))
   })
-  app.get('/api/v2/resources/:id/events',request=>{
-    const after=z.coerce.number().int().min(0).parse((request.query as any).after??0)
-    return ports.store.events(owner(request),resourceId(request),after)
-  })
   app.post('/api/v2/resources/:id/cancel',async request=>{await ports.store.cancel(owner(request),resourceId(request));return ports.store.snapshot(owner(request),resourceId(request))})
   app.post('/api/v2/resources/:id/resume',async request=>{await ports.store.resume(owner(request),resourceId(request));ports.worker.wake();return ports.store.snapshot(owner(request),resourceId(request))})
   app.post('/api/v2/chats/enter',async request=>{
@@ -123,8 +146,8 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
   app.get('/api/v2/library',async request=>{
     const own=owner(request)
     const [paths,knowledge,chats]=await Promise.all([ports.store.list(own,'path'),ports.store.list(own,'learning'),ports.store.list(own,'chat')])
-    return {paths:paths.filter(p=>p.body.status==='published').map(p=>({id:p.id,goal:p.body.goal,document:p.body.document,updatedAt:p.updated_at})),knowledge:knowledge.filter(k=>k.body.nodes.length).map(k=>({id:k.id,routeId:k.body.routeId,conceptId:k.body.conceptId,title:k.body.title})),
-      conversations:[...paths,...chats].map(r=>({id:r.kind==='chat'?r.scope:r.id,resourceId:r.id,kind:r.kind,title:r.body.goal??r.body.title??'对话',query:r.body.goal??r.body.title??'',updatedAt:r.updated_at,routeId:r.kind==='path'&&r.body.document?r.id:undefined})).concat(knowledge.flatMap(r=>r.body.conversations.map((c:any)=>({id:c.id,resourceId:r.id,kind:'learning',title:c.title,query:r.body.title,updatedAt:r.updated_at,routeId:r.body.routeId,conceptId:r.body.conceptId}))))}
+    return ProductLibrarySchema.parse({paths:paths.filter(p=>p.body.status==='published').map(p=>({id:p.id,goal:p.body.goal,document:p.body.document,updatedAt:p.updated_at})),knowledge:knowledge.filter(k=>k.body.nodes.length).map(k=>({id:k.id,routeId:k.body.routeId,conceptId:k.body.conceptId,title:k.body.title})),
+      conversations:[...paths,...chats].map(r=>({id:r.kind==='chat'?r.scope:r.id,resourceId:r.id,kind:r.kind,title:r.body.goal??r.body.title??'对话',query:r.body.goal??r.body.title??'',updatedAt:r.updated_at,routeId:r.kind==='path'&&r.body.document?r.id:undefined})).concat(knowledge.flatMap(r=>r.body.conversations.map((c:any)=>({id:c.id,resourceId:r.id,kind:'learning',title:c.title,query:r.body.title,updatedAt:r.updated_at,routeId:r.body.routeId,conceptId:r.body.conceptId}))))})
   })
   async function pathByDocument(own:string,documentId:string){
     const paths=await ports.store.db.query<Resource>("SELECT * FROM tp_resources WHERE owner_id=$1 AND kind='path' AND (id=$2 OR body->'document'->>'id'=$2)",[own,documentId])
@@ -143,10 +166,10 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     const snapshot=await ports.store.snapshot(own,id),path=snapshot.data as PathState
     if(snapshot.kind!=='path')throw new CommandError('NOT_FOUND',404)
     const busy=snapshot.job&&['queued','running'].includes(snapshot.job.status),waiting=snapshot.job?.status==='waiting'||snapshot.job?.status==='cancelled'
-    return {runId:id,searchScope:path.searchScope??{kind:'zhihu'},goal:path.goal,status:busy?'running':waiting?'failed':path.status,stage:snapshot.job?.phase??'',questionSets:path.questionSets,document:path.document,route:path.route,
+    return {runId:id,searchScope:path.searchScope??{kind:'zhihu'},goal:path.goal,recoverable:snapshot.job?.recoverable??false,status:busy?'running':waiting?'failed':path.status,stage:snapshot.job?.phase??'',questionSets:path.questionSets,document:path.document,route:path.route,
       reply:path.conversation.filter((m:any)=>m.role==='assistant').at(-1)?.content,followUpMessage:path.conversation.filter((m:any)=>m.role==='assistant').at(-1)?.content,conversation:path.conversation,knowledgeCreated:false,revision:snapshot.revision,
       trace:pathTrace(await ports.store.db.query<any>('SELECT id,kind,status,checkpoints FROM tp_jobs WHERE owner_id=$1 AND resource_id=$2 ORDER BY created_at,id',[own,id]),path),
-      ...(waiting?{error:{code:'RECOVERABLE',message:'这次还没完成，已收集的资料和选择都已保留。'}}:{})}
+      ...(waiting?{error:{code:snapshot.job?.recoverable?'RECOVERABLE':'RETRY_BUDGET_EXHAUSTED',message:snapshot.job?.recoverable?'这次还没完成，已收集的资料和选择都已保留。':'本次重试次数已用完，已有资料和选择仍然保留。'}}:{})}
   }
   app.post('/api/path-runs',async(request,reply)=>{
     const input=startSchema.parse(bodyOf(request)),key=requestKey(request),own=owner(request)
@@ -235,7 +258,7 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
       return r.body
     });ports.worker.wake();return ports.store.snapshot(own,id)
   })
-  app.patch('/api/v2/learning/:id/nodes',async request=>{
+  app.patch('/api/v2/learning/:id/nodes',{bodyLimit:20_000_000},async request=>{
     const input=z.object({revision:z.number().int().min(0),nodes:z.array(NodeSchema).max(20_000),baseNodes:z.array(NodeSchema).max(20_000).optional()}).parse(bodyOf(request)),own=owner(request),id=resourceId(request)
     try{validateTree(input.nodes)}catch{throw new CommandError('INVALID_TREE',400)}
     await ports.store.edit(own,id,input.baseNodes?undefined:input.revision,r=>{

@@ -1,1 +1,1 @@
-export * from '../../packages/contracts/src/validate-renderer-document.ts'
+export * from '@threadpeak/contracts/validate-renderer-document'

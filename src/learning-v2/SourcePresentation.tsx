@@ -1,8 +1,9 @@
+import {pollResource} from './poll'
 import {useEffect,useState} from 'react'
 import {MarkdownMath} from '../lib/MarkdownMath'
 import {productRequest, type TaskView} from './client'
-import {READING_POLICY_VERSION} from '../../packages/contracts/src/reading-policy'
-import {hasMissingSourceExcerptMath} from '../../packages/contracts/src/source-image'
+import {READING_POLICY_VERSION} from '@threadpeak/contracts/reading-policy'
+import {hasMissingSourceExcerptMath} from '@threadpeak/contracts/source-image'
 type Presentation={id:string;data:{status:string;metadata:{avatar?:string;badge?:string;badgeIcon?:string;comments?:string[];commentCount?:number};reading?:{kind:'ai-formula';content:string}};job:TaskView|null}
 const pending=new Map<string,Promise<Presentation>>()
 let metadataQueue=Promise.resolve()
@@ -14,9 +15,12 @@ function load(url:string,includeReading:boolean,retry=false){
     const run=async()=>{
       let value=await productRequest<Presentation>('/api/v2/sources/presentation',{method:'POST',body:{url,includeReading,readingVersion:READING_POLICY_VERSION}})
       if(retry&&value.job?.status==='waiting')value=await productRequest<Presentation>(`/api/v2/resources/${value.id}/resume`,{method:'POST',body:{}})
-      while(value.job&&['queued','running'].includes(value.job.status)){
-        await new Promise(r=>setTimeout(r,900));value=await productRequest<Presentation>(`/api/v2/resources/${value.id}`)
-      }
+      let failure:unknown
+      if(value.job&&['queued','running'].includes(value.job.status))await pollResource(async()=>{
+        value=await productRequest<Presentation>(`/api/v2/resources/${value.id}`)
+        return ['queued','running'].includes(value.job?.status??'')
+      },{signal:new AbortController().signal,onError:(error,stopped)=>{if(stopped)failure=error}})
+      if(failure)throw failure
       if(value.job?.status!=='completed')throw new Error('资料仍在整理')
       return value
     }

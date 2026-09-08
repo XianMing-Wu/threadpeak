@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { LearningGoalSchema } from '../../packages/contracts/src/learning-goal.ts'
+import { LearningGoalSchema } from '@threadpeak/contracts/learning-goal'
 
 const text=z.string().trim().min(1).max(1600)
 export const GoalExplorationSchema=z.object({

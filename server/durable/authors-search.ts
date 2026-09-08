@@ -1,7 +1,7 @@
 import { GOAL_POLICY } from '../agent-runtime/goal-policy.ts'
 import { knownSourceIdentity } from './authors-network.ts'
 import { z } from 'zod'
-import { AuthorBriefSchema, rankAuthorMatches, type AuthorSearchState, type AuthorMatch, type AuthorSource } from '../../packages/contracts/src/authors.ts'
+import { AuthorBriefSchema, rankAuthorMatches, type AuthorSearchState, type AuthorMatch, type AuthorSource } from '@threadpeak/contracts/authors'
 import { SHARED_SYSTEM_PREFIX } from '../agent-runtime/constants.ts'
 import { packZhihuSearchQueries } from '../agent-runtime/pack-search.ts'
 import type { SearchEvidence } from '../agent-runtime/types.ts'

@@ -5,12 +5,12 @@ import {createHash} from 'node:crypto'
 import {showcaseRoutes,SHOWCASE_VERSION,homeSuggestions} from '../showcase/content.ts'
 import {showcaseBlueprints,showcaseLearning,showcaseSources} from '../showcase/catalog.ts'
 import {buildPathDocument} from '../pathDocument.ts'
-import {validateTree,LearningSchema} from '../../packages/contracts/src/learning-v2.ts'
+import {validateTree,LearningSchema} from '@threadpeak/contracts/learning-v2'
 import {validateRendererDocument} from '../path-3d/validate-renderer-document.ts'
 import {resolvePath3DView} from '../path-3d/resolved-path-document.ts'
 import {preflightLearningPath} from '../vendor/learning-path-3d/index.js'
 import {prepareMarkdown} from '../lib/markdown-source.ts'
-import {renderMath} from '../../packages/contracts/src/math-normalize.ts'
+import {renderMath} from '@threadpeak/contracts/math-normalize'
 const review=JSON.parse(readFileSync(new URL('../../qa/showcase-2026-09-07/source-review.json',import.meta.url),'utf8'))
 const sha=text=>createHash('sha256').update(text).digest('hex')
 

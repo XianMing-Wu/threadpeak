@@ -4,7 +4,26 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./authors": "./src/authors.ts",
+    "./host-subject-flow": "./src/host-subject-flow.ts",
+    "./learning-goal": "./src/learning-goal.ts",
+    "./learning-v2": "./src/learning-v2.ts",
+    "./markdown-source": "./src/markdown-source.ts",
+    "./math-normalize": "./src/math-normalize.ts",
+    "./node-edits": "./src/node-edits.ts",
+    "./path-document": "./src/path-document.ts",
+    "./product-library": "./src/product-library.ts",
+    "./reading-corpus": "./src/reading-corpus.ts",
+    "./reading-policy": "./src/reading-policy.ts",
+    "./runtime-contracts": "./src/runtime-contracts.ts",
+    "./search-scope": "./src/search-scope.ts",
+    "./source-image": "./src/source-image.ts",
+    "./streaming-markdown": "./src/streaming-markdown.ts",
+    "./task-activity": "./src/task-activity.ts",
+    "./transport-contracts": "./src/transport-contracts.ts",
+    "./unfenced-code": "./src/unfenced-code.ts",
+    "./validate-renderer-document": "./src/validate-renderer-document.ts"
   },
   "dependencies": {
     "zod": "^3.25.76"

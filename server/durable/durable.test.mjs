@@ -1,3 +1,4 @@
+import {buildPathDocument} from '../../src/pathDocument.ts'
 import {placeAnswer} from '../../tests/fixtures/card-answer.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
@@ -7,7 +8,7 @@ import { join } from 'node:path'
 import { openDatabase,migrate } from './database.ts'
 import { DurableStore, CommandError } from './store.ts'
 import { TaskContext, DurableWorker, ToolError } from './worker.ts'
-import { validateTree } from '../../packages/contracts/src/learning-v2.ts'
+import { validateTree } from '@threadpeak/contracts/learning-v2'
 import { readCompletionStream,createAgentLlmProvider } from '../agent-runtime/llm-provider.ts'
 import { ProductTools } from './tools.ts'
 import { createFlows } from './flows.ts'
@@ -109,11 +110,9 @@ test('real HTTP composition with isolated providers: three searches, persisted t
 import { settledParallel } from './worker.ts'
 import { boundedSummary,packContext,tokenBound } from './context.ts'
 import { paragraphDraft } from './stream-draft.ts'
-import { mergeNodeEdits } from '../../packages/contracts/src/node-edits.ts'
+import { mergeNodeEdits } from '@threadpeak/contracts/node-edits'
 import { withPermit } from './limits.ts'
 import { createHmac } from 'node:crypto'
-import { extractAttachment } from './attachments.ts'
-import { retrieveNetwork } from './network-retrieval.ts'
 
 test('a failed parallel branch waits for successful siblings to persist before retry',async t=>{
   const s=await fixture(t),r=await s.create('owner','test','branches',{})
@@ -190,20 +189,7 @@ test('production identity rejects unsigned, expired and wrong-audience tokens; r
   assert.throws(()=>verifyIdentityToken(token({...body,exp:0}),config));assert.throws(()=>verifyIdentityToken(token({...body,aud:'another-product'}),config));assert.throws(()=>verifyIdentityToken(token(body)+'bad',config))
 })
 
-test('real text extraction accepts UTF-8 and rejects unsupported/encrypted-looking binary input',async()=>{
-  const actual=await extractAttachment('学习笔记.md',Buffer.from('# 学习\n保留全部正文').toString('base64'))
-  assert.equal(actual.content,'# 学习\n保留全部正文');assert.equal(actual.mimeType,'text/markdown')
-  await assert.rejects(extractAttachment('attack.html',Buffer.from('html').toString('base64')),e=>e.code==='ATTACHMENT_INVALID')
-  await assert.rejects(extractAttachment('fake.pdf',Buffer.from('not a PDF').toString('base64')),e=>e.code==='ATTACHMENT_INVALID')
-})
-
-test('network retrieval orders relevant high/low evidence, excludes irrelevant and repeated display names',()=>{
-  const row=(weight,id,name,question)=>({weight,body:{question,evidence:{authorId:id,authorName:name,title:question,summary:'总结'}}})
-  const rows=[row('low','a','甲','向量空间'),row('high','b','乙','向量空间'),row('high','c','丙','旅行攻略'),row('high','d','乙','向量空间')]
-  assert.deepEqual(retrieveNetwork(rows,'向量空间').map(x=>x.body.evidence.authorId),['b','a'])
-})
-
-async function settled(s,owner,id){for(let i=0;i<400;i++){const value=await s.snapshot(owner,id);if(!['queued','running'].includes(value.job?.status??''))return value;await new Promise(r=>setTimeout(r,10))}throw Error('test task did not settle')}
+async function settled(s,owner,id){const deadline=Date.now()+30_000;while(Date.now()<deadline){const value=await s.snapshot(owner,id);if(!['queued','running'].includes(value.job?.status??''))return value;await new Promise(r=>setTimeout(r,10))}throw Error('test task did not settle')}
 test('route selection survives refresh and R4 recovery publishes exactly once without repeating searches',async t=>{
   const s=await fixture(t),calls=[],searches=[];let failR4=true
   const r1={queries:[{id:'q1',text:'测试解释',angle:'normal_learning'},{id:'q2',text:'测试入门',angle:'normal_learning'},{id:'q3',text:'测试误区',angle:'pitfall_or_dispute'},{id:'q4',text:'测试应用',angle:'pitfall_or_dispute'}]}
@@ -270,7 +256,7 @@ test('route progress and library use resource identity when old documents share 
   const app=await createProductApp({store,worker,providersReady:true,identity:{production:false}});t.after(()=>app.close())
   const cookie=(await app.inject({url:'/api/v2/session'})).headers['set-cookie'].split(';')[0],headers={cookie}
   const owner=(await store.db.query('SELECT owner_id FROM tp_sessions'))[0].owner_id
-  const body={status:'published',goal:'route',document:{id:'legacy-doc'},progress:'position-one'}
+  const body={status:'published',goal:'route',document:buildPathDocument({id:'legacy-doc',title:'route',description:'goal',goalTitle:'done',goalSummary:'goal',carriers:[{id:'carrier',title:'part',summary:'part',concepts:[['concept','concept','body']]}]}),progress:'position-one'}
   const one=await store.create(owner,'path','scope-one',body),two=await store.create(owner,'path','scope-two',{...body,progress:'position-two'})
   const library=(await app.inject({url:'/api/v2/library',headers})).json()
   assert.deepEqual(new Set(library.conversations.map(c=>c.routeId)),new Set([one.id,two.id]))

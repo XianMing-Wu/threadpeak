@@ -1,4 +1,4 @@
-import type { SearchMetadata } from '../packages/contracts/src/search-scope.ts'
+import type { SearchMetadata } from '@threadpeak/contracts/search-scope'
 export type HttpRequestInit = {
   method?: 'GET' | 'POST'
   headers?: Record<string, string>

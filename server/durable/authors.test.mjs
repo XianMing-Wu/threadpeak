@@ -8,7 +8,7 @@ import {createFlows} from './flows.ts'
 import {createProductApp} from './http.ts'
 import {readAuthorNetwork,sourceForNode,recordAuthorUse,learningTopic,sourceTopic} from './authors-network.ts'
 import {validateAuthorMatches,searchAuthors,authorEvidenceScope} from './authors-search.ts'
-import {rankAuthorMatches,consultationDraft,AuthorBriefSchema} from '../../packages/contracts/src/authors.ts'
+import {rankAuthorMatches,consultationDraft,AuthorBriefSchema} from '@threadpeak/contracts/authors'
 import {networkGraph} from '../../src/learning-v2/author-graph.ts'
 const source=(id,name=id)=>({evidenceId:id,authorId:`author-${id}`,authorName:name,title:'向量空间与换基',summary:`材料 ${id} 说明同一个线性映射在不同基下有不同的坐标表示。`,url:`https://www.zhihu.com/question/1/answer/${id}`})
 const state=(items)=>({version:2,routeId:'route',conceptId:'concept',title:'线性映射',description:'从矩阵和坐标理解',hasDispute:false,articles:items.map(e=>({id:e.evidenceId,title:e.title,summary:e.summary,author:e.authorName,authorId:e.authorId,likes:null,url:e.url,topic:'知乎文章'})),nodes:[{id:'root',type:'root',title:'线性映射',text:'',parents:[],sources:items.map(e=>e.evidenceId)},...items.map(e=>({id:e.evidenceId,type:'article',title:e.title,text:e.summary,parents:['root'],sources:[e.evidenceId]}))],conversations:[{id:'chat',title:'学习',messages:[],date:'2026-09-06'}],active:'chat',initialized:true,phase:'ready'})

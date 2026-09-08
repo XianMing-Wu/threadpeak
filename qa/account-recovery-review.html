@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>离线草稿恢复入口回归</title>
+<body><h1>离线草稿恢复入口回归</h1><p>使用独立 localhost 测试源，并将 API 代理指向未监听端口。准备合成备份后进入真实应用，验证登录服务离线与整页重新打开时，仍显示恢复提示及导出按钮。</p>
+<button id="prepare">准备离线恢复</button><a href="/#knowledge">进入真实应用</a><button id="verify">核对合成备份</button><button id="clean">清理合成数据</button><pre id="result" role="status">尚未准备</pre>
+<script type="module">
+import {readAccountBackup,accountStorageForExport} from '/src/learning-v2/account-storage.ts'
+const owner='offline-recovery-review',draft='这是尚未恢复的合成草稿，必须可完整导出。',output=document.querySelector('#result')
+function database(operation){return new Promise((resolve,reject)=>{
+ const request=indexedDB.open('threadpeak-account-backups',1)
+ request.onupgradeneeded=()=>request.result.createObjectStore('accounts')
+ request.onerror=()=>reject(request.error)
+ request.onsuccess=()=>{const db=request.result,tx=db.transaction('accounts','readwrite');operation(tx.objectStore('accounts'));tx.oncomplete=()=>{db.close();resolve()};tx.onabort=()=>{db.close();reject(tx.error)}}
+})}
+const action=(id,run)=>document.querySelector(id).addEventListener('click',()=>run().catch(error=>{output.textContent=String(error)}))
+action('#prepare',async()=>{
+ if(Object.keys(localStorage).length||Object.keys(sessionStorage).length||(await indexedDB.databases()).some(db=>db.name==='threadpeak-account-backups'))throw Error('测试源已有数据，拒绝覆盖')
+ await database(store=>store.put({local:{'tp-private-draft':draft},session:{},pendingLocal:['tp-private-draft'],pendingSession:[]},owner))
+ localStorage.setItem('tp-server-workspace',owner)
+ output.textContent='合成备份已提交 IndexedDB；当前 localStorage 没有该草稿。请进入真实应用。'
+})
+action('#verify',async()=>{
+ if(localStorage.getItem('tp-server-workspace')!==owner)throw Error('非本测试账号，拒绝访问')
+ const backup=await readAccountBackup(owner),exported=await accountStorageForExport()
+ if(backup?.local['tp-private-draft']!==draft||exported.local['tp-private-draft']!==draft||localStorage.getItem('tp-private-draft')!==null)throw Error('合成备份或导出不一致')
+ output.textContent=JSON.stringify({passed:true,persistentPending:backup.pendingLocal,exportComplete:true,draftStillOnlyInIndexedDB:true},null,2)
+})
+action('#clean',async()=>{
+ if(localStorage.getItem('tp-server-workspace')!==owner)throw Error('非本测试账号，拒绝清理')
+ await database(store=>store.delete(owner))
+ for(const key of ['tp-server-workspace','threadpeak-theme','threadpeak-authenticated'])localStorage.removeItem(key)
+ output.textContent='只清理了本测试创建的账号备份和应用偏好。'
+})
+</script></body></html>

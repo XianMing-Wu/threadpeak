@@ -1,25 +1,23 @@
-import { MaterialChips, MaterialScope, Materials, useMaterials } from '../materials/Materials'
-import { rememberPathSearchScope } from '../path-planning/path-run-client'
-import { CHAT_LAUNCH_KEY } from '../history'
-import { useEffect, useState } from 'react'
+import { useEffect,useState } from 'react'
+import { launchChat } from '../chat/launch'
 import { Composer } from '../components/Composer'
-import { launchChat } from './Chat'
-import { readLearningThinking, subscribeLearningThinking, writeLearningThinking } from '../session/learning-thinking'
-import { openKnowledge, openConceptKnowledge, openRoute } from '../workspace/nav'
-import { useLibrarySelector } from '../runtime/use-library-selector'
-import { selectRecommendedKnowledge, selectRecommendedRoutes } from '../runtime/library-read-model'
 import { Icon } from '../icons'
+import { MaterialChips,MaterialScope,Materials,useMaterials } from '../materials/Materials'
+import { rememberPathSearchScope } from '../path-planning/path-run-client'
+import { selectRecommendedKnowledge,selectRecommendedRoutes } from '../runtime/library-read-model'
+import { useLibrarySelector } from '../runtime/use-library-selector'
+import { readLearningThinking,subscribeLearningThinking,writeLearningThinking } from '../session/learning-thinking'
 import { HomeLandscape } from '../ui/HomeLandscape'
 import { PeakWordmark } from '../ui/PeakWordmark'
+import { openConceptKnowledge,openKnowledge,openRoute } from '../workspace/nav'
 
-import {homeSuggestions} from '../showcase/content'
+import { homeSuggestions } from '../showcase/content'
 import '../showcase/showcase.css'
 const HOME_SELECT_ROUTE = 'threadpeak-home-select-route'
 
 export function HomePage() {
   const initial = sessionStorage.getItem('threadpeak-home-prefill') ?? ''
-  if (initial) sessionStorage.removeItem('threadpeak-home-prefill')
-  if (sessionStorage.getItem(HOME_SELECT_ROUTE) === '1') sessionStorage.removeItem(HOME_SELECT_ROUTE)
+  useEffect(()=>{sessionStorage.removeItem('threadpeak-home-prefill');sessionStorage.removeItem(HOME_SELECT_ROUTE)},[])
   const [value,setValue] = useState(initial)
   const materials=useMaterials()
   const [thinkingDepth, setThinkingDepth] = useState(readLearningThinking)
@@ -28,11 +26,8 @@ export function HomePage() {
     const query=value.trim()
     if(!query||!materials.ready)return
     writeLearningThinking(thinkingDepth)
-    launchChat(query, 'route', materials.attachments, thinkingDepth)
-    // launchChat writes this conversation synchronously; the hash route mounts afterwards.
-    // Keep scope keyed to that launch, so later home changes cannot alter a pending request.
-    const launch = JSON.parse(sessionStorage.getItem(CHAT_LAUNCH_KEY) ?? 'null')
-    if (launch?.conversationId) rememberPathSearchScope(`route-start:${launch.conversationId}`, materials.searchScope)
+    const conversationId=launchChat(query,'route',materials.attachments,thinkingDepth)
+    rememberPathSearchScope(`route-start:${conversationId}`,materials.searchScope)
   }
   const exampleKnowledge = useLibrarySelector(selectRecommendedKnowledge)
   const exampleRoutes = useLibrarySelector(selectRecommendedRoutes)

@@ -1,1 +1,1 @@
-export * from '../../packages/contracts/src/host-subject-flow.ts'
+export * from '@threadpeak/contracts/host-subject-flow'

@@ -1,4 +1,4 @@
-import {LearningGoalSchema} from '../../packages/contracts/src/learning-goal.ts'
+import {LearningGoalSchema} from '@threadpeak/contracts/learning-goal'
 import {z} from 'zod'
 import {createHash} from 'node:crypto'
 import {R4OutputSchema,type R4Output} from '../agent-runtime/schemas.ts'

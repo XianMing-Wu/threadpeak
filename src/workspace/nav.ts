@@ -1,6 +1,6 @@
 import type { RouteName } from '../components/Shell'
 import { resolveOpenLearningTarget } from '../session/resolve-learning-entry'
-import { getConceptGraph, getKnowledge, getRoute, hasSettledMineConcept, hasSettledMineConceptGraph, settledMineConceptIdsOf } from './store'
+import { getReadOnlyConceptGraph, getReadOnlyKnowledge, getRoute, hasSettledMineConceptGraph, settledMineConceptIdsOf } from './store'
 
 export const ACTIVE_ROUTE_KEY = 'threadpeak-active-route'
 export const ACTIVE_CONCEPT_KEY = 'threadpeak-active-concept'
@@ -80,7 +80,7 @@ export function openRoute(routeId: string, returnTo: RouteName = 'paths') {
 }
 
 export function openKnowledge(knowledgeId: string, returnTo: RouteName = 'knowledge'): boolean {
-  const knowledge = getKnowledge(knowledgeId)
+  const knowledge = getReadOnlyKnowledge(knowledgeId)
   if (!knowledge) return false
   if (knowledge.owner !== 'example' && settledMineConceptIdsOf(knowledge).length === 0) return false
   writeKey(ACTIVE_KNOWLEDGE_KEY, knowledgeId)
@@ -92,9 +92,9 @@ export function openKnowledge(knowledgeId: string, returnTo: RouteName = 'knowle
 }
 
 export function openConceptKnowledge(knowledgeId: string, conceptId: string, returnTo: RouteName = 'knowledge-detail'): boolean {
-  const knowledge = getKnowledge(knowledgeId)
+  const knowledge = getReadOnlyKnowledge(knowledgeId)
   if (!knowledge) return false
-  if (knowledge.owner !== 'example' && !hasSettledMineConceptGraph(getConceptGraph(knowledgeId, conceptId))) return false
+  if (knowledge.owner !== 'example' && !hasSettledMineConceptGraph(getReadOnlyConceptGraph(knowledgeId, conceptId))) return false
   writeKey(ACTIVE_KNOWLEDGE_KEY, knowledgeId)
   writeKey(KNOWLEDGE_CONCEPT_KEY, conceptId)
   writeKey(CANVAS_RETURN_KEY, returnTo === 'session-learning' ? 'session-learning' : 'knowledge-detail')
@@ -115,18 +115,4 @@ export function openLearning(routeId: string, conceptId?: string, returnTo: Rout
   const knowledge = getRoute(target.routeId)?.knowledgeId
   if (knowledge) writeKey(ACTIVE_KNOWLEDGE_KEY, knowledge)
   location.hash = 'session-learning'
-}
-
-export function openKnowledgeFromSession(): boolean {
-  const routeId = readActiveRouteId()
-  const conceptId = readActiveConceptId()
-  if (!routeId || !conceptId) return false
-  const route = getRoute(routeId)
-  if (route?.owner === 'mine' && !hasSettledMineConcept(routeId, conceptId)) return false
-  writeKey(ACTIVE_ROUTE_KEY, routeId)
-  writeKey(KNOWLEDGE_CONCEPT_KEY, conceptId)
-  writeKey(CANVAS_RETURN_KEY, 'session-learning')
-  writeKey(ACTIVE_KNOWLEDGE_KEY, route?.knowledgeId ?? '')
-  location.hash = 'knowledge-detail'
-  return true
 }

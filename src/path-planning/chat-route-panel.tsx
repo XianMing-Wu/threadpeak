@@ -61,7 +61,7 @@ export function ChatRoutePanel(props: {
   existingRouteId?: string
   thinkingDepth?: 'fast' | 'deep'
   onRouteReady: (routeId: string) => void
-  onSender?: (handler: (text: string) => void) => void
+  onSender?: (handler: (text: string) => Promise<boolean>) => void
   onGenerating?: (busy: boolean) => void
   onStopRef?: (stop: () => void) => void
 }) {
@@ -80,7 +80,10 @@ export function ChatRoutePanel(props: {
   readyRef.current = readyRouteId
   const [confirmed, setConfirmed] = useState<Record<string, string>>({})
   const launched = useRef('')
+  const libraryStages=useRef(new Set<string>())
   const abortRef = useRef<AbortController | null>(null)
+  const mounted=useRef(true)
+  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;launched.current='';abortRef.current?.abort()}},[])
 
   const persistTrace = (steps: readonly ProcessStep[], extra?: { pathRunId?: string; routeId?: string; routeStep?: number }) => {
     const processTrace = uniqueTrace(steps)
@@ -107,7 +110,10 @@ export function ChatRoutePanel(props: {
   }
 
   const apply = (next: PathRunView, options?: { dropOnFail?: boolean }) => {
+    if(!mounted.current)return
     setView(next)
+    const libraryStage=`${next.runId}:${next.status}`
+    if(next.runId&&!libraryStages.current.has(libraryStage)){libraryStages.current.add(libraryStage);void refreshProductLibrary().catch(()=>{})}
     setConfirmed(Object.assign({},...next.questionSets.map(set=>set.selectedOptionIds)))
     if (next.status === 'failed') {
       // A recoverable task retains its history and selected answers.
@@ -147,12 +153,16 @@ export function ChatRoutePanel(props: {
     props.onGenerating?.(true)
     const watch: PathRunWatch = {
       commandKey:`route-start:${props.conversationId}`,
-      onUpdate: (next) => apply(next, { dropOnFail: false }),
+      onUpdate: (next) => {if(abortRef.current===abort&&!abort.signal.aborted)apply(next, { dropOnFail: false })},
       signal: abort.signal,
     }
     try {
-      apply(await work(watch), { dropOnFail: true })
+      const next=await work(watch)
+      if(!mounted.current||abortRef.current!==abort)return false
+      apply(next, { dropOnFail: true })
+      return next.status!=='failed'
     } catch (error) {
+      if(!mounted.current||abortRef.current!==abort)return false
       if (error instanceof DOMException && error.name === 'AbortError') {
         setView((current) => {
           if (!current) return {
@@ -174,7 +184,7 @@ export function ChatRoutePanel(props: {
           }
         })
         persistTrace(settleTrace(keptRef.current, 'stopped'))
-        return
+        return false
       }
       setView({
         runId: view?.runId ?? '',
@@ -186,9 +196,9 @@ export function ChatRoutePanel(props: {
         knowledgeCreated: false,
         error: { code: 'PROVIDER_UNAVAILABLE', message: error instanceof Error ? error.message : '路线服务不可用。' },
       })
+      return false
     } finally {
-      setPending(false)
-      props.onGenerating?.(false)
+      if(mounted.current&&abortRef.current===abort){setPending(false);props.onGenerating?.(false)}
     }
   }
 
@@ -225,10 +235,10 @@ export function ChatRoutePanel(props: {
       void getPathRun(runId, abort.signal).then((next) => watchPathRun(next, {
         onUpdate: (current) => apply(current, { dropOnFail: false }),
         signal: abort.signal,
-      })).then((next) => apply(next, { dropOnFail: false })).catch((error) => {
-        if (error instanceof DOMException && error.name === 'AbortError') return
+      })).then((next) => {if(!abort.signal.aborted)apply(next, { dropOnFail: false })}).catch((error) => {
+        if (!mounted.current || abort.signal.aborted || error instanceof DOMException && error.name === 'AbortError') return
         setView(current=>current?{...current,status:'failed',error:{code:'PROVIDER_UNAVAILABLE',message:'正在恢复这次路线，已有选择仍然保留。'}}:current)
-      }).finally(() => props.onGenerating?.(false))
+      }).finally(() => {if(mounted.current&&!abort.signal.aborted)props.onGenerating?.(false)})
       return
     }
     if (existing) {
@@ -244,19 +254,19 @@ export function ChatRoutePanel(props: {
   }, [props.existingRouteId, props.conversationId, props.query])
 
   useEffect(() => {
-    props.onSender?.((text) => {
-      if (!view) return
+    props.onSender?.(async (text) => {
+      if (!view) return false
       if (view.status === 'awaiting_answers') {
-        void run((watch) => followUpPathRun(view.runId, text, watch))
-        return
+        return run((watch) => followUpPathRun(view.runId, text, watch))
       }
       if (view.status === 'published') {
-        void run(async (watch) => {
+        return run(async (watch) => {
           const next = await replyPathRun(view.runId, text, watch)
-          if (next.reply) setReplies((current) => [...current, { user: text, assistant: next.reply ?? '' }])
+          if (mounted.current&&next.reply) setReplies((current) => [...current, { user: text, assistant: next.reply ?? '' }])
           return next
         })
       }
+      return false
     })
   }, [props, view])
 
@@ -353,8 +363,8 @@ export function ChatRoutePanel(props: {
         eyebrow="本次生成未完成"
         title="学习路线还没生成完"
         body={publicPathErrorMessage(view.error?.message)}
-        action="重试这一步"
-        onAction={retryLastStep}
+        action={view.recoverable===false?undefined:"重试这一步"}
+        onAction={view.recoverable===false?undefined:retryLastStep}
       />
     </section>}
     {(view?.status === 'published' || (!view && existing)) && enterRouteId && <RouteReadyCard title={publishedTitle} routeId={enterRouteId}/>}

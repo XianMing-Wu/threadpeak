@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react'
-import type {NetworkEvidence} from '../../packages/contracts/src/authors'
-import {authorLearningHref} from '../../packages/contracts/src/authors'
+import type {NetworkEvidence} from '@threadpeak/contracts/authors'
+import {authorLearningHref} from '@threadpeak/contracts/authors'
 import {productRequest,type LearningSnapshot} from './client'
 import {refreshProductLibrary,useProductLibrary} from './library'
 import {Glyph} from './atoms'

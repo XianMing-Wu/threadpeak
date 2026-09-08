@@ -1,0 +1,11 @@
+✔ PGlite events reject stale revisions without a caller lock and roll back sequence conflicts (486.631667ms)
+✔ HTTP buckets are shared by API instances, survive recreation, and expire using database time (351.484833ms)
+✔ shared limit storage errors reject API admission while process liveness stays independent (2.715042ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1108.779792

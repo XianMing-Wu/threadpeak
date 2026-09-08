@@ -1,4 +1,6 @@
 import { requestAuthStart } from '../runtime/request-auth-session'
+import { useAccountRecovery } from '../learning-v2/account-storage'
+import { exportLocalArchive } from '../workspace/snapshot-cache'
 import { useEffect, useState } from 'react'
 import { EmptyStatus } from '../components/EmptyStatus'
 import { Icon, MountainMark } from '../icons'
@@ -9,6 +11,7 @@ export function AuthLanding({ theme, onThemeChange, onAuthorize }: {
   onThemeChange: () => void
   onAuthorize: () => void
 }) {
+  const recovery=useAccountRecovery()
   const [config,setConfig]=useState<{mode:string;loginUrl:string|null;zhihuAvailable:boolean;zhihuMode?:'real'|'mock'|null}|null>(null)
   useEffect(()=>{void fetch('/api/auth/config').then(r=>r.json()).then(setConfig).catch(()=>{})},[])
   const [oauthNotice,setOauthNotice]=useState<AuthSessionResolution|null>(null)
@@ -48,6 +51,10 @@ export function AuthLanding({ theme, onThemeChange, onAuthorize }: {
         {config?.zhihuMode==='mock'?'进入演示账号':config?.zhihuAvailable?'使用知乎账号登录':config?.mode==='local'?'继续学习':'登录并继续'}<Icon name="arrow-right" size={18}/>
       </button>
       {config?.zhihuAvailable&&config.mode==='local'&&<button type="button" className="lp-text-button" onClick={onAuthorize}>继续使用本地工作区</button>}
+      {recovery&&<aside>
+        <p role="alert">本机有一份草稿备份尚未完整恢复。即使暂时无法登录，也可以先导出备份。</p>
+        <button type="button" className="lp-text-button" onClick={exportLocalArchive}>导出本地备份</button>
+      </aside>}
       {oauthNotice && (
         <EmptyStatus
           kind="error"

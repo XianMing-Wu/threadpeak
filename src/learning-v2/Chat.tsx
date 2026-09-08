@@ -1,5 +1,5 @@
 import type {TaskView} from './client'
-import type {TaskActivity} from '../../packages/contracts/src/task-activity.ts'
+import type {TaskActivity} from '@threadpeak/contracts/task-activity'
 import { MarkdownMath } from '../lib/MarkdownMath'
 import { useLearningData } from './data'
 import { useEffect, useRef, useState } from 'react'
@@ -43,7 +43,7 @@ export function ChatPanel({ conversation, selected, nodes, depth, onDepth, onRem
           {draft&&<div className="lp-streaming" aria-live="off"><MarkdownMath source={draft} streaming/></div>}
           <ActivityList activities={activities} waiting={waiting||task?.status==='queued'} part="after"/>
           {(!activities.length||task?.status==='queued')&&!waiting&&<StatusPill busy>{task?.phase??'正在准备回答'}</StatusPill>}
-          {waiting&&<div className="lp-answer-paused" role="status"><p>这次讲解还没完成，已生成的内容保留在这里。</p><button className="lp-secondary" onClick={onRetry}>继续完成</button><button className="lp-secondary" onClick={onStop}>停止本次任务</button></div>}
+          {waiting&&<div className="lp-answer-paused" role="status"><p>这次讲解还没完成，已生成的内容保留在这里。</p>{task?.recoverable?<button className="lp-secondary" onClick={onRetry}>继续完成</button>:<span>本次重试次数已用完。</span>}<button className="lp-secondary" onClick={onStop}>停止本次任务</button></div>}
         </div>
       </article>}
     </div>

@@ -1,4 +1,4 @@
-import { LearningGoalSchema, ConceptAlignmentSchema } from '../../packages/contracts/src/learning-goal.ts'
+import { LearningGoalSchema, ConceptAlignmentSchema } from '@threadpeak/contracts/learning-goal'
 import { z } from 'zod'
 import { isLiuKanshanName } from '../ports.ts'
 import type { AgentId, AuthorCandidate, L0aAngle } from './types.ts'

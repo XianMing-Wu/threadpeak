@@ -1,45 +1,38 @@
+import { useEffect,useState } from 'react'
+import { type AssistantMode } from '../assistant-mode'
+import { addChatHistory,readChatHistory,retainChatHistory } from '../history'
 import { hostDocumentChanged } from '../path-3d/host-document-persistence'
-import { useEffect, useState } from 'react'
-import { normalizeAssistantMode, type AssistantMode } from '../assistant-mode'
-import { addChatHistory, readChatHistory, retainChatHistory } from '../history'
-import {
-  blueprintConcepts,
-  catalogLesson,
-  conceptAccent,
-  conceptTitle,
-  draftFirstLesson,
-  exampleBlueprints,
-  exampleKnowledgeRecord,
-  findExampleBlueprint,
-  graphFromLesson,
-  routeRecordFromBlueprint,
-} from './catalog'
-import { collapseParallelHosts, conversationHostAfterGrow, findMergeTarget, growFollowUpCard, growGraph, growKindFromRelation, inferGrowKind, mergeConversationBranch, parseGrowCommand, parseQuotedUserTurn, parseTurnHost, plainQuoteText, readGrowCommand, replyCardTitle, resolveQuotedHost } from '../knowledge-canvas/generate'
-import { resolveGraphMutation, resolveKnowledgeMigration } from '../session/resolve-learning-entry'
-import { lessonFromCanonical } from '../session/request-canonical-answer.ts'
-import { projectBootstrappedGraph } from '../knowledge-canvas/project-bootstrapped-graph.ts'
-import { isUsableAssistantTurn, mergeSuccessfulLearningTurn } from './merge-learning-turns'
-import type { GraphSnapshot } from '../session/request-graph-bootstrap.ts'
 import { isRenderableMineRoute } from '../path-3d/resolved-path-document.ts'
+import { asProcessSteps,uniqueTrace,type ProcessStep } from '../process-trace'
+import { readableLayerTitle,titleFromPathLayer } from '../session/layer-title.ts'
+import {
+blueprintConcepts,
+catalogLesson,
+conceptAccent,
+conceptTitle,
+exampleBlueprints,
+exampleKnowledgeRecord,
+findExampleBlueprint,
+graphFromLesson,
+routeRecordFromBlueprint
+} from './catalog'
 import { mineRouteFromValidatedDocument } from './published-route'
-import type {
-  ChatExperience,
-  ConceptCard,
-  ConversationKind,
-  ConversationRecord,
-  FirstLesson,
-  KnowledgeCard,
-  KnowledgeGraph,
-  KnowledgeRecord,
-  LearningTurn,
-  RouteBlueprint,
-  RouteCard,
-  RouteRecord,
-  WorkspaceSnapshot,
-} from './types'
 import { hasSettledMineConceptGraph } from './settled-mine-graph.ts'
-import { readableLayerTitle, titleFromPathLayer } from '../session/layer-title.ts'
-import { asProcessSteps, uniqueTrace, type ProcessStep } from '../process-trace'
+import { projectionDraft,readMergedSnapshot,readSnapshot,PROJECTION_KEY,writeProjection } from './snapshot-cache'
+import type {
+ConceptCard,
+ConversationKind,
+ConversationRecord,
+FirstLesson,
+KnowledgeCard,
+KnowledgeGraph,
+KnowledgeRecord,
+LearningTurn,
+RouteBlueprint,
+RouteCard,
+RouteRecord,
+WorkspaceSnapshot
+} from './types'
 
 export { hasSettledMineConceptGraph } from './settled-mine-graph.ts'
 
@@ -100,55 +93,7 @@ export function saveConversationTrace(
   })
 }
 
-const emptySnapshot = (): WorkspaceSnapshot => ({
-  version: 1,
-  routes: [],
-  knowledge: [],
-  conversations: [],
-  lessons: {},
-})
-
-function lessonKey(routeId: string, conceptId: string) {
-  return `${routeId}::${conceptId}`
-}
-
-function validSnapshot(value: unknown): value is WorkspaceSnapshot {
-  if (!value || typeof value !== 'object') return false
-  const snap = value as WorkspaceSnapshot
-  return snap.version === 1 && Array.isArray(snap.routes) && Array.isArray(snap.knowledge) && Array.isArray(snap.conversations) && !!snap.lessons
-}
-
-function migrateConversationModes(snapshot: WorkspaceSnapshot): WorkspaceSnapshot {
-  let dirty = false
-  const conversations = snapshot.conversations.map((conversation) => {
-    const raw = conversation as { mode?: unknown; experience?: unknown; kind?: unknown }
-    const mode = normalizeAssistantMode(raw.mode)
-    const experience: ChatExperience = raw.experience === 'route' ? 'route' : 'answer'
-    const kind: ConversationKind = raw.kind === 'home-visual' ? 'home-answer' : conversation.kind
-    let turnsChanged = false
-    const turns = conversation.turns.map((turn) => {
-      const rawMode = (turn as { mode?: unknown }).mode
-      if (rawMode === undefined) return turn
-      const nextMode = normalizeAssistantMode(rawMode)
-      const dropVisual = rawMode === 'visual'
-      if (nextMode === rawMode && !dropVisual) return turn
-      turnsChanged = true
-      const next: LearningTurn = dropVisual ? { ...turn, failed: true } : { ...turn }
-      if (nextMode) return { ...next, mode: nextMode }
-      const { mode: _ignored, ...rest } = next
-      return rest
-    })
-    if (mode === conversation.mode && experience === conversation.experience && kind === conversation.kind && !turnsChanged) {
-      return conversation
-    }
-    dirty = true
-    return { ...conversation, mode, experience, kind, turns }
-  })
-  if (!dirty) return snapshot
-  const next = { ...snapshot, conversations }
-  localStorage.setItem(WORKSPACE_KEY, JSON.stringify(next))
-  return next
-}
+function lessonKey(routeId: string, conceptId: string) { return `${routeId}::${conceptId}` }
 
 export function useWorkspaceTick() {
   const [tick, setTick] = useState(0)
@@ -164,64 +109,12 @@ export function useWorkspaceTick() {
   return tick
 }
 
-function isLegacyLesson(lesson?: FirstLesson) {
-  return Boolean(lesson?.paragraphs.some((paragraph) => paragraph.includes('这是你第一次进入') && paragraph.includes('而不是套用别的路线的讲稿')))
-}
-
-function migrateKnowledge(snapshot: WorkspaceSnapshot): WorkspaceSnapshot {
-  let dirty = false
-  const lessons = { ...snapshot.lessons }
-  const knowledge = snapshot.knowledge.map((item) => {
-    const example = findExampleBlueprint(item.routeId)
-    if (resolveKnowledgeMigration({ owner: item.owner, routeId: item.routeId, ...(example ? { hasExampleBlueprint: true } : {}) }).kind !== 'rewrite-example' || !example) return item
-    const mixed = item.graph.nodes.some((node) => node.id.startsWith('c-'))
-    const graphs = conceptGraphsOf(item)
-    const route = snapshot.routes.find((entry) => entry.id === item.routeId)
-    const nextGraphs: Record<string, KnowledgeGraph> = { ...graphs }
-    let itemDirty = !item.graphs || mixed
-    for (const conceptId of Object.keys(graphs)) {
-      const current = lessons[lessonKey(item.routeId, conceptId)]
-      if (item.graphs?.[conceptId] && !isLegacyLesson(current) && !mixed) continue
-      const fresh = draftFirstLesson(example, conceptId)
-      lessons[lessonKey(item.routeId, conceptId)] = fresh
-      nextGraphs[conceptId] = graphFromLesson(conceptTitle(example, conceptId), fresh, conceptAccent(example, conceptId))
-      itemDirty = true
-    }
-    if (!itemDirty) return item
-    dirty = true
-    return {
-      ...item,
-      description: route?.summary ?? item.description,
-      graph: nextGraphs[item.seedConceptId] ?? { nodes: item.graph.nodes.filter((node) => node.id === 'root'), edges: [] },
-      graphs: nextGraphs,
-    }
-  })
-  if (!dirty) return snapshot
-  const next = { ...snapshot, knowledge, lessons }
-  localStorage.setItem(WORKSPACE_KEY, JSON.stringify(next))
-  return next
-}
-
-export function readWorkspace(): WorkspaceSnapshot {
-  try {
-    const raw = localStorage.getItem(WORKSPACE_KEY)
-    if (!raw) return emptySnapshot()
-    const parsed = JSON.parse(raw) as unknown
-    return validSnapshot(parsed) ? migrateKnowledge(migrateConversationModes(parsed)) : emptySnapshot()
-  } catch {
-    return emptySnapshot()
-  }
-}
-
-function writeWorkspace(snapshot: WorkspaceSnapshot) {
-  localStorage.setItem(WORKSPACE_KEY, JSON.stringify(snapshot))
-  window.dispatchEvent(new Event(WORKSPACE_EVENT))
-}
-
+export const readWorkspace = readMergedSnapshot
 function mutate(update: (snapshot: WorkspaceSnapshot) => void) {
-  const snapshot = readWorkspace()
+  const snapshot=projectionDraft()
   update(snapshot)
-  writeWorkspace(snapshot)
+  writeProjection(snapshot)
+  window.dispatchEvent(new Event(WORKSPACE_EVENT))
   return snapshot
 }
 
@@ -271,11 +164,7 @@ export function settledMineConceptIdsOf(item: KnowledgeRecord): string[] {
     .map(([id]) => id)
 }
 
-export function hasSettledMineConcept(routeId: string, conceptId: string): boolean {
-  const knowledge = getKnowledgeByRoute(routeId)
-  if (!knowledge || knowledge.owner === 'example') return false
-  return hasSettledMineConceptGraph(getConceptGraph(knowledge.id, conceptId))
-}
+
 
 function toKnowledgeCard(item: KnowledgeRecord): KnowledgeCard {
   return {
@@ -292,21 +181,23 @@ function toKnowledgeCard(item: KnowledgeRecord): KnowledgeCard {
 
 export function listRoutes(owner: 'mine' | 'example'): RouteCard[] {
   if (owner === 'example') return exampleRoutes().map(toRouteCard)
-  return readWorkspace().routes.filter(isRenderableMineRoute).map(toRouteCard)
+  return readSnapshot(PROJECTION_KEY).routes.filter(isRenderableMineRoute).map(toRouteCard)
 }
 
-export function listKnowledge(owner: 'mine' | 'example'): KnowledgeCard[] {
-  if (owner === 'example') return exampleKnowledge().map(toKnowledgeCard)
-  return readWorkspace().knowledge
-    .filter((item) => item.owner !== 'example' && settledMineConceptIdsOf(item).length > 0)
-    .map(toKnowledgeCard)
+/** Read-only showcase data; current user knowledge comes from ProductLibrary. */
+export function listExampleKnowledge(): KnowledgeCard[] {
+  return exampleKnowledge().map(toKnowledgeCard)
 }
 
 export function getRoute(id: string): RouteRecord | undefined {
   const key = id.trim()
   if (!key) return undefined
-  const match = (item: RouteRecord) => item.id === key || item.document.id === key
-  return readWorkspace().routes.find(match) ?? exampleRoutes().find(match)
+  const routes=readWorkspace().routes
+  const exact=routes.find(item=>item.id===key)
+  if(exact)return exact
+  const aliases=routes.filter(item=>item.document.id===key)
+  if(aliases.length)return aliases.length===1?aliases[0]:undefined
+  return findExampleBlueprint(key)?exampleRoutes().find(item=>item.id===key):undefined
 }
 
 export function persistRepairedMineDocument(routeId: string, document: RouteRecord['document']) {
@@ -319,31 +210,32 @@ export function persistRepairedMineDocument(routeId: string, document: RouteReco
   })
 }
 
-export function getKnowledge(id: string): KnowledgeRecord | undefined {
+/** These accessors only read legacy archives or named examples, never server knowledge. */
+export function getReadOnlyKnowledge(id: string): KnowledgeRecord | undefined {
   return readWorkspace().knowledge.find((item) => item.id === id) ?? exampleKnowledge().find((item) => item.id === id)
 }
 
-export function getKnowledgeByRoute(routeId: string): KnowledgeRecord | undefined {
+export function getReadOnlyKnowledgeByRoute(routeId: string): KnowledgeRecord | undefined {
   const route = getRoute(routeId)
-  if (route?.knowledgeId) return getKnowledge(route.knowledgeId)
-  return undefined
+  if (route?.knowledgeId) {const knowledge=getReadOnlyKnowledge(route.knowledgeId);if(knowledge)return knowledge}
+  return readWorkspace().knowledge.find(k=>k.routeId===routeId)
 }
 
-export function getConceptGraph(knowledgeId: string, conceptId: string): KnowledgeGraph | undefined {
-  const knowledge = getKnowledge(knowledgeId)
+export function getReadOnlyConceptGraph(knowledgeId: string, conceptId: string): KnowledgeGraph | undefined {
+  const knowledge = getReadOnlyKnowledge(knowledgeId)
   if (!knowledge) return undefined
   const stored = conceptGraphsOf(knowledge)[conceptId]
   if (knowledge.owner !== 'example') {
-    return hasSettledMineConceptGraph(stored) ? stored : undefined
+    return stored
   }
   if (stored) return stored
-  const lesson = getLesson(knowledge.routeId, conceptId)
+  const lesson = getReadOnlyLesson(knowledge.routeId, conceptId)
   if (!lesson) return undefined
   return graphFromLesson(conceptTitle(blueprintOf(knowledge.routeId), conceptId), lesson, conceptAccent(blueprintOf(knowledge.routeId), conceptId))
 }
 
-export function listConceptCards(knowledgeId: string): ConceptCard[] {
-  const knowledge = getKnowledge(knowledgeId)
+export function listReadOnlyConceptCards(knowledgeId: string): ConceptCard[] {
+  const knowledge = getReadOnlyKnowledge(knowledgeId)
   if (!knowledge) return []
   const blueprint = blueprintOf(knowledge.routeId)
   const learned = knowledge.owner === 'example'
@@ -357,7 +249,7 @@ export function listConceptCards(knowledgeId: string): ConceptCard[] {
     knowledgeId: knowledge.id,
     routeId: knowledge.routeId,
     title: item.title,
-    description: getLesson(knowledge.routeId, item.id)?.heading || item.summary,
+    description: getReadOnlyLesson(knowledge.routeId, item.id)?.heading || item.summary,
     icon: knowledge.icon,
     sources: knowledge.sources,
     type: knowledge.type,
@@ -368,17 +260,13 @@ export function getConversation(id: string): ConversationRecord | undefined {
   return readWorkspace().conversations.find((item) => item.id === id)
 }
 
-export function getLesson(routeId: string, conceptId: string): FirstLesson | undefined {
+export function getReadOnlyLesson(routeId: string, conceptId: string): FirstLesson | undefined {
   const stored = readWorkspace().lessons[lessonKey(routeId, conceptId)]
   if (stored) return stored
   return catalogLesson(routeId, conceptId)
 }
 
-export function hasGeneratedLesson(routeId: string, conceptId: string) {
-  const route = getRoute(routeId)
-  if (route?.owner !== 'example') return false
-  return Boolean(catalogLesson(routeId, conceptId))
-}
+
 
 function newId(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
@@ -591,333 +479,10 @@ export function blueprintOf(routeId: string) {
   return draftFromRoute(getRoute(routeId))
 }
 
-export function syncKnowledgeWithFirstLesson(routeId: string, conceptId: string): { lesson?: FirstLesson; knowledge?: KnowledgeRecord; createdKnowledge: false } {
-  const route = getRoute(routeId)
-  if (route?.owner !== 'example') return { createdKnowledge: false }
-  const lesson = catalogLesson(routeId, conceptId)
-  if (!lesson) return { createdKnowledge: false }
-  return { lesson, knowledge: getKnowledgeByRoute(routeId), createdKnowledge: false }
-}
+
 
 export function saveConversationDraft(id: string, draft: { turns?: LearningTurn[]; value?: string; quote?: string; mode?: AssistantMode }) {
   saveConversation(id, draft)
-}
-
-export function saveKnowledgeGraph(knowledgeId: string, graph: KnowledgeRecord['graph'], conceptId?: string) {
-  mutate((snapshot) => {
-    const write = (item: KnowledgeRecord): KnowledgeRecord => {
-      const key = conceptId || item.seedConceptId
-      const graphs = { ...conceptGraphsOf(item), [key]: graph }
-      return {
-        ...item,
-        graph: key === item.seedConceptId ? graph : item.graph,
-        graphs,
-        updatedAt: Date.now(),
-      }
-    }
-    if (snapshot.knowledge.some((item) => item.id === knowledgeId)) {
-      snapshot.knowledge = snapshot.knowledge.map((item) => item.id === knowledgeId ? write(item) : item)
-      return
-    }
-    const cataloged = exampleKnowledge().find((item) => item.id === knowledgeId)
-    if (cataloged) snapshot.knowledge = [write(cataloged), ...snapshot.knowledge]
-  })
-}
-
-export function ensureMineKnowledgeFromCanonical(input: {
-  routeId: string
-  conceptId: string
-  title: string
-  text: string
-  contentHash: string
-  graph: GraphSnapshot
-}): { knowledgeId: string } | undefined {
-  const route = getRoute(input.routeId)
-  if (route?.owner !== 'mine') return undefined
-  const projected = projectBootstrappedGraph(input.graph, {
-    text: input.text,
-    contentHash: input.contentHash,
-  }, conceptAccent(blueprintOf(input.routeId), input.conceptId))
-  if (projected.kind !== 'ready' || !projected.nodes[0]) return undefined
-  const lesson = lessonFromCanonical(input.title, input.text)
-  const seeded = { nodes: projected.nodes, edges: projected.edges }
-  const knowledgeId = route.knowledgeId || `knowledge-${input.routeId}`
-  mutate((snapshot) => {
-    snapshot.lessons[lessonKey(input.routeId, input.conceptId)] = lesson
-    const existing = snapshot.knowledge.find((item) => item.id === knowledgeId || item.routeId === input.routeId)
-    if (existing) {
-      const graphs = { ...conceptGraphsOf(existing) }
-      const current = graphs[input.conceptId]
-      graphs[input.conceptId] = current && current.nodes.length > 1 ? current : seeded
-      snapshot.knowledge = snapshot.knowledge.map((item) => item.id === existing.id ? {
-        ...item,
-        graphs,
-        graph: input.conceptId === item.seedConceptId ? graphs[input.conceptId] ?? item.graph : item.graph,
-        updatedAt: Date.now(),
-      } : item)
-    } else {
-      snapshot.knowledge = [{
-        id: knowledgeId,
-        routeId: input.routeId,
-        owner: 'mine',
-        title: route.title,
-        description: route.summary,
-        icon: route.icon,
-        sources: 0,
-        type: '我的知识脉络',
-        seedConceptId: input.conceptId,
-        graph: seeded,
-        graphs: { [input.conceptId]: seeded },
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      }, ...snapshot.knowledge]
-    }
-    snapshot.routes = snapshot.routes.map((item) => item.id === input.routeId ? { ...item, knowledgeId } : item)
-  })
-  return { knowledgeId }
-}
-
-export function dropMineConceptGraph(routeId: string, conceptId: string) {
-  mutate((snapshot) => {
-    const knowledge = snapshot.knowledge.find((item) => item.routeId === routeId && item.owner !== 'example')
-    if (!knowledge) return
-    const graphs = { ...conceptGraphsOf(knowledge) }
-    delete graphs[conceptId]
-    delete snapshot.lessons[lessonKey(routeId, conceptId)]
-    const remaining = Object.entries(graphs).filter(([, graph]) => hasSettledMineConceptGraph(graph))
-    if (remaining.length === 0) {
-      snapshot.knowledge = snapshot.knowledge.filter((item) => item.id !== knowledge.id)
-      snapshot.routes = snapshot.routes.map((item) => item.id === routeId ? { ...item, knowledgeId: null } : item)
-      return
-    }
-    const nextGraphs = Object.fromEntries(remaining)
-    snapshot.knowledge = snapshot.knowledge.map((item) => item.id === knowledge.id ? {
-      ...item,
-      graphs: nextGraphs,
-      graph: nextGraphs[item.seedConceptId] ?? remaining[0][1],
-      updatedAt: Date.now(),
-    } : item)
-  })
-}
-
-function replyParagraphs(reply: string) {
-  return [reply]
-}
-
-function isFailureSentinel(reply: string) {
-  return reply === 'authors' || reply === 'coach'
-}
-
-export function syncConversationGraph(
-  routeId: string,
-  conceptId: string,
-  conversationId: string,
-  turns?: LearningTurn[],
-) {
-  const knowledge = getKnowledgeByRoute(routeId)
-  const existingGraph = knowledge ? getConceptGraph(knowledge.id, conceptId) : undefined
-  const hasRoot = Boolean(existingGraph?.nodes.some((node) => node.id === 'root'))
-  if (!knowledge || resolveGraphMutation({ routeId, owner: knowledge.owner, hasRoot }).kind === 'reject') return
-  const conversation = getConversation(conversationId)
-  const lesson = getLesson(routeId, conceptId)
-  if (!lesson) return
-  const blueprint = blueprintOf(routeId)
-  const existingRoot = existingGraph?.nodes.find((node) => node.id === 'root')
-  const root = existingRoot ?? {
-    ...graphFromLesson(conceptTitle(blueprint, conceptId), lesson, conceptAccent(blueprint, conceptId)).nodes[0],
-    id: 'root',
-  }
-  const existing = existingGraph
-  const foreignNodes = (existing?.nodes ?? []).filter((node) => {
-    if (node.id === 'root') return false
-    if (/^g\d+$/.test(node.id)) return Boolean(node.conversationId && node.conversationId !== conversationId)
-    return true
-  })
-  const keep = new Set(['root', ...foreignNodes.map((node) => node.id)])
-  const foreignEdges = (existing?.edges ?? []).filter((edge) => keep.has(edge.from) && keep.has(edge.to))
-  let branchNodes: KnowledgeGraph['nodes'] = [root]
-  let branchEdges: KnowledgeGraph['edges'] = []
-  let hostId = 'root'
-  let lastCreatedId = ''
-  const replay = (turns ?? conversation?.turns ?? []).map((item) => ({ ...item }))
-  const createdAtTurn = new Map<number, string>()
-  for (let index = 0; index < replay.length; index += 1) {
-    const user = replay[index]
-    const assistant = replay[index + 1]
-    if (user.role !== 'user' || user.failed || !isUsableAssistantTurn(assistant)) continue
-    const assistantIndex = index + 1
-    index += 1
-    const parsed = parseQuotedUserTurn(user.text)
-    const command = parseGrowCommand(parsed.question) ?? readGrowCommand(parsed.question) ?? readGrowCommand(user.text)
-    const quote = user.quote || parsed.quote || plainQuoteText(user.text)
-    const asked = command ? command.question : parsed.question.replace(/^[123]\s*/, '').trim()
-    const kind = user.growSource === 'command' && user.grow
-      ? user.grow
-      : user.growSource === 'model' && user.grow
-        ? user.grow
-        : (command?.kind ?? inferGrowKind(asked, quote))
-    const turnHostId = (() => {
-      const turnIndex = parseTurnHost(user.quoteFromId)
-      return turnIndex == null ? undefined : createdAtTurn.get(turnIndex)
-    })()
-    const attachId = user.growSource === 'model' && user.quoteFromId && [...foreignNodes, ...branchNodes].some((node) => node.id === user.quoteFromId)
-      ? user.quoteFromId
-      : resolveQuotedHost([...foreignNodes, ...branchNodes], hostId, quote, user.quoteFromId, turnHostId)
-    const poolNodes = [...foreignNodes.filter((node) => !branchNodes.some((item) => item.id === node.id)), ...branchNodes]
-    const poolEdges = [...foreignEdges.filter((edge) => !branchEdges.some((item) => item.id === edge.id)), ...branchEdges]
-    const mergeNodeId = user.mergeNodeId ?? findMergeTarget(poolNodes, poolEdges, attachId, kind, asked, quote)?.id
-    if (mergeNodeId && !branchNodes.some((node) => node.id === mergeNodeId)) {
-      const borrowed = foreignNodes.find((node) => node.id === mergeNodeId)
-      if (borrowed) {
-        branchNodes = [...branchNodes, borrowed]
-        branchEdges = [...branchEdges, ...foreignEdges.filter((edge) => edge.from === borrowed.id || edge.to === borrowed.id)]
-      }
-    }
-    const grown = user.growSource === 'model' && user.grow && user.growTitle && user.growReason
-      ? growFollowUpCard({
-        nodes: branchNodes,
-        edges: branchEdges,
-        hostId: attachId,
-        relation: user.grow === 'pred' ? 'predecessor' : user.grow === 'succ' ? 'successor' : 'parallel',
-        title: user.growTitle,
-        body: assistant.text,
-        question: asked,
-        quote,
-        edgeExplanation: user.growReason,
-        conversationId,
-      })
-      : growGraph(branchNodes, branchEdges, attachId, kind, asked, quote, {
-        title: user.growTitle || replyCardTitle(assistant.text, asked || quote || root.title),
-        question: quote ? `引用「${quote}」${asked ? ` ${asked}` : ''}` : asked,
-        replyKind: 'full',
-        paragraphs: replyParagraphs(assistant.text),
-      }, conversationId, mergeNodeId, user.growReason)
-    if (!grown) continue
-    branchNodes = grown.nodes
-    branchEdges = grown.edges
-    createdAtTurn.set(assistantIndex, grown.created.id)
-    lastCreatedId = grown.created.id
-    replay[assistantIndex] = { ...assistant, nodeId: grown.created.id }
-    replay[assistantIndex - 1] = {
-      ...user,
-      quote,
-      grow: kind,
-      growSource: user.growSource ?? (command ? 'command' : 'heuristic'),
-      quoteFromId: user.quoteFromId,
-      mergeNodeId: grown.created.id === mergeNodeId ? mergeNodeId : user.mergeNodeId,
-    }
-    hostId = conversationHostAfterGrow(kind, attachId, grown.created.id)
-  }
-  const liveForeign = foreignNodes.filter((node) => !branchNodes.some((item) => item.id === node.id))
-  const liveForeignIds = new Set(['root', ...liveForeign.map((node) => node.id)])
-  const liveForeignEdges = foreignEdges.filter((edge) => liveForeignIds.has(edge.from) && liveForeignIds.has(edge.to))
-  const merged = mergeConversationBranch(root, liveForeign, liveForeignEdges, branchNodes, branchEdges)
-  const collapsed = collapseParallelHosts(merged.nodes, merged.edges)
-  saveKnowledgeGraph(knowledge.id, { nodes: collapsed.nodes, edges: collapsed.edges }, conceptId)
-  saveConversation(conversationId, {
-    turns: replay,
-    canvasHostId: merged.idMap.get(hostId) || hostId,
-  })
-  if (conversation) recordLearningHistory({ ...conversation, turns: replay })
-  return merged.idMap.get(lastCreatedId) || lastCreatedId || undefined
-}
-
-export function appendFollowUpTurn(
-  routeId: string,
-  conceptId: string,
-  conversationId: string,
-  input: {
-    question: string
-    quote?: string
-    quoteFromId?: string
-    reply: string
-    grow?: {
-      relation: 'predecessor' | 'successor' | 'parallel'
-      title: string
-      edgeExplanation: string
-    } | null
-  },
-) {
-  const quote = plainQuoteText(input.quote ?? '')
-  const growKind = input.grow ? growKindFromRelation(input.grow.relation) : undefined
-  const extras: Pick<LearningTurn, 'quote' | 'grow' | 'growSource' | 'quoteFromId' | 'growTitle' | 'growReason'> = {
-    quote,
-    ...(growKind ? { grow: growKind, growSource: 'model' as const } : {}),
-    ...(input.quoteFromId ? { quoteFromId: input.quoteFromId } : {}),
-    ...(input.grow ? { growTitle: input.grow.title, growReason: input.grow.edgeExplanation } : {}),
-  }
-  const conversation = getConversation(conversationId)
-  const userText = quote ? `引用「${quote}」\n${input.question}` : input.question
-  const turns = mergeSuccessfulLearningTurn(conversation?.turns ?? [], { userText, reply: input.reply, extras })
-  if (!input.grow) {
-    saveConversation(conversationId, { turns })
-    if (conversation) recordLearningHistory({ ...conversation, turns })
-    return undefined
-  }
-  return appendLearningTurnToGraph(routeId, conceptId, conversationId, {
-    question: input.question,
-    quote,
-    quoteFromId: input.quoteFromId,
-    reply: input.reply,
-    grow: growKind,
-    growSource: 'model',
-    growTitle: input.grow.title,
-    growReason: input.grow.edgeExplanation,
-  })
-}
-
-export function appendLearningTurnToGraph(
-  routeId: string,
-  conceptId: string,
-  conversationId: string,
-  input: {
-    question: string
-    quote?: string
-    quoteFromId?: string
-    reply: string
-    grow?: 'pred' | 'succ' | 'par'
-    growSource?: 'command' | 'model' | 'heuristic'
-    growTitle?: string
-    growReason?: string
-    mergeNodeId?: string
-  },
-) {
-  if (isFailureSentinel(input.reply)) return undefined
-  const conversation = getConversation(conversationId)
-  const quote = plainQuoteText(input.quote ?? '')
-  const grow = input.grow ?? inferGrowKind(input.question, quote)
-  const growSource = input.growSource ?? 'heuristic'
-  const userText = quote ? `引用「${quote}」\n${input.question}` : input.question
-  const extras: Pick<LearningTurn, 'quote' | 'grow' | 'growSource' | 'quoteFromId' | 'growTitle' | 'growReason' | 'mergeNodeId'> = {
-    quote,
-    grow,
-    growSource,
-    ...(input.quoteFromId ? { quoteFromId: input.quoteFromId } : {}),
-    ...(input.growTitle ? { growTitle: input.growTitle } : {}),
-    ...(input.growReason ? { growReason: input.growReason } : {}),
-    ...(input.mergeNodeId ? { mergeNodeId: input.mergeNodeId } : {}),
-  }
-  const turns = mergeSuccessfulLearningTurn(conversation?.turns ?? [], { userText, reply: input.reply, extras })
-  syncConversationGraph(routeId, conceptId, conversationId, turns)
-  replayConceptGraph(routeId, conceptId)
-  const knowledge = getKnowledgeByRoute(routeId)
-  const graph = knowledge ? getConceptGraph(knowledge.id, conceptId) : undefined
-  const owned = graph?.nodes.filter((node) => node.conversationId === conversationId)
-  return owned?.at(-1)?.id
-}
-
-export function replayConceptGraph(routeId: string, conceptId: string) {
-  const conversations = readWorkspace().conversations
-    .filter((item) => item.kind === 'learning' && item.routeId === routeId && item.conceptId === conceptId)
-    .slice()
-    .sort((a, b) => a.updatedAt - b.updatedAt)
-  for (const item of conversations) {
-    syncConversationGraph(routeId, conceptId, item.id, item.turns)
-  }
-}
-
-export function replayExampleConceptGraph(routeId: string, conceptId: string) {
-  replayConceptGraph(routeId, conceptId)
 }
 
 export function findLearningDraft(entry: { id: string; routeId?: string; conceptId?: string; title?: string }) {
@@ -962,19 +527,23 @@ export function startLearningConversation(routeId: string, conceptId: string): C
 }
 
 export function recommendedExampleKnowledge() {
-  return listKnowledge('example').slice(0, 2)
+  return listExampleKnowledge().slice(0, 2)
 }
 
 /** Local projection of server-owned resources; source content remains on the server. */
 export function hydrateProductLibrary(data: import('../learning-v2/library').ProductLibrary) {
   mutate(snapshot=>{
-    snapshot.routes=data.paths.map(p=>mineRouteFromValidatedDocument(p.goal,p.id,p.document,p.updatedAt,p.id))
+    snapshot.routes=data.paths.map(p=>{
+      const old=snapshot.routes.find(r=>r.id===p.id)
+      const fresh=mineRouteFromValidatedDocument(p.goal,p.id,p.document,p.updatedAt,p.id)
+      return {...fresh,conversationIds:[...new Set([...(old?.conversationIds??[]),...data.conversations.filter(c=>c.routeId===p.id).map(c=>c.id)])],knowledgeId:old?.knowledgeId??null,processTrace:old?.processTrace}
+    })
     for(const entry of data.conversations){
       if(entry.kind==='learning')continue
       const existing=snapshot.conversations.find(c=>c.pathRunId===entry.resourceId||c.id===entry.id)
       const id=entry.id
       const conversation:ConversationRecord={id,kind:entry.kind==='path'?'home-route':'home-answer',title:entry.title,query:entry.query,experience:entry.kind==='path'?'route':'answer',routeId:entry.routeId,turns:[],value:'',quote:'',mode:'',updatedAt:entry.updatedAt,...(entry.kind==='path'?{pathRunId:entry.resourceId}:{})}
-      snapshot.conversations=[{...conversation,...existing,id,pathRunId:conversation.pathRunId??existing?.pathRunId,routeId:entry.routeId??existing?.routeId},...snapshot.conversations.filter(c=>c.id!==id&&!(entry.kind==='path'&&c.pathRunId===entry.resourceId))]
+      snapshot.conversations=[{...conversation,value:existing?.value??'',quote:existing?.quote??'',processTrace:existing?.processTrace,routeReady:!!entry.routeId,id},...snapshot.conversations.filter(c=>c.id!==id&&!(entry.kind==='path'&&c.pathRunId===entry.resourceId))]
     }
   })
 }

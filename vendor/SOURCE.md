@@ -5,7 +5,7 @@
 | 资产 | 来源（历史路径，仅作出处） | 本仓库落点 | sha256 |
 | --- | --- | --- | --- |
 | 知乎图标精灵 | `zhihu_ux_ui/design-system/zhida/icons-v15.svg` | `src/vendor/icons-v15.svg` | `ea4dc55c621c7f484b7e25351a685409d1fb92ddc0f486fcc5a4b64517d1c794` |
-| 3D 角色 GLB | `zhihu_thread_chatbot/public/learning-path/assets/` | `public/assets/` 与 `src/vendor/learning-path-3d/assets/` | 见下表 |
+| 3D 角色 GLB | `zhihu_thread_chatbot/public/learning-path/assets/` | `src/vendor/learning-path-3d/assets/` | 见下表 |
 | 3D 宿主合同摘录 | `zhihu_3D_path/src/app/bootstrapLearningPathPage.ts` | `vendor/evidence/zhihu-3d-path/bootstrapLearningPathPage.ts` | `bb4edffa2481be66bd11b9e8b7091243bd5904147388c058115463558ffffdc0` |
 
 未拷贝：各来源的 `node_modules`、独立 demo HTML。图文模式使用的 `vendor/charts/` 有机思维导图、径向论辩图和时间线引擎已删除，不得恢复。
@@ -14,14 +14,14 @@
 
 | 路径 | sha256 | 字节 |
 | --- | --- | --- |
-| `public/assets/liu-kanshan-idle.glb` | `004e767bcf5af1722acce85bcbe4ed194a2d1ba01b5751b27c492be6a0d7fd45` | 44600 |
-| `public/assets/liu-kanshan-run-stop.glb` | `320bf528d211bf41d91ab21a276df19d46b005caae8ea2dfcff45868aa0036db` | 203960 |
-| `public/assets/liu-kanshan-run.glb` | `c6abc6d57ac5d48ea10d712aaa41dcd45121e997bbd5ed21ec37364d637e6e8c` | 908900 |
-| `public/assets/liu-kanshan-turn.glb` | `795af0fd8c39136a2fabdb0d94f1029378d68945760abb17343c184f5318f1a7` | 203988 |
+| `src/vendor/learning-path-3d/assets/liu-kanshan-idle.glb` | `004e767bcf5af1722acce85bcbe4ed194a2d1ba01b5751b27c492be6a0d7fd45` | 44600 |
+| `src/vendor/learning-path-3d/assets/liu-kanshan-run-stop.glb` | `320bf528d211bf41d91ab21a276df19d46b005caae8ea2dfcff45868aa0036db` | 203960 |
+| `src/vendor/learning-path-3d/assets/liu-kanshan-run.glb` | `c6abc6d57ac5d48ea10d712aaa41dcd45121e997bbd5ed21ec37364d637e6e8c` | 908900 |
+| `src/vendor/learning-path-3d/assets/liu-kanshan-turn.glb` | `795af0fd8c39136a2fabdb0d94f1029378d68945760abb17343c184f5318f1a7` | 203988 |
 | `src/vendor/icons-v15.svg` | `ea4dc55c621c7f484b7e25351a685409d1fb92ddc0f486fcc5a4b64517d1c794` | 22254 |
 | `vendor/evidence/zhihu-3d-path/bootstrapLearningPathPage.ts` | `bb4edffa2481be66bd11b9e8b7091243bd5904147388c058115463558ffffdc0` | 56781 |
 
-`src/vendor/learning-path-3d/` 仍是已同步的 3D renderer artifact；本切片只补齐它引用的 `/assets/*.glb`，不手改 bundle。
+`src/vendor/learning-path-3d/` 仍是已同步的 3D renderer artifact；宿主通过 assetUrls 传入 Vite 生成的四个角色 URL；2026-09-07 删除未引用的 public/assets 重复副本，不手改 bundle。
 
 ## 2026-09-06 稳定性同步
 
@@ -36,3 +36,9 @@
 ## 2026-09-07 圆台与学习卡视觉同步
 
 从 `zhihu_3D_path` 工作树重新构建并完整同步：新增 carrier/concept 类别标识，重画 start/goal，圆台详情改用白色面板与统一排版；类别不由学习状态决定。公开声明同步两种新增 SVG 类别，原有语义图标仍兼容。当前各文件摘要以清单为准，未手改 bundle。
+
+## Coverflow 的项目适配
+
+出处、MIT 许可、上游提交和本地改动见 [Coverflow 来源](../src/vendor/coverflow/SOURCE.md) 与 [许可证](../src/vendor/coverflow/LICENSE)。它是保留交互算法的源码 fork，不属于 3D 生成物的整包同步。更新时先对照记录的提交，逐项合并 SOURCE.md 列出的受控选中、指针取消、键盘和样式适配，再验证拖动、键盘及 reduced motion；不能直接覆盖项目适配。
+
+旧 knowledge-canvas/generate.ts 的改编代码随旧图生成引擎删除，不再作为产品代码维护。

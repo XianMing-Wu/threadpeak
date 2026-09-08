@@ -44,17 +44,23 @@ npm run dev
 
 ```sh
 npm run check
+npm run lint
 npm test
+npm run test:coverage
 npm run build
 npm run test:durable
 # 只允许明确隔离的 threadpeak_test 数据库
 npm run test:postgres
 ```
 
-PostgreSQL gate 从 `TEST_DATABASE_URL` 读取连接；不得传正式库。`npm run ops:queue` 只输出任务状态/错误类别计数，不输出用户正文或秘密。旧 orchestrator 测试仍保留，但默认生产入口不注册旧 G1/G2、批注接口。真实执行范围与当次证据见 [重构记录](docs/backend-rebuild-2026-09-06.md)，不能用旧测试数量代替新链验收。
+PostgreSQL gate 从 `TEST_DATABASE_URL` 读取连接；不得传正式库。`npm run ops:queue` 只输出任务状态/错误类别计数，不输出用户正文或秘密。旧 orchestrator 及仅覆盖这些入口的测试已删除，默认测试同时运行 Node 行为测试和组件到真实 Fastify 的组合测试。文档格式校验用 `check:docs`，产品行为用 `check:product-invariants`；两者不互相替代。真实执行范围与当次证据见 [重构记录](docs/backend-rebuild-2026-09-06.md)，不能用旧测试数量代替新链验收。
 
 ## 当前明确未完成
 
-实际域名/服务器与生产身份签发方接入；正式用户规模下的延迟/成本/压缩质量指标；无官方 authorId 时的跨文章作者身份完备性；数据保留/删除政策及大规模不可压缩骨架分区。详见 [现状与上线缺口](as-implemented-logic.md)。
+实际域名/服务器与生产身份签发方接入；正式用户规模下的延迟/成本/压缩质量指标；无官方 authorId 时的跨文章作者身份完备性；正式用户数据删除/备份政策及大规模不可压缩骨架分区。详见 [现状与上线缺口](as-implemented-logic.md)。
 
 合同权威：[agent-specs.md](agent-specs.md)、[as-implemented-logic.md](as-implemented-logic.md)、[AGENTS.md](AGENTS.md)。参考迁移见 [REFERENCE_AUDIT.md](REFERENCE_AUDIT.md)。
+
+最新架构复核、修复范围和验证结果见 [第三轮审查修复记录](docs/architecture-review-round-3-2026-09-07.md)。旧浏览器记录只读归档，可在知识脉络和路线页导出；未完整恢复的本机备份在离线登录页也可导出。正式路线、知识树与历史从服务端恢复。PGlite 目录通过内核文件锁限定一个进程持有；多个 API/worker 副本必须共用 PostgreSQL，HTTP 额度也由数据库共享。
+
+事件保留 7 天，断点过旧必须重新读取完整快照；完成任务 30 天后压缩重复输入和检查点，保留资源正文与幂等收据。自动错误重试至多 4 次失败，每任务至多 4 次手动恢复，手动恢复间隔至少 30 秒并计入账号额度。等待/取消任务仍保留恢复所需内容；这不是正式用户数据删除政策。

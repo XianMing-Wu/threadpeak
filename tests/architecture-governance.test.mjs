@@ -51,7 +51,7 @@ test('Cursor rules expose complete progressive-disclosure metadata', async () =>
   }
 })
 
-test('AGENTS routes every rule and keeps the current card-tree product invariants', async () => {
+test('documentation: AGENTS routes every rule and records the current card-tree targets', async () => {
   const agents = await read('AGENTS.md')
 
   for (const name of ruleNames) assert.match(agents, new RegExp(name.replace('.', '\\.')))
@@ -114,7 +114,8 @@ test('governance command and evidence boundary stay explicit', async () => {
   ])
   const pkg = JSON.parse(packageSource)
 
-  assert.equal(pkg.scripts['check:product-invariants'], 'node --test tests/architecture-governance.test.mjs tests/product-invariants.test.mjs')
+  assert.equal(pkg.scripts['check:product-invariants'], 'node --test tests/product-invariants.test.mjs')
+  assert.equal(pkg.scripts['check:docs'], 'node --test tests/architecture-governance.test.mjs')
   assert.equal(pkg.scripts['check:architecture'], 'node --test tests/architecture-baseline.test.mjs')
   assert.equal(
     pkg.scripts['check:contracts'],

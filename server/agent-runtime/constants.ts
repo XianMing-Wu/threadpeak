@@ -1,4 +1,4 @@
-import {MATH_OUTPUT_RULE} from '../../packages/contracts/src/math-normalize.ts'
+import {MATH_OUTPUT_RULE} from '@threadpeak/contracts/math-normalize'
 import type { AgentChannel, AgentId, RuntimeLimits, TextAgentId } from './types.ts'
 
 export const TOKEN_BUDGET = 500_000

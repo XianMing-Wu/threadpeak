@@ -1,15 +1,6 @@
 import { createApiClient, type FetchPort, type JsonRequestResult } from '@threadpeak/api-client'
 
 export const LIVE_READY_URL = '/api/ready'
-export const LIVE_ANSWER_URL = '/api/answers'
-export const LIVE_ANSWER_STREAM_URL = '/api/answers/stream'
-export const LIVE_ASK_AUTHOR_URL = '/api/ask-author'
-export const LIVE_AUTHOR_SEARCH_URL = '/api/authors/search'
-export const LIVE_AUTHOR_NETWORK_URL = '/api/authors/network'
-export const LIVE_CANONICAL_ANSWER_URL = '/api/learning/canonical-answer'
-export const LIVE_GRAPH_URL = '/api/learning/graph'
-export const LIVE_FIRST_ENTRY_URL = '/api/learning/first-entry'
-export const LIVE_FOLLOW_UP_URL = '/api/learning/follow-up'
 
 export function createBrowserFetchPort(): FetchPort {
   return async (url, init) => {

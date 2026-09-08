@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {streamingMarkdown} from '../../packages/contracts/src/streaming-markdown.ts'
-import {prepareReading} from '../../packages/contracts/src/reading-policy.ts'
+import {streamingMarkdown} from '@threadpeak/contracts/streaming-markdown'
+import {prepareReading} from '@threadpeak/contracts/reading-policy'
 import {createServer} from 'vite'
 import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
@@ -26,7 +26,7 @@ test('waiting learning task retains rendered draft and recover actions; finalize
  try{
   const {ChatPanel}=await server.ssrLoadModule('/src/learning-v2/Chat.tsx'),{LearningData}=await server.ssrLoadModule('/src/learning-v2/data.tsx')
   const draft=String.raw`正文保留，$x_i=2$。后半个公式 $\frac{1}{`
-  const task={id:'job',status:'waiting',phase:'关联尚未完成',draft,activities:[{id:'answer:write',kind:'write',title:'撰写讲解',status:'done',startedAt:1,updatedAt:2},{id:'answer:attach',kind:'edit',title:'关联知识卡',status:'running',startedAt:2,updatedAt:3}]}
+  const task={id:'job',recoverable:true,status:'waiting',phase:'关联尚未完成',draft,activities:[{id:'answer:write',kind:'write',title:'撰写讲解',status:'done',startedAt:1,updatedAt:2},{id:'answer:attach',kind:'edit',title:'关联知识卡',status:'running',startedAt:2,updatedAt:3}]}
   const props={conversation:{id:'c',messages:[{id:'q',role:'user',text:'问题'}]},selected:[],nodes:[],depth:'fast',phase:'ready',draft,busy:false,paused:true,task,onDepth(){},onRemove(){},onClear(){},onSend(){},onStop(){},onRetry(){}}
   const html=renderToStaticMarkup(createElement(LearningData.Provider,{value:{articles:[],concept:'概念'}},createElement(ChatPanel,props)))
   assert.match(html,/正文保留/);assert.match(html,/class="katex/);assert.match(html,/继续完成/);assert.match(html,/关联知识卡/)

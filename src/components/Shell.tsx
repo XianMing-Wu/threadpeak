@@ -1,14 +1,14 @@
-import { useProductLibrary, type ServerHistory } from '../learning-v2/library'
-import { productRequest } from '../learning-v2/client'
-import { useLayoutEffect, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect,useLayoutEffect,useRef,useState,type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { Icon, MountainMark } from '../icons'
-import { ACTIVE_HISTORY_KEY, CHAT_LAUNCH_KEY, HISTORY_CHANGE_EVENT, HISTORY_OPEN_EVENT, readChatHistory } from '../history'
+import { ACTIVE_HISTORY_KEY,CHAT_LAUNCH_KEY,HISTORY_CHANGE_EVENT,HISTORY_OPEN_EVENT,readChatHistory } from '../history'
+import { Icon,MountainMark } from '../icons'
+import { productRequest } from '../learning-v2/client'
+import { useProductLibrary } from '../learning-v2/library'
 import { resolveAccountIdentity } from '../resolve-account-identity'
-import { resolveHistoryReopen, type HistoryReopenResolution } from '../resolve-history-reopen'
-import { openLearning, setActiveConversation } from '../workspace/nav'
-import { findLearningDraft, getConversation, hydrateLearningHistory } from '../workspace/store'
+import { type HistoryReopenResolution } from '../resolve-history-reopen'
 import { FlowithGlyph } from '../ui/FlowithGlyph'
+import { setActiveConversation } from '../workspace/nav'
+import { getConversation } from '../workspace/store'
 
 function profileMenuBox(button: HTMLElement, collapsed: boolean) {
   const rect = button.getBoundingClientRect()
@@ -66,7 +66,6 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
     addEventListener('keydown',escape)
     return()=>{removeEventListener('pointerdown',close);removeEventListener('keydown',escape)}
   },[])
-  useEffect(()=>{hydrateLearningHistory();setHistory(readChatHistory());setActiveHistoryId(sessionStorage.getItem(ACTIVE_HISTORY_KEY)??'')},[])
   useEffect(()=>{
     let current=true
     void productRequest<{kind:string;provider:string|null;demo?:boolean;profile?:{demo?:boolean}}>('/api/v2/session').then((session) => {
@@ -88,8 +87,8 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
   const nav = [
     ['home','search','搜索'], ['knowledge','book','知识脉络'], ['paths','route','路线规划'], ['authors','network','博主网络'],
   ] as const
-  const serverHistory=serverLibrary?.conversations
-  const visibleHistory=serverHistory?serverHistory.map(e=>({...e,experience:e.kind==='path'?'route' as const:e.kind==='learning'?'learning' as const:'answer' as const})):history
+  const serverHistory=serverLibrary?.conversations??[]
+  const visibleHistory=serverHistory.map(e=>({...e,experience:e.kind==='path'?'route' as const:e.kind==='learning'?'learning' as const:'answer' as const}))
   const today=visibleHistory.filter((entry)=>Date.now()-entry.updatedAt<24*60*60*1000)
   const recent=visibleHistory.filter((entry)=>{const age=Date.now()-entry.updatedAt;return age>=24*60*60*1000&&age<7*24*60*60*1000})
   const earlier=visibleHistory.filter((entry)=>Date.now()-entry.updatedAt>=7*24*60*60*1000)
@@ -104,28 +103,6 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
       const id=stored?.id??remote.id
       sessionStorage.setItem(CHAT_LAUNCH_KEY,JSON.stringify({query:remote.query,mode:remote.kind==='path'?'route':'answer',conversationId:id,routeId:remote.routeId,generate:false}));setActiveConversation(id);location.hash='chat';window.dispatchEvent(new Event(HISTORY_OPEN_EVENT));return
     }
-    const resolution=resolveHistoryReopen(entry, getConversation(entry.id) ?? findLearningDraft(entry))
-    if(resolution.kind==='unavailable'){
-      setReopen(resolution)
-      return
-    }
-    sessionStorage.setItem(ACTIVE_HISTORY_KEY, entry.id)
-    setReopen(null)
-    if(resolution.kind==='draft-learning'){
-      setActiveConversation(resolution.conversationId)
-      openLearning(resolution.routeId, resolution.conceptId)
-      window.dispatchEvent(new Event(HISTORY_OPEN_EVENT))
-      return
-    }
-    sessionStorage.setItem(CHAT_LAUNCH_KEY, JSON.stringify({
-      query: resolution.query,
-      mode: resolution.experience,
-      conversationId: resolution.conversationId,
-      ...(resolution.routeId ? { routeId: resolution.routeId } : {}),
-    }))
-    setActiveConversation(resolution.conversationId)
-    location.hash='chat'
-    window.dispatchEvent(new Event(HISTORY_OPEN_EVENT))
   }}><span className="t">{entry.title}</span></button>
   return <div className={`tp-shell ux-flowith-shell ${collapsed?'is-collapsed':''}`} data-page={route}>
     <div className="shell">

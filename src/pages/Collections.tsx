@@ -1,29 +1,44 @@
-import { useProductLibrary } from '../learning-v2/library'
-import { LearningWorkspace } from '../learning-v2/Workspace'
-import { useEffect, useState } from 'react'
+import {useAccountRecovery} from '../learning-v2/account-storage'
+import {archivedWorkspace,localRecoveryAvailable,exportLocalArchive} from '../workspace/snapshot-cache'
+import { lazy,Suspense,useEffect,useState } from 'react'
 import { EmptyStatus } from '../components/EmptyStatus'
 import { ProductWorkspace } from '../components/Shell'
 import { StatusOrbChip } from '../components/StatusOrb'
 import { Icon } from '../icons'
-import { Path3DStage } from '../path-3d/path-3d-stage'
-import { ExampleWorkspace } from '../learning-v2/ExampleWorkspace'
-import { closeConceptKnowledge, NAV_EVENT, openConceptKnowledge, openKnowledge, openRoute, readActiveKnowledgeId, readActiveRouteId, readKnowledgeConceptId, readKnowledgeListReturn } from '../workspace/nav'
-import { useLibrarySelector } from '../runtime/use-library-selector'
-import { selectKnowledgeCards, selectRouteCards } from '../runtime/library-read-model'
-import { getConceptGraph, getKnowledge, getKnowledgeByRoute, getRoute, hasSettledMineConceptGraph, listConceptCards, useWorkspaceTick } from '../workspace/store'
-import { reconcileMineKnowledge } from '../workspace/reconcile-mine-knowledge'
 import { MineGraphCanvasPage } from '../knowledge-canvas/mine-graph-canvas'
-import { FlowithMarket } from '../ui/FlowithMarket'
+import { ExampleWorkspace } from '../learning-v2/ExampleWorkspace'
+import { useProductLibrary } from '../learning-v2/library'
+import { LearningWorkspace } from '../learning-v2/Workspace'
+const Path3DStage=lazy(()=>import('../path-3d/path-3d-stage').then(m=>({default:m.Path3DStage})))
+import { selectExampleKnowledge,selectRouteCards } from '../runtime/library-read-model'
+import { useLibrarySelector } from '../runtime/use-library-selector'
 import { coverForId } from '../ui/covers'
+import { FlowithMarket } from '../ui/FlowithMarket'
+import { closeConceptKnowledge,NAV_EVENT,openConceptKnowledge,openRoute,readActiveKnowledgeId,readActiveRouteId,readKnowledgeConceptId,readKnowledgeListReturn } from '../workspace/nav'
+import { getReadOnlyConceptGraph,getReadOnlyKnowledge,getReadOnlyKnowledgeByRoute,getRoute,hasSettledMineConceptGraph,listReadOnlyConceptCards,readWorkspace,useWorkspaceTick } from '../workspace/store'
+
+function LocalArchive(){
+  const recovery=useAccountRecovery()
+  const archive=archivedWorkspace(),damaged=recovery||localRecoveryAvailable()
+  if(!damaged&&!archive.routes.length&&!archive.knowledge.length&&!archive.conversations.length)return null
+  return <aside className="square-empty">
+    {damaged&&<p role="alert">有一份本地草稿或旧版归档尚未完整恢复。备份仍然保留，可以先导出或释放浏览器空间。</p>}
+    <details><summary>旧版内容 · 只读归档</summary>
+      {archive.knowledge.filter(k=>k.owner==='mine').map(k=><button key={k.id} onClick={()=>openConceptKnowledge(k.id,k.seedConceptId)}>{k.title}</button>)}
+      {archive.routes.filter(r=>r.owner==='mine').map(r=><article key={r.id}><strong>{r.title}</strong><p>{r.summary}</p></article>)}
+      {archive.conversations.map(c=><details key={c.id}><summary>{c.title}</summary>{c.turns.map((turn,i)=><p key={i}>{turn.text}</p>)}</details>)}
+    </details><button onClick={exportLocalArchive}>导出本地备份</button>
+  </aside>
+}
 
 export function KnowledgePage() {
   const [section, setSection] = useState<'mine' | 'example'>(()=>new URLSearchParams(location.hash.split('?')[1]??'').get('tab')==='example'?'example':'mine')
   const {data,error,reload}=useProductLibrary()
   const mineReady=!!data
-  const items = useLibrarySelector(selectKnowledgeCards(section))
+  const items = useLibrarySelector(selectExampleKnowledge)
   const shown = section === 'mine'
     ? (data?.knowledge??[]).map(k=>({id:k.id,title:k.title,description:'围绕这个概念积累的文章与知识卡片',owner:'mine' as const,onOpen:()=>{location.hash=`knowledge-detail?resource=${encodeURIComponent(k.id)}`}}))
-    : items.flatMap(k=>listConceptCards(k.id).map(c=>({id:c.id,title:c.title,description:c.description,owner:'example' as const,onOpen:()=>openConceptKnowledge(k.id,c.id)})))
+    : items.flatMap(k=>listReadOnlyConceptCards(k.id).map(c=>({id:c.id,title:c.title,description:c.description,owner:'example' as const,onOpen:()=>openConceptKnowledge(k.id,c.id)})))
   return <ProductWorkspace active="knowledge" page="knowledge">
     <FlowithMarket
       kind="collections"
@@ -44,6 +59,7 @@ export function KnowledgePage() {
       loadingStatus={<div role="status" aria-live="polite"><StatusOrbChip label="正在读取知识脉络" flow="knowledge-read"/></div>}
       empty={<div className="square-empty">{error&&<button onClick={()=>void reload()}>{error} · 重新连接</button>}<EmptyStatus kind="empty" title="还没有自己的知识脉络" body="制定路线并开始学习后，会出现在这里。" action="去看我的路线" onAction={() => { location.hash = 'paths' }} /></div>}
     />
+    {section==='mine'&&<LocalArchive/>}
   </ProductWorkspace>
 }
 
@@ -70,18 +86,19 @@ export function PathsPage() {
       total={shown.length}
       empty={<div className="square-empty">{error&&<button onClick={()=>void reload()}>{error} · 重新连接</button>}<EmptyStatus kind="empty" title="还没有自己的路线" body="在首页制定路线后，会出现在这里。" action="去问山制定路线" onAction={() => { sessionStorage.setItem('threadpeak-home-select-route', '1'); location.hash = 'home' }} /></div>}
     />
+    {tab==='mine'&&<LocalArchive/>}
   </ProductWorkspace>
 }
 
 export function Path3DPage() {
-  return <ProductWorkspace active="paths" page="path-3d"><Path3DStage/></ProductWorkspace>
+  return <ProductWorkspace active="paths" page="path-3d"><Suspense fallback={<p role="status">正在打开路线…</p>}><Path3DStage/></Suspense></ProductWorkspace>
 }
 
 export function KnowledgeConceptsPage() {
   useWorkspaceTick()
   const knowledgeId = readActiveKnowledgeId()
-  const knowledge = knowledgeId ? getKnowledge(knowledgeId) : undefined
-  const cards = knowledgeId ? listConceptCards(knowledgeId) : []
+  const knowledge = knowledgeId ? getReadOnlyKnowledge(knowledgeId) : undefined
+  const cards = knowledgeId ? listReadOnlyConceptCards(knowledgeId) : []
   return <ProductWorkspace active="knowledge" page="knowledge-detail">
     <FlowithMarket
       kind="concepts"
@@ -124,23 +141,23 @@ function LegacyKnowledgeDetailPage() {
   useEffect(() => {
     if (!conceptId) return
     const knowledgeId = readActiveKnowledgeId()
-    const knowledge = knowledgeId ? getKnowledge(knowledgeId) : undefined
+    const knowledge = knowledgeId ? getReadOnlyKnowledge(knowledgeId) : undefined
     const route = getRoute(readActiveRouteId())
     const owner = route?.owner || knowledge?.owner
     if (owner === 'example') return
-    if (owner === 'mine' && knowledgeId && hasSettledMineConceptGraph(getConceptGraph(knowledgeId, conceptId))) return
+    if (owner === 'mine' && knowledgeId) return
     closeConceptKnowledge()
-    const remaining = knowledge ?? getKnowledgeByRoute(readActiveRouteId())
-    if (owner !== 'mine' || !remaining || listConceptCards(remaining.id).length === 0) location.hash = 'knowledge'
+    const remaining = knowledge ?? getReadOnlyKnowledgeByRoute(readActiveRouteId())
+    if (owner !== 'mine' || !remaining || listReadOnlyConceptCards(remaining.id).length === 0) location.hash = 'knowledge'
   }, [conceptId])
   if (!conceptId) return <KnowledgeConceptsPage/>
   const routeId = readActiveRouteId()
-  const knowledge = getKnowledge(readActiveKnowledgeId())
+  const knowledge = getReadOnlyKnowledge(readActiveKnowledgeId())
   const route = getRoute(routeId)
   const owner = route?.owner || knowledge?.owner
   if (owner === 'mine') {
     const knowledgeId = readActiveKnowledgeId()
-    if (!knowledgeId || !hasSettledMineConceptGraph(getConceptGraph(knowledgeId, conceptId))) {
+    if (!knowledgeId) {
       return <KnowledgeConceptsPage/>
     }
     return <MineGraphCanvasPage key={`${routeId}:${conceptId}`} routeId={routeId} conceptId={conceptId}/>

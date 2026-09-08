@@ -37,8 +37,8 @@ test('association retries never replay composition; failure and recovery retain 
  assert.equal(snapshot.job.activities.find(a=>a.id==='answer:write').status,'done');assert.equal(snapshot.job.activities.find(a=>a.id==='answer:attach').status,'waiting')
  fail=false;await store.resume('owner',resource.id);await worker.execute(await store.claim());snapshot=await store.snapshot('owner',resource.id)
  assert.equal(snapshot.job.status,'completed');assert.equal(composeCalls,1);assert.equal(attachCalls,4);assert.equal(snapshot.data.paragraphs[0].text,answer.sections[0].text)
- const events=await store.events('owner',resource.id,0),drafts=events.filter(e=>e.kind==='job.progress').map(e=>e.payload.draft)
- assert.ok(drafts.length>0);assert.ok(drafts.every(s=>s.trim()));assert.equal(events.filter(e=>e.kind==='job.completed').length,1)
+ const events=await store.events('owner',resource.id,0),drafts=events.filter(e=>e.kind==='job.progress').map(e=>e.payload)
+ assert.ok(drafts.length>0);assert.ok(drafts.every(s=>s.phase&&!Object.hasOwn(s,'draft')));assert.equal(events.filter(e=>e.kind==='job.completed').length,1)
 })
 
 test('the last throttled chunk is flushed and phase changes never clear it; late writes lose the cancellation fence',async t=>{
@@ -50,13 +50,16 @@ test('the last throttled chunk is flushed and phase changes never clear it; late
 })
 
 test('progress events do not rewrite the resource body, while an actual edit does',async t=>{
- const {store,resource}=await fixture(t),job=await store.claim();const queries=[],query=store.db.query
- // Transactions expose a separate SQL object; observe it without replacing storage.
- const transaction=store.db.transaction;store.db.transaction=fn=>transaction(tx=>fn({...tx,query:async(sql,args)=>{queries.push(sql);return tx.query(sql,args)}}))
+ const {store,resource}=await fixture(t),job=await store.claim()
+ // UPDATE OF observes whether PostgreSQL actually targets body, including
+ // assigning its old value. This does not depend on the SQL query's spelling.
+ await store.db.query('CREATE TABLE body_writes(resource_id text)')
+ await store.db.query("CREATE FUNCTION record_body_write() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN INSERT INTO body_writes VALUES(NEW.id); RETURN NEW; END $$")
+ await store.db.query('CREATE TRIGGER observe_body_write AFTER UPDATE OF body ON tp_resources FOR EACH ROW EXECUTE FUNCTION record_body_write()')
  await store.progress(job,'读取');await store.activity(job,{id:'write',kind:'write',title:'写作',status:'running'})
- assert.equal(queries.filter(q=>q.startsWith('UPDATE tp_resources')&&q.includes('body=')).length,0)
+ assert.equal((await store.db.query('SELECT * FROM body_writes')).length,0)
  await store.progress(job,'编辑',undefined,r=>({...r.body,edited:true}))
- assert.equal(queries.filter(q=>q.startsWith('UPDATE tp_resources')&&q.includes('body=')).length,1)
+ assert.deepEqual(await store.db.query('SELECT * FROM body_writes'),[{resource_id:resource.id}])
  assert.equal((await store.snapshot('owner',resource.id)).data.edited,true)
 })
 

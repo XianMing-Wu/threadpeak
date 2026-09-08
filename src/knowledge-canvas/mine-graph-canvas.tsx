@@ -1,73 +1,18 @@
-import { useEffect, useState } from 'react'
-import { StatusOrbChip } from '../components/StatusOrb'
 import { ProductWorkspace } from '../components/Shell'
-import { KnowledgeCanvasPage } from '../pages/KnowledgeCanvas'
-import { conceptTitle } from '../workspace/catalog'
-import { closeConceptKnowledge, setActiveKnowledgeId } from '../workspace/nav'
-import { blueprintOf, dropMineConceptGraph, ensureMineKnowledgeFromCanonical, getKnowledgeByRoute, listConceptCards, replayConceptGraph } from '../workspace/store'
-import { requestCanonicalSnapshot } from '../session/request-canonical-answer'
-import { requestGraphSnapshot } from '../session/request-graph-bootstrap'
+import { MarkdownMath } from '../lib/MarkdownMath'
+import { getReadOnlyConceptGraph, getReadOnlyKnowledgeByRoute, readWorkspace } from '../workspace/store'
 
-function leaveMineGraph(routeId: string, conceptId: string, drop: boolean) {
-  if (drop) dropMineConceptGraph(routeId, conceptId)
-  closeConceptKnowledge()
-  const knowledge = getKnowledgeByRoute(routeId)
-  location.hash = knowledge && listConceptCards(knowledge.id).length > 0
-    ? 'knowledge-detail'
-    : 'knowledge'
-}
-
-export function MineGraphCanvasPage({ routeId, conceptId }: { routeId: string; conceptId: string }) {
-  const title = conceptTitle(blueprintOf(routeId), conceptId) || conceptId
-  const [ready, setReady] = useState(false)
-  useEffect(() => {
-    let cancelled = false
-    if (!routeId.trim() || !conceptId.trim()) {
-      closeConceptKnowledge()
-      location.hash = 'knowledge'
-      return
-    }
-    void Promise.all([
-      requestGraphSnapshot({ routeId, conceptId }),
-      requestCanonicalSnapshot({ routeId, conceptId }),
-    ]).then(([graphResult, canonicalResult]) => {
-      if (cancelled) return
-      if (graphResult.kind === 'missing' || canonicalResult.kind === 'missing') {
-        leaveMineGraph(routeId, conceptId, true)
-        return
-      }
-      if (graphResult.kind !== 'completed' || canonicalResult.kind !== 'completed') {
-        leaveMineGraph(routeId, conceptId, false)
-        return
-      }
-      const seeded = ensureMineKnowledgeFromCanonical({
-        routeId,
-        conceptId,
-        title,
-        text: canonicalResult.text,
-        contentHash: canonicalResult.contentHash,
-        graph: graphResult.graph,
-      })
-      if (!seeded) {
-        leaveMineGraph(routeId, conceptId, true)
-        return
-      }
-      replayConceptGraph(routeId, conceptId)
-      setActiveKnowledgeId(seeded.knowledgeId)
-      setReady(true)
-    })
-    return () => { cancelled = true }
-  }, [conceptId, routeId, title])
-  if (!routeId.trim() || !conceptId.trim() || !ready) {
-    return <ProductWorkspace active="knowledge" page="knowledge-detail">
-      <main className="canvas-page">
-        <section className="thread-canvas" role="status" aria-live="polite">
-          <article className="square-empty">
-            <StatusOrbChip label="正在读取知识脉络" flow="knowledge-read"/>
-          </article>
-        </section>
-      </main>
-    </ProductWorkspace>
-  }
-  return <KnowledgeCanvasPage/>
+/** Old records are an immutable archive. Opening them performs no requests or writes. */
+export function MineGraphCanvasPage({ routeId, conceptId }: {routeId:string;conceptId:string}) {
+  const knowledge=getReadOnlyKnowledgeByRoute(routeId)
+  const graph=knowledge?getReadOnlyConceptGraph(knowledge.id,conceptId):undefined
+  const conversations=readWorkspace().conversations.filter(c=>c.routeId===routeId&&c.conceptId===conceptId)
+  return <ProductWorkspace active="knowledge" page="knowledge-detail"><main className="query-chat">
+    <header className="query-chat-header"><h1>{knowledge?.title??'旧版知识脉络'} · 只读归档</h1><button onClick={()=>{location.hash='knowledge'}}>返回知识脉络</button></header>
+    <section className="query-chat-body"><p>这里保留旧版的卡片与对话。新的学习内容从“我的路线”进入。</p>
+      {graph?.nodes.map(node=><article className="chat-answer" key={node.id}><h2>{node.title}</h2>{node.turns.map((turn,index)=><MarkdownMath key={index} source={turn.paragraphs.join('\n\n')}/>)}</article>)}
+      {conversations.map(c=><details key={c.id}><summary>{c.title}</summary>{c.turns.map((turn,index)=><article key={index}><strong>{turn.role==='user'?'我':'刘看山'}</strong><MarkdownMath source={turn.text}/></article>)}</details>)}
+      {!graph&&!conversations.length&&<p>没有找到这份旧版内容，已保留现有本地记录。</p>}
+    </section>
+  </main></ProductWorkspace>
 }

@@ -1,37 +1,36 @@
 import {
-  listKnowledge,
-  listConceptCards,
+  listExampleKnowledge,
+  listReadOnlyConceptCards,
   listRoutes,
 } from '../workspace/store'
 import type { KnowledgeCard, Owner, RouteCard } from '../workspace/types'
 
 export type LibraryReadModel = {
-  knowledge: Record<Owner, KnowledgeCard[]>
+  exampleKnowledge: KnowledgeCard[]
   routes: Record<Owner, RouteCard[]>
   recommendedKnowledge: KnowledgeCard[]
   recommendedRoutes: RouteCard[]
 }
 
 export function projectLibraryReadModel(): LibraryReadModel {
-  const knowledge = {
-    mine: listKnowledge('mine'),
-    example: listKnowledge('example'),
-  }
+  const exampleKnowledge = listExampleKnowledge()
   const routes = {
     mine: listRoutes('mine'),
     example: listRoutes('example'),
   }
   return {
-    knowledge,
+    exampleKnowledge,
     routes,
-    recommendedKnowledge: knowledge.example.filter(k=>['knowledge-attention-paper','knowledge-numpy-collection'].includes(k.id)).map(k=>{const c=listConceptCards(k.id).find(c=>['attention-scale','array-broadcast'].includes(c.id))!;return {...k,title:c.title,description:c.description,conceptId:c.id}}),
+    recommendedKnowledge: exampleKnowledge.filter(k=>['knowledge-attention-paper','knowledge-numpy-collection'].includes(k.id)).flatMap(k=>{
+      const cards=listReadOnlyConceptCards(k.id)
+      const concept=cards.find(c=>['attention-scale','array-broadcast'].includes(c.id))??cards[0]
+      return concept?[{...k,title:concept.title,description:concept.description,conceptId:concept.id}]:[]
+    }),
     recommendedRoutes: routes.example.slice(0, 2),
   }
 }
 
-export function selectKnowledgeCards(owner: Owner) {
-  return (view: LibraryReadModel) => view.knowledge[owner]
-}
+export const selectExampleKnowledge=(view:LibraryReadModel)=>view.exampleKnowledge
 
 export function selectRouteCards(owner: Owner) {
   return (view: LibraryReadModel) => view.routes[owner]

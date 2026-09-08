@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>账号切换满额回归</title>
+<body><h1>账号切换满额回归</h1><p>仅用于独立 localhost 测试源。写入合成草稿直到浏览器实际抛出 QuotaExceededError，随后验证隔离与完整恢复。已有数据时拒绝运行。</p><button id="run">运行回归</button><pre id="result" role="status">尚未运行</pre>
+<script type="module">
+import {switchWorkspace,readAccountBackup} from '/src/learning-v2/account-storage.ts'
+const result=document.querySelector('#result'),button=document.querySelector('#run')
+button.addEventListener('click',async()=>{
+ button.disabled=true
+ try{
+  if(Object.keys(localStorage).length||Object.keys(sessionStorage).length||(await indexedDB.databases()).some(db=>db.name==='threadpeak-account-backups'))throw new Error('当前测试源已有数据或备份，拒绝覆盖')
+  localStorage.setItem('tp-server-workspace','quota-test-alice')
+  localStorage.setItem('threadpeak-unsent-draft','这是一份未发送的合成草稿。')
+  sessionStorage.setItem('tp-session-draft','尚未提交的选区')
+  let full=false,blocks=0
+  for(;blocks<256;blocks++){try{localStorage.setItem('tp-qa-block-'+blocks,'"\\'.repeat(32*1024))}catch(e){if(e.name!=='QuotaExceededError')throw e;full=true;break}}
+  if(!full)throw new Error('没有触发真实浏览器配额，不能算通过')
+  const keys=Object.keys(localStorage).filter(k=>k!=='tp-server-workspace'),expected=Object.fromEntries(keys.map(k=>[k,localStorage.getItem(k)]))
+  result.textContent='已触发实际配额，正在归档与切换……'
+  await switchWorkspace('quota-test-bob')
+  if(keys.some(k=>localStorage.getItem(k)!==null)||sessionStorage.getItem('tp-session-draft'))throw new Error('跨账号残留')
+  const backup=await readAccountBackup('quota-test-alice')
+  if(keys.some(k=>backup.local[k]!==expected[k]))throw new Error('持久备份不完整')
+  await switchWorkspace('quota-test-alice')
+  if(keys.some(k=>localStorage.getItem(k)!==expected[k])||sessionStorage.getItem('tp-session-draft')!=='尚未提交的选区')throw new Error('草稿恢复不完整')
+  result.textContent=JSON.stringify({passed:true,actualQuotaExceeded:true,blocks,archivedCharacters:Object.values(expected).reduce((n,s)=>n+s.length,0),isolated:true,restored:true,indexedDB:true},null,2)
+  // Remove only the synthetic account records created by this test.
+  for(const key of [...keys,'tp-server-workspace'])localStorage.removeItem(key)
+  sessionStorage.removeItem('tp-session-draft')
+  const request=indexedDB.deleteDatabase('threadpeak-account-backups');request.onerror=()=>{}
+ }catch(error){result.textContent=JSON.stringify({passed:false,error:String(error)},null,2)}
+})
+</script></body></html>

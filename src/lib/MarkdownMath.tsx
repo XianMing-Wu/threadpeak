@@ -1,11 +1,11 @@
 import { Children, isValidElement, memo, useMemo, useState, type ReactNode } from 'react'
-import { streamingMarkdown } from '../../packages/contracts/src/streaming-markdown.ts'
+import { streamingMarkdown } from '@threadpeak/contracts/streaming-markdown'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
-import { renderMath } from '../../packages/contracts/src/math-normalize.ts'
-import { prepareReading } from '../../packages/contracts/src/reading-policy.ts'
-import { sourceImageInfo } from '../../packages/contracts/src/source-image.ts'
+import { renderMath } from '@threadpeak/contracts/math-normalize'
+import { prepareReading } from '@threadpeak/contracts/reading-policy'
+import { sourceImageInfo } from '@threadpeak/contracts/source-image'
 import './source-images.css'
 
 export function SourceImageView({ src, alt, title }: { src?: string; alt?: string; title?: string }) {

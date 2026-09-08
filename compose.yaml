@@ -23,6 +23,7 @@ services:
       NODE_ENV: production
       THREADPEAK_HOST: 0.0.0.0
       THREADPEAK_PORT: 4312
+      THREADPEAK_TRUSTED_PROXIES: 172.30.84.2/32
       DATABASE_URL: postgres://threadpeak:${POSTGRES_PASSWORD}@db:5432/threadpeak
     depends_on:
       db:
@@ -31,6 +32,9 @@ services:
     tmpfs:
       - /tmp:size=128m,mode=1777
     stop_grace_period: 45s
+    networks:
+      - default
+      - proxy
     healthcheck:
       test: [CMD, node, -e, "fetch('http://127.0.0.1:4312/api/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 15s
@@ -41,6 +45,9 @@ services:
       context: .
       target: web
     restart: unless-stopped
+    networks:
+      proxy:
+        ipv4_address: 172.30.84.2
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:?Set the public hostname for HTTPS}
     ports:
@@ -53,6 +60,11 @@ services:
     depends_on:
       api:
         condition: service_healthy
+networks:
+  proxy:
+    ipam:
+      config:
+        - subnet: 172.30.84.0/24
 volumes:
   database:
   caddy_data:

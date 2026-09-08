@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
-import type { LearningPathDocument } from '../../packages/contracts/src/path-document.ts'
-import { addUniqueDraft, stabilizeHostSubjectDrafts } from '../../packages/contracts/src/host-subject-flow.ts'
-import { validateRendererDocument } from '../../packages/contracts/src/validate-renderer-document.ts'
+import type { LearningPathDocument } from '@threadpeak/contracts/path-document'
+import { addUniqueDraft, stabilizeHostSubjectDrafts } from '@threadpeak/contracts/host-subject-flow'
+import { validateRendererDocument } from '@threadpeak/contracts/validate-renderer-document'
 import { preflightLearningPath } from '../../src/vendor/learning-path-3d/index.js'
 import type { R4Output } from '../agent-runtime/schemas.ts'
 

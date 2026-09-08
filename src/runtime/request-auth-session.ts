@@ -68,10 +68,11 @@ export async function requestAuthSession(fetchPort?: FetchPort): Promise<AuthSes
 }
 
 export async function requestAuthLogout(fetchPort?: FetchPort): Promise<void> {
-  resetSession()
-  await createLiveApiClient(fetchPort).requestJson({
+  const response=await createLiveApiClient(fetchPort).requestJson({
     url: AUTH_LOGOUT_URL,
     method: 'POST',
     traceId: 'auth-logout',
   })
+  if(!response.ok)throw new Error('退出登录暂未完成，请重试。')
+  resetSession()
 }

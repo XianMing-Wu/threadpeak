@@ -8,7 +8,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const golden = JSON.parse(
   await readFile(new URL('../packages/contracts/fixtures/runtime-contracts.golden.json', import.meta.url), 'utf8'),
 )
-const nextContracts = await import('../packages/contracts/src/index.ts')
+const nextContracts = await import('@threadpeak/contracts')
 const inRepoOldHref = pathToFileURL(
   path.join(repoRoot, 'packages/contracts/compat/algorithm-shared-runtime-contracts.ts'),
 ).href

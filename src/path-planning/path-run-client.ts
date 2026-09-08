@@ -1,6 +1,8 @@
-import { productRequest, ensureSession } from '../learning-v2/client'
+import { DEFAULT_SEARCH_SCOPE,SearchScopeSchema,type SearchScope } from '@threadpeak/contracts/search-scope'
+import { z } from 'zod'
+import { productRequest } from '../learning-v2/client'
+import { pollResource } from '../learning-v2/poll'
 import type { ProcessStep } from '../process-trace'
-import { SearchScopeSchema, DEFAULT_SEARCH_SCOPE, type SearchScope } from '../../packages/contracts/src/search-scope'
 
 export function rememberPathSearchScope(commandKey: string, searchScope: SearchScope) {
   sessionStorage.setItem(`tp-route-scope:${commandKey}`, JSON.stringify(SearchScopeSchema.parse(searchScope)))
@@ -28,6 +30,7 @@ export type PathQuestionSet = {
 
 export type PathRunView = {
   runId: string
+  recoverable?:boolean
   goal: string
   status: 'running' | 'awaiting_answers' | 'published' | 'failed'
   stage: string
@@ -47,29 +50,10 @@ export type PathRunWatch = {
   signal?: AbortSignal
 }
 
-const TIMEOUT_MS = 360_000
-const POLL_MS = 650
-
-function sleep(ms:number,signal?:AbortSignal){return new Promise<void>((resolve,reject)=>{
-  if(signal?.aborted){reject(new DOMException('Aborted','AbortError'));return}
-  const done=()=>{signal?.removeEventListener('abort',abort);resolve()}
-  const timer=setTimeout(done,ms)
-  const abort=()=>{clearTimeout(timer);signal?.removeEventListener('abort',abort);reject(new DOMException('Aborted','AbortError'))}
-  signal?.addEventListener('abort',abort,{once:true})
-})}
-
 function asView(payload: unknown): PathRunView | undefined {
   const record = payload && typeof payload === 'object' ? payload as PathRunView : undefined
   if (!record || !record.status) return undefined
   return record
-}
-
-async function readJson(response: Response): Promise<unknown> {
-  try {
-    return await response.json()
-  } catch {
-    throw new Error('路线服务返回了无法解析的响应。')
-  }
 }
 
 async function post(url: string, body: unknown, signal?: AbortSignal, key?:string): Promise<PathRunView> {
@@ -90,16 +74,16 @@ export async function watchPathRun(view: PathRunView, watch?: PathRunWatch): Pro
   watch?.onUpdate?.(view)
   if (view.status !== 'running' || !view.runId) return view
   let current = view
-  while (current.status === 'running') {
-    await sleep(POLL_MS, watch?.signal)
-    try{current = await getPathRun(current.runId, watch?.signal)}catch(error){
-      if(watch?.signal?.aborted)throw error
-      if(error instanceof Error&&'status' in error&&error.status===404)throw error
-      watch?.onUpdate?.({...current,stage:'正在重新连接，资料和选择仍然保留'})
-      await sleep(1500,watch?.signal);continue
-    }
+  const signal=watch?.signal??new AbortController().signal
+  let failed:unknown
+  await pollResource(async()=>{
+    current=await getPathRun(current.runId,signal)
+    if(signal.aborted)return false
     watch?.onUpdate?.(current)
-  }
+    return current.status==='running'
+  },{signal,onError:(error,stopped)=>{if(stopped)failed=error;watch?.onUpdate?.({...current,stage:stopped?'连接暂停，请重新连接':'正在重新连接，资料和选择仍然保留'})}})
+  signal.throwIfAborted()
+  if(failed)throw failed
   return current
 }
 
@@ -113,12 +97,15 @@ export async function startPathRun(
   let frozen={...input}
   if (!frozen.searchScope && watch?.commandKey) {
     const scope = sessionStorage.getItem(`tp-route-scope:${watch.commandKey}`)
-    if (scope) frozen.searchScope = SearchScopeSchema.parse(JSON.parse(scope))
+    if(scope){try{frozen.searchScope=SearchScopeSchema.parse(JSON.parse(scope))}catch{throw new Error('搜索范围记录无法读取，请回首页重新选择。')}}
   }
   frozen.searchScope ??= DEFAULT_SEARCH_SCOPE
   if(watch?.commandKey){
     const previous=sessionStorage.getItem(cacheKey)
-    if(previous)frozen=JSON.parse(previous)
+    if(previous){
+      try{frozen=z.object({goal:z.string().min(1),thinkingDepth:z.enum(['fast','deep']).optional(),searchScope:SearchScopeSchema,attachments:z.array(z.object({sourceId:z.string().min(1),fileName:z.string(),content:z.string(),mimeType:z.enum(['application/pdf','text/markdown','text/plain']).optional()})).optional()}).strict().parse(JSON.parse(previous))}
+      catch{throw new Error('这次发送的本地记录无法读取，原记录已保留，请返回首页重新发起。')}
+    }
     else sessionStorage.setItem(cacheKey,JSON.stringify({...frozen,attachments:input.attachments?.map(a=>({...a,content:'[已上传，服务端读取原文]'}))}))
   }
   return watchPathRun(await post('/api/path-runs', frozen, watch?.signal,watch?.commandKey), watch)
@@ -130,10 +117,6 @@ export async function selectPathAnswer(runId: string, questionId: string, option
 
 export async function submitCustomPathAnswer(runId: string, questionId: string, customAnswer: string, watch?: PathRunWatch) {
   return watchPathRun(await post(`/api/path-runs/${runId}/select`, { questionId, customAnswer }, watch?.signal, `path-answer:${runId}:${questionId}`), watch)
-}
-
-export async function commitPathAnswers(runId: string, watch?: PathRunWatch) {
-  return watchPathRun(await post(`/api/path-runs/${runId}/commit`, {}, watch?.signal), watch)
 }
 
 export async function followUpPathRun(runId: string, message: string, watch?: PathRunWatch) {

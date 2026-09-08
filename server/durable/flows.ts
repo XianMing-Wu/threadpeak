@@ -1,6 +1,6 @@
 import { pathGoalContext } from './learning-goal.ts'
 import type { GoalExploration } from '../path-generation/goal-exploration.ts'
-import type {SearchScope} from '../../packages/contracts/src/search-scope.ts'
+import type {SearchScope} from '@threadpeak/contracts/search-scope'
 import {presentSource} from './source-presentation.ts'
 import { inheritedArticles } from './materials.ts'
 import { preparePdf } from './materials.ts'
@@ -14,8 +14,8 @@ import type { R1Output, R2Output, R3Output, R3bOutput, R4Output } from '../agent
 import type { SearchEvidence } from '../agent-runtime/types.ts'
 import { packZhihuSearchQueries } from '../agent-runtime/pack-search.ts'
 import { projectRouteToDocument } from '../path-generation/project-document.ts'
-import type { LearningState, GraphNode, Paragraph, Article } from '../../packages/contracts/src/learning-v2.ts'
-import { paragraphNode, validateTree } from '../../packages/contracts/src/learning-v2.ts'
+import type { LearningState, GraphNode, Paragraph, Article } from '@threadpeak/contracts/learning-v2'
+import { paragraphNode, validateTree } from '@threadpeak/contracts/learning-v2'
 import { CommandError, type Resource } from './store.ts'
 import { ToolError, settledParallel, type TaskContext } from './worker.ts'
 import type { ProductTools } from './tools.ts'
@@ -137,7 +137,9 @@ export function createFlows(tools:ProductTools,api?:ZhihuDataClient,login?:Zhihu
       state.nodes.push(...paragraphs.filter(p=>!existing.has(p.id)).map(paragraphNode));validateTree(state.nodes)
       conversation.messages.push({id:ctx.job.id,role:'assistant',paragraphs,activities:(ctx.job.activities??[]).map(a=>a.status==='running'?{...a,status:'done' as const,finishedAt:Date.now()}:a),...(paragraphs.some(p=>p.author)?{kind:'author' as const}:{})})
       if(first){state.initialized=true;state.initialAnswer=paragraphs;state.phase='ready'}
-      for(const evidence of network)await tx.query(`INSERT INTO tp_author_network(owner_id,author_id,evidence_id,weight,body) VALUES($1,$2,$3,'high',$4::jsonb) ON CONFLICT DO NOTHING`,[ctx.job.owner_id,evidence.authorId,evidence.evidenceId,JSON.stringify({evidence,question:normalizedQuestion,routeId:state.routeId,conceptId:state.conceptId,conceptTitle:state.title})])
+      if(network.length)await tx.query(`INSERT INTO tp_author_network(owner_id,author_id,evidence_id,weight,body)
+        SELECT $1,e->>'authorId',e->>'evidenceId','high',jsonb_build_object('evidence',e,'question',$3::text,'routeId',$4::text,'conceptId',$5::text,'conceptTitle',$6::text)
+        FROM jsonb_array_elements($2::jsonb) e ON CONFLICT DO NOTHING`,[ctx.job.owner_id,JSON.stringify(network),normalizedQuestion,state.routeId,state.conceptId,state.title])
       if(!first&&ctx.job.kind==='learning.reply')await recordAuthorUse(tx,ctx.job.owner_id,resource.id,ctx.job.id,state,ctx.job.input.selected??[],paragraphs)
       return state
     })

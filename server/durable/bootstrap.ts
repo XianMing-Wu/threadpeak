@@ -50,7 +50,7 @@ export async function startProductServer(env=serverEnvironment()){
   if(!Number.isInteger(window)||window<32000||window>2_000_000)throw new Error('MODEL_CONTEXT_CONFIG_INVALID')
   if(env.THREADPEAK_LOGIN_URL&&new URL(env.THREADPEAK_LOGIN_URL).protocol!=='https:')throw new Error('LOGIN_URL_MUST_BE_HTTPS')
   const db=await openDatabase({url:env.DATABASE_URL,directory:env.THREADPEAK_DATA_DIR??resolve('server/.data/product-v2')});
-  for(let attempt=0;;attempt++){try{await migrate(db);break}catch(error){const code=(error as {code?:string}).code??'';if(attempt>=9||!['ECONNREFUSED','ECONNRESET','CONNECTION_CLOSED','CONNECTION_ENDED','CONNECT_TIMEOUT','57P03','57P01'].includes(code)){await db.close();throw new Error('DATABASE_START_FAILED')}process.stdout.write(JSON.stringify({event:'server.waiting_for_database',attempt:attempt+1})+'\n');await new Promise(resolve=>setTimeout(resolve,Math.min(5000,1000*2**attempt)))}}
+  for(let attempt=0;;attempt++){try{await migrate(db);break}catch(error){const code=(error as {code?:string}).code??'';if(attempt>=9||!['ECONNREFUSED','ECONNRESET','CONNECTION_CLOSED','CONNECTION_ENDED','CONNECT_TIMEOUT','57P03','57P01'].includes(code)){await db.close();throw new Error('DATABASE_START_FAILED')}process.stdout.write(JSON.stringify({event:'server.waiting_for_database',attempt:attempt+1})+'\n');await new Promise(resolve=>{setTimeout(resolve,Math.min(5000,1000*2**attempt))})}}
   const gate=createZhihuGate(db),store=new DurableStore(db),config=resolveProviderConfig(env),{zhihuData,zhihuLogin}=createZhihuUserServices(db,env,gate)
   // Switching to real (including production) cannot retain a usable demo workspace cookie.
   if(zhihuLogin?.config.mode!=='mock')await db.query('DELETE FROM tp_sessions WHERE owner_id LIKE $1',[`${MOCK_ZHIHU_OWNER_PREFIX}%`])
@@ -65,7 +65,7 @@ export async function startProductServer(env=serverEnvironment()){
     const providers=instrumentProviders(db,config.config,llm,zhihu)
     handler=createFlows(new ProductTools(providers.llm,providers.zhihu,window),zhihuData,zhihuLogin)
   }
-  const worker=new DurableWorker(store,handler),app=await createProductApp({store,worker,providersReady:config.ok,zhihuData,zhihuLogin,identity:{production,origin:env.THREADPEAK_PUBLIC_ORIGIN,jwtSecret:env.THREADPEAK_IDENTITY_SECRET,issuer:env.THREADPEAK_IDENTITY_ISSUER,audience:env.THREADPEAK_IDENTITY_AUDIENCE,loginUrl:env.THREADPEAK_LOGIN_URL}})
+  const worker=new DurableWorker(store,handler),app=await createProductApp({store,worker,providersReady:config.ok,zhihuData,zhihuLogin,trustedProxies:env.THREADPEAK_TRUSTED_PROXIES?.split(',').map(value=>value.trim()).filter(Boolean),identity:{production,origin:env.THREADPEAK_PUBLIC_ORIGIN,jwtSecret:env.THREADPEAK_IDENTITY_SECRET,issuer:env.THREADPEAK_IDENTITY_ISSUER,audience:env.THREADPEAK_IDENTITY_AUDIENCE,loginUrl:env.THREADPEAK_LOGIN_URL}})
   app.addHook('onClose',()=>db.close())
   const port=Number(env.THREADPEAK_PORT??4312)
   await app.listen({port,host:env.THREADPEAK_HOST??'127.0.0.1'});worker.start()

@@ -17,7 +17,7 @@ export function registerMaterialRoutes(app:FastifyInstance,store:DurableStore,wo
     return upload(name,bytes,owner(request),key(request))
   })
   // Compatibility with an already open composer; the same durable pipeline handles PDFs.
-  app.post('/api/v2/attachments',async request=>{
+  app.post('/api/v2/attachments',{bodyLimit:20_000_000},async request=>{
     const input=z.object({fileName:Name,base64:z.string().max(14_000_000)}).parse(request.body)
     return upload(input.fileName,Buffer.from(input.base64,'base64'),owner(request),key(request))
   })

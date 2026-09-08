@@ -1,4 +1,4 @@
-import type { AuthorNetwork } from '../../packages/contracts/src/authors.ts'
+import type { AuthorNetwork } from '@threadpeak/contracts/authors'
 import type { AuthorNetworkGraphModel } from '../session/project-author-network.ts'
 
 /** Use the existing visual vocabulary; identities and relationships remain lossless. */

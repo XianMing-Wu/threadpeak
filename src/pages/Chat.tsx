@@ -1,42 +1,19 @@
-import { useEffect, useRef, useState } from 'react'
-import { OrdinaryChat } from '../learning-v2/OrdinaryChat'
+import { useEffect,useRef,useState } from 'react'
+import { resolveChatLaunch,type ChatLaunchReady } from '../chat/resolve-chat-launch'
 import { Composer } from '../components/Composer'
 import { ProductWorkspace } from '../components/Shell'
+import { CHAT_LAUNCH_KEY,clearActiveHistory,HISTORY_OPEN_EVENT } from '../history'
 import { Icon } from '../icons'
-import { addChatHistory, clearActiveHistory, CHAT_LAUNCH_KEY, HISTORY_OPEN_EVENT } from '../history'
-import { resolveChatLaunch, type ChatLaunchReady } from '../chat/resolve-chat-launch'
-import { buildOrdinaryChatContext } from '../chat/build-ordinary-chat-context'
-import { requestOrdinaryAnswerStream } from '../chat/request-ordinary-answer'
-import { resolveOrdinaryAnswer } from '../chat/resolve-ordinary-answer'
-import { MarkdownMath } from '../lib/MarkdownMath'
-import { linkedRouteIntro } from '../workspace/catalog'
-import { setActiveConversation } from '../workspace/nav'
-import { EmptyStatus } from '../components/EmptyStatus'
-import { ProcessTrace } from '../components/ProcessTrace'
-import { applyReasoning, flowSteps, settleTrace, type ProcessStep } from '../process-trace'
+import { OrdinaryChat } from '../learning-v2/OrdinaryChat'
 import { ChatRoutePanel } from '../path-planning/chat-route-panel'
-import { pathLaunchAttachments, type PathAttachment } from '../path-planning/path-run-client'
-import { NotFoundPage } from './NotFound'
+import { readLearningThinking,subscribeLearningThinking,writeLearningThinking } from '../session/learning-thinking'
+import { setActiveConversation } from '../workspace/nav'
 import {
-  createHomeConversation,
-  getConversation,
-  getRoute,
-  saveConversation,
-  startLinkedConversation,
+getConversation
 } from '../workspace/store'
-import type { LearningTurn } from '../workspace/types'
-import { readLearningThinking, subscribeLearningThinking, writeLearningThinking } from '../session/learning-thinking'
+import { NotFoundPage } from './NotFound'
 
 export type ChatExperience = 'answer' | 'route'
-
-export function launchChat(query:string,mode:ChatExperience,attachments: PathAttachment[] = [], thinkingDepth: 'fast' | 'deep' = readLearningThinking()) {
-  const conversation=createHomeConversation(query,mode)
-  if (attachments.length > 0) pathLaunchAttachments.set(conversation.id, attachments)
-  writeLearningThinking(thinkingDepth)
-  sessionStorage.setItem(CHAT_LAUNCH_KEY,JSON.stringify({query,mode,conversationId:conversation.id,routeId:conversation.routeId,generate:true,thinkingDepth}))
-  setActiveConversation(conversation.id)
-  location.hash='chat'
-}
 
 function readChatLaunchPayload(): unknown {
   try {
@@ -48,87 +25,6 @@ function readChatLaunchPayload(): unknown {
 
 function experienceOf(value: unknown, fallback: ChatExperience): ChatExperience {
   return value === 'route' || value === 'answer' ? value : fallback
-}
-
-function OrdinaryAnswerUnavailable() {
-  const resolution=resolveOrdinaryAnswer()
-  return <article className="chat-answer" role="alert">
-    <EmptyStatus kind="error" density="inline" title={resolution.title} body={resolution.message} />
-  </article>
-}
-
-function OrdinaryAnswerLive({
-  query,
-  turns,
-  attachments,
-  thinkingDepth,
-  onSettled,
-  abortSignal,
-}: {
-  query: string
-  turns: LearningTurn[]
-  attachments: PathAttachment[]
-  thinkingDepth: 'fast' | 'deep'
-  onSettled?: (text: string) => void
-  abortSignal?: AbortSignal
-}) {
-  const [text, setText] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [stopped, setStopped] = useState(false)
-  const [trace, setTrace] = useState<ProcessStep[]>(() => flowSteps('ordinary'))
-  const settled = useRef(onSettled)
-  settled.current = onSettled
-  useEffect(() => {
-    let cancelled = false
-    setText(null)
-    setError(null)
-    setStopped(false)
-    setTrace(flowSteps('ordinary'))
-    const context = buildOrdinaryChatContext({
-      currentMessage: query,
-      turns: turns.map((turn) => ({ role: turn.role, text: turn.text })),
-      attachments,
-    })
-    void requestOrdinaryAnswerStream({
-      currentMessage: context.currentMessage,
-      conversation: context.conversation,
-      attachments: context.attachments,
-      thinkingDepth,
-      signal: abortSignal,
-      onDelta: (next) => {
-        if (cancelled) return
-        setText(next)
-      },
-      onReasoning: (id, thought) => {
-        if (cancelled) return
-        setTrace((current) => applyReasoning(current, id, thought))
-      },
-    }).then((result) => {
-      if (cancelled) return
-      if (abortSignal?.aborted) {
-        setStopped(true)
-        setTrace((current) => settleTrace(current, 'stopped'))
-        return
-      }
-      if (result.kind === 'completed') {
-        setText(result.text)
-        settled.current?.(result.text)
-        return
-      }
-      setError(result.message)
-    })
-    return () => { cancelled = true }
-  }, [query])
-  if (!query.trim()) return <OrdinaryAnswerUnavailable/>
-  if (error) return <article className="chat-answer" role="alert">
-    {trace.length > 0 && <ProcessTrace steps={settleTrace(trace, 'failed')}/>}
-    <EmptyStatus kind="error" density="inline" title="无法生成本次回答" body={error} />
-  </article>
-  return <article className="chat-answer" aria-live="polite">
-    {trace.length > 0 && <ProcessTrace steps={text && !stopped ? settleTrace(trace) : trace}/>}
-    {text ? <MarkdownMath source={text}/> : null}
-    {stopped ? <p className="generation-stopped">生成已停止</p> : null}
-  </article>
 }
 
 function fieldsFromLaunch(next: ChatLaunchReady) {
@@ -144,11 +40,6 @@ function fieldsFromLaunch(next: ChatLaunchReady) {
   }
 }
 
-function writeTurns(conversationId: string, turns: LearningTurn[]) {
-  if (!conversationId) return
-  saveConversation(conversationId, { turns })
-}
-
 export function ChatPage() {
   const [launch,setLaunch]=useState(()=>resolveChatLaunch(readChatLaunchPayload()))
   const initial=launch.kind==='ready'?fieldsFromLaunch(launch):null
@@ -158,12 +49,9 @@ export function ChatPage() {
   const [routeId,setRouteId]=useState(initial?.routeId??'')
   const [value,setValue]=useState('')
   const [thinkingDepth,setThinkingDepth]=useState<'fast' | 'deep'>(initial?.thinkingDepth ?? readLearningThinking())
-  const [turns,setTurns]=useState<LearningTurn[]>(initial?.turns ?? [])
-  const [pendingQuestion,setPendingQuestion]=useState(initial?.generate && initial.experience === 'answer' && !(initial.turns.length) ? initial.query : '')
   const [generating,setGenerating]=useState(false)
-  const routeSender=useRef<(text:string)=>void>(()=>undefined)
+  const routeSender=useRef<(text:string)=>Promise<boolean>>(async()=>false)
   const stopGeneration=useRef<() => void>(() => undefined)
-  const answerAbort=useRef<AbortController | null>(new AbortController())
   useEffect(() => subscribeLearningThinking(() => setThinkingDepth(readLearningThinking())), [])
   useEffect(()=>{if(conversationId)setActiveConversation(conversationId)},[conversationId])
   useEffect(()=>{
@@ -175,8 +63,6 @@ export function ChatPage() {
         setConversationId('')
         setRouteId('')
         setValue('')
-        setTurns([])
-        setPendingQuestion('')
         return
       }
       const fields=fieldsFromLaunch(next)
@@ -184,8 +70,6 @@ export function ChatPage() {
       setExperience(fields.experience)
       setConversationId(fields.conversationId)
       setRouteId(fields.routeId)
-      setTurns(fields.turns)
-      setPendingQuestion(fields.generate && fields.experience === 'answer' && fields.turns.length === 0 ? fields.query : '')
       setThinkingDepth(fields.thinkingDepth)
       setValue('')
     }
@@ -197,44 +81,9 @@ export function ChatPage() {
   const followUp=()=>{
     const next=value.trim()
     if(!next)return
-    if(experience==='route'){
-      routeSender.current(next)
-      setValue('')
-      return
-    }
-    answerAbort.current = new AbortController()
-    setTurns((current) => {
-      const following = [...current, { role: 'user' as const, text: next }]
-      writeTurns(conversationId, following)
-      return following
-    })
-    setPendingQuestion(next)
-    setValue('')
-  }
-  const settleAnswer = (text: string) => {
-    setTurns((current) => {
-      const following = [...current]
-      if (following.at(-1)?.role !== 'user') following.push({ role: 'user', text: pendingQuestion || query })
-      following.push({ role: 'assistant', text })
-      writeTurns(conversationId, following)
-      return following
-    })
-    setPendingQuestion('')
-    addChatHistory(query, 'answer', { id: conversationId })
+    void routeSender.current(next).then(ok=>{if(ok)setValue(current=>current.trim()===next?'':current)})
   }
   const newChat=()=>{
-    if(routeId){
-      const linked=startLinkedConversation(routeId)
-      sessionStorage.setItem(CHAT_LAUNCH_KEY,JSON.stringify({query:linked.query,mode:'route',conversationId:linked.id,routeId}))
-      setConversationId(linked.id)
-      setQuery(linked.query)
-      setExperience('route')
-      setTurns([])
-      setPendingQuestion('')
-      setValue('')
-      setActiveConversation(linked.id)
-      return
-    }
     sessionStorage.removeItem(CHAT_LAUNCH_KEY)
     clearActiveHistory()
     location.hash='home'
@@ -245,20 +94,10 @@ export function ChatPage() {
     <main className="query-chat">
       <header className="query-chat-header"><div><button aria-label="返回首页" onClick={()=>location.hash='home'}><Icon name="back" size={18}/></button><h1>{query}</h1></div><button className="new-chat-only" onClick={newChat}><Icon name="new-chat" size={17}/>新对话</button></header>
       <section className="query-chat-body"><div className="query-chat-flow">
-        {experience==='route'?<>
-          {conversation?.kind==='route-followup'&&<article className="chat-answer"><h2>继续同一条路线</h2><p>{linkedRouteIntro(getRoute(routeId)?.title??query,followupOrdinal)}</p></article>}
-          {conversation?.kind!=='route-followup'&&<ChatRoutePanel key={conversationId} conversationId={conversationId} query={query} existingRouteId={routeId||undefined} thinkingDepth={thinkingDepth} onRouteReady={setRouteId} onSender={(handler)=>{routeSender.current=handler}} onGenerating={setGenerating} onStopRef={(stop)=>{stopGeneration.current=stop}}/>}
-        </>:<>
-          {(turns.length ? turns : pendingQuestion ? [{ role: 'user' as const, text: pendingQuestion }] : [{ role: 'user' as const, text: query }]).map((turn, index) => (
-            turn.role === 'user'
-              ? <div className="query-user-bubble" key={`u-${index}`}>{turn.text}</div>
-              : <article className="chat-answer" key={`a-${index}`}><MarkdownMath source={turn.text}/></article>
-          ))}
-          {pendingQuestion ? <OrdinaryAnswerLive query={pendingQuestion} turns={turns} attachments={pathLaunchAttachments.get(conversationId) ?? []} thinkingDepth={thinkingDepth} onSettled={settleAnswer} abortSignal={answerAbort.current?.signal}/> : null}
-        </>}
+        <ChatRoutePanel key={conversationId} conversationId={conversationId} query={query} existingRouteId={routeId||undefined} thinkingDepth={thinkingDepth} onRouteReady={setRouteId} onSender={(handler)=>{routeSender.current=handler}} onGenerating={setGenerating} onStopRef={(stop)=>{stopGeneration.current=stop}}/>
       </div></section>
       <div className="query-chat-composer">
-        <Composer compact value={value} onChange={setValue} onSend={followUp} showAttachment={false} thinkingDepth={thinkingDepth} onThinkingDepth={(next) => { writeLearningThinking(next); setThinkingDepth(next) }} busy={generating || Boolean(pendingQuestion)} onStop={() => { stopGeneration.current(); answerAbort.current?.abort(); setGenerating(false) }}/>
+        <Composer compact value={value} onChange={setValue} onSend={followUp} showAttachment={false} thinkingDepth={thinkingDepth} onThinkingDepth={(next) => { writeLearningThinking(next); setThinkingDepth(next) }} busy={generating} onStop={() => { stopGeneration.current(); setGenerating(false) }}/>
       </div>
     </main>
   </ProductWorkspace>

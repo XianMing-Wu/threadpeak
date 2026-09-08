@@ -1,4 +1,4 @@
-import type {TaskActivity} from '../../packages/contracts/src/task-activity.ts'
+import type {TaskActivity} from '@threadpeak/contracts/task-activity'
 import { providerScope } from './provider-scope.ts'
 import { CommandError, digest, type DurableStore, type Job, type Resource } from './store.ts'
 
@@ -73,19 +73,53 @@ export class TaskContext {
   }
 }
 export type TaskHandler = (ctx: TaskContext) => Promise<void>
+/** Classify transport failures without treating application TypeErrors as transient. */
+export function classifyTaskError(error: unknown, aborted = false): {code:string;retryable:boolean} {
+  if (aborted) return {code:'CANCELLED',retryable:false}
+  if (error instanceof ToolError) return {code:error.code,retryable:error.retryable}
+  if (error instanceof CommandError) return {code:error.code,retryable:false}
+  const failure = error as {name?:string;code?:string;message?:string;cause?:{code?:string}}
+  const code = failure?.code ?? failure?.cause?.code ?? ''
+  if (/^(ECONNRESET|ECONNREFUSED|EPIPE|ETIMEDOUT|EAI_AGAIN|UND_ERR_CONNECT_TIMEOUT|UND_ERR_SOCKET|CONNECTION_CLOSED|CONNECTION_ENDED|CONNECT_TIMEOUT|40001|40P01|53300|57P01|57P02|57P03|08[0-9A-Z]{3})$/.test(code)) return {code:'TRANSIENT_SERVICE_ERROR',retryable:true}
+  if (failure?.name==='TimeoutError'||failure?.name==='AbortError') return {code:'PROVIDER_TIMEOUT',retryable:true}
+  if (failure?.name==='TypeError' && /^(fetch failed|Failed to fetch|Load failed|NetworkError when attempting to fetch resource\.)$/.test(failure.message??'')) return {code:'NETWORK_UNAVAILABLE',retryable:true}
+  return {code:'INTERNAL_ERROR',retryable:false}
+}
 export class DurableWorker {
   private controllers = new Map<string, AbortController>()
+  private jobs = new Map<string, Job>()
   private stopped = false
   private timer?: ReturnType<typeof setTimeout>
   private pumping = false
+  private maintenanceTimer?: ReturnType<typeof setTimeout>
+  private maintenanceTask?: Promise<void>
+  private maintenanceFailures = 0
+  private pumpTask?: Promise<void>
   private tasks = new Set<Promise<void>>()
+  private timing:{maintenanceDelayMs:number;maintenanceRetryMs:number;drainMs:number}
   store: DurableStore; handler: TaskHandler; concurrency: number; log: (value: unknown) => void
-  constructor(store: DurableStore, handler: TaskHandler, concurrency = 4, log = (value: unknown) => { process.stdout.write(JSON.stringify(value)+'\n') }) { this.store=store; this.handler=handler; this.concurrency=concurrency; this.log=log }
-  start() { this.stopped = false; this.wake() }
+  constructor(store: DurableStore, handler: TaskHandler, concurrency = 4, log = (value: unknown) => { process.stdout.write(JSON.stringify(value)+'\n') }, timing={maintenanceDelayMs:60_000,maintenanceRetryMs:60_000,drainMs:10_000}) { this.store=store; this.handler=handler; this.concurrency=concurrency; this.log=log;this.timing=timing }
+  start() { this.stopped = false; this.wake(); if(!this.maintenanceTimer&&!this.maintenanceTask)this.scheduleMaintenance(this.timing.maintenanceDelayMs) }
+  private scheduleMaintenance(delay:number) {
+    if(this.stopped)return
+    this.maintenanceTimer=setTimeout(()=>{
+      this.maintenanceTimer=undefined
+      this.maintenanceTask=this.maintain().finally(()=>{this.maintenanceTask=undefined})
+    },delay)
+  }
+  private async maintain() {
+    let delay=3_600_000
+    try { const result=await this.store.maintain();if(result?.more)delay=60_000;this.maintenanceFailures=0 }
+    catch(error) {
+      delay=Math.min(900_000,this.timing.maintenanceRetryMs*2**Math.min(this.maintenanceFailures++,4))
+      this.log({event:'worker.maintenance_failed',...storageFailure(error),retryInMs:delay})
+    }
+    finally { this.scheduleMaintenance(delay) }
+  }
   wake() {
     if (this.stopped || this.pumping) return
     if (this.timer) clearTimeout(this.timer)
-    void this.pump()
+    this.pumpTask=this.pump()
   }
   private async pump() {
     this.pumping = true
@@ -93,33 +127,55 @@ export class DurableWorker {
       while (!this.stopped && this.controllers.size < this.concurrency) {
         const job = await this.store.claim()
         if (!job) break
+        if(this.stopped){await this.store.release(job);break}
         const task = this.execute(job)
         this.tasks.add(task); void task.finally(() => this.tasks.delete(task))
       }
-    } catch { this.log({ event: 'worker.storage_unavailable' }) }
+    } catch(error) { this.log({ event: 'worker.storage_unavailable',...storageFailure(error) }) }
     finally { this.pumping = false; if (!this.stopped) this.timer = setTimeout(() => this.wake(), 500) }
   }
   async execute(job: Job) {
     const controller = new AbortController(), start = Date.now()
     this.controllers.set(job.id, controller)
+    this.jobs.set(job.id,job)
+    const unsubscribe = this.store.onCancel(id => { if(id===job.id) controller.abort() })
     const heartbeat = setInterval(() => { void this.store.renew(job).then(ok => { if (!ok) controller.abort() }).catch(() => controller.abort()) }, 5000)
+    controller.signal.addEventListener('abort',()=>{clearInterval(heartbeat);unsubscribe()},{once:true})
     const ctx = new TaskContext(this.store, job, controller.signal)
     try {
+      // Cancellation or takeover may occur between claim and handler dispatch.
+      if(!await this.store.renew(job))controller.abort()
+      controller.signal.throwIfAborted()
       await this.handler(ctx)
       await ctx.flush()
       this.log({ event: 'task.completed', jobId: job.id, kind: job.kind, durationMs: Date.now()-start, attempt: job.attempts })
     } catch (error) {
-      const code = error instanceof ToolError || error instanceof CommandError ? error.code : controller.signal.aborted ? 'CANCELLED' : 'INTERNAL_ERROR'
+      const {code,retryable} = classifyTaskError(error,controller.signal.aborted)
       if (!controller.signal.aborted && code !== 'LEASE_LOST') {
         try { await ctx.flush() } catch { /* storage recovery below */ }
-        try { await this.store.recover(job, code, error instanceof ToolError ? error.retryable : false) } catch { /* expired lease is recovered by the next worker */ }
+        try { await this.store.recover(job, code, retryable) } catch { /* expired lease is recovered by the next worker */ }
       }
       this.log({ event: 'task.interrupted', jobId: job.id, kind: job.kind, code, durationMs: Date.now()-start, attempt: job.attempts })
-    } finally { clearInterval(heartbeat); this.controllers.delete(job.id) }
+    } finally { clearInterval(heartbeat); unsubscribe(); this.controllers.delete(job.id); this.jobs.delete(job.id) }
   }
   async stop() {
     this.stopped = true; if (this.timer) clearTimeout(this.timer)
+    if(this.maintenanceTimer)clearTimeout(this.maintenanceTimer)
+    this.maintenanceTimer=undefined
+    const jobs=[...this.jobs.values()]
     for (const controller of this.controllers.values()) controller.abort()
-    await Promise.allSettled([...this.tasks])
+    await Promise.all(jobs.map(async job=>{try{await this.store.release(job)}catch(error){this.log({event:'worker.release_failed',jobId:job.id,...storageFailure(error)})}}))
+    await this.pumpTask
+    // A provider that ignores abort cannot hold deployment open indefinitely.
+    // Fencing above prevents it from publishing after another worker takes over.
+    let deadline:ReturnType<typeof setTimeout>|undefined
+    await Promise.race([Promise.allSettled([...this.tasks,...(this.maintenanceTask?[this.maintenanceTask]:[])]),new Promise<void>(resolve=>{deadline=setTimeout(resolve,this.timing.drainMs)})])
+    if(deadline)clearTimeout(deadline)
   }
+}
+
+function storageFailure(error:unknown) {
+  const value=error as {code?:unknown;name?:unknown;cause?:{code?:unknown}}|undefined
+  const code=value?.code??value?.cause?.code
+  return {code:typeof code==='string'&&/^[A-Z0-9_]{2,60}$/.test(code)?code:'STORAGE_ERROR',errorType:typeof value?.name==='string'&&/^[A-Za-z]{1,40}$/.test(value.name)?value.name:'Error'}
 }
