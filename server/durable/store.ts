@@ -200,7 +200,7 @@ export class DurableStore {
       if(update||phase!==live.phase)await this.event(tx, resource, 'job.progress', { jobId: job.id, phase }, update ? update(resource) : resource.body,!!update)
     })
   }
-  async activity(job:Job, input:Pick<TaskActivity,'id'|'kind'|'title'|'status'|'detail'>) {
+  async activity(job:Job, input:Pick<TaskActivity,'id'|'kind'|'title'|'status'|'detail'|'thought'|'step'>) {
     await this.db.transaction(async tx=>{
       const resource=await this.lockResource(tx,job.owner_id,job.resource_id),live=await this.ownedJob(tx,job)
       const activities=live.activities??[],old=activities.find(a=>a.id===input.id)
@@ -208,10 +208,13 @@ export class DurableStore {
       if(old?.status==='done'&&(input.status==='running'||old.title===input.title&&old.detail===input.detail))return
       const now=this.now(),activity={...old,...input,startedAt:old?.startedAt??now,updatedAt:now,...(input.status==='done'?{finishedAt:now}:{})}
       if(old)activities[activities.indexOf(old)]=activity;else activities.push(activity)
-      const phase=input.status==='running'?input.title:live.phase
+      const phase=input.status==='running'&&input.kind!=='think'?input.title:live.phase
       await tx.query('UPDATE tp_jobs SET activities=$2::jsonb,phase=$3,updated_at=$4 WHERE id=$1',[job.id,JSON.stringify(activities),phase,now])
       job.activities=activities
-      await this.event(tx,resource,'job.activity',{jobId:job.id,activity},resource.body,false)
+      // Reasoning is private presentation data in the owner-scoped snapshot, not
+      // a diagnostic/event log and never a formal answer or checkpoint value.
+      const {thought:_thought,...eventActivity}=activity
+      await this.event(tx,resource,'job.activity',{jobId:job.id,activity:eventActivity},resource.body,false)
     })
   }
   async commit(job: Job, update: (resource: Resource, tx: Sql) => unknown|Promise<unknown>, continuation?:(body:any)=>{kind:string;key:string;input:unknown}|undefined) {

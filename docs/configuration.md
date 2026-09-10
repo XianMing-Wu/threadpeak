@@ -90,3 +90,7 @@ PGlite 数据目录只允许一个进程持有；多个 API/worker 实例使用�
 ### 资料存储额度
 
 `THREADPEAK_MATERIAL_MAX_COUNT` 默认 500；`THREADPEAK_MATERIAL_MAX_BYTES` 默认 1073741824（1 GiB）。必须为正的安全整数，对每个所有者统一生效，额度满返回可读错误，不删除已有资料。知乎导入按每份至少 8 MiB 预留；这不是整个数据库（含检查点与索引）的磁盘预算。部署容量仍须单独测量。
+
+## 模型与思考强度
+
+`DEEPSEEK_MODEL_NAME=deepseek-flash` 同时用于快速回答和深度思考。快速显式 `thinking=disabled` 且不传 reasoning_effort；深度显式 `thinking=enabled`、`reasoning_effort=low`；首页新任务默认快速。R2 名称提取保留 `thinking=disabled` 的短提取例外。 最终路线生成 R4 是快速模式的唯一思考例外：也使用 enabled/low，同一步骤修复保持 low；其他快速步骤仍 disabled。已有任务冻结的深度不被界面默认值覆盖。参数依据见 [DeepSeek 官方说明](https://api-docs.deepseek.com/zh-cn/guides/thinking_mode/)。状态条读取模型实际思考流，与正式正文及校验结果独立；不用服务日志保存思考全文。

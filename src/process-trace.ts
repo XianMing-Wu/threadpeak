@@ -202,9 +202,6 @@ export function asProcessSteps(value: unknown): ProcessStep[] | undefined {
 export function settleTrace(steps: readonly ProcessStep[], status: 'done' | 'failed' | 'stopped' = 'done'): ProcessStep[] {
   return steps.map((step) => {
     if (step.status !== 'running') return { ...step }
-    if (status === 'failed' && step.kind === 'think' && step.thought?.trim()) {
-      return { ...step, status: 'done' }
-    }
     return { ...step, status }
   })
 }

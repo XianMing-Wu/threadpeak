@@ -2,8 +2,8 @@
 
 declare module 'react-markdown' {
   import type { ComponentType, ReactNode } from 'react'
-  export type Components = Record<string, ComponentType<{ children?: ReactNode; node?: unknown }>>
-  const ReactMarkdown: ComponentType<{ children?: string; remarkPlugins?: unknown[]; components?: Components }>
+  export type Components = Record<string, ComponentType<{ children?: ReactNode; node?: unknown; className?: string }>>
+  const ReactMarkdown: ComponentType<{ children?: string; remarkPlugins?: unknown[]; components?: Components; allowedElements?: string[]; unwrapDisallowed?: boolean; skipHtml?: boolean }>
   export default ReactMarkdown
   export const Markdown: typeof ReactMarkdown
 }

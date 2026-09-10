@@ -7,7 +7,7 @@ import { MaterialChips, MaterialScope, Materials, useMaterials } from '../materi
 import { rememberPathSearchScope } from '../path-planning/path-run-client'
 import { selectRecommendedKnowledge, selectRecommendedRoutes } from '../runtime/library-read-model'
 import { useLibrarySelector } from '../runtime/use-library-selector'
-import { readLearningThinking, subscribeLearningThinking, writeLearningThinking } from '../session/learning-thinking'
+import { readLearningThinking, resetLearningThinking, subscribeLearningThinking, writeLearningThinking } from '../session/learning-thinking'
 import { homeSuggestions } from '../showcase/content'
 import { coverForId } from '../ui/covers'
 import { HomeRecommendationFlow } from '../ui/HomeRecommendationFlow'
@@ -55,7 +55,8 @@ export function HomePage() {
     }
   }, [])
   const materials = useMaterials()
-  const [thinkingDepth, setThinkingDepth] = useState(readLearningThinking)
+  const [thinkingDepth, setThinkingDepth] = useState<'fast' | 'deep'>('fast')
+  useEffect(() => { resetLearningThinking() }, [])
   useEffect(() => subscribeLearningThinking(() => setThinkingDepth(readLearningThinking())), [])
   const sending=useRef(false)
   const send = () => {

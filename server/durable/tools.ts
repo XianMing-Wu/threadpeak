@@ -19,6 +19,8 @@ import { structureRepairUserMessage } from '../agent-runtime/repair.ts'
 import {validateGoalPlan,compileStagedPlan,STAGED_PLAN_PROMPT,STAGED_PLAN_OUTPUT} from '../path-generation/staged-plan.ts'
 import {evidenceUrlKey} from '../agent-runtime/evidence-url.ts'
 import { paragraphDraft } from './stream-draft.ts'
+import { modelCall } from './model-call.ts'
+import { reasoningReserve } from '../agent-runtime/thinking-policy.ts'
 import {defaultCapabilities,type ToolCapabilities} from './capabilities.ts'
 import {LEARNING_TOOL_SPECS,ROUTE_STEP_SPECS,type RouteStep,type LearningTool} from './agent-specs.ts'
 export {LEARNING_TOOL_SPECS} from './agent-specs.ts'
@@ -26,17 +28,22 @@ export {LEARNING_TOOL_SPECS} from './agent-specs.ts'
 export class ProductTools {
   llm: LlmProvider; zhihu: ZhihuProvider; window: number; capabilities:ToolCapabilities
   constructor(llm:LlmProvider, zhihu:ZhihuProvider, capabilities:number|ToolCapabilities=64_000) { this.llm=llm; this.zhihu=zhihu; this.capabilities=typeof capabilities==='number'?defaultCapabilities(capabilities):capabilities;this.window=this.capabilities.llm.window }
-  async structured<T>(ctx:TaskContext, name:string, system:string, input:unknown, validate:(value:unknown,prepared:unknown)=>T, output=8192, options:{stream?:boolean;thinkingDepth?:ThinkingDepth;focus?:string;prepare?:(input:any)=>unknown}={}):Promise<T> {
+  async structured<T>(ctx:TaskContext, name:string, system:string, input:unknown, validate:(value:unknown,prepared:unknown)=>T, output=8192, options:{stream?:boolean;thinkingDepth?:ThinkingDepth;thinking?:'disabled';focus?:string;prepare?:(input:any)=>unknown}={}):Promise<T> {
     const runtime={system,budget:this.capabilities.llm,formalOutput:2,...options.focus?{focus:options.focus}:{},...options.thinkingDepth?{thinkingDepth:options.thinkingDepth}:{}}
     return ctx.step(`${name}@${AGENT_CONTRACT_VERSION}:${digest(runtime).slice(0,16)}`, {input,...runtime}, async()=>{
       const label=({'L-search-plan':'拆解检索方向','L-source-select':'筛选相关资料','A-card-plan':'理解请教问题','A-card-select':'筛选相关博主'} as Record<string,string>)[name.split(':')[0]!]
       if(label)await ctx.activity(name,'read',label)
       const depth:ThinkingDepth=options.thinkingDepth??ctx.job.input.depth??'fast'
       const window=effectiveWindow(this.window)
-      const reserve=Math.min(this.capabilities.llm.output,Math.floor(window*.35), output+(depth==='deep'?8192:0))
-      const base=await packContext(this.llm,ctx,system,input,depth,{window:this.window,output:reserve,margin:(options.prepare?Math.max(4096,Math.ceil(window*.08)):2048)+(options.focus?tokenBound(options.focus)+64:0),summary:this.capabilities.llm})
-      if(options.prepare)base[1]!.content=JSON.stringify(options.prepare(JSON.parse(base[1]!.content)))
-      if(options.focus)base.push({role:'user',content:options.focus})
+      const ceiling=Math.min(this.capabilities.llm.output,Math.floor(window*.35))
+      let reserve=Math.min(ceiling,output+reasoningReserve({thinkingDepth:depth,thinking:options.thinking}))
+      const prepareBase=async()=>{
+        const base=await packContext(this.llm,ctx,system,input,depth,{window:this.window,output:reserve,margin:(options.prepare?Math.max(4096,Math.ceil(window*.08)):2048)+(options.focus?tokenBound(options.focus)+64:0),summary:this.capabilities.llm})
+        if(options.prepare)base[1]!.content=JSON.stringify(options.prepare(JSON.parse(base[1]!.content)))
+        if(options.focus)base.push({role:'user',content:options.focus})
+        return base
+      }
+      let base=await prepareBase()
       let previous='',reason=''
       for(let attempt=0;attempt<3;attempt++){
         let messages=base
@@ -53,9 +60,22 @@ export class ProductTools {
           messages=options.focus?[...base,{role:'user' as const,content:repair}]:[...base,{role:'assistant' as const,content:diagnostic},{role:'user' as const,content:repair}]
         }
         if(messages.reduce((s,m)=>s+tokenBound(m.content)+64,0)+reserve+512>window)throw new ToolError('CONTEXT_REQUIRES_PARTITION',false)
-        const result=await this.llm.complete({messages,json:true,thinkingDepth:depth,maxTokens:reserve,signal:ctx.signal,
-          ...(options.stream&&attempt===0&&!ctx.job.draft?{onText:(raw:string)=>{const text=paragraphDraft(raw,true);if(text.trim())ctx.draft('正在撰写讲解',text)}}:{})})
-        if(result.kind==='failed')throw new ToolError(result.code??'MODEL_UNAVAILABLE',result.retryable??true)
+        const thoughtTitle=label??(name.startsWith('R4')?'安排顺序与并列阶段':name.startsWith('R3')?'准备路线选择题':name==='R1'?'理解学习目标':name.startsWith('L-answer:attach')?'关联知识卡':name.startsWith('L-answer')?'撰写讲解':name.startsWith('N')?'寻找合适的博主':'整理回答')
+        const result=await modelCall(this.llm,ctx,name,thoughtTitle,{messages,json:true,thinkingDepth:depth,thinking:options.thinking,maxTokens:reserve,signal:ctx.signal,
+          ...(options.stream&&attempt===0&&!ctx.job.draft?{onText:(raw:string)=>{const text=paragraphDraft(raw,true);if(text.trim())ctx.draft('正在撰写讲解',text)}}:{})},attempt)
+        if(result.kind==='failed'){
+          if(result.code==='OUTPUT_TRUNCATED'){
+            if(attempt<2&&reserve<ceiling){
+              reserve=Math.min(ceiling,Math.max(reserve*2,reserve+4096))
+              base=await prepareBase()
+              previous='';reason='上次输出达到长度上限，未形成完整结果。输出预算已增加，请重新输出完整 JSON，保持必要字段和真实依据，避免重复铺陈。'
+              continue
+            }
+            // Repeating an identical insufficient cap cannot recover this operation.
+            throw new ToolError('OUTPUT_TRUNCATED',false)
+          }
+          throw new ToolError(result.code??'MODEL_UNAVAILABLE',result.retryable??true)
+        }
         previous=result.text
         let validated:T
         try{
@@ -134,7 +154,7 @@ export class ProductTools {
     return this.structured(ctx,'R2-names:v6',`${CATALOG_NAMES_PROMPT}\n输出 JSON：${CATALOG_NAMES_OUTPUT}`,input,(value,prepared)=>{
       const source=prepared as DiscoveryInput
       return validateCatalogNames(value,source.searchScope,[input.goal,input.firstSearch.summary,...(input.attachments??[]).map(a=>a.content)])
-    },1024,{thinkingDepth:'fast'})
+    },1024,{thinkingDepth:'fast',thinking:'disabled'})
   }
   async catalogSearches(ctx:TaskContext,names:string[],scope:SearchScope={kind:'zhihu'}){
     return ctx.step('R-Catalog-all:v7',{names,scope},async()=>{
@@ -161,7 +181,7 @@ export class ProductTools {
       if(!checked.ok)throw new Error(checked.message)
       return {plan,summarizedRefs}
     }
-    const planned=await this.structured(ctx,input.workflow===DIRECT_ROUTE_VERSION?'R4-plan:direct-v6':'R4-plan:strict-v2',`${SHARED_SYSTEM_PREFIX}\n${GOAL_POLICY}\n${input.workflow===DIRECT_ROUTE_VERSION?DIRECT_ROUTE_PROMPT:STAGED_PLAN_PROMPT} searchScope.kind=collections 时只根据所选资料安排学习，缺口明确说明，不虚构外部来源。用户选择的 attachments 必须用于确定范围、重点和练习次序；F 引用表示概念与资料的相关关系，所有资料仍会出现在每个概念中，不要为了可见性给所有概念硬凑相同引用。\n输出 JSON：${input.workflow===DIRECT_ROUTE_VERSION?DIRECT_ROUTE_OUTPUT:STAGED_PLAN_OUTPUT}`,modelInput,(value,prepared)=>settle(value,prepared as typeof modelInput),24576,input.workflow===DIRECT_ROUTE_VERSION?{focus:routeTaskFocus({goal:input.goal,goalContext:input.goalContext,attachments:modelInput.attachments},'plan')}:{})
+    const planned=await this.structured(ctx,input.workflow===DIRECT_ROUTE_VERSION?'R4-plan:direct-v6':'R4-plan:strict-v2',`${SHARED_SYSTEM_PREFIX}\n${GOAL_POLICY}\n${input.workflow===DIRECT_ROUTE_VERSION?DIRECT_ROUTE_PROMPT:STAGED_PLAN_PROMPT} searchScope.kind=collections 时只根据所选资料安排学习，缺口明确说明，不虚构外部来源。用户选择的 attachments 必须用于确定范围、重点和练习次序；F 引用表示概念与资料的相关关系，所有资料仍会出现在每个概念中，不要为了可见性给所有概念硬凑相同引用。\n输出 JSON：${input.workflow===DIRECT_ROUTE_VERSION?DIRECT_ROUTE_OUTPUT:STAGED_PLAN_OUTPUT}`,modelInput,(value,prepared)=>settle(value,prepared as typeof modelInput),24576,{thinkingDepth:'deep',...(input.workflow===DIRECT_ROUTE_VERSION?{focus:routeTaskFocus({goal:input.goal,goalContext:input.goalContext,attachments:modelInput.attachments},'plan')}:{})})
     return compileStagedPlan(planned.plan,scope,attachmentSourceIds,new Set(planned.summarizedRefs))
   }
   async search(ctx:TaskContext,name:string,query:string,scope:SearchScope={kind:'zhihu'}):Promise<SearchEvidence[]>{
@@ -191,12 +211,20 @@ export class ProductTools {
   async chat(ctx:TaskContext,input:unknown):Promise<string>{
     const system=`${SHARED_SYSTEM_PREFIX}\n${AGENT_PROMPTS.R5}`,budget=this.capabilities.llm
     return ctx.step(`R5@${AGENT_CONTRACT_VERSION}:${digest({system,budget}).slice(0,16)}`,input,async()=>{
-      const depth=ctx.job.input.depth??'fast',output=Math.min(budget.output,depth==='deep'?16384:8192)
-      const messages=await packContext(this.llm,ctx,system,input,depth,{window:this.window,output,margin:2048,summary:budget})
+      const depth=ctx.job.input.depth??'fast',ceiling=Math.min(budget.output,Math.floor(effectiveWindow(this.window)*.35))
+      let output=Math.min(ceiling,8192+reasoningReserve({thinkingDepth:depth}))
+      const prepareMessages=()=>packContext(this.llm,ctx,system,input,depth,{window:this.window,output,margin:2048,summary:budget})
+      let messages=await prepareMessages()
       let repair=''
       for(let attempt=0;attempt<3;attempt++){
-        const result=await this.llm.complete({messages:repair?[...messages,{role:'user',content:repair}]:messages,json:false,thinkingDepth:depth,maxTokens:output,signal:ctx.signal,onText:text=>ctx.draft('正在回答',text)})
-        if(result.kind==='failed')throw new ToolError(result.code??'MODEL_UNAVAILABLE',result.retryable??true)
+        const result=await modelCall(this.llm,ctx,'R5','组织回答',{messages:repair?[...messages,{role:'user',content:repair}]:messages,json:false,thinkingDepth:depth,maxTokens:output,signal:ctx.signal,onText:text=>ctx.draft('正在回答',text)},attempt)
+        if(result.kind==='failed'){
+          if(result.code==='OUTPUT_TRUNCATED'){
+            if(attempt<2&&output<ceiling){output=Math.min(ceiling,Math.max(output*2,output+4096));messages=await prepareMessages();repair='上次输出达到长度上限，请围绕原问题重新给出完整回答，避免重复。';continue}
+            throw new ToolError('OUTPUT_TRUNCATED',false)
+          }
+          throw new ToolError(result.code??'MODEL_UNAVAILABLE',result.retryable??true)
+        }
         try{validateAnswerMath(result.text);return result.text}catch(error){repair=`上次回答包含无法渲染的公式。请针对原问题重新给出完整回答。${error instanceof Error?error.message:''}`}
       }
       throw new ToolError('MATH_NOT_SETTLED',false)

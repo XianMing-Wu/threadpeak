@@ -47,6 +47,7 @@ export type PathRunView = {
 }
 
 export type PathRunWatch = {
+  thinkingDepth?: 'fast' | 'deep'
   commandKey?: string
   onUpdate?: (view: PathRunView) => void
   signal?: AbortSignal
@@ -128,7 +129,7 @@ export async function submitCustomPathAnswer(runId: string, questionId: string, 
 }
 
 export async function followUpPathRun(runId: string, message: string, watch?: PathRunWatch) {
-  return watchPathRun(await post(`/api/path-runs/${runId}/follow-up`, { message }, watch?.signal), watch)
+  return watchPathRun(await post(`/api/path-runs/${runId}/follow-up`, { message, thinkingDepth: watch?.thinkingDepth }, watch?.signal), watch)
 }
 
 export async function retryPathRun(runId: string, watch?: PathRunWatch) {
@@ -136,5 +137,5 @@ export async function retryPathRun(runId: string, watch?: PathRunWatch) {
 }
 
 export async function replyPathRun(runId: string, message: string, watch?: PathRunWatch) {
-  return watchPathRun(await post(`/api/path-runs/${runId}/reply`, { message }, watch?.signal), watch)
+  return watchPathRun(await post(`/api/path-runs/${runId}/reply`, { message, thinkingDepth: watch?.thinkingDepth }, watch?.signal), watch)
 }

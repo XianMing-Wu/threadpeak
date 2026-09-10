@@ -73,14 +73,14 @@ test('thought display hides streaming JSON fragments that never form a complete 
   assert.match(thoughtForDisplay(`还差入口可达。\n${fragment}`), /还差入口可达/)
 })
 
-test('failed settle keeps a think bar with thought as 思考完成', () => {
+test('failed stream retains the thought without claiming it completed', () => {
   const steps = settleTrace([
     agentStep('r1', '拆成检索问题', undefined, 'running'),
     thinkStep('r1-think', 'running', '先把目标拆开'),
   ], 'failed')
   assert.equal(steps[0].status, 'failed')
-  assert.equal(steps[1].status, 'done')
-  assert.equal(pillTitle(steps[1]), '思考完成')
+  assert.equal(steps[1].status, 'failed')
+  assert.equal(pillTitle(steps[1]), '思考未完成')
 })
 
 test('applyReasoning inserts a think bar after the matching agent', () => {

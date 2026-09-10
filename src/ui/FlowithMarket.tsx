@@ -55,6 +55,7 @@ export function FlowithMarket({
   error,
   loadingStatus,
   heading,
+  footer,
   title,
   sub,
   switchable = true,
@@ -69,6 +70,7 @@ export function FlowithMarket({
   error?: ReactNode
   loadingStatus?: ReactNode
   heading?: ReactNode
+  footer?: ReactNode
   title?: string
   sub?: string
   switchable?: boolean
@@ -148,6 +150,7 @@ export function FlowithMarket({
           {results}
         </div>
       </section>
+      {footer}
     </main>
   )
 }

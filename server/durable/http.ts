@@ -176,7 +176,7 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     const answerDuringWork=path.workflow===DIRECT_ROUTE_VERSION&&['path.start','path.answer'].includes(snapshot.job?.kind??'')
     return {runId:id,searchScope:path.searchScope??{kind:'zhihu'},goal:path.goal,recoverable:snapshot.job?.recoverable??false,status:path.status==='awaiting_answers'&&!allAnswered(path)&&(!busy||answerDuringWork)?'awaiting_answers':busy?'running':waiting?'failed':path.status,preparing:!!busy&&snapshot.job?.kind==='path.start',stage:snapshot.job?.phase??'',questionSets:path.questionSets,document:path.document,route:path.route,
       reply:path.conversation.filter((m:any)=>m.role==='assistant').at(-1)?.content,followUpMessage:path.conversation.filter((m:any)=>m.role==='assistant').at(-1)?.content,conversation:path.conversation,knowledgeCreated:false,revision:snapshot.revision,
-      trace:pathTrace(await ports.store.db.query<any>('SELECT id,kind,status,checkpoints FROM tp_jobs WHERE owner_id=$1 AND resource_id=$2 ORDER BY created_at,id',[own,id]),path),
+      trace:pathTrace(await ports.store.db.query<any>('SELECT id,kind,status,checkpoints,activities FROM tp_jobs WHERE owner_id=$1 AND resource_id=$2 ORDER BY created_at,id',[own,id]),path),
       ...(waiting?{error:{code:snapshot.job?.recoverable?'RECOVERABLE':'RETRY_BUDGET_EXHAUSTED',message:snapshot.job?.recoverable?'这次还没完成，已收集的资料和选择都已保留。':'本次重试次数已用完，已有资料和选择仍然保留。'}}:{})}
   }
   app.post('/api/path-runs',async(request,reply)=>{
@@ -203,8 +203,8 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     ports.worker.wake();return pathView(own,id)
   })
   for(const action of ['follow-up','reply'] as const)app.post(`/api/path-runs/:id/${action}`,async request=>{
-    const {message}=z.object({message:Text}).parse(bodyOf(request)),own=owner(request),id=resourceId(request),state=(await ports.store.resource<PathState>(own,id)).body
-    await ports.store.enqueue(own,id,action==='follow-up'?'path.clarify':'path.chat',requestKey(request),{question:message,depth:state.depth},r=>{
+    const {message,thinkingDepth}=z.object({message:Text,thinkingDepth:depth}).parse(bodyOf(request)),own=owner(request),id=resourceId(request)
+    await ports.store.enqueue(own,id,action==='follow-up'?'path.clarify':'path.chat',requestKey(request),{question:message,depth:thinkingDepth},r=>{
       if(r.kind!=='path'||action==='reply'&&r.body.status!=='published'||action==='follow-up'&&r.body.status!=='awaiting_answers')throw new CommandError('INVALID_STAGE')
       r.body.conversation.push({messageId:randomUUID(),role:'user',kind:'text',content:message});return r.body
     });ports.worker.wake();return pathView(own,id)

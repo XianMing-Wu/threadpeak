@@ -10,7 +10,7 @@ export function routeTaskFocus(input:{goal?:unknown;goalContext?:unknown;attachm
   :'请只询问这些原话尚未说明、且会改变路线的条件。已明确的范围和深度不重新投票：只学数学的目标不问编程经验或是否改做程序；完整理解不改问是否降低为科普。用户说从零/入门且未说明基础时，至少一题区分“仅没学过目标主题，但能使用它的前置”与“前置也不会，需要补起”；不能只问是否见过目标公式。以近期具体运算、写改或解释动作表达，不让新手选陌生专业术语。知识经验选项允许完全没接触，只校准本目标实际所需的动作，不据此自动换方法或加整门基础。每题沿一个可观察维度；routeEffect只描述能力和顺序影响，不开课程或技术栈清单。从零理论学习的基础题可按“带求和、矩阵或积分的简单表达式，我完全读不懂／以前能算但需复习／目前能独立算所需部分”这种可观察程度区分；不要让最低档仍默认已经会另一类数学。若问进入方式，只用“看图和具体变化／跟着小算例计算／两种都可以”这样的普通描述，禁止把矩阵分解、级数或滤波等陌生数学视角当成选项。成果已清楚时两道就够。只输出题组JSON。'
  const refs=Array.isArray(input.attachments)?input.attachments.map(f=>(f as {ref?:string}).ref).filter(Boolean):[]
  const materialRule=stage==='plan'?(refs.length?`本次附件引用仅允许：${refs.join('、')}。从对应attachments.content逐字引用。`:'本次attachments为空。所有概念的attachmentRefs和materialAnchors都必须为[]。搜索总结不是F附件，禁止给它编F编号。'):''
- return `上文是任务上下文与候选资料。以下仅重申用户实际表达，没有模型补充：\n${String(intent.rawGoal??'')}\n用户实际补充或已选条件原文：\n${intent.userStatements.join('\n')||'尚无'}\n${task}\n${materialRule}`
+ return `上文是任务上下文与候选资料。以下仅重申用户实际表达，没有模型补充：\n${String(intent.rawGoal??'')}\n用户实际补充或已选条件原文：\n${intent.userStatements.join('\n')||'尚无'}\n${task}\n${materialRule}${stage==='plan'?'\n输出是一个完整根对象，必须同时包含 title、learningGoal、stages；不能只输出 learningGoal 的内部字段，也不能分多个 JSON 返回。motivation、startingPoint、constraints、nonGoals 只能复制上面某条用户原话的连续片段，不能为并列项分别添加原话中不存在的主语或否定词。\n完整输出结构：'+DIRECT_ROUTE_OUTPUT:''}`
 }
 export const CatalogNamesSchema=z.object({carriers:z.array(z.string().trim().min(1).max(150)).max(4)}).strict()
 export const CATALOG_NAMES_PROMPT=`从goal/goalContext、附件、firstSearch.summary中提取需要补查目录的具体载体名称。只选仍可能服务原目标、且目录缺口会影响内容取舍或载体比较的课程、书籍、教程、项目。用户点名比较的载体优先考虑；多个相似资源优先保留有实质比较价值者，不因知名度或出现次数照抄完整书单。此时个人条件可能未知，不提前按未确认偏好排除可行方法。

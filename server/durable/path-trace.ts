@@ -1,5 +1,7 @@
 import type {Job} from './store.ts'
-type Step={id:string;kind:'agent'|'search'|'confirm';status:'running'|'done'|'failed'|'stopped';title:string;extra?:string}
+import {latestThinkingActivities} from '@threadpeak/contracts/task-activity'
+type Step={id:string;kind:'agent'|'search'|'confirm'|'think';status:'running'|'done'|'failed'|'stopped';title:string;extra?:string;thought?:string}
+type TraceJob=Pick<Job,'id'|'kind'|'status'|'checkpoints'>&Partial<Pick<Job,'activities'>>
 const definitions=[
   {key:'R1',title:'理解学习目标',kind:'agent',after:[]},
   {key:'R-S:0',title:'搜索学习方法',kind:'search',after:['R1']},
@@ -8,10 +10,18 @@ const definitions=[
   {key:'R3',title:'准备聊聊你的目标',kind:'agent',after:['R2']},
 ] as const
 const statusOf=(job:Pick<Job,'status'>,done:boolean):Step['status']=>done?'done':job.status==='waiting'?'failed':job.status==='cancelled'?'stopped':'running'
-export function pathTrace(jobs:Pick<Job,'id'|'kind'|'status'|'checkpoints'>[],path:{status:string;questionSets:any[];searchScope?:{kind:string};workflow?:string;research?:{ready:boolean}}):Step[]{
+export function pathTrace(jobs:TraceJob[],path:{status:string;questionSets:any[];searchScope?:{kind:string};workflow?:string;research?:{ready:boolean}}):Step[]{
   const result:Step[]=[]
   for(const job of jobs){
-    const checkpoint=(key:string)=>Object.entries(job.checkpoints).find(([name])=>name.startsWith(`${key}@goal-v1:`)||name.startsWith(`${key}:goal-choices-v2@goal-v1`))?.[1]??job.checkpoints[`${key}@goal-v1`]??job.checkpoints[key]
+    const checkpoint=(key:string)=>{
+      // Current catalog checkpoints are v7. Historical v6 and whole web-search
+      // groups remain readable; a single web/zhihu subcall is not the whole group.
+      const aliases=[key,...key.startsWith('R-Catalog:v7:')?[key.replace(':v7:',':v6:')]:[]]
+      for(const alias of aliases){
+        const match=Object.entries(job.checkpoints).find(([name])=>name===alias||name===`${alias}@goal-v1`||name.startsWith(`${alias}@goal-v1:`)||name.startsWith(`${alias}:goal-choices-v2@goal-v1`)||name.startsWith(`${alias}:goal-choices-v2:url-v2@goal-v1`)||name.startsWith(`${alias}:url-v2@goal-v1`))?.[1]
+        if(match)return match
+      }
+    }
     const has=(key:string)=>!!checkpoint(key)
     const direct=path.workflow==='route-direct-v6'||Object.keys(job.checkpoints).some(k=>k.startsWith('R2-names:v6'))
     if(job.kind==='path.start'){
@@ -20,7 +30,7 @@ export function pathTrace(jobs:Pick<Job,'id'|'kind'|'status'|'checkpoints'>[],pa
       const names=(checkpoint('R2-names:v6')?.value as {carriers?:string[]}|undefined)?.carriers??[]
       const next=direct?[
         {key:'R2-names:v6',title:'提取待补查载体',kind:'agent',after:prerequisites},
-        ...names.map((name,i)=>({key:`R-Catalog:v6:${i+1}`,title:`补查${name}`,kind:'search',after:i<2?['R2-names:v6']:['R-Catalog:v6:1','R-Catalog:v6:2']})),
+        ...names.map((name,i)=>({key:`R-Catalog:v7:${i+1}`,title:`补查${name}`,kind:'search',after:i<2?['R2-names:v6']:['R-Catalog:v7:1','R-Catalog:v7:2']})),
         {key:'R3:v6',title:'准备路线选择题',kind:'agent',after:['R2-names:v6']},
       ]:[{...definitions[3],after:prerequisites},definitions[4]]
       for(const step of [...first,...next]){
@@ -40,5 +50,16 @@ export function pathTrace(jobs:Pick<Job,'id'|'kind'|'status'|'checkpoints'>[],pa
     if(done)result.push({id:`${build.id}:publish`,kind:'confirm',status:'done',title:'学习路线已生成'})
   }
   for(const job of jobs.filter(j=>j.kind==='path.chat'))result.push({id:`${job.id}:answer`,kind:'agent',status:statusOf(job,job.status==='completed'),title:job.status==='completed'?'已回答路线追问':'正在回答路线追问'})
-  return result
+  const thoughts=new Map<string,Step[]>()
+  for(const job of jobs)for(const activity of latestThinkingActivities(job.activities??[])){
+    const step=activity.step??''
+    const host=step.startsWith('R4')?`${job.id}:plan`:step==='R5'?`${job.id}:answer`:step.startsWith('R3b')?`${job.id}:clarify`:`${job.id}:${step}`
+    const target=result.some(s=>s.id===host)?host:result.filter(s=>s.id.startsWith(`${job.id}:`)).at(-1)?.id
+    if(!target)continue
+    const status=statusOf(job,activity.status==='done')
+    const group=thoughts.get(target)??[]
+    group.push({id:`${job.id}:${activity.id}`,kind:'think',status:activity.status==='waiting'&&status==='running'?'failed':status,title:'思考过程',extra:activity.title,thought:activity.thought})
+    thoughts.set(target,group)
+  }
+  return result.flatMap(step=>[step,...thoughts.get(step.id)??[]])
 }

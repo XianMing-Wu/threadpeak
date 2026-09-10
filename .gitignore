@@ -14,6 +14,22 @@ qa/evidence/goal-agents/raw/
 qa/evidence/showcase/raw/
 qa/evidence/project-audit-fixes-2026-09-08/raw/
 
+# Local QA reports and provider/model-response evidence. Keep these on the
+# workstation only; they may include real prompt and response payloads.
+qa/evidence/thinking-2026-09-10/
+qa/evidence/thinking-reliability-2026-09-10/
+qa/collections-2026-09-10.md
+qa/collections-review.html
+qa/collections-review.tsx
+qa/thinking-2026-09-10.md
+qa/thinking-output-review.html
+qa/thinking-output-review.tsx
+qa/thinking-reliability-2026-09-10.md
+qa/thinking-review.html
+qa/thinking-review.tsx
+scripts/verify-thinking-flow.mjs
+刘看山/
+
 coverage/
 *.threadpeak-owner
 *.threadpeak-lock

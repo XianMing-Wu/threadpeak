@@ -1,4 +1,5 @@
 import {newChat} from '../chat/launch'
+import {ThinkingActivities} from '../components/ThinkingActivities'
 import {pollResource,taskPollInterval,foregroundDelay} from './poll'
 import { useEffect, useRef, useState } from 'react'
 import { ProductWorkspace } from '../components/Shell'
@@ -42,6 +43,7 @@ export function OrdinaryChat({chatId,question,initialDepth,resourceId}:{chatId:s
     {(notice||snapshot?.job?.status==='waiting')&&<div className="lp-runtime-notice" role="status">{notice||snapshot?.job?.phase}{notice&&<button onClick={()=>setReconnect(n=>n+1)}>重新连接</button>}{snapshot?.job?.status==='waiting'&&snapshot.job.recoverable&&<button onClick={()=>void action('resume')}>继续完成</button>}{snapshot?.job?.status==='waiting'&&<button onClick={()=>void action('cancel')}>停止本次任务</button>}</div>}
     <section className="query-chat-body" ref={scroll} onScroll={()=>{const el=scroll.current;if(el)follow.current=el.scrollHeight-el.scrollTop-el.clientHeight<100}}><div className="query-chat-flow">
       {snapshot?.data.messages.map(m=>m.role==='user'?<div className="query-user-bubble" key={m.id}>{m.text}</div>:<article className="chat-answer" key={m.id}><MarkdownMath source={m.text}/>{m.incomplete&&<small>已停止 · 回答尚未完成</small>}</article>)}
+      <ThinkingActivities activities={snapshot?.job?.activities} waiting={snapshot?.job?.status==='waiting'||snapshot?.job?.status==='queued'} stopped={snapshot?.job?.status==='cancelled'}/>
       {busy&&<article className="chat-answer" aria-busy="true">{snapshot?.job?.draft?<MarkdownMath source={snapshot.job.draft}/>:<p role="status">{snapshot?.job?.phase??'正在读取对话'}</p>}</article>}
     </div></section>
     <div className="query-chat-composer"><Composer compact value={value} onChange={setValue} onSend={()=>void send()} showAttachment={false} thinkingDepth={depth} onThinkingDepth={setDepth} busy={busy} sendDisabled={sending||snapshot?.job?.status==='waiting'} onStop={()=>void action('cancel')}/></div>

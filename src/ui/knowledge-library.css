@@ -54,7 +54,6 @@
 .knowledge-library-notice picture { display: none; }
 .knowledge-library-empty { padding-block: 40px; }
 .knowledge-library-empty > .ux-status { margin-inline: auto; }
-.knowledge-library-archive { margin-top: 24px; }
 .knowledge-library-loading { position: absolute; left: 0; bottom: -22px; color: var(--ink-3); font-size: 12px; line-height: 1.5; }
 .knowledge-shelf-loading-books { display: flex; gap: 30px; margin-top: 20px; padding: 0 20px 12px; overflow: hidden; border-bottom: 8px solid var(--surface-3); }
 .knowledge-shelf-loading-books i { display: block; flex: 0 0 100px; height: 150px; border: 1px solid var(--line-2); border-radius: 2px; background: var(--surface-2); }

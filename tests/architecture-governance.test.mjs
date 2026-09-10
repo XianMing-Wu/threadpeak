@@ -65,14 +65,14 @@ test('rule metadata rejects always-on, duplicate and invalid fields', () => {
   for (const source of [valid.replace('false', 'true'), valid.replace('src/**', ''), valid.replace('src/**', 'src/**,src/**'), valid.replace('---\n#', 'globs: "server/**"\n---\n#'), valid.replace('description:', 'unknown:')]) assert.throws(() => parseRule(source))
 })
 
-test('environment example keys are unique, empty and documented at their configuration owner', async () => {
+test('environment example keys are unique, credential-free and documented at their configuration owner', async () => {
   const [example, configuration, ignore] = await Promise.all(['.env.example', 'docs/configuration.md', '.gitignore'].map(read))
   const entries = example.split(/\r?\n/).filter(line => line && !line.startsWith('#')).map(line => line.split('='))
   assert.ok(entries.length > 0)
   assert.equal(new Set(entries.map(([key]) => key)).size, entries.length)
   for (const [key, value, extra] of entries) {
     assert.match(key, /^[A-Z][A-Z0-9_]+$/)
-    assert.equal(value, '', `${key} must not commit credentials`)
+    assert.equal(value, key === 'DEEPSEEK_MODEL_NAME' ? 'deepseek-flash' : '', `${key} must not commit credentials`)
     assert.equal(extra, undefined)
     assert.ok(configuration.includes(`\`${key}\``), `${key} is missing from configuration.md`)
   }

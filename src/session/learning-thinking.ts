@@ -4,22 +4,18 @@ const KEY = 'threadpeak-thinking-depth'
 const LEGACY_KEY = 'threadpeak-learning-thinking'
 const EVENT = 'threadpeak-learning-thinking'
 
-function readStored(): string | null {
-  try {
-    return localStorage.getItem(KEY) ?? sessionStorage.getItem(LEGACY_KEY)
-  } catch {
-    return null
-  }
-}
+// A new browser session starts fast; an old persistent preference must not
+// silently make all subsequent routes use deep reasoning.
+let current: LearningThinking = 'fast'
 
 export function readLearningThinking(): LearningThinking {
-  return readStored() === 'deep' ? 'deep' : 'fast'
+  return current
 }
 
 export function writeLearningThinking(value: LearningThinking) {
+  current = value
   try {
-    if (value === 'deep') localStorage.setItem(KEY, 'deep')
-    else localStorage.removeItem(KEY)
+    localStorage.removeItem(KEY)
     sessionStorage.removeItem(LEGACY_KEY)
   } catch {
     // private mode
@@ -28,6 +24,7 @@ export function writeLearningThinking(value: LearningThinking) {
 }
 
 export function resetLearningThinking() {
+  current = 'fast'
   try {
     localStorage.removeItem(KEY)
     sessionStorage.removeItem(LEGACY_KEY)

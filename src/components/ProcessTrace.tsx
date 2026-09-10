@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode, type SVGProps } from 'react'
-import { pillTitle, thoughtForDisplay, type ProcessStep } from '../process-trace'
+import { pillTitle, type ProcessStep } from '../process-trace'
 import './process-trace.css'
 
 function MiniIcon({ children, size = 12, ...props }: SVGProps<SVGSVGElement> & { size?: number; children: ReactNode }) {
@@ -54,16 +54,16 @@ export function ConfirmedQuestion({ question, answer }: { question: string; answ
 
 function ThinkStep({ step }: { step: ProcessStep }) {
   const running = step.status === 'running'
-  const rawThought = step.thought?.trim() ?? ''
-  const thought = thoughtForDisplay(rawThought) || (running && rawThought ? '正在整理路线结构…' : '')
+  const thought = step.thought?.trim() ?? ''
   const bodyRef = useRef<HTMLDivElement>(null)
+  const follow = useRef(true)
   const [open, setOpen] = useState(running)
   useEffect(() => {
     setOpen(running)
   }, [running])
   useEffect(() => {
     const node = bodyRef.current
-    if (node && running) node.scrollTop = node.scrollHeight
+    if (node && running && follow.current) node.scrollTop = node.scrollHeight
   }, [thought, running])
   return (
     <details
@@ -75,10 +75,10 @@ function ThinkStep({ step }: { step: ProcessStep }) {
         <ToolPill
           step={step}
           running={running}
-          trailing={<MiniIcon size={9}><path d="m6 9 6 6 6-6"/></MiniIcon>}
+          trailing={<>{running && <span className="tp-spinner" aria-hidden="true" />}<MiniIcon size={9}><path d="m6 9 6 6 6-6"/></MiniIcon></>}
         />
       </summary>
-      {thought ? <div className="tp-thought" ref={bodyRef}>{thought}</div> : null}
+      {thought ? <div className="tp-thought" ref={bodyRef} tabIndex={0} aria-live="off" aria-label="模型思考过程" onScroll={() => { const node=bodyRef.current; if(node)follow.current=node.scrollHeight-node.scrollTop-node.clientHeight<40 }}>{thought}</div> : null}
     </details>
   )
 }

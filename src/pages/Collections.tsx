@@ -1,7 +1,6 @@
-import {useAccountRecovery} from '../learning-v2/account-storage'
-import {archivedWorkspace,localRecoveryAvailable,exportLocalArchive} from '../workspace/snapshot-cache'
 import { lazy,Suspense,useEffect,useState } from 'react'
 import { EmptyStatus } from '../components/EmptyStatus'
+import { LocalRecoveryNotice } from '../components/LocalRecoveryNotice'
 import { ProductWorkspace } from '../components/Shell'
 import { Icon } from '../icons'
 import { MineGraphCanvasPage } from '../knowledge-canvas/mine-graph-canvas'
@@ -17,20 +16,6 @@ import { KnowledgeLibrary } from '../ui/KnowledgeLibrary'
 import { buildKnowledgeShelves } from '../ui/knowledge-shelves'
 import { closeConceptKnowledge,NAV_EVENT,openConceptKnowledge,openRoute,readActiveKnowledgeId,readActiveRouteId,readKnowledgeConceptId,readKnowledgeListReturn } from '../workspace/nav'
 import { getReadOnlyConceptGraph,getReadOnlyKnowledge,getReadOnlyKnowledgeByRoute,getRoute,hasSettledMineConceptGraph,listReadOnlyConceptCards,readWorkspace,useWorkspaceTick } from '../workspace/store'
-
-function LocalArchive(){
-  const recovery=useAccountRecovery()
-  const archive=archivedWorkspace(),damaged=recovery||localRecoveryAvailable()
-  if(!damaged&&!archive.routes.length&&!archive.knowledge.length&&!archive.conversations.length)return null
-  return <aside className="square-empty">
-    {damaged&&<p role="alert">有一份本地草稿或旧版归档尚未完整恢复。备份仍然保留，可以先导出或释放浏览器空间。</p>}
-    <details><summary>旧版内容 · 只读归档</summary>
-      {archive.knowledge.filter(k=>k.owner==='mine').map(k=><button key={k.id} onClick={()=>openConceptKnowledge(k.id,k.seedConceptId)}>{k.title}</button>)}
-      {archive.routes.filter(r=>r.owner==='mine').map(r=><article key={r.id}><strong>{r.title}</strong><p>{r.summary}</p></article>)}
-      {archive.conversations.map(c=><details key={c.id}><summary>{c.title}</summary>{c.turns.map((turn,i)=><p key={i}>{turn.text}</p>)}</details>)}
-    </details><button onClick={exportLocalArchive}>导出本地备份</button>
-  </aside>
-}
 
 export function KnowledgePage() {
   const {data,error,reload}=useProductLibrary()
@@ -49,7 +34,7 @@ export function KnowledgePage() {
       }}
       loading={!data && !error}
       error={error ? <EmptyStatus headingLevel={2} kind="error" density="inline" title={data?'暂时无法更新你的知识脉络':'暂时无法读取你的知识脉络'} body={data?'已读取的内容仍然保留，可继续浏览。':'下方示例仍可浏览，你的内容读取失败，请重新连接。'} action="重新连接" onAction={()=>void reload()}/> : undefined}
-      footer={<LocalArchive/>}
+      footer={<LocalRecoveryNotice/>}
     />
   </ProductWorkspace>
 }
@@ -75,11 +60,10 @@ export function PathsPage() {
         onOpen: () => { openRoute(route.id, 'paths'); location.hash='path-3d' },
       }))}
       total={shown.length}
-      error={tab==='mine'&&error&&!data ? <EmptyStatus headingLevel={3} kind="error" title="暂时无法读取路线" body="已有路线仍然保留，请重新连接后再试。" action="重新连接" onAction={()=>void reload()}/> : undefined}
+      error={tab==='mine'&&error ? <EmptyStatus headingLevel={3} kind="error" density={data?'inline':'panel'} title={data?'暂时无法更新路线':'暂时无法读取路线'} body={data?'正在显示已读取的路线。':'已有路线仍然保留，请重新连接后再试。'} action="重新连接" onAction={()=>void reload()}/> : undefined}
       empty={<EmptyStatus headingLevel={3} title={tab==='mine'?'还没有自己的路线':'暂时没有示例路线'} body="在首页制定路线后，会出现在这里。" action="去问山制定路线" onAction={() => { sessionStorage.setItem('threadpeak-home-select-route', '1'); location.hash = 'home' }} />}
+      footer={tab==='mine'?<LocalRecoveryNotice/>:undefined}
     />
-    {tab==='mine'&&error&&data&&<EmptyStatus headingLevel={2} kind="error" density="inline" title="暂时无法更新路线" body="正在显示已读取的路线。" action="重新连接" onAction={()=>void reload()}/>}
-    {tab==='mine'&&<LocalArchive/>}
   </ProductWorkspace>
 }
 

@@ -73,3 +73,13 @@ export function renderOutputText(source: string, fallback?: ReactNode) {
   if (!source.trim()) return fallback ?? null
   return <MarkdownMath source={source} />
 }
+
+/** Inline content for headings: preserve formula text without adding block or link elements. */
+export const InlineMarkdownMath=memo(function InlineMarkdownMath({source}:{source:string}){
+  const prepared=useMemo(()=>prepareReading(source,false),[source])
+  const components:Components={
+    p:({children})=><>{children}</>,pre:({children})=><>{children}</>,
+    code:({className,children})=>className?.includes('math-')?<KatexView tex={texOf(children)} display={false}/>:<code>{children}</code>,
+  }
+  return <ReactMarkdown remarkPlugins={[remarkGfm,remarkMath]} components={components} allowedElements={['p','em','strong','del','code','pre','br']} unwrapDisallowed skipHtml>{prepared.markdown}</ReactMarkdown>
+})

@@ -5,6 +5,8 @@ import { AGENT_CONTRACT_VERSION, summaryPurpose } from '../agent-runtime/goal-po
 import { ToolError, type TaskContext } from './worker.ts'
 import type {ProviderBudget} from './capabilities.ts'
 import {recordContextMetric} from './metrics.ts'
+import {modelCall} from './model-call.ts'
+import {reasoningReserve,THINKING_POLICY_VERSION} from '../agent-runtime/thinking-policy.ts'
 
 // A conservative byte upper bound, not a tokenizer or a claim about billing.
 export const tokenBound = (s: string) => Buffer.byteLength(s, 'utf8')
@@ -35,13 +37,13 @@ function fields(value: unknown, path = '', result: Field[] = []): Field[] {
 }
 export async function boundedSummary(llm:LlmProvider,ctx:TaskContext,text:string,source:string,target:number,depth:ThinkingDepth,configuredWindow:number,purpose:unknown={task:'保留整份资料的知识范围、关系和条件，尚未指定学习目标'},capability?:ProviderBudget):Promise<string>{
   const budget=Math.max(512,Math.floor(target)),window=effectiveWindow(configuredWindow)
-  const key=createHash('sha256').update(JSON.stringify({version:AGENT_CONTRACT_VERSION,requestVersion:2,policy:SUMMARY_POLICY,capability,source,text,budget,depth,window,purpose})).digest('hex')
+  const key=createHash('sha256').update(JSON.stringify({version:AGENT_CONTRACT_VERSION,requestVersion:3,thinkingPolicy:THINKING_POLICY_VERSION,policy:SUMMARY_POLICY,capability,source,text,budget,depth,window,purpose})).digest('hex')
   return ctx.step(`memory:${key}`,{source,budget,key},async()=>{
     const [memory]=await ctx.store.db.query<{summary:string}>('SELECT summary FROM tp_memories WHERE owner_id=$1 AND source_hash=$2',[ctx.job.owner_id,key])
     const started=Date.now()
     if(memory&&tokenBound(memory.summary)<=budget){await recordContextMetric(ctx,{kind:'summary',cache:'hit',inputBytes:tokenBound(text),outputBytes:tokenBound(memory.summary),durationMs:Date.now()-started,window,budget,namespace:capability?.namespace});return memory.summary}
     const overhead=tokenBound(SUMMARY_POLICY)+tokenBound(JSON.stringify({source,purpose}))+2048
-    const reasoning=depth==='deep'?Math.min(8192,Math.floor((capability?.output??16384)/2)):0
+    const reasoning=Math.min(reasoningReserve({thinkingDepth:depth}),Math.floor((capability?.output??16384)/2))
     const output=Math.min(capability?.output??16384,16384,Math.max(1024,Math.min(budget,8192))+reasoning,Math.floor((window-overhead)*.4))
     const chunkBudget=Math.min(48000,Math.floor((window-overhead-output)/2))
     if(chunkBudget<512||output<reasoning+512)throw new ToolError('CONTEXT_REQUIRES_PARTITION',false)
@@ -56,11 +58,22 @@ export async function boundedSummary(llm:LlmProvider,ctx:TaskContext,text:string
         const messages:ChatMessage[]=[{role:'system',content:SUMMARY_POLICY},{role:'user',content:JSON.stringify(input)},{role:'user',content:`请现在只返回这段来源的摘要，最多${input.maximumCharacters}个字符。合并重复和无关铺陈，保留与purpose有关的条件差异；来源的营销结论注明“原文声称”。不要复述整段，不输出标题。`}]
         if(messages.reduce((n,m)=>n+tokenBound(m.content)+64,0)+output+1024>window)throw new ToolError('CONTEXT_REQUIRES_PARTITION',false)
         const result=await ctx.step(`memory-part:${key}:${pass}:${index}`,input,async()=>{
-          modelCalls++
-          const response=await llm.complete({messages,json:false,thinkingDepth:depth,maxTokens:output,signal:ctx.signal})
-          if(response.kind==='failed')throw new ToolError(response.code??'SUMMARY_UNAVAILABLE',response.retryable??true)
-          if(!response.text.trim())throw new ToolError('SUMMARY_EMPTY')
-          return response.text.trim()
+          const ceiling=Math.min(capability?.output??16384,window-messages.reduce((n,m)=>n+tokenBound(m.content)+64,0)-1024)
+          let partOutput=output
+          for(let attempt=0;attempt<3;attempt++){
+            modelCalls++
+            const response=await modelCall(llm,ctx,`memory-part:${key}:${pass}:${index}`,'整理长资料',{messages,json:false,thinkingDepth:depth,maxTokens:partOutput,signal:ctx.signal},attempt)
+            if(response.kind==='failed'){
+              if(response.code==='OUTPUT_TRUNCATED'){
+                if(attempt<2&&partOutput<ceiling){partOutput=Math.min(ceiling,Math.max(partOutput*2,partOutput+4096));continue}
+                throw new ToolError('OUTPUT_TRUNCATED',false)
+              }
+              throw new ToolError(response.code??'SUMMARY_UNAVAILABLE',response.retryable??true)
+            }
+            if(!response.text.trim())throw new ToolError('SUMMARY_EMPTY')
+            return response.text.trim()
+          }
+          throw new ToolError('OUTPUT_TRUNCATED',false)
         })
         return result
       }

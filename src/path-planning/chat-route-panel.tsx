@@ -168,6 +168,7 @@ export function ChatRoutePanel(props: {
     setPending(true)
     props.onGenerating?.(true)
     const watch: PathRunWatch = {
+      thinkingDepth: props.thinkingDepth ?? 'fast',
       commandKey:`route-start:${props.conversationId}`,
       onUpdate: (next) => {if(abortRef.current===abort&&!abort.signal.aborted)apply(next, { dropOnFail: false })},
       signal: abort.signal,

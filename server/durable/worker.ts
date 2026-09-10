@@ -57,9 +57,9 @@ export class TaskContext {
     this.progressChain = this.progressChain.then(() => this.store.progress(this.job, phase, draft, update))
     return this.progressChain
   }
-  async activity(id:string,kind:TaskActivity['kind'],title:string,status:TaskActivity['status']='running',detail?:string) {
+  async activity(id:string,kind:TaskActivity['kind'],title:string,status:TaskActivity['status']='running',detail?:string,content:Pick<TaskActivity,'thought'|'step'>={}) {
     this.signal.throwIfAborted()
-    this.progressChain=this.progressChain.then(()=>this.store.activity(this.job,{id,kind,title,status,detail}))
+    this.progressChain=this.progressChain.then(()=>this.store.activity(this.job,{id,kind,title,status,detail,...content}))
     return this.progressChain
   }
   draft(phase: string, text: string) {

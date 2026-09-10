@@ -33,7 +33,6 @@ export function readMergedSnapshot():WorkspaceSnapshot {
   merged={archive,projection,value};return value
 }
 export const projectionDraft=()=>structuredClone(readSnapshot(PROJECTION_KEY))
-export const archivedWorkspace=()=>readSnapshot(LEGACY_WORKSPACE_KEY)
 
 export function localRecoveryAvailable(){
   readSnapshot(LEGACY_WORKSPACE_KEY);readSnapshot(PROJECTION_KEY)

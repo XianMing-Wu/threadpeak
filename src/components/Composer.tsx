@@ -45,7 +45,7 @@ export function Composer({ value, onChange, onSend, compact = false, quote, onCl
         <div className="composer-bar composer-footer">
           <div className="bar-l">
             <ChoiceMenu value={thinkingLabel} onChange={setThinkingLabel} label="思考深度" quiet hover preferAbove={compact} icon={<Icon name="prod-home-thinking-smart" size={16}/>} options={[
-              {value:'快速回答',label:'快速回答',description:'跳过推理直达结果'},
+              {value:'快速回答',label:'快速回答',description:'简短思考，尽快回答'},
               {value:'深度思考',label:'深度思考',description:'深入推理给出答案'},
             ]}/>
             {toolbarStart}

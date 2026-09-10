@@ -86,7 +86,7 @@ export function KnowledgeLibrary({ shelves, onOpen, loading, error, footer }: {
       {!shown.length && !loading && <div className="knowledge-library-empty">
         {query.trim() ? <EmptyStatus headingLevel={2} title="没有找到匹配内容" body="试试路线名称、载体或概念关键词。" action="清空搜索" onAction={() => setQuery('')}/>
           : !error && <EmptyStatus headingLevel={2} title="书架还没有内容" body="制定路线并开始学习后，相关概念会放在同一层。" action="去看我的路线" onAction={() => { location.hash = 'paths' }}/>}</div>}
-      {footer && <div className="knowledge-library-archive">{footer}</div>}
+      {footer}
     </div>
   </main>
 }

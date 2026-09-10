@@ -293,3 +293,8 @@ test('JSON extract recovers fences, surrounding prose and trailing commas', () =
   const smart = parseAgentJson(`{“queries”:${JSON.stringify(r1Valid.queries)}}`)
   assert.equal(smart.ok, true)
 })
+
+test('an unfinished outer JSON object cannot be replaced by a valid inner learning goal',()=>{
+ const malformed='{"title":"路线","learningGoal":{"outcome":"手算"},"stages":[{"parallel":false,"carriers":[{"title":"阶段"}]}'
+ assert.equal(extractStructuredJson(malformed),undefined)
+})

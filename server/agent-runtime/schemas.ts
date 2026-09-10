@@ -736,6 +736,9 @@ function eachJsonObject(text: string, visit: (value: unknown) => void) {
         }
       }
     }
+    // An unfinished outer object is not a container of independent answers.
+    // Do not descend into its learningGoal/cards fragments and hide the syntax error.
+    if (depth > 0 || inString) return
   }
 }
 

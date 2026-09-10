@@ -138,6 +138,8 @@ export type LlmCompleteInput = {
   messages: readonly ChatMessage[]
   json: boolean
   thinkingDepth: ThinkingDepth
+  /** Only the short catalog-name extraction opts out of thinking. */
+  thinking?: 'enabled' | 'disabled'
   maxTokens?: number
   signal?: AbortSignal
   onReasoning?: (text: string) => void

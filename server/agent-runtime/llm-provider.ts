@@ -3,6 +3,7 @@ import type { HttpPort } from '../ports.ts'
 import type { LlmCompleteInput, LlmCompleteResult, LlmProvider,ProviderMetadata } from './types.ts'
 import { readUsage,providerDiagnostic,parseProviderError,classifyProviderError } from './provider-metadata.ts'
 import { extractStructuredJson } from './schemas.ts'
+import { thinkingParameters } from './thinking-policy.ts'
 
 const MAX_RESPONSE_CHARS = 1_000_000
 class CompletionStreamError extends Error {
@@ -67,8 +68,8 @@ export function createAgentLlmProvider(ports: { config: ProviderConfig; http: Ht
           headers: { Authorization: `Bearer ${ports.config.deepseekApiKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ model: ports.config.deepseekModelName, messages: input.messages,
             ...(input.cacheUserId&&new URL(url).hostname==='api.deepseek.com'?{user_id:input.cacheUserId}:{}),
-            max_tokens: input.maxTokens ?? 8192, temperature: input.json ? 0 : 0.2,
-            thinking: { type: input.thinkingDepth === 'deep' ? 'enabled' : 'disabled' },
+            max_tokens: input.maxTokens ?? 8192,
+            ...thinkingParameters(input),
             ...(input.json ? { response_format: { type: 'json_object' } } : {}), ...(stream ? { stream: true,stream_options:{include_usage:true} } : {}) }),
         })
         if (!response.ok) {
@@ -95,6 +96,7 @@ export function createAgentLlmProvider(ports: { config: ProviderConfig; http: Ht
         if (choice.finish_reason !== 'stop') return {...failure(choice.finish_reason==='length'?'OUTPUT_TRUNCATED':choice.finish_reason==='insufficient_system_resource'?'PROVIDER_BUSY':'OUTPUT_INCOMPLETE', true),...metadata}
         const content = typeof message.content === 'string' ? message.content : ''
         const reasoning = typeof message.reasoning_content === 'string' ? message.reasoning_content : typeof message.reasoning === 'string' ? message.reasoning : ''
+        if (reasoning) input.onReasoning?.(reasoning)
         if (input.json) {
           const extracted = extractStructuredJson(content)
           if (!content.trim()) return {...failure('OUTPUT_EMPTY', true),...metadata}

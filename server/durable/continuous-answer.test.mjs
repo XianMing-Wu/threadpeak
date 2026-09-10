@@ -8,6 +8,7 @@ import {placeAnswer} from '../../tests/fixtures/card-answer.mjs'
 import {readCardScope} from '../knowledge/card-tools.ts'
 import {citationCatalog,attachComposition} from '../knowledge/answer-composition.ts'
 import {boundedSummary} from './context.ts'
+import {latestThinkingActivities} from '@threadpeak/contracts/task-activity'
 
 const input={allowedCards:[{id:'a',title:'旋转',content:'矩阵作用于向量，得到旋转后的向量。'}],currentQuestion:'用一个例子解释向量和矩阵',goalContext:{rawGoal:'绘制可以旋转的图形'}}
 const answer={sections:[{after:'C1',title:'同一个点怎样旋转',text:'我们先取一个点，再用矩阵变换这个点。'}]}
@@ -47,6 +48,24 @@ test('the last throttled chunk is flushed and phase changes never clear it; late
  assert.equal((await store.snapshot('owner',resource.id)).job.draft,'首段和最后一个字')
  ctx.draft('写作','迟到的字');await store.cancel('owner',resource.id)
  await assert.rejects(ctx.flush(),e=>e.code==='LEASE_LOST');assert.equal((await store.snapshot('owner',resource.id)).job.status,'cancelled')
+})
+
+test('truncated association recovers with a larger budget, preserves composed prose and commits exactly one answer',async t=>{
+ const {store,resource}=await fixture(t);let compose=0,attach=0;const budgets=[]
+ const tools=new ProductTools({complete:async call=>{
+  const data=JSON.parse(call.messages[1].content)
+  if(!data.citationCatalog){compose++;return {kind:'completed',text:JSON.stringify(answer)}}
+  attach++;budgets.push(call.maxTokens);call.onReasoning?.(attach===1?'先前被截断的核对':'已经核对全部依据')
+  if(attach===1)return {kind:'failed',code:'OUTPUT_TRUNCATED',retryable:true}
+  return {kind:'completed',text:JSON.stringify(placeAnswer(data))}
+ }},{})
+ const worker=new DurableWorker(store,async ctx=>{const result=await tools.answerCards(ctx,input);await ctx.flush();await store.commit(ctx.job,()=>result)},1,()=>{})
+ await worker.execute(await store.claim())
+ const snapshot=await store.snapshot('owner',resource.id)
+ assert.equal(snapshot.job.status,'completed');assert.equal(compose,1);assert.equal(attach,2);assert.deepEqual(budgets,[4096,8192])
+ assert.equal(snapshot.data.paragraphs[0].text,answer.sections[0].text)
+ const thoughts=latestThinkingActivities(snapshot.job.activities);assert.equal(thoughts.length,1);assert.equal(thoughts[0].status,'done');assert.match(thoughts[0].thought,/先前尝试 1（输出已中断）/)
+ const events=await store.events('owner',resource.id,0);assert.equal(events.filter(e=>e.kind==='job.completed').length,1)
 })
 
 test('progress events do not rewrite the resource body, while an actual edit does',async t=>{
