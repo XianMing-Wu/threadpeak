@@ -28,7 +28,7 @@ import { ToolError, settledParallel, type TaskContext } from './worker.ts'
 import type { ProductTools } from './tools.ts'
 
 export type PathState = {
-  workflow?:typeof DIRECT_ROUTE_VERSION; research?:{firstSearch:{summary:string};catalogSearch:{summary:string};catalogCarriers:string[];ready:boolean};
+  workflow?:typeof DIRECT_ROUTE_VERSION; research?:{firstSearch:{summary:string};catalogSearch:{summary:string};catalogCarriers:string[];materialQuestions?:R1Output['queries'];ready:boolean};
   searchScope?:SearchScope; goal:string; attachments:any[]; depth:'fast'|'deep'; status:'running'|'awaiting_answers'|'published';
   questionSets:(Omit<R3Output,'round'> & {round:number; selectedOptionIds:Record<string,string>; customAnswers?:Record<string,string>})[];
   conversation:any[]; exploration?:GoalExploration; route?:R4Output; document?:any; conceptIdByWireId?:Record<string,string>;
@@ -108,13 +108,14 @@ export function createFlows(tools:ProductTools,api?:ZhihuDataClient,login?:Zhihu
         ? [{queryId:'route-materials',query:state.goal,results:await ctx.step('R-materials',{sourceIds:state.attachments.map(a=>a.sourceId)},async()=>inheritedArticles(state.attachments).filter(a=>a.url).map(a=>({evidenceId:a.id,title:a.title,summary:a.summary,url:a.url!,authorId:a.authorId,authorName:a.author,sourceKind:'zhihu' as const})))}]
         : await settledParallel(packed.map(async(q,index)=>({queryId:`route-search-${index}`,query:q.query,questions:r1.queries.filter(question=>q.sourceIds.includes(question.id)),results:await tools.search(ctx,`R-S:${index}:goal-choices-v2`,q.query,searchScope)})))
       const firstSearch={summary:mergeSearchSummaries(groups)}
-      const researchInput={goalContext,goal:state.goal,searchScope,attachments,firstSearch}
+      const materialQuestions=searchScope.kind==='collections'?r1.queries:undefined
+      const researchInput={goalContext,goal:state.goal,searchScope,attachments,firstSearch,...materialQuestions?{materialQuestions}:{}}
       await ctx.progress('正在提取待补查的书课名称')
       const {carriers}=await tools.catalogNames(ctx,researchInput)
-      await ctx.progress('正在补查资料并准备问题',undefined,r=>({...r.body,workflow:DIRECT_ROUTE_VERSION,research:{catalogSearch:{summary:''},ready:false,...r.body.research,firstSearch,catalogCarriers:carriers}}))
+      await ctx.progress('正在补查资料并准备问题',undefined,r=>({...r.body,workflow:DIRECT_ROUTE_VERSION,research:{catalogSearch:{summary:''},ready:false,...r.body.research,firstSearch,materialQuestions,catalogCarriers:carriers}}))
       await settledParallel([
         (async()=>{
-          const catalogs=await tools.catalogSearches(ctx,carriers)
+          const catalogs=await tools.catalogSearches(ctx,carriers,searchScope)
           await ctx.progress('课程资料已准备好',undefined,r=>({...r.body,research:{...r.body.research,catalogSearch:{summary:mergeSearchSummaries(catalogs)},ready:true}}))
         })(),
         (async()=>{
@@ -147,7 +148,7 @@ export function createFlows(tools:ProductTools,api?:ZhihuDataClient,login?:Zhihu
       await ctx.progress('正在生成学习路线')
       const questionSets=state.questionSets.map(set=>({...set,selectedOptions:set.questions.flatMap(q=>q.options.filter(o=>o.id===set.selectedOptionIds[q.id]).map(o=>({questionId:q.id,optionId:o.id,label:o.label,routeEffect:o.routeEffect}))),selectedOptionIds:Object.values(set.selectedOptionIds)}))
       if(state.workflow===DIRECT_ROUTE_VERSION&&!state.research?.ready)throw new ToolError('PREPARATION_INCOMPLETE',false)
-      state.route=await tools.routePlan(ctx,{goalContext,goal:state.goal,searchScope,...(state.workflow===DIRECT_ROUTE_VERSION?{workflow:state.workflow,firstSearch:state.research!.firstSearch,catalogSearch:state.research!.catalogSearch}:{exploration:explorationForPlanning(state.exploration)}),questionSets,newerRoundPreferred:true,attachments},resource.id,state.attachments.map(a=>a.sourceId))
+      state.route=await tools.routePlan(ctx,{goalContext,goal:state.goal,searchScope,...(state.workflow===DIRECT_ROUTE_VERSION?{workflow:state.workflow,firstSearch:state.research!.firstSearch,catalogSearch:state.research!.catalogSearch,...state.research!.materialQuestions?{materialQuestions:state.research!.materialQuestions}:{}}:{exploration:explorationForPlanning(state.exploration)}),questionSets,newerRoundPreferred:true,attachments},resource.id,state.attachments.map(a=>a.sourceId))
       const projected=projectRouteToDocument(state.route)
       if(!projected.ok)throw new ToolError('ROUTE_NOT_SETTLED',false)
       state.document=projected.value.document;state.conceptIdByWireId=projected.value.conceptIdByWireId;state.status='published'

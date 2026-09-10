@@ -28,11 +28,10 @@ export function rankAuthorMatches(candidates:AuthorMatch[],useNetwork:boolean,ne
   const ordered=pool.map((c,index)=>({c,index})).sort((a,b)=>
     Number(a.c.fit!=='direct')-Number(b.c.fit!=='direct') ||
     (useNetwork?Number(b.c.topic.pinned)-Number(a.c.topic.pinned)||b.c.topic.score-a.c.topic.score:0)||a.index-b.index).map(x=>x.c)
-  const ids=new Set<string>(),names=new Map<string,string>()
+  const ids=new Set<string>()
   const ranked=ordered.filter(c=>{
-    const same=names.get(c.authorName)
-    if(ids.has(c.authorId)||same&&(same.startsWith('author-ev-')||c.authorId.startsWith('author-ev-')))return false
-    ids.add(c.authorId);names.set(c.authorName,c.authorId);return true
+    if(ids.has(c.authorId))return false
+    ids.add(c.authorId);return true
   })
   const selected=ranked.slice(0,3)
   const fresh=ranked.find(c=>!c.known)

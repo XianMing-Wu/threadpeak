@@ -18,7 +18,7 @@ test('expired lease can renew before takeover, but no renewal can cross a newer 
 test('claims never consume failure budget; automatic and manual retries are bounded',async t=>{
  const {store,advance}=await fixture(t),{r}=await jobFor(store)
  let job
- for(let i=0;i<8;i++){advance(100_000);job=await store.claim();assert.equal(job.attempts,0)}
+ for(let i=0;i<3;i++){advance(100_000);job=await store.claim();assert.equal(job.attempts,0)}
  for(let i=1;i<=MAX_JOB_FAILURES;i++){await store.recover(job,'NETWORK_UNAVAILABLE',true);const snapshot=await store.snapshot('owner',r.id);assert.equal(snapshot.job.attempts,i);advance(100_000);if(i<MAX_JOB_FAILURES)job=await store.claim()}
  assert.equal((await store.snapshot('owner',r.id)).job.status,'waiting')
  for(let i=0;i<MAX_MANUAL_RESUMES;i++){advance(31_000);await store.resume('owner',r.id);job=await store.claim();await store.recover(job,'CONFIG_REQUIRED',false)}

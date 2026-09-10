@@ -6,6 +6,10 @@ export type PathProgressCache = {
 }
 
 const memory = new Map<string, string>()
+let workspace:string|null=null
+function currentAccount(){let next:string|null=null;try{next=localStorage.getItem('tp-server-workspace')}catch{/* Local memory is still bounded. */}if(next!==workspace){memory.clear();workspace=next}}
+function remember(key:string,value:string){memory.delete(key);memory.set(key,value);while(memory.size>32)memory.delete(memory.keys().next().value!)}
+if(typeof window!=='undefined')window.addEventListener('threadpeak:account-change',()=>memory.clear())
 
 export function pathProgressKey(documentId: string): string {
   const id = documentId.trim()
@@ -37,15 +41,17 @@ export function sessionPathProgressCache(): PathProgressCache {
 export function createPathProgressStorage(cache?: PathProgressCache): LearningProgressStoragePort {
   return {
     read({ key }, { signal }) {
+      currentAccount()
       if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
       if (memory.has(key)) return memory.get(key) ?? null
       const persisted = cache?.read(key) ?? null
-      if (persisted != null) memory.set(key, persisted)
+      if (persisted != null) remember(key, persisted)
       return persisted
     },
     write({ key, value }, { signal }) {
+      currentAccount()
       if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
-      memory.set(key, value)
+      remember(key, value)
       cache?.write(key, value)
     },
   }

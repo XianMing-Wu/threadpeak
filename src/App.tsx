@@ -2,6 +2,7 @@ import { lazy,Suspense,useEffect,useState } from 'react'
 import { WideShell,type RouteName } from './components/Shell'
 import { IconSprite } from './icons'
 import { ensureSession } from './learning-v2/client'
+import { switchWorkspace } from './learning-v2/account-storage'
 import { clearProductLibrary } from './learning-v2/library'
 import { requestAuthLogout,requestGuestSession } from './runtime/request-auth-session'
 import {PageBoundary} from './components/PageBoundary'
@@ -25,7 +26,6 @@ function readRoute():RouteName {
   if (!key) return 'home'
   return routes.has(key)?key:'not-found'
 }
-const AUTH_KEY='threadpeak-authenticated'
 const THEME_KEY='threadpeak-theme'
 type Theme = 'light' | 'dark'
 function readThemePreference(): Theme | null {
@@ -38,12 +38,13 @@ function systemTheme(): Theme { return window.matchMedia('(prefers-color-scheme:
 export function App(){
   const[notice,setNotice]=useState('')
   const[sessionReady,setSessionReady]=useState(false)
-  const[route,setRoute]=useState<RouteName>(readRoute)
+  const[hash,setHash]=useState(()=>location.hash)
+  const route=readRoute()
   const[authenticated,setAuthenticated]=useState(false)
   const[themePreference,setThemePreference]=useState<Theme|null>(readThemePreference)
   const[systemAppearance,setSystemAppearance]=useState<Theme>(systemTheme)
   const theme=themePreference??systemAppearance
-  useEffect(()=>{const onHash=()=>setRoute(readRoute());addEventListener('hashchange',onHash);return()=>removeEventListener('hashchange',onHash)},[])
+  useEffect(()=>{const onHash=()=>setHash(location.hash);addEventListener('hashchange',onHash);return()=>removeEventListener('hashchange',onHash)},[])
   useEffect(()=>{
     document.documentElement.dataset.theme=theme
     document.documentElement.style.colorScheme=theme
@@ -59,7 +60,7 @@ export function App(){
     return()=>{media.removeEventListener('change',update);removeEventListener('storage',sync)}
   },[])
   useEffect(()=>{
-    void ensureSession().then(()=>{setAuthenticated(new URLSearchParams(location.search).get('oauth')!=='failed');setSessionReady(true)}).catch(()=>{setAuthenticated(false);setSessionReady(true)})
+    void ensureSession().then(()=>{setAuthenticated(true);const url=new URL(location.href);if(url.searchParams.has('oauth')){url.searchParams.delete('oauth');history.replaceState(null,'',url)}setSessionReady(true)}).catch(()=>{setAuthenticated(false);setSessionReady(true)})
   },[])
   const toggleTheme=()=>{
     const next=theme==='dark'?'light':'dark'
@@ -67,10 +68,13 @@ export function App(){
     try {localStorage.setItem(THEME_KEY,next)} catch { /* Keep the explicit choice for this session. */ }
   }
   const logout=()=>{
-    void requestAuthLogout().then(()=>{clearProductLibrary();localStorage.setItem(AUTH_KEY,'false');setAuthenticated(false)}).catch(e=>setNotice(e instanceof Error?e.message:'退出登录暂未完成。'))
+    void requestAuthLogout().then(async()=>{clearProductLibrary();setAuthenticated(false);await switchWorkspace('anonymous')}).catch(e=>setNotice(e instanceof Error?e.message:'退出登录暂未完成。'))
   }
-  const authorize=async()=>{await requestGuestSession();localStorage.setItem(AUTH_KEY,'true');setAuthenticated(true);history.replaceState(null,'',`${location.pathname}#home`);setRoute('home')}
+  const authorize=async()=>{await requestGuestSession();setAuthenticated(true);history.replaceState(null,'',`${location.pathname}#home`);setHash('#home')}
   const pages={home:<HomePage/>,chat:<ChatPage/>,knowledge:<KnowledgePage/>,'knowledge-detail':<KnowledgeDetailPage/>,paths:<PathsPage/>,'path-3d':<Path3DPage/>,'session-learning':<SessionPage/>,authors:<AuthorsPage/>,'not-found':<NotFoundPage/>,settings:<SettingsPage theme={theme} onThemeChange={toggleTheme} onLogout={logout}/>}
+  useEffect(()=>{const titles:Record<string,string>={home:'首页',chat:'对话',paths:'学习路线','path-3d':'3D 路线',knowledge:'知识脉络','knowledge-detail':'概念学习','session-learning':'概念学习',authors:'找人请教',settings:'设置','not-found':'页面不存在'};document.title=`${titles[route]} · 问山 ThreadPeak`},[route])
+  const params=new URLSearchParams(hash.split('?')[1]??'')
+  const pageKey=route==='knowledge-detail'?`${route}:${params.get('resource')??params.get('id')??''}`:route==='session-learning'?route:hash
   const page=pages[route]
-  return <><IconSprite/>{notice&&<div role="alert">{notice}<button onClick={()=>setNotice('')}>关闭</button></div>}<Suspense fallback={<p role="status">正在打开页面…</p>}>{!sessionReady?<main className="auth-landing"><p role="status">正在连接你的工作区…</p></main>:authenticated?<WideShell route={route} theme={theme} onThemeChange={toggleTheme} onLogout={logout}><PageBoundary key={route}>{page}</PageBoundary></WideShell>:<AuthLanding theme={theme} onThemeChange={toggleTheme} onAuthorize={authorize}/>}</Suspense></>
+  return <><IconSprite/>{notice&&<div role="alert">{notice}<button onClick={()=>setNotice('')}>关闭</button></div>}<Suspense fallback={<p role="status">正在打开页面…</p>}>{!sessionReady?<main className="auth-landing"><p role="status">正在连接你的工作区…</p></main>:authenticated?<WideShell route={route} theme={theme} onThemeChange={toggleTheme} onLogout={logout}><PageBoundary key={pageKey}>{page}</PageBoundary></WideShell>:<AuthLanding theme={theme} onThemeChange={toggleTheme} onAuthorize={authorize}/>}</Suspense></>
 }

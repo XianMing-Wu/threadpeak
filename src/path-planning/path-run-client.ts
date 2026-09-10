@@ -90,13 +90,19 @@ export async function watchPathRun(view: PathRunView, watch?: PathRunWatch): Pro
 }
 
 export const pathLaunchAttachments = new Map<string, PathAttachment[]>()
+export function readPathLaunchAttachments(id:string):{sourceId:string}[]{
+  const raw=sessionStorage.getItem(`tp-launch-materials:${id}`)
+  if(raw){try{return z.array(z.object({sourceId:z.string().min(1)})).max(8).parse(JSON.parse(raw))}catch{throw new Error('已选资料记录无法读取，原选择仍保留，请返回首页检查。')}}
+  return (pathLaunchAttachments.get(id)??[]).map(a=>({sourceId:a.sourceId}))
+}
+
 
 export async function startPathRun(
-  input: { goal: string; attachments?: PathAttachment[]; thinkingDepth?: 'fast' | 'deep'; searchScope?: SearchScope },
+  input: { goal: string; attachments?: {sourceId:string}[]; thinkingDepth?: 'fast' | 'deep'; searchScope?: SearchScope },
   watch?: PathRunWatch,
 ) {
   const cacheKey=`tp-route-command:${watch?.commandKey??''}`
-  let frozen={...input}
+  let frozen:typeof input={...input,attachments:input.attachments?.map(a=>({sourceId:a.sourceId}))}
   if (!frozen.searchScope && watch?.commandKey) {
     const scope = sessionStorage.getItem(`tp-route-scope:${watch.commandKey}`)
     if(scope){try{frozen.searchScope=SearchScopeSchema.parse(JSON.parse(scope))}catch{throw new Error('搜索范围记录无法读取，请回首页重新选择。')}}
@@ -105,10 +111,10 @@ export async function startPathRun(
   if(watch?.commandKey){
     const previous=sessionStorage.getItem(cacheKey)
     if(previous){
-      try{frozen=z.object({goal:z.string().min(1),thinkingDepth:z.enum(['fast','deep']).optional(),searchScope:SearchScopeSchema,attachments:z.array(z.object({sourceId:z.string().min(1),fileName:z.string(),content:z.string(),mimeType:z.enum(['application/pdf','text/markdown','text/plain']).optional()})).optional()}).strict().parse(JSON.parse(previous))}
+      try{frozen=z.object({goal:z.string().min(1),thinkingDepth:z.enum(['fast','deep']).optional(),searchScope:SearchScopeSchema,attachments:z.array(z.object({sourceId:z.string().min(1)})).optional()}).strict().parse(JSON.parse(previous))}
       catch{throw new Error('这次发送的本地记录无法读取，原记录已保留，请返回首页重新发起。')}
     }
-    else sessionStorage.setItem(cacheKey,JSON.stringify({...frozen,attachments:input.attachments?.map(a=>({...a,content:'[已上传，服务端读取原文]'}))}))
+    else sessionStorage.setItem(cacheKey,JSON.stringify({...frozen,attachments:input.attachments?.map(a=>({sourceId:a.sourceId}))}))
   }
   return watchPathRun(await post('/api/path-runs', frozen, watch?.signal,watch?.commandKey), watch)
 }

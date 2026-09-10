@@ -183,12 +183,12 @@ export function LearningPath3DView({
         nodeBadgeIconById,
         onReady: (snapshot) => {
           if (!lease.signal.aborted) {
-            host.dataset.snapshot = JSON.stringify(snapshot)
+            if(import.meta.env.DEV)host.dataset.snapshot = JSON.stringify(snapshot)
             setReadingProgress(false)
           }
         },
         onProgressChange: () => {
-          if (!lease.signal.aborted && lease.current) host.dataset.snapshot = JSON.stringify(lease.current.getSnapshot())
+          if (!lease.signal.aborted && lease.current) if(import.meta.env.DEV)host.dataset.snapshot = JSON.stringify(lease.current.getSnapshot())
         },
         onError: ({ phase, message, error: cause }) => {
           if (lease.signal.aborted) return
@@ -198,7 +198,7 @@ export function LearningPath3DView({
       })
 
       if (!lease.attach(instance)) return
-      host.dataset.snapshot = JSON.stringify(instance.getSnapshot())
+      if(import.meta.env.DEV)host.dataset.snapshot = JSON.stringify(instance.getSnapshot())
       const instructions = mount.querySelector('.pointer-copy')
       if (instructions) instructions.textContent = '点击圆台查看 · 选择“走到这”移动 · 拖动或滚轮浏览'
       const mark = mount.querySelector('.loading-mark')

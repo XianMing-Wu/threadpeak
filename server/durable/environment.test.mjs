@@ -40,3 +40,20 @@ test('nonempty process configuration wins, blank values fall through, and quoted
   `, { THREADPEAK_PORT: '4314', THREADPEAK_HOST: '', DEEPSEEK_CONTEXT_TOKENS: '   ' })
   assert.deepEqual(result, { port: '4314', host: '127.0.0.2', window: '64000', unset: true, literal: 'test-only-$literal' })
 })
+
+test('bootstrap SIGTERM closes the worker before storage and makes the same checkpointed job immediately claimable',async t=>{
+ const result=await isolated(t,'',`
+   const {openDatabase}=await import(${JSON.stringify(new URL('./database.ts',import.meta.url).href)});
+   const {DurableStore}=await import(${JSON.stringify(new URL('./store.ts',import.meta.url).href)});
+   const directory=process.cwd()+'/handoff';
+   const {app,store,worker}=await startProductServer({THREADPEAK_PORT:'0',THREADPEAK_DATA_DIR:directory});
+   let ready;const entered=new Promise(resolve=>{ready=resolve});let original;
+   worker.handler=async ctx=>{original=ctx.job;await store.checkpoint(ctx.job,'paid-provider','hash',{value:'retained'});ready();await new Promise((_,reject)=>ctx.signal.addEventListener('abort',()=>reject(ctx.signal.reason),{once:true}))};
+   const resource=await store.create('owner','test','handoff',{});
+   await store.enqueue('owner',resource.id,'test','bootstrap-shutdown',{});worker.wake();await entered;
+   process.emit('SIGTERM');await app.close();
+   const db=await openDatabase({directory});
+   try{const next=await new DurableStore(db).claim();console.log(JSON.stringify({same:next.id===original.id,fenced:next.fence>original.fence,attempts:next.attempts,checkpoint:next.checkpoints['paid-provider'].value.value}))}finally{await db.close()}
+ `)
+ assert.deepEqual(result,{same:true,fenced:true,attempts:0,checkpoint:'retained'})
+})

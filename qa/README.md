@@ -10,6 +10,8 @@
 
 - [2026-09-09 登录页视觉重设计](login-design-2026-09-09.md)：全幅球体背景、中文字体、浮层尺寸稳定与多屏宽验收。
 
+- [2026-09-10 Grok 两份报告逐项复核](grok-review-resolution-2026-09-10.md)：79 个编号条目及附加意见的判断、修复、拒绝理由和本轮验证。
+
 ## 独立验收页面
 
 先启动 Vite，再打开相应地址。QA 页面不属于正式产品路由，也不进入应用构建入口。
@@ -23,6 +25,7 @@
 | [author-surface.html](author-surface.html) | 390px 真实 App 视口，检查作者目录、卡片与资料页面 |
 | [visual-atlas.html](visual-atlas.html) | 390px 视口切换首页、作者、路线与封面原图目录 |
 | [ux-ui-lab.html](ux-ui-lab.html) | 真实作者关系图的独立合成资料，验证键盘、焦点、缩放和减少动效 |
+| [review-regressions.html](review-regressions.html) | 合成卡片的等待继续、成功收起、焦点恢复与隐藏画布 DOM 验收 |
 | [learning-actions-lab.html](learning-actions-lab.html) | 真实文章作者入口与浮动问博主输入，验证窄屏、失败保留和成功接收 |
 | [account-storage-review.html](account-storage-review.html) | 用合成草稿填满真实浏览器容量，验证账号隔离和恢复 |
 | [account-recovery-review.html](account-recovery-review.html) | 登录接口不可用时，验证重新打开真实 App 后仍发现持久备份 |

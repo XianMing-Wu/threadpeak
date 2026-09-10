@@ -1,5 +1,5 @@
 import {useSyncExternalStore} from 'react'
-const KEEP=new Set(['threadpeak-theme','threadpeak-authenticated'])
+const KEEP=new Set(['threadpeak-theme'])
 const ARCHIVE_PREFIX='threadpeak-account-archive:'
 const WORKSPACE='tp-server-workspace'
 const scoped=(key:string)=>(key.startsWith('threadpeak-')||key.startsWith('tp-'))&&!KEEP.has(key)&&!key.startsWith(ARCHIVE_PREFIX)&&key!==WORKSPACE

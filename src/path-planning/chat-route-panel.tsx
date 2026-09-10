@@ -1,3 +1,4 @@
+import {newChat} from '../chat/launch'
 import { productRequest } from '../learning-v2/client'
 import {pollResource,foregroundDelay,taskPollInterval} from '../learning-v2/poll'
 import { refreshProductLibrary } from '../learning-v2/library'
@@ -13,7 +14,7 @@ import { createMineRouteFromChat, getConversation, getRoute, loadConversationTra
 import {
   followUpPathRun,
   getPathRun,
-  pathLaunchAttachments,
+  readPathLaunchAttachments,
   replyPathRun,
   retryPathRun,
   selectPathAnswer,
@@ -60,6 +61,8 @@ export function ChatRoutePanel(props: {
   conversationId: string
   query: string
   existingRouteId?: string
+  generate?:boolean
+  resourceId?:string
   thinkingDepth?: 'fast' | 'deep'
   onRouteReady: (routeId: string) => void
   onSender?: (handler: (text: string) => Promise<boolean>) => void
@@ -69,6 +72,7 @@ export function ChatRoutePanel(props: {
   const existing = props.existingRouteId ? getRoute(props.existingRouteId) : undefined
   const [view, setView] = useState<PathRunView | null>(null)
   const [pending, setPending] = useState(false)
+  const [stopNotice,setStopNotice]=useState('')
   const [replies, setReplies] = useState<{ user: string; assistant: string }[]>([])
   const [readyRouteId, setReadyRouteId] = useState(existing?.id ?? '')
   const [drafts, setDrafts] = useState<Record<string, string>>({})
@@ -84,7 +88,9 @@ export function ChatRoutePanel(props: {
   const libraryStages=useRef(new Set<string>())
   const abortRef = useRef<AbortController | null>(null)
   const mounted=useRef(true)
-  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;launched.current='';abortRef.current?.abort()}},[])
+  const executing=useRef(false),stopping=useRef<Promise<void>|null>(null),currentView=useRef(view)
+  currentView.current=view
+  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;launched.current='';abortRef.current?.abort();abortRef.current=null;executing.current=false}},[])
 
   const persistTrace = (steps: readonly ProcessStep[], extra?: { pathRunId?: string; routeId?: string; routeStep?: number }) => {
     const processTrace = uniqueTrace(steps)
@@ -143,10 +149,19 @@ export function ChatRoutePanel(props: {
   }
 
   const stop = () => {
-    if(view?.runId)void productRequest(`/api/v2/resources/${view.runId}/cancel`,{method:'POST',body:{}}).then(()=>getPathRun(view.runId)).then(next=>{abortRef.current?.abort();apply(next)}).catch(()=>{})
+    const id=currentView.current?.runId
+    if(!id||stopping.current)return
+    const stopTask=(async()=>{
+      try{setStopNotice('');await productRequest(`/api/v2/resources/${id}/cancel`,{method:'POST',body:{}});apply(await getPathRun(id))}
+      catch(error){if(mounted.current)setStopNotice(error instanceof Error?error.message:'停止尚未确认，请重试。')}
+    })()
+    stopping.current=stopTask
+    void stopTask.finally(()=>{if(stopping.current===stopTask)stopping.current=null})
   }
 
   const run = async (work: (watch: PathRunWatch) => Promise<PathRunView>) => {
+    if(executing.current||stopping.current)return false
+    executing.current=true
     abortRef.current?.abort()
     const abort = new AbortController()
     abortRef.current = abort
@@ -164,29 +179,7 @@ export function ChatRoutePanel(props: {
       return next.status!=='failed'
     } catch (error) {
       if(!mounted.current||abortRef.current!==abort)return false
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        setView((current) => {
-          if (!current) return {
-            runId: '',
-            goal: props.query,
-            status: 'failed',
-            stage: 'failed',
-            trace: settleTrace(keptRef.current, 'stopped'),
-            questionSets: [],
-            knowledgeCreated: false,
-            error: { code: 'PROVIDER_UNAVAILABLE', message: '生成已停止。' },
-          }
-          return {
-            ...current,
-            status: current.status === 'published' ? current.status : 'failed',
-            stage: current.status === 'published' ? current.stage : 'failed',
-            trace: settleTrace(current.trace ?? [], 'stopped'),
-            error: current.status === 'published' ? current.error : { code: 'PROVIDER_UNAVAILABLE', message: '生成已停止。' },
-          }
-        })
-        persistTrace(settleTrace(keptRef.current, 'stopped'))
-        return false
-      }
+      if (abort.signal.aborted) return false
       setView({
         runId: view?.runId ?? '',
         goal: props.query,
@@ -199,21 +192,22 @@ export function ChatRoutePanel(props: {
       })
       return false
     } finally {
+      if(stopping.current)await stopping.current
+      if(abortRef.current===abort)executing.current=false
       if(mounted.current&&abortRef.current===abort){setPending(false);props.onGenerating?.(false)}
     }
   }
 
   const retryLastStep = () => {
-    const attachments = pathLaunchAttachments.get(props.conversationId)
+    const attachments = readPathLaunchAttachments(props.conversationId)
     const start = (watch: PathRunWatch) => startPathRun({
       goal: props.query,
       thinkingDepth: props.thinkingDepth,
       ...(attachments ? { attachments } : {}),
     }, watch)
     void run(async (watch) => {
-      if (!view?.runId) return start(watch)
+      if (!view?.runId){if(props.generate===false)throw new Error('请从历史记录重新打开这次路线。');return start(watch)}
       const next = await retryPathRun(view.runId, watch)
-      if (next.error?.message === '找不到这次路线制定。') return start(watch)
       return next
     })
   }
@@ -224,22 +218,13 @@ export function ChatRoutePanel(props: {
 
   useEffect(() => {
     const stored = getConversation(props.conversationId)
-    if (stored?.pathRunId) {
-      const runId = stored.pathRunId
+    const restoreId=props.resourceId??stored?.pathRunId
+    if (restoreId) {
+      const runId = restoreId
       const key = `restore:${runId}`
       if (launched.current === key) return
       launched.current = key
-      abortRef.current?.abort()
-      const abort = new AbortController()
-      abortRef.current = abort
-      props.onGenerating?.(true)
-      void getPathRun(runId, abort.signal).then((next) => watchPathRun(next, {
-        onUpdate: (current) => apply(current, { dropOnFail: false }),
-        signal: abort.signal,
-      })).then((next) => {if(!abort.signal.aborted)apply(next, { dropOnFail: false })}).catch((error) => {
-        if (!mounted.current || abort.signal.aborted || error instanceof DOMException && error.name === 'AbortError') return
-        setView(current=>current?{...current,status:'failed',error:{code:'PROVIDER_UNAVAILABLE',message:'正在恢复这次路线，已有选择仍然保留。'}}:current)
-      }).finally(() => {if(mounted.current&&!abort.signal.aborted)props.onGenerating?.(false)})
+      void run(async watch=>watchPathRun(await getPathRun(runId,watch.signal),watch))
       return
     }
     if (existing) {
@@ -247,12 +232,13 @@ export function ChatRoutePanel(props: {
       if (storedTraces.length) persistTrace(settleTrace(storedTraces))
       return
     }
+    if(props.generate===false){setView({runId:'',goal:props.query,status:'failed',stage:'',questionSets:[],knowledgeCreated:false,recoverable:false,error:{code:'RESTORE_REQUIRED',message:'未找到这次路线的恢复标识，请从历史记录重新打开。'}});return}
     const key = `${props.conversationId}::${props.query}`
     if (launched.current === key) return
     launched.current = key
-    const attachments = pathLaunchAttachments.get(props.conversationId)
+    const attachments = readPathLaunchAttachments(props.conversationId)
     void run((watch) => startPathRun({ goal: props.query, thinkingDepth: props.thinkingDepth, ...(attachments ? { attachments } : {}) }, watch))
-  }, [props.existingRouteId, props.conversationId, props.query])
+  }, [props.existingRouteId, props.conversationId, props.query, props.resourceId, props.generate])
 
   const preparingRun = !pending && view?.status === 'awaiting_answers' && view.preparing ? view.runId : undefined
   useEffect(() => {
@@ -303,7 +289,7 @@ export function ChatRoutePanel(props: {
   const beforeAnswers = answerBoundary < 0 ? steps : steps.slice(0, answerBoundary)
   const afterAnswers = answerBoundary < 0 ? [] : steps.slice(answerBoundary)
 
-  return <article className="route-clarification">
+  return <article className="route-clarification">{stopNotice&&<p role="alert">{stopNotice}</p>}
     {beforeAnswers.length > 0 ? <AgentStatus steps={beforeAnswers} /> : null}
     {(view?.questionSets ?? []).map((set) => (
       <div key={`set-${set.round}`} className="clarification-stack" role="group" aria-label={set.status === 'active' ? '聊聊你的学习目标' : `第 ${set.round} 轮已确认`}>
@@ -341,7 +327,7 @@ export function ChatRoutePanel(props: {
                 <label className={`clarification-custom-row ${selectedId === CUSTOM_ANSWER ? 'is-selected' : ''}`}>
                   <span className="option-letter"><Icon name="edit" size={14}/></span>
                   <textarea id={`custom-${question.id}`} className="clarification-custom-input"
-                    aria-label="用自己的话回答" rows={1} maxLength={4000} placeholder="用自己的话说…"
+                    aria-label="用自己的话回答" rows={1} maxLength={4000} placeholder="我想自己说"
                     value={customDrafts[question.id] ?? ''} disabled={pending || view?.status !== 'awaiting_answers'}
                     onFocus={() => setDrafts(current => ({...current, [question.id]: CUSTOM_ANSWER}))}
                     onChange={event => {
@@ -382,6 +368,7 @@ export function ChatRoutePanel(props: {
         action={view.recoverable===false?undefined:"重试这一步"}
         onAction={view.recoverable===false?undefined:retryLastStep}
       />
+      <button type="button" onClick={newChat}>重新制定路线</button>
     </section>}
     {(view?.status === 'published' || (!view && existing)) && enterRouteId && <RouteReadyCard title={publishedTitle} routeId={enterRouteId}/>}
     {replies.map((item, index) => <div key={index}>

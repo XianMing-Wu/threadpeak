@@ -19,7 +19,7 @@ const HOME_SELECT_ROUTE = 'threadpeak-home-select-route'
 
 export function HomePage() {
   const initial = sessionStorage.getItem('threadpeak-home-prefill') ?? ''
-  useEffect(() => { sessionStorage.removeItem('threadpeak-home-prefill'); sessionStorage.removeItem(HOME_SELECT_ROUTE) }, [])
+  useEffect(() => { sessionStorage.removeItem('threadpeak-home-prefill'); if(sessionStorage.getItem(HOME_SELECT_ROUTE)){composerRef.current?.querySelector('textarea')?.focus();sessionStorage.removeItem(HOME_SELECT_ROUTE)} }, [])
   const [value, setValue] = useState(initial)
   const composerRef = useRef<HTMLDivElement>(null)
   const homeRef = useRef<HTMLElement>(null)
@@ -57,12 +57,16 @@ export function HomePage() {
   const materials = useMaterials()
   const [thinkingDepth, setThinkingDepth] = useState(readLearningThinking)
   useEffect(() => subscribeLearningThinking(() => setThinkingDepth(readLearningThinking())), [])
+  const sending=useRef(false)
   const send = () => {
     const query = value.trim()
-    if (!query || !materials.ready) return
+    if (!query || !materials.ready || sending.current) return
+    sending.current=true
+    try{
     writeLearningThinking(thinkingDepth)
     const conversationId = launchChat(query, 'route', materials.attachments, thinkingDepth)
     rememberPathSearchScope(`route-start:${conversationId}`, materials.searchScope)
+    }catch(error){sending.current=false;materials.setError(error instanceof Error?error.message:'发送未完成，请重试。')}
   }
   const chooseSuggestion = (prompt: string) => {
     setValue(prompt)

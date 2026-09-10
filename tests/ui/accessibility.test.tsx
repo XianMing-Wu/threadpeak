@@ -102,7 +102,7 @@ test('clearing local history opens a native modal on Cancel and restores trigger
   expect(document.activeElement).toBe(trigger)
   expect(localStorage.getItem('threadpeak-chat-history')).toBe('[]')
   expect(localStorage.getItem('unrelated-retained-content')).toBe('keep')
-  await screen.findByText('本地历史已清空')
+  await screen.findByText('旧版本本机历史索引已清空，服务端对话仍然保留')
 })
 
 test('history groups use calendar days and expose named lists', () => {

@@ -105,7 +105,7 @@ test('author feedback validates ownership and source/topic membership, is revers
  const other=await app.inject({method:'POST',url:'/api/auth/guest'}),otherCookie=String(other.headers['set-cookie']).split(';')[0]
  assert.equal((await app.inject({method:'POST',url:'/api/v2/authors/feedback',headers:{cookie:otherCookie},payload})).statusCode,404)
  await request({...payload,kind:'pinned'},'pin-feedback')
- result=await app.inject({method:'POST',url:'/api/v2/authors/preferences/clear',headers,payload:{}});assert.equal(result.statusCode,200);assert.equal(result.json().authors.length,1);assert.equal(result.json().authors[0].topics[0].pinned,false)
+ result=await app.inject({method:'POST',url:'/api/v2/authors/preferences/clear',headers:{...headers,'idempotency-key':'clear-preferences'},payload:{}});assert.equal(result.statusCode,200);assert.equal(result.json().authors.length,1);assert.equal(result.json().authors[0].topics[0].pinned,false)
  // A late transport replay of old feedback cannot resurrect cleared preferences.
  await request(payload);assert.equal((await store.db.query('SELECT * FROM tp_author_preferences')).length,0)
 })
@@ -160,7 +160,7 @@ test('many materials compile to at most three distinct people without merging st
  const c=(id,authorId,name)=>({...source(id,name),authorId,fit:'direct',known:false,topic:{id:'x',score:0,pinned:false,hidden:false}})
  const pool=[c('a','author-a','甲'),c('b','author-a','甲'),c('c','author-c','丙'),c('d','author-d','丁')]
  assert.deepEqual(rankAuthorMatches(pool,false).map(x=>x.evidenceId),['a','c','d'])
- assert.equal(rankAuthorMatches([c('a','author-ev-a','同名'),c('b','author-ev-b','同名')],false).length,1)
+ assert.equal(rankAuthorMatches([c('a','author-ev-a','同名'),c('b','author-ev-b','同名')],false).length,2)
  assert.equal(rankAuthorMatches([c('a','verified-a','同名'),c('b','verified-b','同名')],false).length,2)
  assert.equal(pool.length,4)
 })
@@ -209,7 +209,7 @@ test('importing the second article of one author adds only that article to the s
  const worker=new DurableWorker(store,createFlows(tools),1,()=>{}),app=await createProductApp({store,worker,identity:{production:false},providersReady:true});t.after(()=>app.close())
  const session=await app.inject({method:'POST',url:'/api/auth/guest'}),headers={cookie:String(session.headers['set-cookie']).split(';')[0]},owner=(await store.db.query('SELECT owner_id FROM tp_sessions'))[0].owner_id
  const origin=await store.create(owner,'learning','article-origin',state([a,b])),target=await store.create(owner,'learning','article-destination',{...state([]),title:'矩阵的坐标表示'})
- const post=payload=>app.inject({method:'POST',url:`/api/v2/learning/${target.id}/import-author-source`,headers,payload})
+ const post=payload=>app.inject({method:'POST',url:`/api/v2/learning/${target.id}/import-author-source`,headers:{...headers,'idempotency-key':'import-second-article'},payload})
  assert.equal((await post({authorId:a.authorId})).statusCode,400,'an author alone cannot select an article')
  const accepted=await post({authorId:a.authorId,evidenceId:b.evidenceId});assert.equal(accepted.statusCode,200)
  for(let i=0;i<200;i++){if((await store.snapshot(owner,target.id)).job?.status==='completed')break;await new Promise(r=>setTimeout(r,10))}

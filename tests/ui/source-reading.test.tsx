@@ -12,7 +12,7 @@ test('the reported autograd gap opens an independent reading and retains the ori
  request.mockResolvedValue(complete('## 独立例子\n\n公式 $y=x^2$。'))
  const view=render(<SourceReading source={missing} url="https://zhuanlan.zhihu.com/p/qa-reading-1"/>)
  await waitFor(()=>expect(screen.getByText('独立例子')).toBeTruthy())
- expect(request).toHaveBeenCalledWith('/api/v2/sources/presentation',{method:'POST',body:{url:'https://zhuanlan.zhihu.com/p/qa-reading-1',includeReading:true,readingVersion:READING_POLICY_VERSION}})
+ expect(request).toHaveBeenCalledWith('/api/v2/sources/presentation',expect.objectContaining({method:'POST',body:{url:'https://zhuanlan.zhihu.com/p/qa-reading-1',includeReading:true,readingVersion:READING_POLICY_VERSION},signal:expect.any(AbortSignal)}))
  expect(screen.getByText('根据摘要主题整理，非作者原文')).toBeTruthy()
  expect(view.container.querySelector('details')?.open).toBe(false)
  expect(view.container.querySelector('details')?.textContent).toContain('一个简单的求导例子是：')
@@ -39,4 +39,17 @@ test('a changed summary for the same URL cannot reuse the previous reading',asyn
  view.rerender(<SourceReading source={missing+'\n二阶求导：计算 ，假设给定。'} url={url}/>)
  await waitFor(()=>expect(screen.getByText(/第二份讲解/)).toBeTruthy())
  expect(screen.queryByText(/第一份讲解/)).toBeNull();expect(request).toHaveBeenCalledTimes(2)
+})
+
+
+test('shared readers abort only after the final subscriber leaves, without cancelling the server task',async()=>{
+ let signal:AbortSignal|undefined
+ request.mockImplementation(async(_url,options)=>await new Promise<unknown>((_resolve,reject)=>{signal=options?.signal;signal?.addEventListener('abort',()=>reject(new DOMException('reader left','AbortError')),{once:true})}) as never)
+ const url='https://zhuanlan.zhihu.com/p/qa-reading-refcount'
+ const one=render(<SourceReading source={missing} url={url}/>),two=render(<SourceReading source={missing} url={url}/>)
+ await waitFor(()=>expect(request).toHaveBeenCalledTimes(1))
+ one.unmount();expect(signal?.aborted).toBe(false)
+ two.unmount();expect(signal?.aborted).toBe(true)
+ expect(request).toHaveBeenCalledTimes(1)
+ expect(request.mock.calls.some(([url])=>url.endsWith('/cancel'))).toBe(false)
 })

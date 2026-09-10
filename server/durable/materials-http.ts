@@ -10,16 +10,29 @@ import type { ZhihuLogin } from './zhihu-oauth.ts'
 import { safeZhihuUrl } from './authors-network.ts'
 const Name=z.string().trim().min(1).max(200)
 export function registerMaterialRoutes(app:FastifyInstance,store:DurableStore,worker:DurableWorker,owner:(r:FastifyRequest)=>string,key:(r:FastifyRequest)=>string,api?:ZhihuDataClient,login?:ZhihuLogin){
-  app.addContentTypeParser('application/octet-stream',{parseAs:'buffer',bodyLimit:101*1024*1024},(_request,body,done)=>done(null,body))
-  app.post('/api/v2/materials/upload',{bodyLimit:101*1024*1024},async request=>{
-    const name=Name.parse((request.query as any).name),bytes=request.body as Buffer
-    if(!Buffer.isBuffer(bytes))throw new CommandError('ATTACHMENT_INVALID',400)
-    return upload(name,bytes,owner(request),key(request))
-  })
-  // Compatibility with an already open composer; the same durable pipeline handles PDFs.
-  app.post('/api/v2/attachments',{bodyLimit:20_000_000},async request=>{
-    const input=z.object({fileName:Name,base64:z.string().max(14_000_000)}).parse(request.body)
-    return upload(input.fileName,Buffer.from(input.base64,'base64'),owner(request),key(request))
+  // Authentication runs in the parent onRequest hook, before accepting large bodies.
+  void app.register(async uploads=>{
+    const active=new Map<string,number>(),held=new WeakMap<FastifyRequest,string>()
+    let total=0
+    const release=(request:FastifyRequest)=>{const own=held.get(request);if(!own)return;held.delete(request);total--;const count=(active.get(own)??1)-1;if(count)active.set(own,count);else active.delete(own)}
+    uploads.addHook('onRequest',async request=>{
+      const own=owner(request);if(total>=4||(active.get(own)??0)>=2)throw new CommandError('UPLOAD_BUSY',429)
+      total++;active.set(own,(active.get(own)??0)+1);held.set(request,own)
+      request.raw.once('close',()=>{if(!request.raw.complete)release(request)})
+    })
+    uploads.addHook('onResponse',async request=>release(request))
+    uploads.addHook('onError',async request=>release(request))
+    uploads.addContentTypeParser('application/octet-stream',{parseAs:'buffer',bodyLimit:101*1024*1024},(_request,body,done)=>done(null,body))
+    uploads.post('/api/v2/materials/upload',{bodyLimit:101*1024*1024},async request=>{
+      const commandKey=key(request),name=Name.parse((request.query as any).name),bytes=request.body as Buffer
+      if(!Buffer.isBuffer(bytes))throw new CommandError('ATTACHMENT_INVALID',400)
+      return upload(name,bytes,owner(request),commandKey)
+    })
+    // Compatibility with an already open composer; the same durable pipeline handles PDFs.
+    uploads.post('/api/v2/attachments',{bodyLimit:20_000_000},async request=>{
+      const commandKey=key(request),input=z.object({fileName:Name,base64:z.string().max(14_000_000)}).parse(request.body)
+      return upload(input.fileName,Buffer.from(input.base64,'base64'),owner(request),commandKey)
+    })
   })
   async function upload(name:string,bytes:Buffer,own:string,commandKey:string){
     const ext=validateUpload(name,bytes),hash=digest(bytes.toString('base64'))
@@ -35,7 +48,15 @@ export function registerMaterialRoutes(app:FastifyInstance,store:DurableStore,wo
     }
     return materialView(resource)
   }
-  app.get('/api/v2/materials',async request=>(await store.list(owner(request),'attachment')).map(r=>materialView(r as Resource<Material>)))
+  app.get('/api/v2/materials',async request=>{
+    const {cursor}=z.object({cursor:z.string().max(1000).optional()}).parse(request.query)
+    let before:{time:number;id:string}|undefined
+    try{if(cursor)before=z.object({time:z.number().int().nonnegative(),id:z.string().min(1).max(240)}).parse(JSON.parse(Buffer.from(cursor,'base64url').toString()))}catch{throw new CommandError('INVALID_MATERIAL_CURSOR',400)}
+    const rows=await store.db.query<Resource<Material>>(`SELECT id,updated_at,jsonb_build_object('fileName',body->'fileName','mimeType',body->'mimeType','status',body->'status','origin',body->'origin','bytes',body->'bytes','folderId',body->'folderId','recent',body->'recent') AS body
+      FROM tp_resources WHERE owner_id=$1 AND kind='attachment' AND ($2::bigint IS NULL OR (updated_at,id)<($2::bigint,$3::text)) ORDER BY updated_at DESC,id DESC LIMIT 51`,[owner(request),before?.time??null,before?.id??''])
+    const page=rows.slice(0,50),last=page.at(-1)
+    return {items:page.map(row=>{const {content,...meta}=materialView(row);return meta}),...(rows.length>50&&last?{nextCursor:Buffer.from(JSON.stringify({time:last.updated_at,id:last.id})).toString('base64url')}:{})}
+  })
   app.get('/api/v2/materials/:id',async request=>{
     const snapshot=await store.snapshot(owner(request),(request.params as any).id)
     if(snapshot.kind!=='attachment')throw new CommandError('NOT_FOUND',404)

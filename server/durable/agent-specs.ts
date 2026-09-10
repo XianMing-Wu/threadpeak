@@ -4,14 +4,15 @@ import {AUTHOR_EVIDENCE_GUIDANCE} from '../knowledge/author-evidence.ts'
 import {CompositionSchema,COMPOSE_PROMPT,COMPOSE_OUTPUT} from '../knowledge/answer-composition.ts'
 import {AGENT_PROMPTS,OUTPUT_STRUCTURE_TEXT} from '../agent-runtime/prompts.ts'
 import {DEFAULT_MAX_OUTPUT_TOKENS} from '../agent-runtime/constants.ts'
-import {CATALOG_NAMES_PROMPT,CATALOG_NAMES_OUTPUT} from '../path-generation/direct-route.ts'
+import {CATALOG_NAMES_PROMPT,CATALOG_NAMES_OUTPUT,ROUTE_INTERVIEW_PROMPT,ROUTE_INTERVIEW_OUTPUT} from '../path-generation/direct-route.ts'
 
 // Only these route interview steps can use the shared shape parser. R4 has its
 // own strict stage planner; removed G/A/L contracts are never dispatchable here.
 export const ROUTE_STEP_SPECS={
  R1:{prompt:AGENT_PROMPTS.R1,output:OUTPUT_STRUCTURE_TEXT.R1,maxOutput:DEFAULT_MAX_OUTPUT_TOKENS.R1},
  R2:{prompt:CATALOG_NAMES_PROMPT,output:CATALOG_NAMES_OUTPUT,maxOutput:1024},
- R3:{prompt:AGENT_PROMPTS.R3,output:OUTPUT_STRUCTURE_TEXT.R3,maxOutput:DEFAULT_MAX_OUTPUT_TOKENS.R3},
+ // R3 dispatch uses RouteInterviewSchema in routeInterview, never the legacy shared parser.
+ R3:{prompt:ROUTE_INTERVIEW_PROMPT,output:ROUTE_INTERVIEW_OUTPUT,maxOutput:4096},
  R3b:{prompt:AGENT_PROMPTS.R3b,output:OUTPUT_STRUCTURE_TEXT.R3b,maxOutput:DEFAULT_MAX_OUTPUT_TOKENS.R3b},
 } as const
 export type RouteStep=keyof typeof ROUTE_STEP_SPECS

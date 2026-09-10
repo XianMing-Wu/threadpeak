@@ -1,5 +1,5 @@
 import type { RouteName } from '../components/Shell'
-import { resolveOpenLearningTarget } from '../session/resolve-learning-entry'
+import { resolveOpenLearningTarget,resolveLearningEntry } from '../session/resolve-learning-entry'
 import { getReadOnlyConceptGraph, getReadOnlyKnowledge, getRoute, hasSettledMineConceptGraph, settledMineConceptIdsOf } from './store'
 
 export const ACTIVE_ROUTE_KEY = 'threadpeak-active-route'
@@ -109,10 +109,13 @@ export function closeConceptKnowledge() {
 
 export function openLearning(routeId: string, conceptId?: string, returnTo: RouteName = 'path-3d') {
   const target = resolveOpenLearningTarget(routeId, conceptId)
+  const route=getRoute(target.routeId)
+  if(resolveLearningEntry({...target,route,conceptIds:route?.document.structure.concepts.map(c=>c.id)}).kind!=='ready')return false
   writeKey(ACTIVE_ROUTE_KEY, target.routeId)
   writeKey(ACTIVE_CONCEPT_KEY, target.conceptId)
   writeKey(SESSION_RETURN_KEY, returnTo)
   const knowledge = getRoute(target.routeId)?.knowledgeId
   if (knowledge) writeKey(ACTIVE_KNOWLEDGE_KEY, knowledge)
   location.hash = 'session-learning'
+  return true
 }

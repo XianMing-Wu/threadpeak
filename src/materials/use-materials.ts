@@ -34,6 +34,7 @@ export function useMaterials() {
   current.current = { files, folderMaterials, searchScope, uploads, imports }
   const pendingImports = useRef(new Set<string>())
   const importKeys = useRef(new Map<string, string>())
+  const creationAttempt = useRef(0)
   const folderLoad = useRef<Promise<void> | undefined>(undefined)
   const mounted = useRef(true)
 
@@ -63,8 +64,8 @@ export function useMaterials() {
       const records = await Promise.allSettled(requested.map(id => productRequest<MaterialView>(`/api/v2/materials/${encodeURIComponent(id)}`)))
       if (!live||epoch!==restoreEpoch.current) return
       const values = records.flatMap((r,i) => r.status === 'fulfilled'&&r.value.sourceId===requested[i] ? [r.value] : [])
-      setUnresolved([...ids.filter(id=>!values.some(v=>v.sourceId===id&&v.origin==='upload')).map(sourceId=>({sourceId})),...Object.entries(bindings).filter(([,source])=>!values.some(v=>v.sourceId===source)).map(([folderId,sourceId])=>({folderId,sourceId}))])
-      setFiles(values.filter(item => item.origin === 'upload' && ids.includes(item.sourceId)))
+      setUnresolved([...ids.filter(id=>!values.some(v=>v.sourceId===id&&(v.origin==='upload'||v.origin==='creation'))).map(sourceId=>({sourceId})),...Object.entries(bindings).filter(([,source])=>!values.some(v=>v.sourceId===source)).map(([folderId,sourceId])=>({folderId,sourceId}))])
+      setFiles(values.filter(item => (item.origin === 'upload'||item.origin==='creation'&&getWorkspaceSession()?.capabilities.zhihuMaterials) && ids.includes(item.sourceId)))
       setFolderMaterials(Object.fromEntries(Object.entries(bindings).flatMap(([id, source]) => { const found = values.find(item => item.sourceId === source); return found ? [[id, { ...found, folderId: id }]] : [] })))
       setSearchScope(scope)
       setLoaded(true)
@@ -87,7 +88,7 @@ export function useMaterials() {
       const results=await Promise.allSettled(pending.map(async item=>{
         const next=await productRequest<MaterialView>(`/api/v2/materials/${encodeURIComponent(item.sourceId)}`,{signal:abort.signal})
         if(abort.signal.aborted)return
-        if(item.origin==='upload')setFiles(old=>old.map(a=>a.sourceId===next.sourceId?next:a))
+        if(item.origin!=='collection')setFiles(old=>old.map(a=>a.sourceId===next.sourceId?next:a))
         else setFolderMaterials(old=>Object.fromEntries(Object.entries(old).map(([id,a])=>[id,a.sourceId===next.sourceId?{...next,folderId:id}:a])))
       }))
       const failure=results.find(r=>r.status==='rejected');if(failure?.status==='rejected')throw failure.reason
@@ -105,10 +106,10 @@ export function useMaterials() {
   }, [])
 
   const add = (item: MaterialView) => {
-    if (!loaded||item.origin !== 'upload') return
+    if (!loaded||item.origin==='collection'||item.origin==='creation'&&(!getWorkspaceSession()?.capabilities.zhihuMaterials||current.current.searchScope.kind==='collections')) return
     const state = current.current
     if (state.files.some(a => a.sourceId === item.sourceId)) return
-    if (state.files.length + unresolved.filter(a=>!a.folderId&&a.sourceId!==item.sourceId).length + state.uploads.length + ((state.searchScope.kind === 'collections' ? state.searchScope.folderIds.length : 0)) >= 8) { setError('一次最多添加 8 份资料，请先移除一份。'); return }
+    if (state.files.length + unresolved.filter(a=>!a.folderId&&a.sourceId!==item.sourceId).length + state.uploads.length + (pendingImports.current.has('@creation') || state.imports['@creation'] ? 1 : 0) + ((state.searchScope.kind === 'collections' ? state.searchScope.folderIds.length : 0)) >= 8) { setError('一次最多添加 8 份资料，请先移除一份。'); return }
     setUnresolved(old=>old.filter(a=>a.sourceId!==item.sourceId))
     setFiles(old => old.some(a => a.sourceId === item.sourceId) ? old : [...old, item]); setError('')
   }
@@ -144,7 +145,7 @@ export function useMaterials() {
   }
   const upload = async (picked: FileList | File[]) => {
     const state = current.current
-    if (!loaded || state.files.length + unresolved.filter(a=>!a.folderId).length + state.uploads.length + ((state.searchScope.kind === 'collections' ? state.searchScope.folderIds.length : 0)) + picked.length > 8) { setError('一次最多添加 8 份资料；一个收藏夹算一份。'); return }
+    if (!loaded || state.files.length + unresolved.filter(a=>!a.folderId).length + state.uploads.length + (pendingImports.current.has('@creation') || state.imports['@creation'] ? 1 : 0) + ((state.searchScope.kind === 'collections' ? state.searchScope.folderIds.length : 0)) + picked.length > 8) { setError('一次最多添加 8 份资料；一个收藏夹算一份。'); return }
     const batch: Upload[] = [...picked].map(file => ({ id: crypto.randomUUID(), file, status: 'uploading' }))
     current.current = { ...state, uploads: [...state.uploads, ...batch] }
     setUploads(old => [...old, ...batch]); setError('')
@@ -168,6 +169,13 @@ export function useMaterials() {
     } catch (e) { if (mounted.current&&epoch===restoreEpoch.current) setImports(old => ({ ...old, [folder.id]: { title: folder.title, error: message(e) } })) }
     finally { if(epoch===restoreEpoch.current)pendingImports.current.delete(folder.id) }
   }
+  const importCreation=async()=>{
+    const id='@creation',state=current.current
+    if(!loaded||!getWorkspaceSession()?.capabilities.zhihuMaterials||state.searchScope.kind==='collections'||pendingImports.current.has(id))return
+    if(state.files.length+unresolved.filter(a=>!a.folderId).length+state.uploads.length>=8){setError('一次最多添加 8 份资料，请先移除一份。');return}
+    const attempt=++creationAttempt.current,epoch=restoreEpoch.current,key=importKeys.current.get(id)??crypto.randomUUID();importKeys.current.set(id,key);pendingImports.current.add(id);setImports(old=>({...old,[id]:{title:'我的公开创作'}}))
+    try{const item=await productRequest<MaterialView>('/api/v2/materials/zhihu',{method:'POST',body:{kind:'creation'},key});if(mounted.current&&epoch===restoreEpoch.current&&attempt===creationAttempt.current&&pendingImports.current.has(id)){setFiles(old=>old.some(a=>a.sourceId===item.sourceId)?old:[...old,item]);setImports(old=>{const next={...old};delete next[id];return next});importKeys.current.delete(id)}}catch(e){if(mounted.current&&epoch===restoreEpoch.current&&attempt===creationAttempt.current&&pendingImports.current.has(id))setImports(old=>({...old,[id]:{title:'我的公开创作',error:message(e)}}))}finally{if(epoch===restoreEpoch.current&&attempt===creationAttempt.current)pendingImports.current.delete(id)}
+  }
   const setKind = (kind: SearchScope['kind']) => {
     if(!loaded)return
     setSearchScope(old => kind === 'collections' ? { kind, folderIds: old.kind === 'collections' ? old.folderIds : [] } : { kind }); setError('')
@@ -178,7 +186,7 @@ export function useMaterials() {
     const state = current.current
     const selected = state.searchScope.kind === 'collections' ? state.searchScope.folderIds : []
     const exists = selected.includes(folder.id)
-    if (!exists && state.files.length + unresolved.filter(a=>!a.folderId).length + state.uploads.length + selected.length >= 8) { setError('一次最多添加 8 份资料，请先移除一份。'); return }
+    if (!exists && state.files.length + unresolved.filter(a=>!a.folderId).length + state.uploads.length + (pendingImports.current.has('@creation') || state.imports['@creation'] ? 1 : 0) + selected.length >= 8) { setError('一次最多添加 8 份资料，请先移除一份。'); return }
     if(exists)setUnresolved(old=>old.filter(a=>a.folderId!==folder.id))
     const next: SearchScope = { kind: 'collections', folderIds: exists ? selected.filter(id => id !== folder.id) : [...selected, folder.id] }
     current.current = { ...state, searchScope: next }; setSearchScope(next); setError('')
@@ -201,17 +209,17 @@ export function useMaterials() {
     try {
       await productRequest(`/api/v2/resources/${encodeURIComponent(item.sourceId)}/resume`, { method: 'POST' })
       const next = await productRequest<MaterialView>(`/api/v2/materials/${encodeURIComponent(item.sourceId)}`)
-      if (item.origin === 'upload') setFiles(old => old.map(a => a.sourceId === item.sourceId ? next : a))
+      if (item.origin !== 'collection') setFiles(old => old.map(a => a.sourceId === item.sourceId ? next : a))
       else setFolderMaterials(old => Object.fromEntries(Object.entries(old).map(([id, a]) => [id, a.sourceId === item.sourceId ? { ...next, folderId: id } : a])))
     } catch (e) { setError(message(e)) }
   }
   const items = selectedMaterials(files, folderMaterials, searchScope)
   return {
     files, items, folders, foldersDemo, foldersStatus, foldersError, loadFolders, folderMaterials, searchScope, setKind, toggleFolder,
-    imports, importFolder, uploads, upload, retryUpload: uploadOne, removeUpload: (id: string) => { current.current.uploads = current.current.uploads.filter(a => a.id !== id); setUploads(old => old.filter(a => a.id !== id)) },
+    imports, importFolder, importCreation, removeCreationImport:()=>{creationAttempt.current++;pendingImports.current.delete('@creation');setImports(old=>{const next={...old};delete next['@creation'];return next})}, uploads, upload, retryUpload: uploadOne, removeUpload: (id: string) => { current.current.uploads = current.current.uploads.filter(a => a.id !== id); setUploads(old => old.filter(a => a.id !== id)) },
     add, remove, resume, error, setError, loaded, preview, setPreview, libraryOpen, setLibraryOpen,
     unresolved,restoring,restoreError,retryRestore:()=>{if(!restoring){setLoaded(false);setRestoreAttempt(n=>n+1)}},
-    ready: loaded && !restoring && !unresolved.length && !uploads.length && materialsReady(files, folderMaterials, searchScope),
+    ready: loaded && !restoring && !unresolved.length && !uploads.length && !imports['@creation'] && materialsReady(files, folderMaterials, searchScope),
     attachments: items.map(a => ({ ...a, content: '[资料已保存，由服务端读取]' })),
   }
 }

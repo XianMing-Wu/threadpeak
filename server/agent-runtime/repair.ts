@@ -2,9 +2,6 @@ import { DEFAULT_LIMITS } from './constants.ts'
 import { estimateCall } from './tokens.ts'
 import type { AgentId, ChatMessage } from './types.ts'
 
-/** One extra same-Agent call after extract still fails. Engineering cap, not a 4.2 product number. */
-export const STRUCTURE_SELF_REPAIR_LIMIT = 1
-
 export const PUBLIC_STRUCTURE_FAILURE_MESSAGE = '这次还没生成完整结果，请再试一次。'
 export const PATH_STRUCTURE_FAILURE_MESSAGE = '生成学习路线这一步还没通过校验。前面的检索和选择题都还在，请重试这一步。'
 

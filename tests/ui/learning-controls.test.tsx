@@ -60,9 +60,8 @@ test('keyboard selection exposes a separate toolbar and preserves the selected b
   fireEvent.change(screen.getByRole('textbox', { name: '询问 AI 的问题' }), { target: { value: '解释这一步' } })
   fireEvent.click(screen.getByRole('button', { name: '发送询问 AI 问题' }))
   await waitFor(() => expect(submit).toHaveBeenLastCalledWith('解释这一步', 'ai', ['answer']))
-  await waitFor(() => expect((screen.getByRole('textbox', { name: '询问 AI 的问题' }) as HTMLTextAreaElement).value).toBe(''))
-  expect(screen.getByRole('dialog', { name: '询问 AI' })).toBeTruthy()
-  fireEvent.click(screen.getByRole('button', { name: '关闭询问 AI 输入框' }))
+  await waitFor(() => expect(screen.queryByRole('dialog', { name: '询问 AI' })).toBeNull())
+  expect(document.activeElement).toBe(ask)
 
   fireEvent.click(screen.getByRole('button', { name: '问博主' }))
   fireEvent.change(screen.getByRole('textbox', { name: '问博主的问题' }), { target: { value: '还有哪些应用条件？' } })

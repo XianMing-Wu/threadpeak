@@ -30,7 +30,7 @@ export function AuthLanding({ theme, onThemeChange, onAuthorize }: {
     try {
       if (mode === 'guest') { await onAuthorize(); return }
       const current = config ?? await loadConfig()
-      if (!current.zhihuAvailable) throw new Error('知乎账号登录暂未开放，可先以游客身份开始学习。')
+      if (!current.zhihuAvailable) return
       const result = await requestAuthStart()
       if (result.kind !== 'redirect') throw new Error(result.message)
       location.href = result.authorizeUrl
@@ -60,10 +60,10 @@ export function AuthLanding({ theme, onThemeChange, onAuthorize }: {
           <h2 id="auth-entry-title">欢迎来到问山</h2>
           <p className="auth-entry-description">选择一种方式，开始你的学习。</p>
           <div className="auth-actions">
-            <button type="button" className="auth-login auth-login-zhihu" disabled={!!pending} onClick={() => void login('zhihu')}>
+            <button type="button" className="auth-login auth-login-zhihu" disabled={!!pending||config?.zhihuAvailable===false} onClick={() => void login('zhihu')}>
               <span className="auth-zhihu-mark" aria-hidden="true">知</span><span>{pending === 'zhihu' ? '正在连接知乎…' : '知乎账号登录'}</span>{config?.zhihuMode === 'mock' && <span className="auth-demo-tag">演示</span>}
             </button>
-            <p className="auth-login-caption">连接你在知乎收藏的好内容</p>
+            <p className="auth-login-caption">{config?.zhihuAvailable===false?'知乎账号登录暂未开放，可先以游客身份开始学习。':'连接你在知乎收藏的好内容'}</p>
             <div className="auth-choice-divider" aria-hidden="true"><span>或</span></div>
             <button type="button" className="auth-login auth-login-guest" disabled={!!pending} onClick={() => void login('guest')}>
               <Icon name="user" size={18}/><span>{pending === 'guest' ? '正在进入…' : '游客登录'}</span>

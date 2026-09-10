@@ -1,12 +1,13 @@
 import {afterEach,beforeEach,expect,test,vi} from 'vitest'
 import {act,cleanup,render,renderHook,screen,waitFor} from '@testing-library/react'
 import {useMaterials} from '../../src/materials/use-materials'
+import {publishWorkspaceSession} from '../../src/runtime/workspace-session'
 import {MaterialChips} from '../../src/materials/Materials'
 import {ensureSession,productRequest} from '../../src/learning-v2/client'
 vi.mock('../../src/learning-v2/client',async importOriginal=>({...await importOriginal<typeof import('../../src/learning-v2/client')>(),ensureSession:vi.fn(),productRequest:vi.fn()}))
 const material=(sourceId:string)=>({sourceId,fileName:`${sourceId}.txt`,mimeType:'text/plain',content:'原始资料',origin:'upload',status:'ready'})
 beforeEach(()=>{vi.mocked(ensureSession).mockResolvedValue(undefined);vi.mocked(productRequest).mockRejectedValue(new Error('temporary network failure'))})
-afterEach(()=>{cleanup();sessionStorage.clear();vi.resetAllMocks()})
+afterEach(()=>{cleanup();publishWorkspaceSession(null);sessionStorage.clear();vi.resetAllMocks()})
 test('partial recovery preserves failed selections, blocks send and retries successfully',async()=>{
  sessionStorage.setItem('tp-home-materials',JSON.stringify(['a','b']))
  vi.mocked(productRequest).mockImplementation(async url=>{if(url.endsWith('/a'))return material('a') as never;throw Error('offline')})
@@ -75,4 +76,37 @@ test('account switch does not send the remaining old-account upload queue or res
  await act(async()=>{pending.forEach((p,i)=>p.resolve({ok:true,json:async()=>material(`old-upload-${i}`)} as Response));await upload})
  expect(fetch).toHaveBeenCalledTimes(2);expect(result.current.files).toEqual([]);expect(sessionStorage.getItem('tp-home-materials')).toBe('[]')
  vi.unstubAllGlobals()
+})
+
+
+test('authorized creation import deduplicates clicks, reserves a slot and stays out of collections',async()=>{
+ publishWorkspaceSession({kind:'authenticated',provider:'zhihu',workspaceId:'creation-test',capabilities:{zhihuMaterials:true}})
+ sessionStorage.setItem('tp-home-materials',JSON.stringify(Array.from({length:7},(_,i)=>`file-${i}`)))
+ let finish!:(value:unknown)=>void
+ vi.mocked(productRequest).mockImplementation(async(url,options)=>options?.method==='POST'?await new Promise<unknown>(resolve=>{finish=resolve}) as never:material(url.split('/').at(-1)!) as never)
+ const {result}=renderHook(()=>useMaterials());await waitFor(()=>expect(result.current.ready).toBe(true))
+ let first!:Promise<void>
+ act(()=>{first=result.current.importCreation();void result.current.importCreation()})
+ expect(vi.mocked(productRequest).mock.calls.filter(([,o])=>o?.method==='POST')).toHaveLength(1)
+ expect(result.current.ready).toBe(false)
+ act(()=>result.current.add(material('ninth') as never))
+ expect(result.current.files).toHaveLength(7);expect(result.current.error).toContain('最多添加 8')
+ await act(async()=>{finish({...material('creation'),origin:'creation'});await first})
+ expect(result.current.files).toHaveLength(8);expect(result.current.ready).toBe(true)
+ act(()=>result.current.setKind('collections'))
+ expect(result.current.items.some(item=>item.origin==='creation')).toBe(false)
+})
+
+test('guest cannot import creations and a removed in-flight import cannot return a selected material',async()=>{
+ publishWorkspaceSession({kind:'guest',provider:null,workspaceId:'guest-test',capabilities:{zhihuMaterials:false}})
+ const {result}=renderHook(()=>useMaterials());await waitFor(()=>expect(result.current.ready).toBe(true))
+ await act(async()=>result.current.importCreation());expect(productRequest).not.toHaveBeenCalled()
+ publishWorkspaceSession({kind:'authenticated',provider:'zhihu',workspaceId:'creation-test',capabilities:{zhihuMaterials:true}})
+ let finish!:(value:unknown)=>void
+ vi.mocked(productRequest).mockImplementation(async()=>await new Promise<unknown>(resolve=>{finish=resolve}) as never)
+ let request!:Promise<void>
+ act(()=>{request=result.current.importCreation()})
+ act(()=>result.current.removeCreationImport())
+ await act(async()=>{finish({...material('removed-creation'),origin:'creation'});await request})
+ expect(result.current.files).toEqual([]);expect(result.current.ready).toBe(true)
 })

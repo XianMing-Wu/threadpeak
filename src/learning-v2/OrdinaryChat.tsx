@@ -1,3 +1,4 @@
+import {newChat} from '../chat/launch'
 import {pollResource,taskPollInterval,foregroundDelay} from './poll'
 import { useEffect, useRef, useState } from 'react'
 import { ProductWorkspace } from '../components/Shell'
@@ -5,26 +6,26 @@ import { Composer } from '../components/Composer'
 import { MarkdownMath } from '../lib/MarkdownMath'
 import { Icon } from '../icons'
 import { productRequest, type TaskView } from './client'
-import { pathLaunchAttachments } from '../path-planning/path-run-client'
+import { readPathLaunchAttachments } from '../path-planning/path-run-client'
 import { refreshProductLibrary } from './library'
 
-type Snapshot={id:string;revision:number;data:{title:string;messages:{id:string;role:'user'|'assistant';text:string;incomplete?:boolean}[]};job:TaskView|null}
-export function OrdinaryChat({chatId,question,initialDepth}:{chatId:string;question:string;initialDepth:'fast'|'deep'}){
+type Snapshot={id:string;revision:number;dataRevision?:number;data:{title:string;messages:{id:string;role:'user'|'assistant';text:string;incomplete?:boolean}[]};job:TaskView|null}
+export function OrdinaryChat({chatId,question,initialDepth,resourceId}:{chatId:string;question:string;resourceId?:string;initialDepth:'fast'|'deep'}){
   const [snapshot,setSnapshot]=useState<Snapshot|null>(null),[value,setValue]=useState(''),[depth,setDepth]=useState(initialDepth),[notice,setNotice]=useState(''),[sending,setSending]=useState(false)
   const [reconnect,setReconnect]=useState(0)
   const mounted=useRef(true)
   const live=useRef<Snapshot|null>(null)
   useEffect(()=>{mounted.current=true;return()=>{mounted.current=false}},[])
   const lock=useRef(false),scroll=useRef<HTMLDivElement>(null),follow=useRef(true)
-  const accept=(next:Snapshot)=>{if(mounted.current&&(!live.current||live.current.id!==next.id||live.current.revision<next.revision)){live.current=next;setSnapshot(next)}}
+  const accept=(next:Snapshot)=>{if(mounted.current&&(!live.current||live.current.id!==next.id||live.current.revision<=next.revision)){const value={...next,data:next.data??live.current!.data};live.current=value;setSnapshot(value)}}
   useEffect(()=>{
     const abort=new AbortController()
     const poll=(id:string)=>pollResource(async()=>{
-      const next=await productRequest<Snapshot|{unchanged:true}>(`/api/v2/resources/${id}?after=${live.current?.id===id?live.current.revision:0}`,{signal:abort.signal})
+      const next=await productRequest<Snapshot|{unchanged:true}>(`/api/v2/resources/${id}?afterData=${live.current?.id===id?live.current.dataRevision??0:0}`,{signal:abort.signal})
       if(abort.signal.aborted)return false
-      if(!('unchanged' in next))accept(next);setNotice('')
+      accept(next as Snapshot);setNotice('')
     },{signal:abort.signal,intervalMs:()=>taskPollInterval(live.current?.job?.status),wait:foregroundDelay,onError:(_error,stopped)=>setNotice(stopped?'连接暂停，点击重新连接继续。':'正在重新连接，内容仍然保留。')})
-    void productRequest<Snapshot>('/api/v2/chats/enter',{method:'POST',body:{chatId,question,depth:initialDepth,attachments:pathLaunchAttachments.get(chatId)??[]},key:`chat:${chatId}`,signal:abort.signal}).then(next=>{if(!abort.signal.aborted){accept(next);void poll(next.id);void refreshProductLibrary().catch(()=>{})}}).catch(e=>{if(!abort.signal.aborted)setNotice(e.message)})
+    void (resourceId?productRequest<Snapshot>(`/api/v2/resources/${encodeURIComponent(resourceId)}`,{signal:abort.signal}):productRequest<Snapshot>('/api/v2/chats/enter',{method:'POST',body:{chatId,question,depth:initialDepth,attachments:readPathLaunchAttachments(chatId)},key:`chat:${chatId}`,signal:abort.signal})).then(next=>{if(!abort.signal.aborted){accept(next);void poll(next.id);void refreshProductLibrary().catch(()=>{})}}).catch(e=>{if(!abort.signal.aborted)setNotice(e.message)})
     return()=>{abort.abort()}
   },[chatId,reconnect])
   useEffect(()=>{if(snapshot?.job?.status==='completed')void refreshProductLibrary().catch(()=>{})},[snapshot?.job?.id,snapshot?.job?.status])
@@ -37,7 +38,7 @@ export function OrdinaryChat({chatId,question,initialDepth}:{chatId:string;quest
   }
   async function action(name:string){if(!snapshot)return;try{accept(await productRequest(`/api/v2/resources/${snapshot.id}/${name}`,{method:'POST',body:{}}))}catch(e){if(mounted.current)setNotice(e instanceof Error?e.message:'暂时没有完成。')}}
   return <ProductWorkspace active="paths" page="chat"><main className="query-chat">
-    <header className="query-chat-header"><div><button aria-label="返回首页" onClick={()=>location.hash='home'}><Icon name="back" size={18}/></button><h1>{snapshot?.data.title??question}</h1></div><button className="new-chat-only" onClick={()=>location.hash='home'}><Icon name="new-chat" size={17}/>新对话</button></header>
+    <header className="query-chat-header"><div><button aria-label="返回首页" onClick={()=>location.hash='home'}><Icon name="back" size={18}/></button><h1>{snapshot?.data.title??question}</h1></div><button className="new-chat-only" onClick={newChat}><Icon name="new-chat" size={17}/>新对话</button></header>
     {(notice||snapshot?.job?.status==='waiting')&&<div className="lp-runtime-notice" role="status">{notice||snapshot?.job?.phase}{notice&&<button onClick={()=>setReconnect(n=>n+1)}>重新连接</button>}{snapshot?.job?.status==='waiting'&&snapshot.job.recoverable&&<button onClick={()=>void action('resume')}>继续完成</button>}{snapshot?.job?.status==='waiting'&&<button onClick={()=>void action('cancel')}>停止本次任务</button>}</div>}
     <section className="query-chat-body" ref={scroll} onScroll={()=>{const el=scroll.current;if(el)follow.current=el.scrollHeight-el.scrollTop-el.clientHeight<100}}><div className="query-chat-flow">
       {snapshot?.data.messages.map(m=>m.role==='user'?<div className="query-user-bubble" key={m.id}>{m.text}</div>:<article className="chat-answer" key={m.id}><MarkdownMath source={m.text}/>{m.incomplete&&<small>已停止 · 回答尚未完成</small>}</article>)}

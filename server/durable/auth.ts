@@ -20,6 +20,7 @@ export function verifyIdentityToken(token:string,config:IdentityConfig,now=Date.
 function cookie(request:FastifyRequest,name='tp_workspace'){return request.headers.cookie?.split(';').map(s=>s.trim()).find(s=>s.startsWith(`${name}=`))?.slice(name.length+1)}
 export const isGuestOwner=(owner:string)=>owner.startsWith('guest:')||owner.startsWith('local:')
 export function createIdentity(store:DurableStore,config:IdentityConfig){
+  if(config.origin)config={...config,origin:new URL(config.origin).origin}
   function checkOrigin(request:FastifyRequest){
     if(request.headers.origin&&config.origin&&request.headers.origin!==config.origin||request.headers['sec-fetch-site']==='cross-site')throw new CommandError('ORIGIN_DENIED',403)
   }

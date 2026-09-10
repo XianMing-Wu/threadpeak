@@ -1,3 +1,4 @@
+import {safeSourceImageUrl} from '@threadpeak/contracts/source-image'
 import {SourceFootprints,type SourceFeedback as Feedback} from './SourceFootprints'
 import {ChoiceMenu} from '../components/ChoiceMenu'
 import {SourceComments} from './SourceComments'
@@ -13,20 +14,20 @@ import { SourceImport } from './AuthorSourceImport'
 import { isDemoSourceUrl, sourceLink } from './source-link'
 import {restoreAuthorDraft} from './author-draft'
 
-export function AuthorAvatar({name,src,sourceUrl}:{name:string;src?:string;sourceUrl?:string}){const {value}=useSourcePresentation(sourceUrl,!src);src=src||value?.data.metadata.avatar;const [failedSrc,setFailedSrc]=useState<string>();if(src&&src!==failedSrc)return <img className="au-avatar" src={src} alt={`${name}的头像`} width={42} height={42} loading="lazy" decoding="async" draggable={false} referrerPolicy="no-referrer" onError={()=>setFailedSrc(src)}/>;return <span className="au-avatar" aria-hidden="true">{Array.from(name).slice(0,1).join('')}</span>}
+export function AuthorAvatar({name,src,sourceUrl}:{name:string;src?:string;sourceUrl?:string}){const {value}=useSourcePresentation(sourceUrl,!src);src=src||value?.data.metadata.avatar;const [failedSrc,setFailedSrc]=useState<string>();if(safeSourceImageUrl(src)&&src!==failedSrc)return <img className="au-avatar" src={src} alt={`${name}的头像`} width={42} height={42} loading="lazy" decoding="async" draggable={false} referrerPolicy="no-referrer" onError={()=>setFailedSrc(src)}/>;return <span className="au-avatar" aria-hidden="true">{Array.from(name).slice(0,1).join('')}</span>}
 export function AuthorBadge({icon,text,sourceUrl,fallback="知乎内容作者"}:{icon?:string;text?:string;sourceUrl?:string;fallback?:string}){
   const {value}=useSourcePresentation(sourceUrl,!icon&&!text)
   icon=icon||value?.data.metadata.badgeIcon; text=text||value?.data.metadata.badge
   const [failedSrc,setFailedSrc]=useState<string>()
-  return <span className={`au-meta ${text||icon?'au-identity':''}`} aria-label={text||icon?'知乎作者认证':undefined}>{icon&&icon!==failedSrc&&<img className="au-badge-icon" src={icon} alt="" width={13} height={13} referrerPolicy="no-referrer" onError={()=>setFailedSrc(icon)}/>}<span>{text||fallback}</span></span>
+  return <span className={`au-meta ${text||icon?'au-identity':''}`} aria-label={text||icon?'知乎作者认证':undefined}>{safeSourceImageUrl(icon)&&icon!==failedSrc&&<img className="au-badge-icon" src={icon} alt="" width={13} height={13} referrerPolicy="no-referrer" onError={()=>setFailedSrc(icon)}/>}<span>{text||fallback}</span></span>
 }
 function SourceMetrics({source}:{source:AuthorMatch|NetworkEvidence}){
   const count=(value:number|undefined)=>typeof value==='number'&&Number.isFinite(value)&&value>=0?new Intl.NumberFormat('zh-CN').format(value):null
-  const likes=count(source.likes),comments=count(source.commentCount)
+  const likes=count(source.likes)
   const edited=source.editedAt&&source.editedAt>0?new Date(source.editedAt*1000):null
   const date=edited&&Number.isFinite(edited.getTime())?edited:null
-  if(likes===null&&comments===null&&!date)return null
-  return <div className="au-source-metrics" aria-label="文章数据">{likes!==null&&<span><Glyph name="like" size={12}/>{likes} 赞同</span>}{comments!==null&&<span><Glyph name="message" size={12}/>{comments} 评论</span>}{date&&<time dateTime={date.toISOString()}>{new Intl.DateTimeFormat('zh-CN',{year:'numeric',month:'numeric',day:'numeric'}).format(date)} 更新</time>}</div>
+  if(likes===null&&!date)return null
+  return <div className="au-source-metrics" aria-label="文章数据">{likes!==null&&<span><Glyph name="like" size={12}/>{likes} 赞同</span>}{date&&<time dateTime={date.toISOString()}>{new Intl.DateTimeFormat('zh-CN',{year:'numeric',month:'numeric',day:'numeric'}).format(date)} 更新</time>}</div>
 }
 export function AuthorMatchCard({author,index,onPrepare,onInspect}:{author:AuthorMatch;index:number;onPrepare:()=>void;onInspect:()=>void}){
   const [expanded,setExpanded]=useState(false)

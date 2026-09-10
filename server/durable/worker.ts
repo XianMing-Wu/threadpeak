@@ -93,6 +93,7 @@ export class DurableWorker {
   private controllers = new Map<string, AbortController>()
   private jobs = new Map<string, Job>()
   private stopped = false
+  private scheduled = false
   private timer?: ReturnType<typeof setTimeout>
   private pumping = false
   private maintenanceTimer?: ReturnType<typeof setTimeout>
@@ -121,6 +122,7 @@ export class DurableWorker {
     finally { this.scheduleMaintenance(delay) }
   }
   wake() {
+    this.scheduled=true
     if (this.stopped || this.pumping) return
     if (this.timer) clearTimeout(this.timer)
     this.pumpTask=this.pump()
@@ -129,7 +131,7 @@ export class DurableWorker {
     this.pumping = true
     try {
       while (!this.stopped && this.controllers.size < this.concurrency) {
-        const job = await this.store.claim()
+        const job = await this.store.claim(undefined,[...this.controllers.keys()])
         if (!job) break
         if(this.stopped){await this.store.release(job);break}
         const task = this.execute(job)
@@ -153,7 +155,11 @@ export class DurableWorker {
       controller.signal.throwIfAborted()
       await this.handler(ctx)
       await ctx.flush()
-      this.log({ event: 'task.completed', jobId: job.id, kind: job.kind, durationMs: Date.now()-start, attempt: job.attempts })
+      const [finished]=await this.store.db.query<{status:string;fence:number}>('SELECT status,fence FROM tp_jobs WHERE id=$1',[job.id])
+      if(!finished||finished.fence!==job.fence)throw new CommandError('LEASE_LOST')
+      if(!['completed','waiting','cancelled'].includes(finished.status))throw new ToolError('HANDLER_NOT_SETTLED',false)
+      outcome=finished.status
+      this.log({ event: `task.${outcome}`, jobId: job.id, kind: job.kind, durationMs: Date.now()-start, attempt: job.attempts })
     } catch (error) {
       const {code,retryable} = classifyTaskError(error,controller.signal.aborted)
       outcome=controller.signal.aborted?'cancelled':'failed';failureCode=code
@@ -162,7 +168,7 @@ export class DurableWorker {
         try { await this.store.recover(job, code, retryable) } catch { /* expired lease is recovered by the next worker */ }
       }
       this.log({ event: 'task.interrupted', jobId: job.id, kind: job.kind, code, durationMs: Date.now()-start, attempt: job.attempts })
-    } finally { clearInterval(heartbeat); unsubscribe(); this.controllers.delete(job.id); this.jobs.delete(job.id);await recordMetric(this.store.db,job,job.kind,{kind:'task',durationMs:Date.now()-start,ageAtStartMs:Math.max(0,start-job.created_at),attempt:job.attempts,result:outcome,code:failureCode}) }
+    } finally { clearInterval(heartbeat); unsubscribe(); this.controllers.delete(job.id); this.jobs.delete(job.id);await recordMetric(this.store.db,job,job.kind,{kind:'task',durationMs:Date.now()-start,ageAtStartMs:Math.max(0,start-job.created_at),attempt:job.attempts,result:outcome,code:failureCode});if(this.scheduled)this.wake() }
   }
   async stop() {
     this.stopped = true; if (this.timer) clearTimeout(this.timer)

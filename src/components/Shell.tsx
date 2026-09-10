@@ -142,7 +142,7 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
       if(remote.kind==='learning'){void productRequest(`/api/v2/learning/${remote.resourceId}/commands`,{method:'POST',body:{kind:'activate-conversation',conversationId:remote.id}}).then(()=>{location.hash=`knowledge-detail?resource=${encodeURIComponent(remote.resourceId)}`}).catch(e=>setReopen({kind:'unavailable',title:'暂时未打开',message:e.message} as HistoryReopenResolution));return}
       const stored=remote.kind==='path'?getConversation(remote.id):undefined
       const id=stored?.id??remote.id
-      sessionStorage.setItem(CHAT_LAUNCH_KEY,JSON.stringify({query:remote.query,mode:remote.kind==='path'?'route':'answer',conversationId:id,routeId:remote.routeId,generate:false}));setActiveConversation(id);location.hash='chat';window.dispatchEvent(new Event(HISTORY_OPEN_EVENT));return
+      sessionStorage.setItem(CHAT_LAUNCH_KEY,JSON.stringify({query:remote.query,mode:remote.kind==='path'?'route':'answer',conversationId:id,routeId:remote.routeId,resourceId:remote.resourceId,generate:false}));setActiveConversation(id);location.hash='chat';window.dispatchEvent(new Event(HISTORY_OPEN_EVENT));return
     }
   }}><span className="t">{entry.title}</span></button>
   return <div className={`tp-shell ux-flowith-shell ${collapsed?'is-collapsed':''}`} data-page={route}>

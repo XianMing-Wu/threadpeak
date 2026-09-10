@@ -151,3 +151,21 @@ test('an interview remains usable while catalogs are running and shows why each 
   const saved=await server.store.snapshot(owner,resource.id);expect(saved.job?.status).toBe('running');expect(saved.data.research.ready).toBe(false)
  }finally{cleanup();await server.close()}
 })
+
+test('server history restores the same route with generate=false, while a missing restore identity cannot create a new run',async()=>{
+ const server=await backend()
+ try{
+  await fetch('/api/v2/session')
+  const owner=(await server.store.db.query<{owner_id:string}>('SELECT owner_id FROM tp_sessions'))[0].owner_id
+  const questions=Array.from({length:2},(_,i)=>({id:`restore-q${i}`,prompt:`历史问题${i}`,reason:'保留已确认的范围',options:[0,1,2].map(j=>({id:`restore-q${i}-o${j}`,label:`历史条件${i}-${j}`,routeEffect:'调整范围'}))}))
+  const resource=await server.store.create(owner,'path','server-history',{workflow:'route-direct-v6',goal:'恢复原路线',depth:'fast',attachments:[],status:'awaiting_answers',questionSets:[{round:1,status:'active',message:'恢复访谈',questions,selectedOptionIds:{},customAnswers:{}}],conversation:[]})
+  const view=render(createElement(StrictMode,null,createElement(ChatRoutePanel,{conversationId:'history-entry',resourceId:resource.id,generate:false,query:'恢复原路线',onRouteReady:()=>{}})))
+  await screen.findByText('历史问题0')
+  expect(server.calls).toContain(`/api/path-runs/${resource.id}`);expect(server.calls).not.toContain('/api/path-runs')
+  view.unmount()
+  render(createElement(ChatRoutePanel,{conversationId:'missing-history-entry',generate:false,query:'丢失的恢复标识',onRouteReady:()=>{}}))
+  await screen.findByText('未找到这次路线的恢复标识，请从历史记录重新打开。')
+  expect(await server.store.db.query('SELECT id FROM tp_jobs')).toHaveLength(0)
+  expect(await server.store.list(owner,'path')).toHaveLength(1)
+ }finally{cleanup();await server.close()}
+})

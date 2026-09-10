@@ -48,11 +48,13 @@ export function createZhihuUserServices(db:Sql,env:Record<string,string|undefine
 export async function startProductServer(env=serverEnvironment()){
   const production=env.NODE_ENV==='production',oauth=loginConfig(env)
   if(production&&(!env.DATABASE_URL||!env.THREADPEAK_PUBLIC_ORIGIN||(!oauth&&(!env.THREADPEAK_IDENTITY_SECRET||env.THREADPEAK_IDENTITY_SECRET.length<32||!env.THREADPEAK_IDENTITY_ISSUER||!env.THREADPEAK_IDENTITY_AUDIENCE))||!env.DEEPSEEK_CONTEXT_TOKENS))throw new Error('PRODUCTION_CONFIG_REQUIRED')
+  const materialBudget={count:Number(env.THREADPEAK_MATERIAL_MAX_COUNT??500),bytes:Number(env.THREADPEAK_MATERIAL_MAX_BYTES??1024**3)}
+  if(Object.values(materialBudget).some(value=>!Number.isSafeInteger(value)||value<=0))throw new Error('RESOURCE_BUDGET_CONFIG_INVALID')
   const capabilities=resolveCapabilities(env)
   if(env.THREADPEAK_LOGIN_URL&&new URL(env.THREADPEAK_LOGIN_URL).protocol!=='https:')throw new Error('LOGIN_URL_MUST_BE_HTTPS')
   const db=await openDatabase({url:env.DATABASE_URL,directory:env.THREADPEAK_DATA_DIR??resolve('server/.data/product-v2')});
   for(let attempt=0;;attempt++){try{await migrate(db);break}catch(error){const code=(error as {code?:string}).code??'';if(attempt>=9||!['ECONNREFUSED','ECONNRESET','CONNECTION_CLOSED','CONNECTION_ENDED','CONNECT_TIMEOUT','57P03','57P01'].includes(code)){await db.close();throw new Error('DATABASE_START_FAILED')}process.stdout.write(JSON.stringify({event:'server.waiting_for_database',attempt:attempt+1})+'\n');await new Promise(resolve=>{setTimeout(resolve,Math.min(5000,1000*2**attempt))})}}
-  const gate=createZhihuGate(db),store=new DurableStore(db),config=resolveProviderConfig(env),{zhihuData,zhihuLogin}=createZhihuUserServices(db,env,gate)
+  const gate=createZhihuGate(db),store=new DurableStore(db,Date.now,materialBudget),config=resolveProviderConfig(env),{zhihuData,zhihuLogin}=createZhihuUserServices(db,env,gate)
   // Switching to real (including production) cannot retain a usable demo workspace cookie.
   if(zhihuLogin?.config.mode!=='mock')await db.query('DELETE FROM tp_sessions WHERE owner_id LIKE $1',[`${MOCK_ZHIHU_OWNER_PREFIX}%`])
   let handler:TaskHandler=async ctx=>{
@@ -66,13 +68,14 @@ export async function startProductServer(env=serverEnvironment()){
     const providers=instrumentProviders(db,config.config,llm,zhihu)
     handler=createFlows(new ProductTools(providers.llm,providers.zhihu,capabilities),zhihuData,zhihuLogin)
   }
-  const worker=new DurableWorker(store,handler),app=await createProductApp({store,worker,providersReady:config.ok,zhihuData,zhihuLogin,trustedProxies:env.THREADPEAK_TRUSTED_PROXIES?.split(',').map(value=>value.trim()).filter(Boolean),identity:{production,origin:env.THREADPEAK_PUBLIC_ORIGIN,jwtSecret:env.THREADPEAK_IDENTITY_SECRET,issuer:env.THREADPEAK_IDENTITY_ISSUER,audience:env.THREADPEAK_IDENTITY_AUDIENCE,loginUrl:env.THREADPEAK_LOGIN_URL}})
-  app.addHook('onClose',()=>db.close())
-  const port=Number(env.THREADPEAK_PORT??4312)
-  await app.listen({port,host:env.THREADPEAK_HOST??'127.0.0.1'});worker.start()
-  process.stdout.write(JSON.stringify({event:'server.ready',port,providersReady:config.ok,storage:env.DATABASE_URL?'postgres':'pglite',mode:production?'production':'local',zhihuOAuthMode:zhihuLogin?.config.mode??'unconfigured'})+'\n')
+  const worker=new DurableWorker(store,handler),app=await createProductApp({store,worker,closeStorage:()=>db.close(),providersReady:config.ok,zhihuData,zhihuLogin,trustedProxies:env.THREADPEAK_TRUSTED_PROXIES?.split(',').map(value=>value.trim()).filter(Boolean),identity:{production,origin:env.THREADPEAK_PUBLIC_ORIGIN?new URL(env.THREADPEAK_PUBLIC_ORIGIN).origin:undefined,jwtSecret:env.THREADPEAK_IDENTITY_SECRET,issuer:env.THREADPEAK_IDENTITY_ISSUER,audience:env.THREADPEAK_IDENTITY_AUDIENCE,loginUrl:env.THREADPEAK_LOGIN_URL}})
   let closing=false
   const close=async()=>{if(closing)return;closing=true;await app.close()}
-  process.once('SIGTERM',()=>void close());process.once('SIGINT',()=>void close())
+  const onSignal=()=>{void close().catch(()=>{process.stderr.write(JSON.stringify({event:'server.close_failed',code:'STORAGE_ERROR'})+'\n');process.exitCode=1})}
+  process.once('SIGTERM',onSignal);process.once('SIGINT',onSignal)
+  app.addHook('onClose',async()=>{process.removeListener('SIGTERM',onSignal);process.removeListener('SIGINT',onSignal)})
+  const port=Number(env.THREADPEAK_PORT??4312)
+  try{await app.listen({port,host:env.THREADPEAK_HOST??'127.0.0.1'});worker.start()}catch(error){await app.close();throw error}
+  process.stdout.write(JSON.stringify({event:'server.ready',port,providersReady:config.ok,storage:env.DATABASE_URL?'postgres':'pglite',mode:production?'production':'local',zhihuOAuthMode:zhihuLogin?.config.mode??'unconfigured'})+'\n')
   return {app,store,worker}
 }

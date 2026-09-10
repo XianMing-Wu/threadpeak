@@ -4,7 +4,7 @@ import helmet from '@fastify/helmet'
 import rateLimit, {normalizeIP} from '@fastify/rate-limit'
 import {isIP} from 'node:net'
 import {readLibraryPage} from './library.ts'
-import { pathGoalContext, hydrateLearningGoal } from './learning-goal.ts'
+import { pathGoalContext, hydrateLearningGoal, ownedPath } from './learning-goal.ts'
 import { SearchScopeSchema } from '@threadpeak/contracts/search-scope'
 import {registerSourcePresentation} from './source-presentation.ts'
 import { registerAuthorRoutes } from './authors-http.ts'
@@ -26,10 +26,10 @@ import type { ZhihuLogin } from './zhihu-oauth.ts'
 
 const Text=z.string().trim().min(1).max(20000),Id=z.string().min(1).max(240)
 const depth=z.enum(['fast','deep']).default('fast')
-const attachment=z.object({sourceId:Id,fileName:z.string().min(1).max(200),mimeType:z.enum(['application/pdf','text/markdown','text/plain']).optional(),content:z.string().min(1).max(2_000_000)})
+const attachment=z.object({sourceId:Id})
 const startSchema=z.object({searchScope:SearchScopeSchema.default({kind:'zhihu'}),goal:Text,attachments:z.array(attachment).max(8).default([]),thinkingDepth:depth})
 const commandSchema=z.object({kind:z.enum(['reply','author','new-conversation','activate-conversation']),question:Text.optional(),selected:z.array(Id).max(200).default([]),conversationId:Id,depth})
-function requestKey(request:FastifyRequest){const key=request.headers['idempotency-key'];return typeof key==='string'&&key.length>=8&&key.length<=200?key:randomUUID()}
+function requestKey(request:FastifyRequest){const key=request.headers['idempotency-key'];if(typeof key!=='string'||key.trim().length<8||key.length>200)throw new CommandError('IDEMPOTENCY_KEY_REQUIRED',400);return key}
 const bodyOf=(request:FastifyRequest)=>request.body??{}
 const resourceId=(request:FastifyRequest)=>(request.params as {id:string}).id
 
@@ -40,12 +40,13 @@ export function trustedProxies(value:string[]=[]):string[] {
   }
   return value
 }
-export async function createProductApp(ports:{store:DurableStore;worker:DurableWorker;identity:IdentityConfig;providersReady:boolean;requestLimit?:number;trustedProxies?:string[];zhihuData?:ZhihuDataClient;zhihuLogin?:ZhihuLogin}){
-  const app=Fastify({logger:false,bodyLimit:1_000_000,requestTimeout:30_000,trustProxy:trustedProxies(ports.trustedProxies)})
+export async function createProductApp(ports:{store:DurableStore;worker:DurableWorker;identity:IdentityConfig;providersReady:boolean;requestLimit?:number;trustedProxies?:string[];zhihuData?:ZhihuDataClient;zhihuLogin?:ZhihuLogin;closeStorage?:()=>Promise<void>}){
+  const app=Fastify({logger:false,bodyLimit:1_000_000,requestTimeout:120_000,trustProxy:trustedProxies(ports.trustedProxies)})
   await app.register(helmet)
   await app.register(rateLimit,{global:false,max:ports.requestLimit??600,timeWindow:60_000,store:sharedHttpRateLimitStore(ports.store.db),skipOnError:false})
   const identity=createIdentity(ports.store,ports.identity),owners=new WeakMap<FastifyRequest,string>()
   const owner=(request:FastifyRequest)=>owners.get(request)!
+  const guestLimit=app.rateLimit({max:20,timeWindow:3_600_000,keyGenerator:request=>`guest-entry:${normalizeIP(request.ip,64)}`})
   const limit=app.rateLimit({keyGenerator:request=>JSON.stringify([owner(request)??'anonymous',normalizeIP(request.ip,64)])})
   const entryRoutes=new Set(['/health','/api/ready','/api/auth/config','/api/auth/guest','/api/auth/zhihu/start','/api/auth/zhihu/callback','/api/v2/session','/api/auth/session'])
   app.addHook('onRequest',async(request,reply)=>{
@@ -57,6 +58,7 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     // Login and public routes are limited before session/OAuth writes. Their
     // bucket cannot be rotated by requesting a fresh development identity.
     if(entry)await limit.call(app,request,reply)
+    if(request.url.split('?')[0]==='/api/auth/guest')await guestLimit.call(app,request,reply)
     let failure:unknown
     try{if(request.url.startsWith('/api/')&&!['/api/ready','/api/auth/config','/api/auth/guest','/api/auth/zhihu/start','/api/auth/zhihu/callback'].includes(request.url.split('?')[0]!))owners.set(request,await identity.resolve(request,reply))}catch(error){failure=error}
     if(!entry)await limit.call(app,request,reply)
@@ -64,11 +66,17 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
   })
   app.setErrorHandler((error,_request,reply)=>{
     const httpStatus=(error as {statusCode?:number})?.statusCode??500
-    const status=error instanceof CommandError?error.status:error instanceof NodeEditConflict?409:error instanceof z.ZodError?400:[413,429].includes(httpStatus)?httpStatus:500
-    const code=error instanceof CommandError?error.code:error instanceof NodeEditConflict?'NODE_EDIT_CONFLICT':status===400?'INVALID_INPUT':status===429?'REQUEST_RATE_LIMITED':status===413?'REQUEST_TOO_LARGE':'SERVICE_UNAVAILABLE'
-    const notices:Record<string,string>={RETRY_BUDGET_EXHAUSTED:'这次任务已达到继续次数上限，已有内容仍然保留。',RETRY_EXPIRED:'这次任务已归档，已有内容仍然保留。',RETRY_COOLDOWN:'请稍后再继续这次任务。',REQUEST_RATE_LIMITED:'请求较多，请稍后再试。',REQUEST_TOO_LARGE:'提交的内容较大，请减少后重试。',COLLECTION_SCOPE_INVALID:'请先选择收藏夹并等待内容读取完成。',ZHIHU_LOGIN_REQUIRED:'连接账号后即可选择你的收藏夹。',ZHIHU_NOT_CONFIGURED:'知乎账号连接暂未开放，仍可添加文件开始学习。',ZHIHU_REAUTHORIZE:'知乎授权已到期，请重新连接账号。',PDF_NOT_CONFIGURED:'PDF 解析服务尚未连接，请先添加 Markdown 或文本文件。',MATERIAL_PROCESSING:'资料还在整理，完成后即可生成路线。',COLLECTION_EMPTY:'这个收藏夹还没有可读取的公开内容。'}
+    const status=error instanceof CommandError?error.status:error instanceof NodeEditConflict?409:error instanceof z.ZodError?400:[400,413,415,429].includes(httpStatus)?httpStatus:500
+    const code=error instanceof CommandError?error.code:error instanceof NodeEditConflict?'NODE_EDIT_CONFLICT':status===400?'INVALID_INPUT':status===429?'REQUEST_RATE_LIMITED':status===415?'UNSUPPORTED_MEDIA_TYPE':status===413?'REQUEST_TOO_LARGE':'SERVICE_UNAVAILABLE'
+    const notices:Record<string,string>={UPLOAD_BUSY:'正在上传的文件较多，请等当前上传完成后重试。',MATERIAL_QUOTA_EXCEEDED:'资料存储已达到当前服务额度，请联系管理员调整额度后继续。',PROVIDER_CONFIG_REQUIRED:'生成服务尚未配置完成，请稍后重试。',RETRY_BUDGET_EXHAUSTED:'这次任务已达到继续次数上限，已有内容仍然保留。',RETRY_EXPIRED:'这次任务已归档，已有内容仍然保留。',RETRY_COOLDOWN:'请稍后再继续这次任务。',REQUEST_RATE_LIMITED:'请求较多，请稍后再试。',REQUEST_TOO_LARGE:'提交的内容较大，请减少后重试。',COLLECTION_SCOPE_INVALID:'请先选择收藏夹并等待内容读取完成。',ZHIHU_LOGIN_REQUIRED:'连接账号后即可选择你的收藏夹。',ZHIHU_NOT_CONFIGURED:'知乎账号连接暂未开放，仍可添加文件开始学习。',ZHIHU_REAUTHORIZE:'知乎授权已到期，请重新连接账号。',PDF_NOT_CONFIGURED:'PDF 解析服务尚未连接，请先添加 Markdown 或文本文件。',MATERIAL_PROCESSING:'资料还在整理，完成后即可生成路线。',COLLECTION_EMPTY:'这个收藏夹还没有可读取的公开内容。'}
     const message=notices[code]??(code==='ACCOUNT_BUSY'?'正在处理的任务较多，请稍后继续。':code==='PDF_UNREADABLE'||code==='ATTACHMENT_EMPTY'?'这份 PDF 没有可读取的文字，请换成含文字的 PDF、Markdown 或文本文件。':code==='ATTACHMENT_SIZE'||code==='ATTACHMENT_TEXT_SIZE'?'附件较大，请拆成较小的文件再添加。':code==='TEXT_ENCODING'?'请将文本另存为 UTF-8 后添加。':code==='NODE_EDIT_CONFLICT'?'这张卡片的同一内容已在另一处编辑，你的版本仍保留，请选择要保存的版本。':code==='REVISION_CONFLICT'?'内容已在另一处更新，正在读取最新版本。':code==='BUSY'?'当前任务还在进行。':status===404?'找不到这项内容。':status===401?'请先登录。':status===400?'请检查这次输入。':'这次操作暂时还没完成，已有内容已保留。')
     reply.code(status).send({code,message})
+  })
+  app.addHook('preHandler',async request=>{
+    if(ports.providersReady||request.method!=='POST')return
+    const url=request.url.split('?')[0]!
+    const generation=url==='/api/path-runs'||/\/api\/path-runs\/[^/]+\/(select|follow-up|reply|retry)$/.test(url)||/\/api\/v2\/chats\/[^/]+\/reply$/.test(url)||url==='/api/v2/authors/search'||url==='/api/v2/sources/presentation'||url.endsWith('/import-author-source')||url.endsWith('/resume')||url.endsWith('/commands')&&['reply','author'].includes((request.body as any)?.kind)
+    if(generation)throw new CommandError('PROVIDER_CONFIG_REQUIRED',503)
   })
   app.get('/health',()=>({ok:true}))
   app.get('/api/ready',async(_request,reply)=>{
@@ -96,7 +104,7 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
   })
   app.get('/api/v2/session',async request=>{
     const own=owner(request),[account]=await ports.store.db.query<{profile:unknown}>('SELECT profile FROM tp_zhihu_accounts WHERE owner_id=$1',[own])
-    return {kind:own.startsWith('account:')?'authenticated':'guest',capabilities:{zhihuMaterials:!!account},provider:account?'zhihu':null,profile:account?.profile,demo:!!(account?.profile as any)?.demo,available:true,workspaceId:digest(own)}
+    return {kind:own.startsWith('account:')?'authenticated':'guest',capabilities:{zhihuMaterials:!!account},provider:account?'zhihu':own.startsWith('account:')?'account':null,profile:account?.profile,demo:!!(account?.profile as any)?.demo,available:true,workspaceId:digest(own)}
   })
   registerMaterialRoutes(app,ports.store,ports.worker,owner,requestKey,ports.zhihuData,ports.zhihuLogin)
   registerSourcePresentation(app,ports.store,ports.worker,owner)
@@ -111,6 +119,8 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
   app.get('/api/auth/session',request=>({kind:owner(request).startsWith('account:')?'authenticated':'guest',provider:owner(request).startsWith('account:zhihu:')?'zhihu':owner(request).startsWith('account:')?'account':null}))
   app.post('/api/auth/logout',(request,reply)=>identity.logout(request,reply,owner(request)))
   app.get('/api/v2/resources/:id',async request=>{
+    const afterData=(request.query as {afterData?:string}).afterData
+    if(afterData!==undefined)return ports.store.snapshot(owner(request),resourceId(request),z.coerce.number().int().min(0).parse(afterData))
     const after=(request.query as {after?:string}).after
     if(after!==undefined){
       const revision=z.coerce.number().int().min(0).parse(after)
@@ -126,6 +136,7 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
   app.post('/api/v2/chats/enter',async request=>{
     const input=z.object({chatId:Id,question:Text,attachments:z.array(attachment).max(8).default([]),depth}).parse(bodyOf(request)),own=owner(request)
     input.attachments=await ownedAttachments(own,input.attachments)
+    if(!ports.providersReady){const [old]=await ports.store.db.query<Resource>("SELECT * FROM tp_resources WHERE owner_id=$1 AND kind='chat' AND scope=$2",[own,input.chatId]);if(!old||(await ports.store.snapshot(own,old.id)).job===null)throw new CommandError('PROVIDER_CONFIG_REQUIRED',503);return ports.store.snapshot(own,old.id)}
     const resource=await ports.store.create(own,'chat',input.chatId,{title:input.question,attachments:input.attachments,messages:[]})
     const existing=(await ports.store.snapshot(own,resource.id)).job
     if(!existing){
@@ -201,11 +212,12 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
   app.post('/api/path-runs/:id/retry',async request=>{await ports.store.resume(owner(request),resourceId(request));ports.worker.wake();return pathView(owner(request),resourceId(request))})
   app.post('/api/v2/learning/enter',async(request,reply)=>{
     const input=z.object({routeId:Id,conceptId:Id,depth}).parse(bodyOf(request)),own=owner(request)
-    const path=(await ports.store.list(own,'path')).find(p=>p.id===input.routeId||p.body.document?.id===input.routeId||p.body.route?.routeId===input.routeId)
+    const path=await ownedPath(ports.store,own,input.routeId)
     if(!path||path.body.status!=='published')throw new CommandError('NOT_FOUND',404)
     const conceptId=path.body.conceptIdByWireId?.[input.conceptId]??input.conceptId
     const concept=path.body.route.concepts.find((c:any)=>c.id===conceptId)
     if(!concept)throw new CommandError('NOT_FOUND',404)
+    if(!ports.providersReady){const [old]=await ports.store.db.query<Resource>("SELECT * FROM tp_resources WHERE owner_id=$1 AND kind='learning' AND scope=$2",[own,`${path.id}:${conceptId}`]);if(!old||(await ports.store.snapshot(own,old.id)).job===null)throw new CommandError('PROVIDER_CONFIG_REQUIRED',503);return ports.store.snapshot(own,old.id)}
     const conversationId=randomUUID(),materials=inheritedArticles(path.body.attachments??[])
     const materialNodes=materials.length?[{id:'root',type:'root' as const,title:concept.title,text:'',sources:materials.map(a=>a.id),parents:[]},...materials.map(a=>({id:a.id,type:'article' as const,title:a.title,text:a.summary,sources:[a.id],parents:['root']}))]:[]
     const state:LearningState={goalContext:pathGoalContext(path.body,conceptId),searchScope:path.body.searchScope??{kind:'zhihu'},version:2,routeId:path.body.document.id,conceptId,learningSummary:concept.learningSummary,title:concept.title,description:concept.detailedDescription,hasDispute:concept.hasDispute,
@@ -284,6 +296,6 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     });return ports.store.snapshot(own,id)
   })
   registerAuthorRoutes(app,ports.store,ports.worker,owner,requestKey)
-  app.addHook('onClose',()=>ports.worker.stop())
+  app.addHook('onClose',async()=>{await ports.worker.stop();await ports.closeStorage?.()})
   return app
 }

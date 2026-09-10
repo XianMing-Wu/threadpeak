@@ -1,0 +1,17 @@
+
+> threadpeak-ux-ui@2.0.0 test:ui
+> NODE_OPTIONS=--no-experimental-webstorage vitest run
+
+
+ RUN  v4.1.11 /Users/wxm/project/FullStack/学习理念/知乎项目/threadpeak/threadpeak
+
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+
+ Test Files  15 passed (15)
+      Tests  81 passed (81)
+   Start at  23:20:58
+   Duration  12.12s (transform 754ms, setup 181ms, import 2.21s, tests 4.88s, environment 3.53s)

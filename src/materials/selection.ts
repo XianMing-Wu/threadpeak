@@ -24,7 +24,7 @@ export function normalizeScope(value: unknown): SearchScope {
 
 /** Only explicit folder selections are submitted, even if an earlier import finishes late. */
 export function selectedMaterials(files: MaterialView[], folders: Record<string, MaterialView>, scope: SearchScope): MaterialView[] {
-  return [...files.filter(item => item.origin === 'upload'), ...(scope.kind === 'collections'
+  return [...files.filter(item => item.origin === 'upload'||scope.kind!=='collections'&&item.origin==='creation'), ...(scope.kind === 'collections'
     ? (scope.folderIds ?? []).flatMap(id => folders[id] ? [folders[id]] : []) : [])]
 }
 

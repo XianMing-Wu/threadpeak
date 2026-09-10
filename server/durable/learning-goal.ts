@@ -1,6 +1,6 @@
 import { GoalContextSchema, type GoalContext } from '@threadpeak/contracts/learning-goal'
 import type { LearningState } from '@threadpeak/contracts/learning-v2'
-import type { DurableStore } from './store.ts'
+import {CommandError,type Resource,type DurableStore } from './store.ts'
 type GoalPath={goal?:string;conversation?:any[];questionSets?:{questions:{id:string;prompt:string}[]}[];route?:{title?:string;learningGoal?:GoalContext['interpretation'];carriers?:{id:string;title:string;description:string}[];conceptEdges?:{fromConceptId:string;toConceptId:string}[];concepts:{id:string;carrierId?:string;title?:string;detailedDescription?:string;goalAlignment?:GoalContext['conceptAlignment']}[]}}
 
 /** Construct intent only from the owned path, not client-supplied labels or model effects. */
@@ -27,11 +27,17 @@ export function pathGoalContext(path:GoalPath,conceptId?:string):GoalContext|und
 export async function hydrateLearningGoal(store:DurableStore,owner:string,id:string){
   const resource=await store.resource<LearningState>(owner,id)
   if(resource.kind!=='learning'||resource.body.goalContext?.routeContext)return resource
-  const path=(await store.list(owner,'path')).find(p=>p.body.status==='published'&&
-    [p.id,p.body.document?.id,p.body.route?.routeId].includes(resource.body.routeId)&&
-    p.body.route?.concepts.some((c:{id:string})=>c.id===resource.body.conceptId))
+  let path:Resource|undefined
+  try{path=await ownedPath(store,owner,resource.body.routeId)}catch(error){if(!(error instanceof CommandError)||error.status!==404)throw error}
   const context=path&&pathGoalContext(path.body,resource.body.conceptId)
   if(!context)return resource
   await store.edit(owner,id,undefined,r=>({...r.body,goalContext:{...context,...r.body.goalContext,...context.routeContext?{routeContext:context.routeContext}:{}}}))
   return store.resource<LearningState>(owner,id)
+}
+
+export async function ownedPath(store:DurableStore,owner:string,id:string){
+  const paths=await store.db.query<Resource>("SELECT * FROM tp_resources WHERE owner_id=$1 AND kind='path' AND (id=$2 OR body->'document'->>'id'=$2 OR body->'route'->>'routeId'=$2) ORDER BY id",[owner,id])
+  const path=paths.find(p=>p.id===id)??(paths.length===1?paths[0]:undefined)
+  if(!path||path.body.status!=='published')throw new CommandError('NOT_FOUND',404)
+  return path
 }

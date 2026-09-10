@@ -49,6 +49,7 @@ export async function preparePdf(ctx:TaskContext,tools:ProductTools,api:ZhihuDat
     const form=new FormData();form.append('file',new Blob([Buffer.from(row.base64,'base64')],{type:'application/pdf'}),meta.fileName)
     const data=await api.json('/resources/v1/files',{form,signal:ctx.signal});if(typeof data.file_id!=='string')throw new ToolError('PDF_UPLOAD_INVALID');return data.file_id as string
   })
+  await ctx.store.db.query('DELETE FROM tp_material_uploads WHERE resource_id=$1',[resource.id])
   await ctx.progress('正在解析 PDF')
   const taskId=await ctx.step('PDF-task',{fileId:uploaded},async()=>{const data=await api.json('/api/v1/pdf-parse/tasks',{body:{file_id:uploaded},key:`threadpeak-pdf-${resource.id}`,signal:ctx.signal});if(typeof data.task_id!=='string')throw new ToolError('PDF_TASK_INVALID');return data.task_id as string})
   const parsed=await ctx.step('PDF-content',{taskId},async()=>{

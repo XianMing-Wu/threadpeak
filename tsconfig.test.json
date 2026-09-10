@@ -3,6 +3,7 @@
   "include": [
     "tests/ui",
     "qa/reading-lab.tsx",
+    "qa/review-regressions.tsx",
     "qa/path-lighting-lab.tsx",
     "qa/author-message-lab.tsx",
     "vitest.config.ts",

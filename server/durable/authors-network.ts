@@ -59,7 +59,11 @@ type Usage={author_id:string;topic_id:string;amount:number;created_at:number}
 export async function readAuthorNetwork(db:Sql,owner:string):Promise<AuthorNetwork>{
   const allowDemo=isMockZhihuOwner(owner)
   const [learning,legacy,prefs,usage,paths,materials]=await Promise.all([
-    db.query<Resource<LearningState>>("SELECT * FROM tp_resources WHERE owner_id=$1 AND kind='learning' ORDER BY updated_at DESC",[owner]),
+    db.query<Resource<LearningState>>(`SELECT id,created_at,jsonb_build_object(
+      'routeId',body->'routeId','conceptId',body->'conceptId','title',body->'title','articles',body->'articles',
+      'nodes',(SELECT COALESCE(jsonb_agg((n-'text')||CASE WHEN n->>'type'='author' THEN jsonb_build_object('text',n->'text') ELSE '{}'::jsonb END),'[]') FROM jsonb_array_elements(body->'nodes') n),
+      'conversations',(SELECT COALESCE(jsonb_agg(jsonb_build_object('messages',(SELECT COALESCE(jsonb_agg((m-'text'-'paragraphs')||CASE WHEN m->>'role'='user' THEN jsonb_build_object('text',m->'text') ELSE jsonb_build_object('paragraphs',(SELECT COALESCE(jsonb_agg(CASE WHEN p ? 'author' THEN p ELSE jsonb_build_object('id',p->'id') END),'[]') FROM jsonb_array_elements(COALESCE(m->'paragraphs','[]')) p)) END),'[]') FROM jsonb_array_elements(c->'messages') m))),'[]') FROM jsonb_array_elements(body->'conversations') c)
+    ) AS body FROM tp_resources WHERE owner_id=$1 AND kind='learning' ORDER BY updated_at DESC`,[owner]),
     db.query<{body:any}>('SELECT body FROM tp_author_network WHERE owner_id=$1 UNION ALL SELECT body FROM tp_author_discoveries WHERE owner_id=$1',[owner]),
     db.query<Preference>('SELECT * FROM tp_author_preferences WHERE owner_id=$1',[owner]),
     db.query<Usage>('SELECT author_id,topic_id,amount,created_at FROM tp_author_usage WHERE owner_id=$1',[owner]),

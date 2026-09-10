@@ -2,7 +2,8 @@ import type {LearningSnapshot} from './client'
 /** Apply only newer server revisions; share unchanged collections without mutation. */
 export function mergeLearningSnapshot(old:LearningSnapshot|null,next:LearningSnapshot):LearningSnapshot{
   if(!old||old.id!==next.id)return next
-  if(old.revision>=next.revision)return old
+  if(old.revision>next.revision)return old
+  if(old.revision===next.revision&&(old.job?.updated_at??0)>(next.job?.updated_at??0))return old
   if(old.dataRevision!==undefined&&old.dataRevision===next.dataRevision)return {...next,data:old.data}
   return {...next,data:{...next.data,
     nodes:equalJson(old.data.nodes,next.data.nodes)?old.data.nodes:next.data.nodes,

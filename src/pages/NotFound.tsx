@@ -5,7 +5,7 @@ export function NotFoundPage() {
   return <ProductWorkspace active="paths" page="not-found">
     <main className="query-chat ux-flowith">
       <section className="query-chat-body">
-        <article className="chat-answer ux-status-region square-empty" role="alert">
+        <article className="chat-answer ux-status-region square-empty">
           <EmptyStatus
             kind="error"
             headingLevel={1}

@@ -60,11 +60,11 @@ test('collection-only route and concept inherit owned scope with zero external s
   await db.query('UPDATE tp_sessions SET owner_id=$1',[own])
   const material=await store.create(own,'attachment','selected-folder',{fileName:'线性代数收藏',origin:'collection',folderId:'55',status:'ready',mimeType:'text/markdown',content:'坐标表示基下的分量。',entries:[{id:'e',title:'坐标入门',summary:'坐标表示基下的分量。',url:'https://zhuanlan.zhihu.com/p/55',authorId:'https://www.zhihu.com/people/a',authorName:'作者甲',likes:1}]})
   const body={goal:'学会收藏夹内容',searchScope:{kind:'collections',folderIds:['55']},attachments:[{sourceId:material.id,fileName:'client name',content:'client text must not be used'}]}
-  const bad=await app.inject({method:'POST',url:'/api/path-runs',headers:{cookie},payload:{...body,searchScope:{kind:'collections',folderIds:['forged']}}});assert.equal(bad.statusCode,400)
-  const accepted=await app.inject({method:'POST',url:'/api/path-runs',headers:{cookie},payload:body});assert.equal(accepted.statusCode,202,accepted.body);const id=accepted.json().runId
+  const bad=await app.inject({method:'POST',url:'/api/path-runs',headers:{cookie,'idempotency-key':'scope-route-test'},payload:{...body,searchScope:{kind:'collections',folderIds:['forged']}}});assert.equal(bad.statusCode,400)
+  const accepted=await app.inject({method:'POST',url:'/api/path-runs',headers:{cookie,'idempotency-key':'scope-route-test'},payload:body});assert.equal(accepted.statusCode,202,accepted.body);const id=accepted.json().runId
   async function finish(id){for(let i=0;i<500;i++){const s=await store.snapshot(own,id);if(['completed','waiting'].includes(s.job?.status))return s;await new Promise(r=>setTimeout(r,10))}throw new Error('timeout')}
   let snapshot=await finish(id);assert.equal(snapshot.job.status,'completed',JSON.stringify(snapshot.job));assert.equal(snapshot.data.attachments[0].content,'坐标表示基下的分量。')
-  for(const q of snapshot.data.questionSets[0].questions)await app.inject({method:'POST',url:`/api/path-runs/${id}/select`,headers:{cookie},payload:{questionId:q.id,optionId:q.options[0].id}})
+  for(const q of snapshot.data.questionSets[0].questions)await app.inject({method:'POST',url:`/api/path-runs/${id}/select`,headers:{cookie,'idempotency-key':`scope-answer:${q.id}`},payload:{questionId:q.id,optionId:q.options[0].id}})
   snapshot=await finish(id);assert.equal(snapshot.data.status,'published',JSON.stringify(snapshot.job))
   assert.equal(inputs.find(c=>c.newerRoundPreferred).attachments[0].contentBasis,'source_summary')
   assert.equal(snapshot.data.route.concepts[0].goalAlignment.materialAnchors[0].evidenceKind,'context_summary')

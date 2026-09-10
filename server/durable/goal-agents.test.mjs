@@ -1,3 +1,4 @@
+import {ROUTE_INTERVIEW_OUTPUT} from '../path-generation/direct-route.ts'
 import {placeAnswer} from '../../tests/fixtures/card-answer.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
@@ -65,7 +66,7 @@ test('every new concept needs goal, depth, check and a grounded direct or prereq
 })
 test('new interview calls repair non-three choices with the same prompt and freeze custom placeholder outside options',async t=>{
   const store=await fixture(t),ctx=await context(store),calls=[]
-  const tools=new ProductTools({complete:async call=>{calls.push(call);const value=interview();if(calls.length===1)value.questions[0].options.pop();return {kind:'completed',text:JSON.stringify(value)}}},{})
+  const tools=new ProductTools({complete:async call=>{calls.push(call);const value=JSON.parse(ROUTE_INTERVIEW_OUTPUT);if(calls.length===1)value.questions[0].options.pop();return {kind:'completed',text:JSON.stringify(value)}}},{})
   const result=await tools.planStep(ctx,'R3',{goalContext:{rawGoal:'读论文',userStatements:[]},exploration:exploration()})
   assert.equal(result.questions[0].options.length,3);assert.equal(calls.length,2)
   assert.equal(calls[0].messages[0].content,calls[1].messages[0].content)
@@ -154,7 +155,7 @@ test('HTTP custom submission survives reload, auto-plans, carries owned goal int
   const session=await app.inject({method:'POST',url:'/api/auth/guest'}),headers={cookie:String(session.headers['set-cookie']).split(';')[0]}
   const owner=(await store.db.query('SELECT owner_id FROM tp_sessions'))[0].owner_id
   async function finish(id){for(let i=0;i<300;i++){const s=await store.snapshot(owner,id);if(s.job?.status==='completed')return s;if(s.job?.status==='waiting')throw Error(s.job.error_code);await new Promise(r=>setTimeout(r,10))}throw Error('timeout')}
-  const started=await app.inject({method:'POST',url:'/api/path-runs',headers,payload:{goal:'为了读论文学习数学'}});assert.equal(started.statusCode,202)
+  const started=await app.inject({method:'POST',url:'/api/path-runs',headers:{...headers,'idempotency-key':'goal-custom-start'},payload:{goal:'为了读论文学习数学'}});assert.equal(started.statusCode,202)
   const id=started.json().runId,start=await finish(id),q=start.data.questionSets[0].questions[0]
   const answer={questionId:q.id,customAnswer:'我只想看懂论文，不准备面试。'}
   const saved=await app.inject({method:'POST',url:`/api/path-runs/${id}/select`,headers:{...headers,'idempotency-key':'custom-save-command'},payload:answer});assert.equal(saved.statusCode,200)

@@ -38,11 +38,12 @@
     "@threadpeak/api-client": "0.1.0",
     "@threadpeak/contracts": "0.1.0",
     "@threadpeak/runtime-store": "0.1.0",
-    "drizzle-orm": "^0.45.2",
     "fastify": "^5.12.1",
     "fs-native-extensions": "1.5.1",
     "katex": "0.16.47",
     "mdast-util-from-markdown": "2.0.3",
+    "mdast-util-math": "3.0.0",
+    "micromark-extension-math": "3.1.0",
     "motion": "^13.2.0",
     "postgres": "^3.4.9",
     "react": "^19.2.8",
@@ -52,9 +53,7 @@
     "remark-math": "^6.0.0",
     "thinking-orbs": "^0.3.1",
     "three": "^0.185.1",
-    "zod": "^3.25.76",
-    "mdast-util-math": "3.0.0",
-    "micromark-extension-math": "3.1.0"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

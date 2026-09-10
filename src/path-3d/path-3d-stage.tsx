@@ -77,7 +77,6 @@ export function Path3DStage() {
 
   const enterLearning = (detail: ContextualCardAction, event: Event) => {
     const conceptId = conceptIdFromAction(detail, view.document)
-    if (conceptId) sessionStorage.setItem('threadpeak-active-concept', conceptId)
     const shouldLearn = detail.actionId?.startsWith('learn:') || detail.actionId?.startsWith('action-')
     if (!shouldLearn || !conceptId) return
     event.preventDefault()
@@ -85,8 +84,8 @@ export function Path3DStage() {
   }
   const onResourceNavigate = (href: string, target: 'self' | 'blank') => {
     if (href === '#session-learning' || href.startsWith('#session-learning')) {
-      openLearning(view.routeId, sessionStorage.getItem('threadpeak-active-concept') || undefined, 'path-3d')
-      return { status: 'accepted' as const, resolvedHref: href }
+      const accepted=openLearning(view.routeId, sessionStorage.getItem('threadpeak-active-concept') || undefined, 'path-3d')
+      return accepted?{ status: 'accepted' as const, resolvedHref: href }:{ status:'invalid-url' as const, reason:'请先选择本路线中的概念。' }
     }
     return defaultResourceNavigation(href, target)
   }

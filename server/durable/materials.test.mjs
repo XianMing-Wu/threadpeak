@@ -50,7 +50,7 @@ test('PDF async API persists summary and every page, sends no platform credentia
     return envelope({task_status:'succeeded',result:{url:'https://zhihu-openapi.bj.bcebos.com/result.json',summary:'涵盖全部页面的 API 总结'}})
   })
   const {app,cookie,store,own,finish,db}=await fixture(t,{api})
-  const upload=await app.inject({method:'POST',url:'/api/v2/materials/upload?name=book.pdf',headers:{cookie,'content-type':'application/octet-stream'},payload:Buffer.from('%PDF-1.7\ncontrolled-test')})
+  const upload=await app.inject({method:'POST',url:'/api/v2/materials/upload?name=book.pdf',headers:{cookie,'content-type':'application/octet-stream','idempotency-key':'fixture-material-upload'},payload:Buffer.from('%PDF-1.7\ncontrolled-test')})
   assert.equal(upload.statusCode,200);const id=upload.json().sourceId;assert.equal(upload.json().status,'processing')
   const snapshot=await finish(id);assert.equal(snapshot.job.status,'completed',JSON.stringify(snapshot.job));assert.equal(snapshot.data.content,'涵盖全部页面的 API 总结')
   assert.equal(snapshot.data.rawContent,'第一页正文\n\n最后一页正文');assert.equal((await db.query('SELECT * FROM tp_material_uploads')).length,0)
@@ -60,7 +60,7 @@ test('PDF async API persists summary and every page, sends no platform credentia
 test('PDF without API summary uses real summary port over all parsed text',async t=>{
   let input='';const api=new ZhihuDataClient('key',async(raw)=>{const u=new URL(raw);if(u.hostname.endsWith('bcebos.com'))return new Response(JSON.stringify({pages:[{blocks:[{content:'开头范围。'}]},{blocks:[{content:'结尾限制。'}]}]}));return envelope(u.pathname==='/resources/v1/files'?{file_id:'file'}:u.pathname.endsWith('/tasks')?{task_id:'task'}:{task_status:'succeeded',result:{url:'https://data.bcebos.com/result'}})})
   const {app,cookie,finish}=await fixture(t,{api,llm:{complete:async args=>{input=JSON.parse(args.messages[1].content).text;return {kind:'completed',text:'开头范围与结尾限制。'}}}})
-  const res=await app.inject({method:'POST',url:'/api/v2/materials/upload?name=x.pdf',headers:{cookie,'content-type':'application/octet-stream'},payload:Buffer.from('%PDF-1.7\ntest')})
+  const res=await app.inject({method:'POST',url:'/api/v2/materials/upload?name=x.pdf',headers:{cookie,'content-type':'application/octet-stream','idempotency-key':'fixture-material-upload'},payload:Buffer.from('%PDF-1.7\ntest')})
   const final=await finish(res.json().sourceId);assert.equal(final.job.status,'completed');assert.match(input,/开头范围/);assert.match(input,/结尾限制/);assert.equal(final.data.content,'开头范围与结尾限制。')
 })
 test('OAuth state is bound, single use; stable identity and encrypted token never leak in response',async t=>{
@@ -87,7 +87,7 @@ test('collections import follows pagination with end-user token and groups one a
     pages++;return envelope({Items:[item(pages)],Paging:{IsEnd:pages===2,NextOffset:'50'}})
   })
   const {app,cookie,own,db,finish}=await fixture(t,{api,loginFactory:()=>({userToken:async()=> 'user-token'})})
-  const res=await app.inject({method:'POST',url:'/api/v2/materials/zhihu',headers:{cookie},payload:{kind:'collection',folderId:'123'}})
+  const res=await app.inject({method:'POST',url:'/api/v2/materials/zhihu',headers:{cookie,'idempotency-key':'fixture-zhihu-import'},payload:{kind:'collection',folderId:'123'}})
   assert.equal(res.statusCode,200,res.body);const snapshot=await finish(res.json().sourceId);assert.equal(snapshot.job.status,'completed',JSON.stringify(snapshot.job));assert.equal(snapshot.data.entries.length,2)
   const network=await readAuthorNetwork(db,own);assert.equal(network.authors.length,1);assert.equal(network.authors[0].evidence.length,2);assert.equal(network.authors[0].topics[0].score,0);assert.equal(network.authors[0].topics[0].uses,0)
   await assert.rejects(api.user('contents','',{}),e=>e.code==='ZHIHU_LOGIN_REQUIRED')
@@ -118,7 +118,7 @@ test('all route materials appear in every concept, guide first-learning prompts,
 test('recent collections use their non-paged contract and never query developer-owned contents',async t=>{
   const api=new ZhihuDataClient('platform',async(raw,init)=>{assert.equal(init.headers['X-OAuth-Token'],'user-token');assert.equal(new URL(raw).pathname,'/api/v1/user/collections');return envelope({Items:[{Title:'最近收藏的内容',Summary:'公开摘要',Url:'https://www.zhihu.com/answer/27'}]})})
   const {app,cookie,finish}=await fixture(t,{api,loginFactory:()=>({userToken:async()=> 'user-token'})})
-  const result=await app.inject({method:'POST',url:'/api/v2/materials/zhihu',headers:{cookie},payload:{kind:'recent'}})
+  const result=await app.inject({method:'POST',url:'/api/v2/materials/zhihu',headers:{cookie,'idempotency-key':'fixture-zhihu-import'},payload:{kind:'recent'}})
   assert.equal(result.statusCode,200);const snapshot=await finish(result.json().sourceId);assert.equal(snapshot.job.status,'completed');assert.equal(snapshot.data.entries.length,1);assert.equal(snapshot.data.entries[0].authorId,null)
 })
 test('author identity is reconciled only by an exact content URL, never by a shared display name',async()=>{
@@ -131,6 +131,6 @@ test('author identity is reconciled only by an exact content URL, never by a sha
 test('expired login cannot fall back to the platform owner when importing a folder',async t=>{
   let calls=0;const api=new ZhihuDataClient('platform',async()=>{calls++;return envelope({Items:[]})})
   const {app,cookie}=await fixture(t,{api,loginFactory:()=>({userToken:async()=>{throw new CommandError('ZHIHU_REAUTHORIZE',401)}})})
-  const result=await app.inject({method:'POST',url:'/api/v2/materials/zhihu',headers:{cookie},payload:{kind:'collection',folderId:'123'}})
+  const result=await app.inject({method:'POST',url:'/api/v2/materials/zhihu',headers:{cookie,'idempotency-key':'fixture-zhihu-import'},payload:{kind:'collection',folderId:'123'}})
   assert.equal(result.statusCode,401);assert.equal(calls,0)
 })

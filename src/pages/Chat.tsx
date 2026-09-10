@@ -47,6 +47,7 @@ export function ChatPage() {
   const [experience,setExperience]=useState<ChatExperience>(initial?.experience??'answer')
   const [conversationId,setConversationId]=useState(initial?.conversationId??'')
   const [routeId,setRouteId]=useState(initial?.routeId??'')
+  const [generate,setGenerate]=useState(initial?.generate??false)
   const [value,setValue]=useState('')
   const [thinkingDepth,setThinkingDepth]=useState<'fast' | 'deep'>(initial?.thinkingDepth ?? readLearningThinking())
   const [generating,setGenerating]=useState(false)
@@ -70,6 +71,7 @@ export function ChatPage() {
       setExperience(fields.experience)
       setConversationId(fields.conversationId)
       setRouteId(fields.routeId)
+      setGenerate(fields.generate)
       setThinkingDepth(fields.thinkingDepth)
       setValue('')
     }
@@ -77,7 +79,7 @@ export function ChatPage() {
     return()=>removeEventListener(HISTORY_OPEN_EVENT,restore)
   },[])
   if(launch.kind!=='ready')return <NotFoundPage/>
-  if(experience==='answer')return <OrdinaryChat key={conversationId} chatId={conversationId} question={query} initialDepth={thinkingDepth}/>
+  if(experience==='answer')return <OrdinaryChat key={conversationId} chatId={conversationId} question={query} resourceId={launch.resourceId} initialDepth={thinkingDepth}/>
   const followUp=()=>{
     const next=value.trim()
     if(!next)return
@@ -88,16 +90,14 @@ export function ChatPage() {
     clearActiveHistory()
     location.hash='home'
   }
-  const conversation=conversationId?getConversation(conversationId):undefined
-  const followupOrdinal=routeId?1+(conversation?.title.match(/对话 (\d+)/)?.[1]?Number(conversation.title.match(/对话 (\d+)/)?.[1])-1:0):1
   return <ProductWorkspace active="paths" page="chat">
     <main className="query-chat">
       <header className="query-chat-header"><div><button aria-label="返回首页" onClick={()=>location.hash='home'}><Icon name="back" size={18}/></button><h1>{query}</h1></div><button className="new-chat-only" onClick={newChat}><Icon name="new-chat" size={17}/>新对话</button></header>
       <section className="query-chat-body"><div className="query-chat-flow">
-        <ChatRoutePanel key={conversationId} conversationId={conversationId} query={query} existingRouteId={routeId||undefined} thinkingDepth={thinkingDepth} onRouteReady={setRouteId} onSender={(handler)=>{routeSender.current=handler}} onGenerating={setGenerating} onStopRef={(stop)=>{stopGeneration.current=stop}}/>
+        <ChatRoutePanel key={conversationId} conversationId={conversationId} generate={generate} resourceId={launch.resourceId} query={query} existingRouteId={routeId||undefined} thinkingDepth={thinkingDepth} onRouteReady={setRouteId} onSender={(handler)=>{routeSender.current=handler}} onGenerating={setGenerating} onStopRef={(stop)=>{stopGeneration.current=stop}}/>
       </div></section>
       <div className="query-chat-composer">
-        <Composer compact value={value} onChange={setValue} onSend={followUp} showAttachment={false} thinkingDepth={thinkingDepth} onThinkingDepth={(next) => { writeLearningThinking(next); setThinkingDepth(next) }} busy={generating} onStop={() => { stopGeneration.current(); setGenerating(false) }}/>
+        <Composer compact value={value} onChange={setValue} onSend={followUp} showAttachment={false} thinkingDepth={thinkingDepth} onThinkingDepth={(next) => { writeLearningThinking(next); setThinkingDepth(next) }} busy={generating} onStop={() => { stopGeneration.current() }}/>
       </div>
     </main>
   </ProductWorkspace>

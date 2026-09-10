@@ -2,8 +2,8 @@ import {switchWorkspace} from './account-storage.ts'
 import {publishWorkspaceSession} from '../runtime/workspace-session.ts'
 import {delay} from './poll.ts'
 import type {TaskActivity} from '@threadpeak/contracts/task-activity'
-import { LearningSchema, type LearningState } from '@threadpeak/contracts/learning-v2'
-export type TaskView={activities?:TaskActivity[];id:string;kind:string;status:'queued'|'running'|'waiting'|'completed'|'cancelled';phase:string;draft:string;recoverable:boolean;basisIds:string[];conversationId?:string}
+import { LearningSchema,validateTree, type LearningState } from '@threadpeak/contracts/learning-v2'
+export type TaskView={updated_at?:number;activities?:TaskActivity[];id:string;kind:string;status:'queued'|'running'|'waiting'|'completed'|'cancelled';phase:string;draft:string;recoverable:boolean;basisIds:string[];conversationId?:string}
 export type LearningSnapshot={id:string;kind:'learning';revision:number;dataRevision?:number;data:LearningState;job:TaskView|null}
 let session:Promise<void>|undefined
 export function resetSession(){session=undefined;publishWorkspaceSession(null)}
@@ -44,5 +44,6 @@ export function readLearning(value:unknown,previous?:LearningSnapshot|null):Lear
   if(!s||s.kind!=='learning'||!Number.isInteger(s.revision)||typeof s.id!=='string')throw new Error('学习内容尚未读取完整。')
   if(s.dataRevision!==undefined&&(!Number.isInteger(s.dataRevision)||s.dataRevision<0||s.dataRevision>s.revision))throw new Error('学习内容版本无法读取。')
   if(previous?.id===s.id&&s.dataRevision!==undefined&&previous.dataRevision===s.dataRevision)return {...s,data:previous.data}
-  return {...s,data:LearningSchema.parse(s.data)}
+  const data=LearningSchema.parse(s.data);if(data.nodes.length)validateTree(data.nodes)
+  return {...s,data}
 }

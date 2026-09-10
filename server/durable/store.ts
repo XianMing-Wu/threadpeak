@@ -15,7 +15,7 @@ export type Resource<T = any> = { id: string; owner_id: string; kind: string; sc
 export type Job = {
   id: string; owner_id: string; resource_id: string; kind: string; input: any; status: 'queued'|'running'|'waiting'|'completed'|'cancelled';
   activities:TaskActivity[]; command_key: string; input_hash: string; phase: string; draft: string; checkpoints: Record<string, { hash: string; value: unknown }>;
-  compacted: boolean; attempts: number; resume_count: number; resumed_at: number; fence: number; lease_until: number; next_at: number; error_code: string|null; created_at: number; updated_at: number;
+  compacted: boolean; attempts: number; lease_takeovers:number; resume_count: number; resumed_at: number; fence: number; lease_until: number; next_at: number; error_code: string|null; created_at: number; updated_at: number;
 }
 export type Event = { resource_id: string; sequence: number; kind: string; payload: unknown; created_at: number }
 export type JobView = Pick<Job, 'id'|'kind'|'status'|'phase'|'draft'|'attempts'|'updated_at'|'activities'> & { recoverable: boolean; basisIds:string[]; conversationId?:string }
@@ -27,6 +27,7 @@ export function jobView(job?: Job, emptySearch = false): JobView|null {
 
 export const JOB_LEASE_MS = 90_000
 export const MAX_JOB_FAILURES = 4
+export const MAX_LEASE_TAKEOVERS = 4
 export const MAX_MANUAL_RESUMES = 4
 const stoppedMessageId=(jobId:string)=>`${jobId}-stopped`
 
@@ -34,7 +35,8 @@ export class DurableStore {
   private cancellations = new Set<(id: string) => void>()
   onCancel(listener: (id: string) => void) { this.cancellations.add(listener); return () => { this.cancellations.delete(listener) } }
   db: Sql; now: () => number
-  constructor(db: Sql, now = Date.now) { this.db=db; this.now=now }
+  private materialBudget:{count:number;bytes:number}
+  constructor(db: Sql, now = Date.now,materialBudget={count:500,bytes:1024**3}) { this.db=db; this.now=now; this.materialBudget=materialBudget }
   async existingCommand(owner:string,key:string){
     return (await this.db.query<Job>('SELECT * FROM tp_jobs WHERE owner_id=$1 AND command_key=$2',[owner,key]))[0]
   }
@@ -44,18 +46,20 @@ export class DurableStore {
     return row
   }
   async list(owner: string, kind: string) { return this.db.query<Resource>('SELECT * FROM tp_resources WHERE owner_id=$1 AND kind=$2 ORDER BY updated_at DESC', [owner, kind]) }
-  async snapshot(owner: string, id: string) {
+  async snapshot(owner: string, id: string, afterData?:number) {
     // One MVCC statement keeps body and job consistent without waiting for a
     // writer's row lock. Two independent READ COMMITTED queries could mix states.
-    const [resource]=await this.db.query<Resource & {latest_job:Job|null}>(`SELECT r.*,to_jsonb(j) AS latest_job
+    const [resource]=await this.db.query<Resource & {latest_job:Job|null;empty_search:boolean}>(`SELECT r.id,r.kind,r.revision,r.data_revision,
+      CASE WHEN r.data_revision=$3 THEN NULL ELSE r.body END AS body,
+      r.kind='learning' AND r.body->>'phase'='empty' AS empty_search,to_jsonb(j) AS latest_job
       FROM tp_resources r LEFT JOIN LATERAL (
         SELECT id,kind,status,phase,draft,attempts,updated_at,activities,compacted,resume_count,
           jsonb_build_object('conversationId',input->'conversationId','context',jsonb_build_object('allowedCards',
             (SELECT COALESCE(jsonb_agg(jsonb_build_object('id',c->'id')),'[]'::jsonb) FROM jsonb_array_elements(COALESCE(input->'context'->'allowedCards','[]'::jsonb)) c))) AS input
         FROM tp_jobs WHERE resource_id=r.id ORDER BY created_at DESC,id DESC LIMIT 1
-      ) j ON true WHERE r.id=$1 AND r.owner_id=$2`,[id,owner])
+      ) j ON true WHERE r.id=$1 AND r.owner_id=$2`,[id,owner,afterData??null])
     if(!resource)throw new CommandError('NOT_FOUND',404)
-    return { id: resource.id, kind: resource.kind, revision: resource.revision, dataRevision: resource.data_revision??0, data: resource.body, job: jobView(resource.latest_job??undefined, resource.kind==='learning'&&resource.body.phase==='empty') }
+    return { id: resource.id, kind: resource.kind, revision: resource.revision, dataRevision: resource.data_revision??0, ...(resource.body===null?{unchanged:true}:{}), data: resource.body??undefined, job: jobView(resource.latest_job??undefined, resource.empty_search) }
   }
   async lockResource(tx: Sql, owner: string, id: string): Promise<Resource> {
     const [row] = await tx.query<Resource>('SELECT * FROM tp_resources WHERE id=$1 AND owner_id=$2 FOR UPDATE', [id, owner])
@@ -81,11 +85,22 @@ export class DurableStore {
     if(persistBody){resource.body=body;resource.data_revision=resource.revision}
   }
   async create(owner: string, kind: string, scope: string, body: unknown) {
-    const id = randomUUID(), now = this.now()
-    await this.db.query('INSERT INTO tp_resources(id,owner_id,kind,scope,body,created_at,updated_at) VALUES($1,$2,$3,$4,$5::jsonb,$6,$6) ON CONFLICT(owner_id,kind,scope) DO NOTHING', [id, owner, kind, scope, JSON.stringify(body), now])
-    const [row] = await this.db.query<Resource>('SELECT * FROM tp_resources WHERE owner_id=$1 AND kind=$2 AND scope=$3', [owner, kind, scope])
-    return row!
+    const insert=async(tx:Sql)=>{
+      if(kind==='attachment'){
+        await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`${owner}:materials`])
+        const [old]=await tx.query<Resource>('SELECT * FROM tp_resources WHERE owner_id=$1 AND kind=$2 AND scope=$3',[owner,kind,scope]);if(old)return old
+        // Imported text can grow to 2M UTF-16 units; reserve 8 MiB before the import starts.
+        const bytes=Math.max(Number((body as any).bytes)||0,(body as any).origin==='upload'?0:8*1024**2)
+        const [used]=await tx.query<{count:number;bytes:number}>(`SELECT count(*)::integer AS count,COALESCE(sum(GREATEST(COALESCE((body->>'bytes')::bigint,0),CASE WHEN body->>'origin'='upload' THEN 0 ELSE 8388608 END)),0)::bigint AS bytes FROM tp_resources WHERE owner_id=$1 AND kind='attachment'`,[owner])
+        if(used!.count>=this.materialBudget.count||used!.bytes+bytes>this.materialBudget.bytes)throw new CommandError('MATERIAL_QUOTA_EXCEEDED',429)
+      }
+      const id=randomUUID(),now=this.now()
+      await tx.query('INSERT INTO tp_resources(id,owner_id,kind,scope,body,created_at,updated_at) VALUES($1,$2,$3,$4,$5::jsonb,$6,$6) ON CONFLICT(owner_id,kind,scope) DO NOTHING',[id,owner,kind,scope,JSON.stringify(body),now])
+      const [row]=await tx.query<Resource>('SELECT * FROM tp_resources WHERE owner_id=$1 AND kind=$2 AND scope=$3',[owner,kind,scope]);return row!
+    }
+    return kind==='attachment'?this.db.transaction(insert):insert(this.db)
   }
+
   private async admit(tx: Sql, owner: string, kind: string) {
     await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))', [owner])
     const [quota] = await tx.query<{recent:number;active:number}>(`SELECT
@@ -132,12 +147,20 @@ export class DurableStore {
       if(!active&&resource.body.research?.ready&&answered)await this.enqueueLocked(tx,resource,'path.answer',key,input)
     })
   }
-  async claim(leaseMs = JOB_LEASE_MS): Promise<Job|undefined> {
+  async claim(leaseMs = JOB_LEASE_MS, excludedIds:string[]=[]): Promise<Job|undefined> {
     return this.db.transaction(async tx => {
-      const [job] = await tx.query<Job>(`SELECT * FROM tp_jobs WHERE (status='queued' AND next_at<=$1) OR (status='running' AND lease_until<$1)
-        ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1`, [this.now()])
+      const [job] = await tx.query<Job>(`SELECT * FROM tp_jobs WHERE ((status='queued' AND next_at<=$1) OR (status='running' AND lease_until<$1)) AND NOT (id=ANY($2::text[]))
+        ORDER BY created_at,id FOR UPDATE SKIP LOCKED LIMIT 1`, [this.now(),excludedIds])
       if (!job) return
-      const [claimed] = await tx.query<Job>(`UPDATE tp_jobs SET status='running',fence=fence+1,lease_until=$2,updated_at=$3 WHERE id=$1 RETURNING *`, [job.id, this.now()+leaseMs, this.now()])
+      const takeovers=(job.lease_takeovers??0)+(job.status==='running'?1:0)
+      if(takeovers>=MAX_LEASE_TAKEOVERS){
+        // Never wait on a resource while holding the job: cancellation takes the reverse order.
+        const [resource]=await tx.query<Resource>('SELECT * FROM tp_resources WHERE id=$1 FOR UPDATE SKIP LOCKED',[job.resource_id]);if(!resource)return
+        await tx.query("UPDATE tp_jobs SET status='waiting',fence=fence+1,lease_takeovers=$2,lease_until=0,error_code='LEASE_TAKEOVER_LIMIT',phase='任务多次中断，已有进度已保留，请检查后继续',updated_at=$3 WHERE id=$1",[job.id,takeovers,this.now()])
+        await this.event(tx,resource,'job.waiting',{jobId:job.id,code:'LEASE_TAKEOVER_LIMIT'},resource.body,false)
+        return
+      }
+      const [claimed] = await tx.query<Job>(`UPDATE tp_jobs SET status='running',fence=fence+1,lease_takeovers=$4,lease_until=$2,updated_at=$3 WHERE id=$1 RETURNING *`, [job.id, this.now()+leaseMs, this.now(),takeovers])
       return claimed
     })
   }
@@ -173,7 +196,8 @@ export class DurableStore {
       const text=draft??live.draft
       await tx.query('UPDATE tp_jobs SET phase=$2,draft=$3,updated_at=$4 WHERE id=$1', [job.id, phase, text, this.now()])
       job.draft=text
-      await this.event(tx, resource, 'job.progress', { jobId: job.id, phase }, update ? update(resource) : resource.body,!!update)
+      // Token deltas live in the lightweight job snapshot. Emit only phase/body changes.
+      if(update||phase!==live.phase)await this.event(tx, resource, 'job.progress', { jobId: job.id, phase }, update ? update(resource) : resource.body,!!update)
     })
   }
   async activity(job:Job, input:Pick<TaskActivity,'id'|'kind'|'title'|'status'|'detail'>) {
@@ -258,7 +282,7 @@ export class DurableStore {
         if(resource.kind==='chat')resource.body.messages=resource.body.messages.filter((m:any)=>m.id!==stoppedMessageId(latest.id))
         if(resource.kind==='learning')for(const c of resource.body.conversations)c.messages=c.messages.filter((m:any)=>m.id!==stoppedMessageId(latest.id))
       }
-      const jobs = await tx.query("UPDATE tp_jobs SET status='queued',attempts=0,resume_count=resume_count+1,resumed_at=$2,next_at=0,phase='正在继续',updated_at=$2 WHERE resource_id=$1 AND status='waiting' RETURNING id", [id, this.now()])
+      const jobs = await tx.query("UPDATE tp_jobs SET status='queued',attempts=0,lease_takeovers=0,resume_count=resume_count+1,resumed_at=$2,next_at=0,phase='正在继续',updated_at=$2 WHERE resource_id=$1 AND status='waiting' RETURNING id", [id, this.now()])
       if (jobs.length) {
         await tx.query('INSERT INTO tp_job_resumes(job_id,resume_number,owner_id,created_at) VALUES($1,$2,$3,$4)',[latest.id,latest.resume_count+1,owner,this.now()])
         await this.event(tx, resource, 'job.resumed', {})

@@ -22,11 +22,11 @@ for(const production of [false,true])test(`guest entry is explicit, isolated and
  for(const c of login.headers['set-cookie']){assert.match(c,/HttpOnly/);assert.equal(c.includes('Secure'),production)}
  const snapshot=(await app.inject({url:'/api/v2/session',headers})).json()
  assert.equal(snapshot.kind,'guest');assert.equal(snapshot.provider,null);assert.equal(snapshot.capabilities.zhihuMaterials,false)
- const upload=await app.inject({method:'POST',url:'/api/v2/materials/upload?name=notes.md',headers:{...headers,'content-type':'application/octet-stream','idempotency-key':'file'},payload:Buffer.from('# 我的学习资料\n完整保留')})
+ const upload=await app.inject({method:'POST',url:'/api/v2/materials/upload?name=notes.md',headers:{...headers,'content-type':'application/octet-stream','idempotency-key':'guest-upload-file'},payload:Buffer.from('# 我的学习资料\n完整保留')})
  assert.equal(upload.statusCode,200,upload.body)
  assert.equal((await app.inject({url:'/api/v2/zhihu/folders',headers})).json().code,'ZHIHU_LOGIN_REQUIRED')
  for(const kind of ['collection','creation','recent'])assert.equal((await app.inject({method:'POST',url:'/api/v2/materials/zhihu',headers,payload:{kind,folderId:'55'}})).json().code,'ZHIHU_LOGIN_REQUIRED')
- const forged=await app.inject({method:'POST',url:'/api/path-runs',headers,payload:{goal:'学会这些知识',searchScope:{kind:'collections',folderIds:['55']}}});assert.equal(forged.json().code,'ZHIHU_LOGIN_REQUIRED')
+ const forged=await app.inject({method:'POST',url:'/api/path-runs',headers:{...headers,'idempotency-key':'guest-forged-scope'},payload:{goal:'学会这些知识',searchScope:{kind:'collections',folderIds:['55']}}});assert.equal(forged.json().code,'ZHIHU_LOGIN_REQUIRED')
  const second=await app.inject({method:'POST',url:'/api/auth/guest'}),otherHeaders={cookie:cookies(second).join('; ')}
  assert.equal((await app.inject({url:`/api/v2/materials/${upload.json().sourceId}`,headers:otherHeaders})).statusCode,404)
  const logout=await app.inject({method:'POST',url:'/api/auth/logout',headers});assert.equal(logout.statusCode,200)
@@ -36,7 +36,7 @@ for(const production of [false,true])test(`guest entry is explicit, isolated and
  assert.equal((await app.inject({url:'/api/v2/session',headers:{cookie:recovery.replace('tp_guest=','tp_workspace=')}})).statusCode,401)
  const again=await app.inject({method:'POST',url:'/api/auth/guest',headers:{cookie:recovery}}),restored={cookie:cookies(again).join('; ')}
  assert.equal((await app.inject({url:'/api/v2/session',headers:restored})).json().workspaceId,snapshot.workspaceId)
- assert.match((await app.inject({url:'/api/v2/materials',headers:restored})).body,/我的学习资料/)
+ assert.equal((await app.inject({url:'/api/v2/materials',headers:restored})).json().items[0].sourceId,upload.json().sourceId)
  const [guest]=await db.query('SELECT owner_id FROM tp_sessions WHERE token_hash=$1',[digest(cookies(again)[0].split('=')[1])]);assert.equal((await store.list(guest.owner_id,'attachment')).length,1)
 })
 test('legacy local logout preserves its workspace before revoking the session',async t=>{
