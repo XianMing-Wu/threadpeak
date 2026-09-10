@@ -1,4 +1,4 @@
-import { t as e } from "./CharacterRig-BpJUYaY6.js";
+import { t as e } from "./CharacterRig-CH9rqunS.js";
 //#region src/infrastructure/three/character/prepareLearningPathCharacter.ts
 var t = (e) => `/assets/${e}`, n = () => ({
 	run: t("liu-kanshan-run.glb"),
@@ -16,4 +16,4 @@ function r(t = n()) {
 //#endregion
 export { n as getDefaultCharacterAssetUrls, r as prepareLearningPathCharacter };
 
-//# sourceMappingURL=prepareLearningPathCharacter-Bvm1PXv0.js.map
+//# sourceMappingURL=prepareLearningPathCharacter-CoxBgT1d.js.map

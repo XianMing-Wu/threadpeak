@@ -1,3 +1,4 @@
+import {protectMarkdownStructure,readingAst} from './markdown-structure.ts'
 import {decodeMathEncoding,wrapMathIslands} from './math-normalize.ts'
 import { prepareSourceImages, protectedSourceRanges, mathFencesToDelimiters } from './source-image.ts'
 import { fenceUnfencedCode } from './unfenced-code.ts'
@@ -94,11 +95,11 @@ function wrapJoinedMatrixLines(text: string) {
 }
 
 function protectDelimited(text: string, slots: string[]) {
-  return text.replace(/\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|(?<!\\)\$([^$\n]+?)(?<!\\)\$|\\\((.+?)\\\)/g, (_all, displayA, displayB, inlineA, inlineB, offset) => {
-    if(inlineA!=null&&/^(?:\d[\d.,]*\s+(?:and|or|USD|美元|元)|.*\b(?:dollars|price)\b)/i.test(inlineA))return _all.replace(/\$/g,'\\$')
+  return text.replace(/\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|(?<!\\)\$([^$\n]+?)(?<!\\)\$|\\\(([^]*?)\\\)/g, (_all, displayA, displayB, inlineA, inlineB, offset) => {
+    if(inlineA!=null&&/^(?:\d[\d.,]*\s+(?:and|or|USD|美元|元|和|或|至|到)|.*\b(?:dollars|price)\b)/i.test(inlineA))return _all.replace(/\$/g,'\\$')
     const raw = String(displayA ?? displayB ?? inlineA ?? inlineB ?? '')
     const tex = repairMathSpacing(raw.trim())
-    if (!tex) return ''
+    if (!tex) return '`[公式内容缺失]`'
     const before=text.slice(0,offset).split(/\n\s*\n/).at(-1)??''
     const attachedMatrix=/\\begin\{(?:matrix|pmatrix|bmatrix|vmatrix)\}/.test(tex)&&/=\s*\$?\s*$/.test(before)
     const display = !attachedMatrix && (displayA != null || displayB != null) && (raw.includes('\n') || !isShortInlineMath(tex))
@@ -204,22 +205,13 @@ function wrapBareMath(text: string, slots: string[]) {
 }
 
 function collectDelimitedMath(markdown: string): PreparedMath[] {
-  const math: PreparedMath[] = []
-  for (const block of splitFences(markdown)) {
-    if (block.code) continue
-    const pattern = /\$\$([\s\S]+?)\$\$|(?<!\\)\$([^$\n]+?)(?<!\\)\$/g
-    let match: RegExpExecArray | null
-    while ((match = pattern.exec(block.text))) {
-      const raw = String(match[1] ?? match[2] ?? '')
-      const tex = raw.trim()
-      if (!tex) continue
-      math.push({
-        tex,
-        display: match[1] != null && (raw.includes('\n') || !isShortInlineMath(tex)),
-      })
-    }
+  const result: PreparedMath[]=[]
+  const walk=(node:ReturnType<typeof readingAst>['children'][number])=>{
+    if(node.type==='math'||node.type==='inlineMath')result.push({tex:node.value.trim(),display:node.type==='math'})
+    else if('children' in node)node.children.forEach(walk)
   }
-  return math
+  readingAst(markdown).children.forEach(walk)
+  return result
 }
 
 function prepareText(text: string) {
@@ -246,8 +238,17 @@ function prepareText(text: string) {
   return numbered.replace(/(?<!\$)\$(?!\$)([^$\n]*\\tag\{[^{}]*\}[^$\n]*)\$(?!\$)/g,(_all,tex)=>dollars(tex,true))
 }
 
+function prepareFormattedText(source:string) {
+  return splitFences(source).map(block=>{
+    if(block.code)return block.text
+    const identifiers=/\\[A-Za-z]+/.test(block.text)?block.text:block.text.replace(/(?<![A-Za-z0-9_])[A-Za-z]{2,}_[A-Za-z][A-Za-z0-9_]+(?![A-Za-z0-9_])/g,name=>'`'+name+'`')
+    return splitFences(identifiers).map(part=>part.code?part.text:prepareText(part.text)).join('')
+  }).join('')
+}
+
 export function prepareMarkdown(source: string): PreparedMarkdown {
-  const normalized=mathFencesToDelimiters(fenceUnfencedCode(prepareSourceImages(fenceUnfencedCode(source))))
+  const structure=protectMarkdownStructure(fenceUnfencedCode(prepareSourceImages(fenceUnfencedCode(source))),prepareFormattedText)
+  const normalized=mathFencesToDelimiters(structure.source)
   // Long snake_case names in prose are identifiers. Short x_i remains math;
   // explicit mathematical delimiters and TeX groups retain their authority.
   const identifiers = splitFences(normalized).map(block => block.code ? block.text : block.text.split(/(\$\$[\s\S]*?\$\$|(?<!\\)\$[^$\n]+\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/g).map((part,i) => {
@@ -261,10 +262,11 @@ export function prepareMarkdown(source: string): PreparedMarkdown {
     if (block.code) return block.text
     return loosenChineseBlocks(prepareText(block.text))
   }).join('')
+  const restoredMarkdown=structure.restore(markdown)
   // GFM splits table cells before remark-math runs. Shield TeX's vertical bars
   // (determinants, norms, array borders) without changing their mathematical meaning.
-  const safeMarkdown = splitFences(markdown).map(block => block.code ? block.text : block.text.replace(/\$\$([\s\S]+?)\$\$|(?<!\\)\$([^$\n]+?)(?<!\\)\$/g, expression => expression.replace(/\|/g, '&#124;'))).join('')
-  return { markdown: safeMarkdown, math: collectDelimitedMath(markdown) }
+  const safeMarkdown = splitFences(restoredMarkdown).map(block => block.code ? block.text : block.text.replace(/\$\$([\s\S]+?)\$\$|(?<!\\)\$([^$\n]+?)(?<!\\)\$/g, expression => expression.replace(/\|/g, '&#124;'))).join('')
+  return { markdown: safeMarkdown, math: collectDelimitedMath(restoredMarkdown) }
 }
 
 export function replaceMathPlaceholders(

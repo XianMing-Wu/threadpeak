@@ -1,17 +1,19 @@
 import {switchWorkspace} from './account-storage.ts'
+import {publishWorkspaceSession} from '../runtime/workspace-session.ts'
 import {delay} from './poll.ts'
 import type {TaskActivity} from '@threadpeak/contracts/task-activity'
 import { LearningSchema, type LearningState } from '@threadpeak/contracts/learning-v2'
 export type TaskView={activities?:TaskActivity[];id:string;kind:string;status:'queued'|'running'|'waiting'|'completed'|'cancelled';phase:string;draft:string;recoverable:boolean;basisIds:string[];conversationId?:string}
 export type LearningSnapshot={id:string;kind:'learning';revision:number;dataRevision?:number;data:LearningState;job:TaskView|null}
 let session:Promise<void>|undefined
-export function resetSession(){session=undefined}
+export function resetSession(){session=undefined;publishWorkspaceSession(null)}
 export function ensureSession(){
   return session??=fetch('/api/v2/session',{credentials:'same-origin',signal:AbortSignal.timeout(15000)}).then(async r=>{
     if(!r.ok)throw new Error('请先登录后继续。')
     const identity=await r.json()
     if(typeof identity.workspaceId!=='string'||!identity.workspaceId)throw new Error('工作区身份无法读取。')
     await switchWorkspace(identity.workspaceId)
+    publishWorkspaceSession(identity)
   }).catch(e=>{session=undefined;throw e})
 }
 export class ApiError extends Error { code:string; status:number; constructor(code:string,status:number,message:string){super(message);this.code=code;this.status=status} }

@@ -41,4 +41,15 @@ export const readingCorpus: ReadingCase[] = [
   {id:'unresolved-macro',label:'未知命令保留原式',source:String.raw`$\unknownmacro{x}$`,unresolved:true},
   {id:'unclosed-array',label:'截断代码不能吞掉后续中文',source:'A = np.array([[1,2],\n这里的数组已被截断。\n公式 $x^2=1$。',math:1,code:'A = np.array([[1,2],'},
   {id:'currency-links',label:'金额、链接与路径不是公式',source:'价格 $20 and $30，https://example.com/x_i 和 `C:\\temp\\notes.txt`。',math:0},
+  {id:'autograd-missing',label:'求导摘要中的表达式与条件已经丢失',source:'一个简单的求导例子是： ，计算  ，假设给定  \n先画出计算图。',incomplete:true,math:0},
+  {id:'autograd-intact',label:'完整求导例子不能误报缺式',source:'求导例子是：$y=x^2$，计算 $dy/dx$，假设给定 $x=2$。',incomplete:false,math:3},
+  {id:'inline-multiline',label:'跨行行内公式保持完整',source:'求导：\\(\n\\frac{dy}{dx}=2x\n\\)\n这里是后面的解释。',math:1},
+  {id:'quoted-math',label:'引用中的公式与后文仍在引用块内',source:'> $$\n> \\frac{dy}{dx}=2x\n> $$\n> 接着代入数值。',math:1},
+  {id:'listed-math',label:'数学围栏不破坏嵌套列表',source:'1. 求导\n\n   ```latex\n   \\frac{dy}{dx}=2x\n   ```\n\n   继续代入。\n2. 完成',math:1},
+  {id:'styled-math',label:'标题、强调和列表标记不进入公式',source:'## x^2 与导数\n\n**x^2**是例子。\n\n- x^2\n- 完成\n\n### 高阶求导与 create_graph',math:3},
+  {id:'empty-formula',label:'空公式有明确提示，不静默删除',source:'求导例子是：$ $，计算 $$ $$。',incomplete:true,math:0},
+  {id:'chinese-currency',label:'中文金额仍为金额',source:'预算 $20 和 $30，公式 $x^2$。',math:1},
+  {id:'mathematica-code',label:'语言名包含 math 的普通代码仍为代码',source:'```mathematica\nf[x_] := x^2\n(* $a|b$ <tag> *)\n```',math:0,code:'f[x_] := x^2'},
+  {id:'table-code',label:'表格中的代码竖线与公式分别解析',source:'| 接口 | 公式 | 代码 |\n| :-- | :--: | --: |\n| **backward** | $dy/dx$ | `x.grad` |\n| grad | $x^2$ | `a\\|b` |',math:2},
+
 ]

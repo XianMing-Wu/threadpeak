@@ -100,7 +100,7 @@ export class ZhihuLogin {
     return this.gate?this.gate.run(init.signal??undefined,work):work(init.signal??new AbortController().signal)
   }
   async userToken(owner:string){
-    if(owner.startsWith('local:'))throw new CommandError('ZHIHU_LOGIN_REQUIRED',401)
+    if(owner.startsWith('local:')||owner.startsWith('guest:'))throw new CommandError('ZHIHU_LOGIN_REQUIRED',401)
     if(isMockZhihuOwner(owner)!==!!this.mock)throw new CommandError('ZHIHU_REAUTHORIZE',401)
     const [row]=await this.db.query<{token_cipher:string;token_expires_at:number}>('SELECT token_cipher,token_expires_at FROM tp_zhihu_accounts WHERE owner_id=$1',[owner])
     if(!row||row.token_expires_at<=Date.now())throw new CommandError('ZHIHU_REAUTHORIZE',401)

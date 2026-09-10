@@ -4,7 +4,7 @@ import {DurableStore} from './store.ts'
 import {readLibraryPage} from './library.ts'
 import {readStageMetrics} from './ops-metrics.ts'
 import {recordMetric} from './metrics.ts'
-import {cacheZhihuDirect,instrumentProviders} from './provider-runtime.ts'
+import {instrumentProviders} from './provider-runtime.ts'
 import {providerScope} from './provider-scope.ts'
 export const platformCases={
  'library keyset pages retain tied IDs, isolate owners and exclude chat bodies':async db=>{
@@ -29,8 +29,7 @@ export const platformCases={
   await db.query("INSERT INTO tp_provider_calls(id,owner_id,job_id,step,provider,body,created_at) SELECT $1||g,$1,'test-job','old','test','{}'::jsonb,$2 FROM generate_series(1,1001) g",[owner,old])
   await db.query('INSERT INTO tp_memories(owner_id,source_hash,summary,created_at) VALUES($1,$2,$3,$4)',[owner,'keep','permanent summary',old])
   const scope={ownerId:owner,jobId:'test-job',step:'direct'},input={messages:[{role:'user',content:'test'}],thinkingDepth:'fast'}
-  const cached=cacheZhihuDirect({direct:async()=>({kind:'completed',text:'answer',cacheable:true})},db,'test')
-  await providerScope.run(scope,()=>cached.direct(input))
+  await db.query("INSERT INTO tp_provider_cache(owner_id,cache_key,body,expires_at) VALUES($1,'legacy-valid','{}'::jsonb,$2)",[owner,now+86400000])
   const p=instrumentProviders(db,{deepseekModelName:'test'},{complete:async()=>({kind:'completed',text:'{}'})},{direct:async()=>({kind:'completed',text:'answer'})})
   await providerScope.run(scope,()=>p.llm.complete({...input,json:true}))
   assert.equal((await db.query('SELECT count(*)::integer n FROM tp_provider_cache WHERE owner_id=$1 AND expires_at<$2',[owner,now]))[0].n,1001)

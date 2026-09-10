@@ -164,3 +164,38 @@
   cursor: pointer;
   margin-bottom: 12px;
 }
+
+/* GFM tables retain readable cells and one horizontal scroll area in narrow cards. */
+.md-body table {
+  max-width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+  font-size: inherit;
+}
+.md-body th,
+.md-body td {
+  padding: 9px 12px;
+  border: 1px solid var(--line-2);
+  vertical-align: top;
+  min-width: 5em;
+}
+.md-body th {
+  color: var(--ink-1);
+  background: var(--surface-2);
+  font-weight: 600;
+}
+.md-body code { font-family: var(--font-mono, monospace); }
+.md-body pre code { white-space: pre; overflow-wrap: normal; }
+.md-body blockquote {
+  padding: .15em 0 .15em 1em;
+  border-left: 3px solid var(--line-2);
+}
+.md-body h4,
+.md-body h5,
+.md-body h6 {
+  margin: .9em 0 .4em;
+  color: var(--ink-1);
+  font-size: inherit;
+  font-weight: 600;
+}
+.md-body hr { border: 0; border-top: 1px solid var(--line-2); margin: 1.25em 0; }

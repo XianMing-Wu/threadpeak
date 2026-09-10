@@ -1,10 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {mkdtemp,rm} from 'node:fs/promises'
-import {tmpdir} from 'node:os'
-import {join} from 'node:path'
 import {openDatabase,migrate} from './database.ts'
-import {cacheZhihuDirect,instrumentProviders,cacheUserId} from './provider-runtime.ts'
+import {instrumentProviders,cacheUserId} from './provider-runtime.ts'
 import {providerScope} from './provider-scope.ts'
 import {createZhihuGate,limitZhihuProvider,ZHIHU_START_INTERVAL_MS} from './zhihu-gate.ts'
 import {pause,withPermit} from './limits.ts'
@@ -38,54 +35,12 @@ test('shared scheduler separates starts and queues the third request with two bo
   await assert.rejects(createZhihuGate(db,60).run(abort.signal,()=>assert.fail('cancelled request sent')))
 })
 
-test('direct cache merges identical calls across wrappers and reuses only within owner, complete request and namespace',async t=>{
-  const db=await fixture(t);let calls=0,searches=0
-  const raw={search:async()=>{searches++;return {kind:'empty'}},direct:async()=>{calls++;await pause(30);return good}}
-  const a=cacheZhihuDirect(raw,db,'credential-1'),b=cacheZhihuDirect(raw,db,'credential-1')
-  const pair=await Promise.all([scope('alice',()=>a.direct(input)),scope('alice',()=>b.direct(input))])
-  assert.equal(calls,1);assert.deepEqual(pair.map(r=>r.cache).sort(),['hit','miss'])
-  assert.equal((await scope('alice',()=>b.direct(input))).cache,'hit')
-  await scope('bob',()=>b.direct(input))
-  await scope('alice',()=>b.direct({...input,thinkingDepth:'deep'}))
-  await scope('alice',()=>b.direct({...input,messages:[{role:'user',content:'目标：复现。材料版本：v2'}]}))
-  await scope('alice',()=>cacheZhihuDirect(raw,db,'credential-2').direct(input))
-  assert.equal(calls,5)
-  await a.search('same',10);await a.search('same',10);assert.equal(searches,2)
-  await db.query('UPDATE tp_provider_cache SET expires_at=0')
-  assert.equal((await scope('alice',()=>b.direct(input))).cache,'miss');assert.equal(calls,6)
-  assert.ok((await db.query("SELECT * FROM tp_provider_slots WHERE pool LIKE 'direct-cache:%'")).every(row=>row.token===null))
-})
-
-test('failed, incomplete and cancelled direct calls never become cache hits',async t=>{
-  const db=await fixture(t)
-  for(const result of [{kind:'failed',code:'ZHIHU_RATE_LIMITED'}, {...good,cacheable:false},{...good,text:''}]){
-    let calls=0;const p=cacheZhihuDirect({search:async()=>({kind:'empty'}),direct:async()=>{calls++;return result}},db,JSON.stringify(result))
-    await scope('alice',()=>p.direct(input));await scope('alice',()=>p.direct(input));assert.equal(calls,2)
-  }
-  const abort=new AbortController(),p=cacheZhihuDirect({direct:async()=>{abort.abort();return good}},db,'cancel')
-  await assert.rejects(scope('alice',()=>p.direct({...input,signal:abort.signal})))
-  assert.equal((await db.query('SELECT * FROM tp_provider_cache')).length,0)
-})
-
-test('direct cache survives database reopen, with no second upstream request',async()=>{
-  const directory=await mkdtemp(join(tmpdir(),'tp-direct-cache-'));let db=await openDatabase({directory});await migrate(db)
-  try{
-    const raw={direct:async()=>good},first=cacheZhihuDirect(raw,db,'same-provider')
-    assert.equal((await scope('alice',()=>first.direct(input))).cache,'miss')
-    await db.close();db=await openDatabase({directory});await migrate(db)
-    const reopened=cacheZhihuDirect({direct:async()=>assert.fail('cache lost at restart')},db,'same-provider')
-    assert.equal((await scope('alice',()=>reopened.direct(input))).cache,'hit')
-  }finally{await db.close();await rm(directory,{recursive:true,force:true})}
-})
-
-test('cancellation during cache persistence rolls back the cache transaction',async t=>{
-  const db=await fixture(t),abort=new AbortController()
-  const wrapped={...db,transaction:fn=>db.transaction(tx=>fn({...tx,query:async(sql,params)=>{
-    const rows=await tx.query(sql,params);if(sql.startsWith('INSERT INTO tp_provider_cache('))abort.abort();return rows
-  }}))}
-  const p=cacheZhihuDirect({direct:async()=>good},wrapped,'cancel-at-commit')
-  await assert.rejects(scope('alice',()=>p.direct({...input,signal:abort.signal})))
-  assert.equal((await db.query('SELECT * FROM tp_provider_cache')).length,0)
+test('instrumented providers expose only search APIs and never resurrect retired direct cache data',async t=>{
+ const db=await fixture(t);let calls=0
+ const p=instrumentProviders(db,config,{complete:async()=>good},{search:async()=>{calls++;return {kind:'empty'}},direct:async()=>assert.fail('retired transport called')})
+ assert.equal(p.zhihu.direct,undefined)
+ await scope('alice',()=>p.zhihu.search('问题',10));await scope('alice',()=>p.zhihu.search('问题',10))
+ assert.equal(calls,2);assert.equal((await db.query('SELECT * FROM tp_provider_cache')).length,0)
 })
 
 test('truncated model output retains actual usage but is not published as a completed answer',async()=>{
@@ -117,23 +72,21 @@ test('DeepSeek records actual nonstream and stream KV usage and sends stable opa
   assert.ok(rows.every(r=>r.body.usage.prompt_cache_hit_tokens===1024&&!r.body.messages))
 })
 
-test('missing usage stays unknown; cache hits do not count the original upstream usage twice',async t=>{
+test('missing usage stays unknown for both LLM and uncached searches',async t=>{
   const db=await fixture(t),p=instrumentProviders(db,config,{complete:async()=>({kind:'completed',text:'ok'})},{search:async()=>({kind:'empty'}),direct:async()=>({...good,usage:{prompt_tokens:9}})})
   await scope('alice',()=>p.llm.complete({...input,json:false}))
-  await scope('alice',()=>p.zhihu.direct(input));await scope('alice',()=>p.zhihu.direct(input))
+  await scope('alice',()=>p.zhihu.search('问题',10));await scope('alice',()=>p.zhihu.search('问题',10))
   const rows=await db.query('SELECT body FROM tp_provider_calls ORDER BY created_at')
-  assert.equal(rows[0].body.usage,undefined);assert.equal(rows.at(-1).body.cache,'hit');assert.equal(rows.at(-1).body.usage,undefined)
+  assert.equal(rows[0].body.usage,undefined);assert.equal(rows.at(-1).body.cache,undefined);assert.equal(rows.at(-1).body.usage,undefined)
 })
 
-test('Zhihu uses the documented depth models and distinguishes rate, quota, auth and business errors',async t=>{
+test('Zhihu search distinguishes rate, quota, auth and business errors',async t=>{
   const db=await fixture(t),bodies=[];let payload={},status=200
   const raw=createAgentZhihuProvider({config,clock:{unixSeconds:()=>1},http:async(_url,init)=>{if(init.body)bodies.push(JSON.parse(init.body));return {ok:status===200,status,text:async()=>JSON.stringify(payload)}}})
-  payload={choices:[{message:{content:'完成'},finish_reason:'stop'}]}
-  assert.equal((await raw.direct(input)).cacheable,true);await raw.direct({...input,thinkingDepth:'deep'})
-  assert.deepEqual(bodies.map(b=>b.model),['zhida-fast-1p5','zhida-thinking-1p5']);assert.ok(bodies.every(b=>b.thinking===undefined&&b.stream===false))
+  assert.equal(raw.direct,undefined)
   for(const [http,code,expected,retryable] of [[429,'rate_limit_exceeded','ZHIHU_RATE_LIMITED',true],[429,'insufficient_quota','ZHIHU_QUOTA_EXCEEDED',false],[401,'invalid_key','AUTH_INVALID',false]]){
     status=http;payload={error:{code,message:'must not persist raw error'}}
-    const result=await raw.direct(input);assert.equal(result.code,expected);assert.equal(result.retryable,retryable);assert.equal(result.diagnostic.upstreamCode,code);assert.equal(result.diagnostic.message,undefined)
+    const result=await raw.search('问题',10);assert.equal(result.code,expected);assert.equal(result.retryable,retryable);assert.equal(result.diagnostic.upstreamCode,code);assert.equal(result.diagnostic.message,undefined)
   }
   status=200;payload={Code:30001,Msg:'frequency'}
   const result=await limitZhihuProvider(raw,createZhihuGate(db,0)).search('q',10)

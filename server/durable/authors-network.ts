@@ -4,6 +4,8 @@ import type { GraphNode, LearningState } from '@threadpeak/contracts/learning-v2
 import { isLiuKanshanName } from '../ports.ts'
 import type { Sql } from './database.ts'
 import { digest, type Resource } from './store.ts'
+import {searchMetadataOf} from '@threadpeak/contracts/search-scope'
+import {evidenceUrlKey} from '../agent-runtime/evidence-url.ts'
 
 export const learningTopic=(id:string)=>`learning:${id}`
 export function safeZhihuUrl(raw:unknown,allowDemo=false):string|undefined{
@@ -11,7 +13,7 @@ export function safeZhihuUrl(raw:unknown,allowDemo=false):string|undefined{
   if(allowDemo&&isMockZhihuUrl(raw))return raw
   try{const u=new URL(raw);if(u.protocol==='https:'&&!u.username&&!u.password&&(u.hostname==='zhihu.com'||u.hostname.endsWith('.zhihu.com')))return u.href}catch{}
 }
-export function canonicalContentUrl(url:string){const u=new URL(url);u.search='';u.hash='';return u.href}
+export function canonicalContentUrl(url:string){return evidenceUrlKey(url)}
 /** Only an exact published-content match can resolve a search result's missing author ID. */
 export function knownSourceIdentity<T extends {url:string;authorId:string|null;authorName?:string|null;authorUrl?:string|null}>(source:T,network:AuthorNetwork):T{
   if(!source.authorId?.startsWith('author-ev-'))return source
@@ -22,7 +24,7 @@ export function knownSourceIdentity<T extends {url:string;authorId:string|null;a
 function validSource(raw:any,allowDemo=false):AuthorSource|undefined{
   if(raw?.sourceKind==='web')return
   if(!raw?.evidenceId||!raw.authorId||!raw.authorName||isLiuKanshanName(raw.authorName)||!safeZhihuUrl(raw.url,allowDemo))return
-  return {...Object.fromEntries(['avatar','badge','badgeIcon','likes','commentCount','editedAt','contentType','contentId','authorityLevel','rankingScore','comments','sourceKind','site'].filter(k=>raw[k]!==undefined).map(k=>[k,raw[k]])),evidenceId:raw.evidenceId,authorId:raw.authorId,authorName:raw.authorName,title:raw.title||'知乎文章',summary:raw.summary??'',url:raw.url,authorUrl:safeZhihuUrl(raw.authorUrl,allowDemo)}
+  return {...Object.fromEntries(['avatar','badge','badgeIcon','likes','commentCount','editedAt','contentType','contentId','authorityLevel','rankingScore','comments','sourceKind','site','authorSignature'].filter(k=>raw[k]!==undefined).map(k=>[k,raw[k]])),evidenceId:raw.evidenceId,authorId:raw.authorId,authorName:raw.authorName,title:raw.title||'知乎文章',summary:raw.summary??'',url:raw.url,authorUrl:safeZhihuUrl(raw.authorUrl,allowDemo)}
 }
 /** One immutable-state lookup, with path compression; never cache across edits. */
 export function sourceLookup(state:LearningState,allowDemo=false){
@@ -40,7 +42,7 @@ export function sourceLookup(state:LearningState,allowDemo=false){
       }
       if(node.type==='author'&&node.author){
         const original=originals.get(node.id)
-        source=validSource({evidenceId:node.author.evidenceId,authorId:node.author.id,authorName:node.author.name,title:original?.title??node.title,summary:original?.text??node.text,url:node.author.url,authorUrl:node.author.authorUrl,avatar:node.author.avatar,badge:node.author.badge},allowDemo);break
+        source=validSource({...searchMetadataOf(original?.author??node.author),evidenceId:node.author.evidenceId,authorId:node.author.id,authorName:node.author.name,title:original?.title??node.title,summary:original?.text??node.text,url:node.author.url,authorUrl:node.author.authorUrl},allowDemo);break
       }
       node=byId.get(node.parents[0]??'')
     }
@@ -76,9 +78,9 @@ export async function readAuthorNetwork(db:Sql,owner:string):Promise<AuthorNetwo
     if(source.authorUrl)author.authorUrl=source.authorUrl
     let evidence=author.evidence.find(e=>e.evidenceId===source.evidenceId)
     if(!evidence){evidence={...source,uses:[]};author.evidence.push(evidence)}
-    const key=digest({topic:use.topicId,evidence:source.evidenceId,origin:use.origin,question:use.question,searchId:use.searchId})
+    const key=digest({topic:use.topicId,evidence:source.evidenceId,origin:use.origin,question:use.question,searchId:use.searchId,questionKind:use.questionKind})
     const old=evidence.uses.find(u=>u.key===key)
-    if(old){old.nodeIds=[...new Set([...old.nodeIds,...use.nodeIds])];old.nodeTitles={...old.nodeTitles,...use.nodeTitles};return}
+    if(old){old.nodeIds=[...new Set([...old.nodeIds,...use.nodeIds])];old.nodeTitles={...old.nodeTitles,...use.nodeTitles};old.nodeKinds={...old.nodeKinds,...use.nodeKinds};return}
     evidence.uses.push({...use,key,helpful:prefs.some(p=>p.author_id===author.id&&p.topic_id===use.topicId&&p.kind==='helpful'&&p.evidence_id===source.evidenceId&&p.value)})
     if(!author.topics.some(t=>t.id===use.topicId))author.topics.push({id:use.topicId,title:use.topic,uses:0,helpful:0,score:0,pinned:false,hidden:false})
   }
@@ -88,19 +90,20 @@ export async function readAuthorNetwork(db:Sql,owner:string):Promise<AuthorNetwo
     const concept=route?.concepts?.find((c:any)=>c.id===state.conceptId),carrier=route?.carriers?.find((c:any)=>c.id===concept?.carrierId)
     const context={topicId,topic:state.title,resourceId:resource.id,carrierId:carrier?`${state.routeId}:${carrier.id}`:undefined,carrier:carrier?.title,discoveredAt:resource.created_at}
     const titles=(ids:string[])=>Object.fromEntries(ids.map(id=>[id,nodesById.get(id)?.title??'知识卡片']))
+    const kinds=(ids:string[])=>Object.fromEntries(ids.flatMap(id=>{const node=nodesById.get(id);return node?[[id,node.type]]:[]}))
     const sources=new Map<string,{source:AuthorSource;nodes:string[]}>()
     for(const node of state.nodes){const source=lookup(node.id);if(!source)continue;const existing=sources.get(source.evidenceId);if(existing)existing.nodes.push(node.id);else sources.set(source.evidenceId,{source,nodes:[node.id]})}
-    for(const {source,nodes} of sources.values())add(source,{...context,question:'',nodeIds:nodes,nodeTitles:titles(nodes),origin:state.articles.some(a=>a.id===source.evidenceId)?'learning':'author-card'})
+    for(const {source,nodes} of sources.values())add(source,{...context,question:'',nodeIds:nodes,nodeTitles:titles(nodes),nodeKinds:kinds(nodes),origin:state.articles.some(a=>a.id===source.evidenceId)?'learning':'author-card'})
     // Questions are relationships, not preference points. Include archived conversations,
     // but link only cards that still exist in the current tree.
     for(const chat of state.conversations){
-      let question=''
+      let question='',questionKind:SourceUse['questionKind']='follow_up'
       for(const message of chat.messages){
-        if(message.role==='user'){question=message.text??'';continue}
+        if(message.role==='user'){question=message.text??'';questionKind=message.id==='concept-question'?'initial':'follow_up';continue}
         if(!question)continue
         for(const paragraph of message.paragraphs??[]){
           const source=lookup(paragraph.id)
-          if(source)add(source,{...context,question,nodeIds:[paragraph.id],nodeTitles:titles([paragraph.id]),origin:'conversation'})
+          if(source)add(source,{...context,question,questionKind,nodeIds:[paragraph.id],nodeTitles:titles([paragraph.id]),nodeKinds:kinds([paragraph.id]),origin:'conversation'})
         }
       }
     }
@@ -112,7 +115,13 @@ export async function readAuthorNetwork(db:Sql,owner:string):Promise<AuthorNetwo
   for(const {body} of legacy){
     const linked=body.resourceId?learning.find(r=>r.id===body.resourceId):learning.find(r=>body.conceptId&&r.body.conceptId===body.conceptId&&r.body.routeId===body.routeId)
     // A migrated card relation is represented above, not as a fabricated old positive feedback.
-    if(linked&&authors.get(body.evidence?.authorId)?.evidence.some(e=>e.evidenceId===body.evidence.evidenceId))continue
+    const recorded=linked&&authors.get(body.evidence?.authorId)?.evidence.find(e=>e.evidenceId===body.evidence.evidenceId&&e.url===body.evidence.url)
+    if(recorded){
+      // Older cards stored only avatar/badge. Recover metadata from their exact
+      // immutable search evidence without rewriting identity, summary or uses.
+      for(const [key,value] of Object.entries(searchMetadataOf(body.evidence)))if((recorded as any)[key]===undefined)(recorded as any)[key]=value
+      continue
+    }
     add(body.evidence,{topicId:body.topicId??`question:${digest(body.question??'')}`,topic:body.topic??body.conceptTitle??body.question??'已发现的资料',question:body.question??'',searchId:body.searchId,nodeIds:[],origin:'search',discoveredAt:body.discoveredAt??0})
   }
   for(const row of [...prefs,...usage])row.author_id=aliases.get(row.author_id)??row.author_id

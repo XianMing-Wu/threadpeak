@@ -1,3 +1,4 @@
+import { SendControl } from '../components/SendControl'
 import { useEffect, useId, useRef, useState } from 'react'
 import type { GraphNode } from './model'
 import { Glyph, IconButton, type IconName } from './atoms'
@@ -10,7 +11,7 @@ export const aiQuickActions: {label:string;icon:IconName;question:string}[] = [
   {label:'示例',icon:'example',question:'请围绕这张卡片给出一个具体例子，帮助我理解。'},
 ]
 
-export function NodePrompt({ mode, nodes, depth, onDepth, busy=false, onSubmit, onClose, submitError }: {
+export function NodePrompt({ mode, nodes, depth, onDepth, busy=false, onSubmit, onClose, onStop, submitError }: {
   mode: NodePromptMode
   nodes: GraphNode[]
   depth: 'fast' | 'deep'
@@ -18,6 +19,7 @@ export function NodePrompt({ mode, nodes, depth, onDepth, busy=false, onSubmit, 
   busy?: boolean
   submitError?: string
   onSubmit: (text: string) => Promise<boolean>
+  onStop?: () => void
   onClose: () => void
 }) {
   const [value, setValue] = useState('')
@@ -53,7 +55,7 @@ export function NodePrompt({ mode, nodes, depth, onDepth, busy=false, onSubmit, 
   const status=submitting?'正在发送…':busy?'正在完成上一条回复':''
 
   if(mode==='ai')return <form className="lp-node-prompt lp-ai-quick" aria-busy={submitting} role="dialog" aria-label="询问 AI" onSubmit={e=>{e.preventDefault();submit()}} onPointerDown={e=>e.stopPropagation()} onWheel={e=>e.stopPropagation()} onKeyDown={e=>{e.stopPropagation();if(e.key==='Escape'){e.preventDefault();dismiss()}}}>
-    <div className="lp-ai-input"><Glyph name="spark" size={19}/><textarea ref={input} aria-label="询问 AI 的问题" placeholder="询问 AI" value={value} onChange={e=>setValue(e.target.value)} rows={value.includes('\n')?3:1} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();submit()}}}/><button type="submit" aria-label="发送询问 AI 问题" disabled={busy||submitting||!value.trim()||!nodes.length}><Glyph name="arrow" size={20}/></button></div>
+    <div className="lp-ai-input"><Glyph name="spark" size={19}/><textarea ref={input} aria-label="询问 AI 的问题" placeholder="询问 AI" value={value} onChange={e=>setValue(e.target.value)} rows={value.includes('\n')?3:1} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();submit()}}}/><SendControl busy={busy} submitting={submitting} disabled={!value.trim()||!nodes.length} onSend={()=>void submit()} onStop={onStop} sendLabel="发送询问 AI 问题"/></div>
     <div className="lp-quick-actions"><span>快速操作</span>{aiQuickActions.map(action=><button type="button" key={action.label} disabled={busy||submitting||!nodes.length} onClick={()=>void submit(action.question)}><Glyph name={action.icon} size={19}/>{action.label}</button>)}</div>
     {feedback&&<p className="lp-node-prompt-error" role="alert">{feedback}</p>}
     <footer><button type="button" className="lp-node-prompt-depth" aria-pressed={depth==='deep'} onClick={()=>onDepth(depth==='fast'?'deep':'fast')}><Glyph name="spark" size={13}/>{depth==='deep'?'深度思考':'快速回答'}</button><span role="status">{status||'Esc 关闭'}</span><IconButton icon="close" label="关闭询问 AI 输入框" onClick={dismiss}/></footer>
@@ -79,7 +81,7 @@ export function NodePrompt({ mode, nodes, depth, onDepth, busy=false, onSubmit, 
     {feedback&&<p className="lp-node-prompt-error" role="alert">{feedback}</p>}
     <footer><button type="button" className="lp-node-prompt-depth" aria-label="深度思考" aria-pressed={depth === 'deep'} onClick={() => onDepth(depth === 'fast' ? 'deep' : 'fast')}><Glyph name="spark" size={14}/>{depth === 'deep' ? '深度思考' : '快速回答'}</button>
       <span role="status">{status||'Shift + Enter 换行'}</span>
-      <button type="submit" className="lp-node-prompt-send" aria-label={`发送${label}问题`} disabled={busy || submitting || !value.trim() || nodes.length === 0}><Glyph name="arrow" size={18}/></button>
+      <SendControl busy={busy} submitting={submitting} disabled={!value.trim()||!nodes.length} onSend={()=>void submit()} onStop={onStop} sendLabel={`发送${label}问题`}/>
     </footer>
   </form>
 }

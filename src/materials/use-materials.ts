@@ -1,3 +1,4 @@
+import {getWorkspaceSession} from '../runtime/workspace-session'
 import {pollResource} from '../learning-v2/poll'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError, ensureSession, productRequest } from '../learning-v2/client'
@@ -55,6 +56,7 @@ export function useMaterials() {
         scope = normalizeScope(saved?.scope)
         if (saved?.folders && typeof saved.folders === 'object') bindings = Object.fromEntries(Object.entries(saved.folders).filter(([id, source]) => id.length > 0 && id.length <= 240 && typeof source === 'string')) as Record<string, string>
       } catch { /* Start with the default scope. */ }
+      if(getWorkspaceSession()?.kind==='guest'&&scope.kind==='collections'){scope={kind:'zhihu'};bindings={}}
       const selectedFolders=scope.kind==='collections'?scope.folderIds:[]
       bindings=Object.fromEntries(Object.entries(bindings).filter(([id])=>selectedFolders.includes(id)))
       const requested=[...new Set([...ids,...Object.values(bindings)])]
@@ -94,6 +96,7 @@ export function useMaterials() {
   }, [])
 
   const loadFolders = useCallback(() => {
+    if(getWorkspaceSession()?.kind==='guest')return Promise.resolve()
     if (folderLoad.current) return folderLoad.current
     setFoldersStatus('loading'); setFoldersError('')
     return folderLoad.current = productRequest<{ items: FolderView[]; demo?: boolean }>('/api/v2/zhihu/folders').then(result => {

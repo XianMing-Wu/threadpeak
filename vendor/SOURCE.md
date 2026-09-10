@@ -46,3 +46,7 @@
 出处、MIT 许可、上游提交和本地改动见 [Coverflow 来源](../src/vendor/coverflow/SOURCE.md) 与 [许可证](../src/vendor/coverflow/LICENSE)。它是保留交互算法的源码 fork，不属于 3D 生成物的整包同步。更新时先对照记录的提交，逐项合并 SOURCE.md 列出的受控选中、指针取消、键盘和样式适配，再验证拖动、键盘及 reduced motion；不能直接覆盖项目适配。
 
 旧 knowledge-canvas/generate.ts 的改编代码随旧图生成引擎删除，不再作为产品代码维护。
+
+## 2026-09-09 阴影尺寸一致性修复
+
+基于上面 2026-09-08 同步的上游工作树，在临时构建目录应用[源码补丁](patches/2026-09-09-shadow-targets.patch)，运行上游 `build:module` 后整包同步 19 个文件，并逐文件校验。保留上游现有未提交工作；没有修改生成 bundle。补丁释放 VSM 的主贴图、深度纹理与模糊中间贴图，避免 2048/4096 尺寸混用；显卡尺寸上限参与质量选择。公开入口、角色资产和许可证范围未变，摘要仍以清单为准。复现及验证见[审查记录](../qa/path-author-audit-2026-09-09.md)。

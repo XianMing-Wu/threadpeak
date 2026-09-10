@@ -6,6 +6,7 @@ import {DurableWorker} from './worker.ts'
 import {createProductApp} from './http.ts'
 import {ProductTools} from './tools.ts'
 import {createFlows} from './flows.ts'
+import {READING_POLICY_VERSION} from '@threadpeak/contracts/reading-policy'
 import {matchingSource} from './source-presentation.ts'
 const url='https://zhuanlan.zhihu.com/p/123?utm_source=old'
 const excerpt='矩阵乘法：设 ，，则。满足结合律： 满足分配律：，重要注意：'
@@ -20,7 +21,7 @@ test('old source enrichment is owner scoped, persistent and idempotent; AI readi
  const tools=new ProductTools({async complete(){models++;return {kind:'completed',text:JSON.stringify({content:'### 矩阵的乘法\n\n'+('对于矩阵，乘积是否存在首先取决于维数是否匹配。这是根据摘要主题整理的独立说明。').repeat(2)+'\n\n$AB \\ne BA$，其中 $A=\\begin{pmatrix}1&0\\\\0&0\\end{pmatrix}$。'})}}},{async search(){searches++;return {kind:'hits',items:[{evidenceId:'live',url:'https://zhuanlan.zhihu.com/p/123?utm_source=new',title:'矩阵运算',summary:excerpt,avatar:'https://pic1.zhimg.com/real.jpg',authorId:'upstream',authorName:'作者'}]}},async direct(){throw Error('not used')}})
  const worker=new DurableWorker(store,createFlows(tools),1,()=>{}),app=await createProductApp({store,worker,identity:{production:false},providersReady:true})
  t.after(async()=>{await app.close();await db.close()})
- const session=await app.inject({method:'GET',url:'/api/v2/session'}),cookie=session.headers['set-cookie'].split(';')[0]
+ const session=await app.inject({method:'POST',url:'/api/auth/guest'}),cookie=String(session.headers['set-cookie']).split(';')[0]
  const [owned]=await db.query('SELECT owner_id FROM tp_sessions LIMIT 1')
  const learning=await store.create(owned.owner_id,'learning','existing',s)
  const request=()=>app.inject({method:'POST',url:'/api/v2/sources/presentation',headers:{cookie},payload:{url}})
@@ -29,7 +30,7 @@ test('old source enrichment is owner scoped, persistent and idempotent; AI readi
  for(let i=0;i<200;i++){if((await store.snapshot(owned.owner_id,metadata.json().id)).job?.status==='completed')break;await new Promise(r=>setTimeout(r,10))}
  const metadataData=(await store.snapshot(owned.owner_id,metadata.json().id)).data
  assert.equal(metadataData.metadata.avatar,'https://pic1.zhimg.com/real.jpg');assert.equal(metadataData.reading,undefined);assert.equal(models,0)
- const oldScope=digest({url:'https://zhuanlan.zhihu.com/p/123',summary:excerpt,version:2,includeReading:true})
+ const oldScope=digest({url:'https://zhuanlan.zhihu.com/p/123',summary:excerpt,version:READING_POLICY_VERSION-1,includeReading:true})
  const old=await store.create(owned.owner_id,'source-presentation',oldScope,{status:'ready',metadata:{},source:{url,summary:excerpt}})
  const first=await request();assert.equal(first.statusCode,200);const id=first.json().id;assert.notEqual(id,old.id,'a completed presentation from an older reading policy must not hide new missing-source detection')
  for(let i=0;i<200;i++){if((await store.snapshot(owned.owner_id,id)).job?.status==='completed')break;await new Promise(r=>setTimeout(r,10))}
@@ -40,7 +41,14 @@ test('old source enrichment is owner scoped, persistent and idempotent; AI readi
  assert.equal((await store.resource(owned.owner_id,learning.id)).body.nodes[1].text,excerpt)
  assert.equal((await request()).json().id,id);assert.equal(searches,2);assert.equal(models,1)
  const anonymous=await app.inject({method:'POST',url:'/api/v2/sources/presentation',payload:{url}});assert.equal(anonymous.statusCode,401)
- const second=await app.inject({method:'GET',url:'/api/v2/session'}),otherCookie=second.headers['set-cookie'].split(';')[0]
+ const second=await app.inject({method:'POST',url:'/api/auth/guest'}),otherCookie=String(second.headers['set-cookie']).split(';')[0]
  const other=await app.inject({method:'POST',url:'/api/v2/sources/presentation',headers:{cookie:otherCookie},payload:{url}});assert.equal(other.statusCode,404)
  assert.equal((await db.query('SELECT * FROM tp_author_usage')).length,0)
+})
+
+test('generated empty math is rejected but a literal code example of the missing-math label is allowed',async()=>{
+ const {validateAnswerMath}=await import('./math-output.ts')
+ assert.throws(()=>validateAnswerMath('求导：$ $'),/没有内容/)
+ assert.throws(()=>validateAnswerMath('$$\n\n$$'),/没有内容/)
+ assert.doesNotThrow(()=>validateAnswerMath('界面标签为 `[公式内容缺失]`；代码字符串 `$ $` 不应求值。'))
 })

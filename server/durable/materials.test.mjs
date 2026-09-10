@@ -20,8 +20,9 @@ async function fixture(t,{api,loginFactory,llm,zhihu}={}){
   const handler=createFlows(tools,api,login),worker=new DurableWorker(store,handler,1,()=>{})
   const app=await createProductApp({store,worker,identity:{production:false},providersReady:true,zhihuData:api,zhihuLogin:login})
   t.after(async()=>{await app.close();await db.close()})
-  const session=await app.inject({url:'/api/v2/session'}),cookie=session.headers['set-cookie'].split(';')[0]
-  const own=(await db.query('SELECT owner_id FROM tp_sessions'))[0].owner_id
+  const session=await app.inject({method:'POST',url:'/api/auth/guest'}),cookie=String(session.headers['set-cookie']).split(';')[0]
+  const own=login?'account:zhihu:test-authorized':(await db.query('SELECT owner_id FROM tp_sessions'))[0].owner_id
+  if(login)await db.query('UPDATE tp_sessions SET owner_id=$1',[own])
   async function finish(id){for(let i=0;i<300;i++){const s=await store.snapshot(own,id);if(['completed','waiting','cancelled'].includes(s.job?.status))return s;await new Promise(r=>setTimeout(r,10))}throw new Error('job did not finish')}
   return {db,store,app,cookie,own,handler,finish}
 }
@@ -31,7 +32,7 @@ test('upload .markdown, idempotence, owner isolation and server-owned source con
   assert.equal(upload.statusCode,200,upload.body);assert.equal(upload.json().content,body);assert.equal(upload.json().status,'ready')
   assert.equal((await app.inject({method:'POST',url:'/api/v2/materials/upload?name=notes.markdown',headers,payload:Buffer.from(body)})).json().sourceId,upload.json().sourceId)
   assert.equal((await app.inject({method:'POST',url:'/api/v2/materials/upload?name=notes.markdown',headers,payload:Buffer.from('different')})).statusCode,409)
-  const other=await app.inject({url:'/api/v2/session'}),otherCookie=other.headers['set-cookie'].split(';')[0]
+  const other=await app.inject({method:'POST',url:'/api/auth/guest'}),otherCookie=String(other.headers['set-cookie']).split(';')[0]
   assert.equal((await app.inject({url:`/api/v2/materials/${upload.json().sourceId}`,headers:{cookie:otherCookie}})).statusCode,404)
   // Don't start the worker for route generation; inspect accepted immutable command inputs.
   const record=await store.resource(own,upload.json().sourceId);assert.equal(record.body.rawContent,body)
@@ -99,7 +100,7 @@ test('all route materials appear in every concept, guide first-learning prompts,
     else throw new Error('unexpected input')
     return {kind:'completed',text:JSON.stringify(out)}
   }}
-  const direct=[];const {app,cookie,own,store,finish}=await fixture(t,{llm,zhihu:{search:async()=>({kind:'empty'}),direct:async(input)=>{direct.push(JSON.parse(input.messages[1].content));return{kind:'completed',text:'二维解释'}}}})
+  const direct=[];const {app,cookie,own,store,finish}=await fixture(t,{llm,zhihu:{search:async()=>({kind:'empty'}),direct:async(input)=>{direct.push(JSON.parse(input.messages[1].content.slice(input.messages[1].content.indexOf('\n{')+1)));return{kind:'completed',text:'二维解释'}}}})
   const attachments=[{sourceId:'file-one',fileName:'课程.markdown',mimeType:'text/markdown',content:'二维具体例子，先坐标后换基。'}]
   await store.create(own,'path','route',{status:'published',attachments,document:{id:'doc'},route:{concepts:['one','two'].map(id=>({id,title:'基',detailedDescription:'用例子理解',hasDispute:false}))}})
   for(const conceptId of ['one','two']){
@@ -109,7 +110,7 @@ test('all route materials appear in every concept, guide first-learning prompts,
     const next=await app.inject({method:'POST',url:`/api/v2/learning/${r.json().id}/commands`,headers:{cookie},payload:{kind:'new-conversation',conversationId:`new-${conceptId}`}})
     assert.equal(next.json().data.articles.length,1);assert.equal(next.json().data.conversations.at(-1).messages.length,0)
   }
-  assert.equal(direct.length,6);for(const c of direct)assert.match(c.materials[0].content,/二维具体例子/)
+  assert.equal(direct.length,0);assert.equal(contexts.filter(c=>c.mode==='first_learning').length,2)
   assert.ok(contexts.filter(c=>c.read_card_scope).every(c=>c.read_card_scope.cards[0].content===attachments[0].content))
   assert.equal(inheritedArticles(attachments)[0].url,undefined)
 })

@@ -17,17 +17,52 @@ export function verifyIdentityToken(token:string,config:IdentityConfig,now=Date.
     return `account:${digest({issuer:config.issuer,subject:payload.sub})}`
   }catch{throw new CommandError('UNAUTHENTICATED',401)}
 }
-function cookie(request:FastifyRequest){return request.headers.cookie?.split(';').map(s=>s.trim()).find(s=>s.startsWith('tp_workspace='))?.slice(13)}
+function cookie(request:FastifyRequest,name='tp_workspace'){return request.headers.cookie?.split(';').map(s=>s.trim()).find(s=>s.startsWith(`${name}=`))?.slice(name.length+1)}
+export const isGuestOwner=(owner:string)=>owner.startsWith('guest:')||owner.startsWith('local:')
 export function createIdentity(store:DurableStore,config:IdentityConfig){
+  function checkOrigin(request:FastifyRequest){
+    if(request.headers.origin&&config.origin&&request.headers.origin!==config.origin||request.headers['sec-fetch-site']==='cross-site')throw new CommandError('ORIGIN_DENIED',403)
+  }
+  const cookieValue=(name:string,token:string,days:number)=>`${name}=${token}; Path=/; HttpOnly;${config.production?' Secure;':''} SameSite=Lax; Max-Age=${days*86400}`
+  async function lookup(token:string|undefined,recovery=false){
+    if(!token||!/^[a-f0-9]{64}$/.test(token))return undefined
+    const [session]=await store.db.query<{owner_id:string}>('SELECT owner_id FROM tp_sessions WHERE token_hash=$1 AND expires_at>$2',[digest(recovery?`guest-recovery:${token}`:token),Date.now()])
+    return session?.owner_id
+  }
   return {
+    async logout(request:FastifyRequest,reply:FastifyReply,owner:string){
+      const cookies=[cookieValue('tp_workspace','',0)]
+      // Upgrade an existing local workspace before revoking its only active token.
+      if(isGuestOwner(owner)&&await lookup(cookie(request,'tp_guest'),true)!==owner){
+        const restore=randomBytes(32).toString('hex')
+        await store.db.query('INSERT INTO tp_sessions(token_hash,owner_id,expires_at) VALUES($1,$2,$3)',[digest(`guest-recovery:${restore}`),owner,Date.now()+90*86400_000])
+        cookies.push(cookieValue('tp_guest',restore,90))
+      }
+      const token=cookie(request)
+      if(token)await store.db.query('DELETE FROM tp_sessions WHERE token_hash=$1',[digest(token)])
+      reply.header('Set-Cookie',cookies)
+      return {kind:'anonymous'}
+    },
+    async startGuest(request:FastifyRequest,reply:FastifyReply){
+      checkOrigin(request)
+      const active=await lookup(cookie(request)),recoveryToken=cookie(request,'tp_guest'),recovered=await lookup(recoveryToken,true)
+      // Keep legacy local workspaces and guest drafts; never adopt a Zhihu account.
+      const owner=active&&isGuestOwner(active)?active:recovered&&isGuestOwner(recovered)?recovered:`guest:${randomUUID()}`
+      const fresh=randomBytes(32).toString('hex'),restore=recovered===owner?recoveryToken!:randomBytes(32).toString('hex')
+      await store.db.transaction(async tx=>{
+        await tx.query('INSERT INTO tp_sessions(token_hash,owner_id,expires_at) VALUES($1,$2,$3)',[digest(fresh),owner,Date.now()+30*86400_000])
+        await tx.query('INSERT INTO tp_sessions(token_hash,owner_id,expires_at) VALUES($1,$2,$3) ON CONFLICT(token_hash) DO UPDATE SET expires_at=EXCLUDED.expires_at',[digest(`guest-recovery:${restore}`),owner,Date.now()+90*86400_000])
+        if(active&&isGuestOwner(active))await tx.query('DELETE FROM tp_sessions WHERE token_hash=$1',[digest(cookie(request))])
+      })
+      reply.header('Set-Cookie',[cookieValue('tp_workspace',fresh,30),cookieValue('tp_guest',restore,90)])
+      return {kind:'guest',provider:null,capabilities:{zhihuMaterials:false}}
+    },
     async resolve(request:FastifyRequest,reply:FastifyReply):Promise<string>{
-      const origin=request.headers.origin
-      if(origin && config.origin && origin!==config.origin)throw new CommandError('ORIGIN_DENIED',403)
-      if(request.headers['sec-fetch-site']==='cross-site')throw new CommandError('ORIGIN_DENIED',403)
+      checkOrigin(request)
       if(config.production){
         const token=request.headers.authorization?.replace(/^Bearer /,'')
         const stored=cookie(request)
-        if(!token&&stored&&/^[a-f0-9]{64}$/.test(stored)){const [session]=await store.db.query<{owner_id:string}>('SELECT owner_id FROM tp_sessions WHERE token_hash=$1 AND expires_at>$2',[digest(stored),Date.now()]);if(session?.owner_id.startsWith('account:'))return session.owner_id}
+        if(!token&&stored){const owner=await lookup(stored);if(owner&&(owner.startsWith('account:')||owner.startsWith('guest:')))return owner}
         if(!token)throw new CommandError('UNAUTHENTICATED',401)
         const owner=verifyIdentityToken(token,config)
         // A trusted login callback or gateway presents the signed token. Browser JS never stores it.
@@ -43,11 +78,7 @@ export function createIdentity(store:DurableStore,config:IdentityConfig){
         const [session]=await store.db.query<{owner_id:string}>('SELECT owner_id FROM tp_sessions WHERE token_hash=$1 AND expires_at>$2',[digest(token),Date.now()])
         if(session)return session.owner_id
       }
-      if(!['/api/v2/session','/api/auth/session'].includes(request.url.split('?')[0]!))throw new CommandError('UNAUTHENTICATED',401)
-      const fresh=randomBytes(32).toString('hex'),owner=`local:${randomUUID()}`,expires=Date.now()+30*86400_000
-      await store.db.query('INSERT INTO tp_sessions(token_hash,owner_id,expires_at) VALUES($1,$2,$3)',[digest(fresh),owner,expires])
-      reply.header('Set-Cookie',`tp_workspace=${fresh}; Path=/; HttpOnly; SameSite=Strict; Max-Age=2592000`)
-      return owner
+      throw new CommandError('UNAUTHENTICATED',401)
     },
   }
 }

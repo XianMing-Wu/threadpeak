@@ -444,36 +444,6 @@
 .ux-flowith-skin .bar-l button:hover, .ux-flowith-skin .composer-icon:hover {
   background: var(--surface-2);
 }
-.ux-flowith-skin .composer-send {
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--r-control);
-  background: var(--accent);
-  color: var(--on-accent);
-  cursor: pointer;
-  transition: background var(--motion-fast), transform var(--motion-fast);
-}
-.ux-flowith-skin .composer-send:hover {
-  background: var(--accent-hover);
-}
-.ux-flowith-skin .composer-send:active {
-  transform: scale(.97);
-}
-.ux-flowith-skin .composer-send:disabled {
-  background: var(--surface-3);
-  color: var(--ink-3);
-  cursor: not-allowed;
-}
-.ux-flowith-skin .composer-send.is-stop {
-  background: var(--ink-1);
-  color: var(--surface-1);
-}
 .ux-flowith-shell .home-discovery {
   flex: none;
   width: min(900px, 100%);
@@ -514,7 +484,7 @@
 .suggestion-track {
   display: flex;
   width: max-content;
-  animation: suggestion-loop 24s linear infinite;
+  animation: suggestion-loop 64s linear infinite;
 }
 .suggestion-marquee:hover .suggestion-track, .suggestion-marquee:focus-within .suggestion-track {
   animation-play-state: paused;

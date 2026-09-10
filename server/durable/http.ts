@@ -1,3 +1,4 @@
+import {DIRECT_ROUTE_VERSION} from '../path-generation/direct-route.ts'
 import {sharedHttpRateLimitStore} from './http-rate-limit.ts'
 import helmet from '@fastify/helmet'
 import rateLimit, {normalizeIP} from '@fastify/rate-limit'
@@ -15,7 +16,8 @@ import { mergeNodeEdits, mergeNodeFieldPatch, NodeEditConflict } from '@threadpe
 import { createIdentity, type IdentityConfig } from './auth.ts'
 import { CommandError, digest, type DurableStore, type Resource } from './store.ts'
 import type { DurableWorker } from './worker.ts'
-import { replyInput, selectPathOption, selectPathCustomAnswer, type PathState } from './flows.ts'
+import { replyInput, selectPathOption, allAnswered,selectPathCustomAnswer, type PathState } from './flows.ts'
+import {sourceForNode} from './authors-network.ts'
 import { pathTrace } from './path-trace.ts'
 import { registerMaterialRoutes } from './materials-http.ts'
 import { inheritedArticles, planningMaterial } from './materials.ts'
@@ -45,7 +47,7 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
   const identity=createIdentity(ports.store,ports.identity),owners=new WeakMap<FastifyRequest,string>()
   const owner=(request:FastifyRequest)=>owners.get(request)!
   const limit=app.rateLimit({keyGenerator:request=>JSON.stringify([owner(request)??'anonymous',normalizeIP(request.ip,64)])})
-  const entryRoutes=new Set(['/health','/api/ready','/api/auth/config','/api/auth/zhihu/start','/api/auth/zhihu/callback','/api/v2/session','/api/auth/session'])
+  const entryRoutes=new Set(['/health','/api/ready','/api/auth/config','/api/auth/guest','/api/auth/zhihu/start','/api/auth/zhihu/callback','/api/v2/session','/api/auth/session'])
   app.addHook('onRequest',async(request,reply)=>{
     reply.header('Cache-Control','no-store').header('X-Content-Type-Options','nosniff')
     // Liveness must remain available during a database outage. Readiness and
@@ -56,7 +58,7 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     // bucket cannot be rotated by requesting a fresh development identity.
     if(entry)await limit.call(app,request,reply)
     let failure:unknown
-    try{if(request.url.startsWith('/api/')&&!['/api/ready','/api/auth/config','/api/auth/zhihu/start','/api/auth/zhihu/callback'].includes(request.url.split('?')[0]!))owners.set(request,await identity.resolve(request,reply))}catch(error){failure=error}
+    try{if(request.url.startsWith('/api/')&&!['/api/ready','/api/auth/config','/api/auth/guest','/api/auth/zhihu/start','/api/auth/zhihu/callback'].includes(request.url.split('?')[0]!))owners.set(request,await identity.resolve(request,reply))}catch(error){failure=error}
     if(!entry)await limit.call(app,request,reply)
     if(failure)throw failure
   })
@@ -74,10 +76,12 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     return reply.code(ports.providersReady?200:503).send({ready:ports.providersReady,storage:true})
   })
   app.get('/api/auth/config',()=>({mode:ports.identity.production?'production':'local',loginUrl:ports.identity.loginUrl??null,zhihuAvailable:!!ports.zhihuLogin,zhihuMode:ports.zhihuLogin?.config.mode??'real',zhihuDemo:ports.zhihuLogin?.config.mode==='mock'}))
+  app.post('/api/auth/guest',(request,reply)=>identity.startGuest(request,reply))
   app.get('/api/auth/zhihu/start',async(request,reply)=>{
     if(request.headers['sec-fetch-site']==='cross-site'||request.headers.origin&&ports.identity.origin&&request.headers.origin!==ports.identity.origin)throw new CommandError('ORIGIN_DENIED',403)
     if(!ports.zhihuLogin)throw new CommandError('ZHIHU_NOT_CONFIGURED',503)
-    const current=ports.zhihuLogin.config.mode==='mock'&&request.headers.cookie?.includes('tp_workspace=')?await identity.resolve(request,reply):undefined
+    let current:string|undefined
+    if(ports.zhihuLogin.config.mode==='mock'&&request.headers.cookie?.includes('tp_workspace=')){try{current=await identity.resolve(request,reply)}catch(error){if(!(error instanceof CommandError)||error.status!==401)throw error}}
     const result=await ports.zhihuLogin.start(current);reply.header('Set-Cookie',result.cookie);return {kind:'redirect',authorizeUrl:result.authorizeUrl,mode:ports.zhihuLogin.config.mode??'real'}
   })
   app.get('/api/auth/zhihu/callback',async(request,reply)=>{
@@ -92,7 +96,7 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
   })
   app.get('/api/v2/session',async request=>{
     const own=owner(request),[account]=await ports.store.db.query<{profile:unknown}>('SELECT profile FROM tp_zhihu_accounts WHERE owner_id=$1',[own])
-    return {kind:own.startsWith('account:')?'authenticated':'local',provider:account?'zhihu':null,profile:account?.profile,demo:!!(account?.profile as any)?.demo,available:true,workspaceId:digest(own)}
+    return {kind:own.startsWith('account:')?'authenticated':'guest',capabilities:{zhihuMaterials:!!account},provider:account?'zhihu':null,profile:account?.profile,demo:!!(account?.profile as any)?.demo,available:true,workspaceId:digest(own)}
   })
   registerMaterialRoutes(app,ports.store,ports.worker,owner,requestKey,ports.zhihuData,ports.zhihuLogin)
   registerSourcePresentation(app,ports.store,ports.worker,owner)
@@ -104,14 +108,8 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
       return planningMaterial(resource as Resource<import('./materials.ts').Material>)
     }))
   }
-  app.get('/api/auth/session',request=>({kind:owner(request).startsWith('account:')?'authenticated':'anonymous',provider:owner(request).startsWith('account:zhihu:')?'zhihu':'account'}))
-  app.post('/api/auth/logout',async(request,reply)=>{
-    // Local mode has no external identity to recover an erased anonymous account.
-    if(!owner(request).startsWith('account:'))return {kind:'anonymous'}
-    const token=request.headers.cookie?.split(';').map(s=>s.trim()).find(s=>s.startsWith('tp_workspace='))?.slice(13)
-    if(token)await ports.store.db.query('DELETE FROM tp_sessions WHERE token_hash=$1',[digest(token)])
-    reply.header('Set-Cookie','tp_workspace=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0');return {kind:'anonymous'}
-  })
+  app.get('/api/auth/session',request=>({kind:owner(request).startsWith('account:')?'authenticated':'guest',provider:owner(request).startsWith('account:zhihu:')?'zhihu':owner(request).startsWith('account:')?'account':null}))
+  app.post('/api/auth/logout',(request,reply)=>identity.logout(request,reply,owner(request)))
   app.get('/api/v2/resources/:id',async request=>{
     const after=(request.query as {after?:string}).after
     if(after!==undefined){
@@ -164,7 +162,8 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     const snapshot=await ports.store.snapshot(own,id),path=snapshot.data as PathState
     if(snapshot.kind!=='path')throw new CommandError('NOT_FOUND',404)
     const busy=snapshot.job&&['queued','running'].includes(snapshot.job.status),waiting=snapshot.job?.status==='waiting'||snapshot.job?.status==='cancelled'
-    return {runId:id,searchScope:path.searchScope??{kind:'zhihu'},goal:path.goal,recoverable:snapshot.job?.recoverable??false,status:busy?'running':waiting?'failed':path.status,stage:snapshot.job?.phase??'',questionSets:path.questionSets,document:path.document,route:path.route,
+    const answerDuringWork=path.workflow===DIRECT_ROUTE_VERSION&&['path.start','path.answer'].includes(snapshot.job?.kind??'')
+    return {runId:id,searchScope:path.searchScope??{kind:'zhihu'},goal:path.goal,recoverable:snapshot.job?.recoverable??false,status:path.status==='awaiting_answers'&&!allAnswered(path)&&(!busy||answerDuringWork)?'awaiting_answers':busy?'running':waiting?'failed':path.status,preparing:!!busy&&snapshot.job?.kind==='path.start',stage:snapshot.job?.phase??'',questionSets:path.questionSets,document:path.document,route:path.route,
       reply:path.conversation.filter((m:any)=>m.role==='assistant').at(-1)?.content,followUpMessage:path.conversation.filter((m:any)=>m.role==='assistant').at(-1)?.content,conversation:path.conversation,knowledgeCreated:false,revision:snapshot.revision,
       trace:pathTrace(await ports.store.db.query<any>('SELECT id,kind,status,checkpoints FROM tp_jobs WHERE owner_id=$1 AND resource_id=$2 ORDER BY created_at,id',[own,id]),path),
       ...(waiting?{error:{code:snapshot.job?.recoverable?'RECOVERABLE':'RETRY_BUDGET_EXHAUSTED',message:snapshot.job?.recoverable?'这次还没完成，已收集的资料和选择都已保留。':'本次重试次数已用完，已有资料和选择仍然保留。'}}:{})}
@@ -173,6 +172,7 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     const input=startSchema.parse(bodyOf(request)),key=requestKey(request),own=owner(request)
     input.attachments=await ownedAttachments(own,input.attachments)
     if(input.searchScope.kind==='collections'){
+      if(!own.startsWith('account:zhihu:'))throw new CommandError('ZHIHU_LOGIN_REQUIRED',401)
       const folders=new Set(input.searchScope.folderIds)
       const selected=input.attachments as any[]
       if(folders.size!==input.searchScope.folderIds.length||[...folders].some(id=>!selected.some(a=>a.origin==='collection'&&a.folderId===id&&a.entries?.length))||selected.some(a=>a.origin!=='upload'&&!(a.origin==='collection'&&folders.has(a.folderId))))throw new CommandError('COLLECTION_SCOPE_INVALID',400)
@@ -186,7 +186,9 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
   app.post('/api/path-runs/:id/select',async request=>{
     const answer=z.union([z.object({questionId:Id,optionId:Id}).strict(),z.object({questionId:Id,customAnswer:z.string().max(4000).refine(s=>!!s.trim())}).strict()]).parse(bodyOf(request)),own=owner(request),id=resourceId(request)
     const state=(await ports.store.resource<PathState>(own,id)).body
-    await ports.store.enqueue(own,id,'path.answer',requestKey(request),{...answer,depth:state.depth},r=>'customAnswer' in answer?selectPathCustomAnswer(r,answer.questionId,answer.customAnswer):selectPathOption(r,answer.questionId,answer.optionId))
+    const update=(r:Resource)=>'customAnswer' in answer?selectPathCustomAnswer(r,answer.questionId,answer.customAnswer):selectPathOption(r,answer.questionId,answer.optionId)
+    if(state.workflow==='route-direct-v6')await ports.store.answerPath(own,id,requestKey(request),{...answer,depth:state.depth},update)
+    else await ports.store.enqueue(own,id,'path.answer',requestKey(request),{...answer,depth:state.depth},update)
     ports.worker.wake();return pathView(own,id)
   })
   for(const action of ['follow-up','reply'] as const)app.post(`/api/path-runs/:id/${action}`,async request=>{
@@ -206,13 +208,13 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     if(!concept)throw new CommandError('NOT_FOUND',404)
     const conversationId=randomUUID(),materials=inheritedArticles(path.body.attachments??[])
     const materialNodes=materials.length?[{id:'root',type:'root' as const,title:concept.title,text:'',sources:materials.map(a=>a.id),parents:[]},...materials.map(a=>({id:a.id,type:'article' as const,title:a.title,text:a.summary,sources:[a.id],parents:['root']}))]:[]
-    const state:LearningState={goalContext:pathGoalContext(path.body,conceptId),searchScope:path.body.searchScope??{kind:'zhihu'},version:2,routeId:path.body.document.id,conceptId,title:concept.title,description:concept.detailedDescription,hasDispute:concept.hasDispute,
+    const state:LearningState={goalContext:pathGoalContext(path.body,conceptId),searchScope:path.body.searchScope??{kind:'zhihu'},version:2,routeId:path.body.document.id,conceptId,learningSummary:concept.learningSummary,title:concept.title,description:concept.detailedDescription,hasDispute:concept.hasDispute,
       articles:materials,nodes:materialNodes,initialized:false,phase:'searching',active:conversationId,conversations:[{id:conversationId,title:concept.title,date:new Date().toISOString(),messages:[{id:'concept-question',role:'user',text:concept.title}]}]}
     const resource=await ports.store.create(own,'learning',`${path.id}:${conceptId}`,state)
     const missing=materials.filter(a=>!resource.body.articles.some((old:any)=>old.id===a.id))
-    if(missing.length||state.goalContext&&!resource.body.goalContext)await ports.store.edit(own,resource.id,undefined,r=>{
+    if(missing.length||state.goalContext&&(!resource.body.goalContext||!resource.body.goalContext.routeContext&&!!state.goalContext.routeContext))await ports.store.edit(own,resource.id,undefined,r=>{
       const body=r.body as LearningState
-      body.goalContext??=state.goalContext
+      if(state.goalContext)body.goalContext={...state.goalContext,...body.goalContext,...state.goalContext?.routeContext?{routeContext:state.goalContext.routeContext}:{}}
       if(!body.nodes.length)body.nodes.push({id:'root',type:'root',title:body.title,text:'',sources:[],parents:[]})
       for(const a of missing)if(!body.articles.some(old=>old.id===a.id)){body.articles.push(a);body.nodes.push({id:a.id,type:'article',title:a.title,text:a.summary,sources:[a.id],parents:['root']})}
       body.nodes.find(n=>n.type==='root')!.sources=body.articles.map(a=>a.id);return body
@@ -245,9 +247,11 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     if(resource.kind!=='learning'||!resource.body.nodes.length)throw new CommandError('MATERIAL_NOT_READY')
     const context=replyInput(resource.body,input.question,input.selected,input.conversationId)
     if(input.kind==='author'&&context.cards.length!==1)throw new CommandError('ONE_AUTHOR_HOST_REQUIRED',400)
-    const excludedAuthorIds=[...new Set([...resource.body.nodes.map(n=>n.author?.id),...context.cards.flatMap(card=>resource.body.articles.filter(a=>card.sources.includes(a.id)).map(a=>a.authorId))].filter(Boolean))]
+    const hostSource=input.kind==='author'?sourceForNode(resource.body,context.cards[0]!.id):undefined
+    const excludedSourceUrls=[...new Set([...resource.body.nodes.map(n=>n.author?.url),hostSource?.url].filter((url):url is string=>!!url))]
+    const excludedAuthorIds=[...new Set([...resource.body.nodes.map(n=>n.author?.id),hostSource?.authorId,...context.cards.flatMap(card=>resource.body.articles.filter(a=>card.sources.includes(a.id)).map(a=>a.authorId))].filter(Boolean))]
     const excludedAuthorNames=[...new Set([...resource.body.nodes.map(n=>n.author?.name),...context.cards.flatMap(card=>resource.body.articles.filter(a=>card.sources.includes(a.id)).map(a=>a.author))].filter(Boolean))]
-    await ports.store.enqueue(own,id,`learning.${input.kind}`,key,{...input,intent:input,context,excludedAuthorIds,excludedAuthorNames},(r,jobId)=>{
+    await ports.store.enqueue(own,id,`learning.${input.kind}`,key,{...input,intent:input,context,excludedAuthorIds,excludedAuthorNames,excludedSourceUrls,hostSource},(r,jobId)=>{
       // Freeze the exact card versions seen when accepting this command.
       if(r.revision!==resource.revision)throw new CommandError('REVISION_CONFLICT')
       const conversation=r.body.conversations.find((c:any)=>c.id===input.conversationId)

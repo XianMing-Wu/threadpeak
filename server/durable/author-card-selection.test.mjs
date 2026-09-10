@@ -25,7 +25,7 @@ test('the same author-selection agent repairs a bad reference with specific feed
   const catalog=authorCardCandidates(evidence),calls=[],checkpoints=[]
   const tools=new ProductTools({complete:async input=>{
     calls.push(input)
-    return {kind:'completed',text:JSON.stringify({normalizedQuestion:'详细讲解一下',selections:[{evidenceId:calls.length===1?'E9':'E2'}]})}
+    return {kind:'completed',text:JSON.stringify({normalizedQuestion:'详细讲解一下',selections:[{reason:'这份资料解释了该问题',limitation:'',evidenceId:calls.length===1?'E9':'E2'}]})}
   }},{})
   const ctx={job:{input:{depth:'deep'}},signal:new AbortController().signal,step:async(n,i,work)=>work(),activity:async()=>{},store:{checkpoint:async(j,n,h,v)=>checkpoints.push({n,v})}}
   const selection=await tools.learning(ctx,'A-card-select',{candidates:catalog.candidates,question:'详细讲解一下'},v=>catalog.resolve(v.selections),'A-card-select:refs-v1')

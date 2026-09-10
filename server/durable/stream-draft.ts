@@ -24,7 +24,7 @@ export function paragraphDraft(raw: string, headings=false): string {
     const key=strings[i]!, value=strings[i+1]!
     if(!key.closed||raw.slice(key.end,value.start).trim()!==':')continue
     if(key.value==='title'&&value.closed)title=value.value
-    if(key.value==='text'){parts.push(`${headings&&title?`### ${title}\n\n`:''}${value.value}`);title=''}
+    if(key.value==='text'){parts.push(`${headings&&title?`## ${title}\n\n`:''}${value.value}`);title=''}
   }
   return parts.join('\n\n')
 }

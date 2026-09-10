@@ -1,5 +1,6 @@
 import {placeAnswer} from '../../tests/fixtures/card-answer.mjs'
-import {plan as goalPlan, exploration as goalExploration, interview as goalInterview} from '../../tests/fixtures/goal-agents.mjs'
+import {plan as goalPlan} from '../../tests/fixtures/goal-agents.mjs'
+import {ROUTE_INTERVIEW_OUTPUT} from '../path-generation/direct-route.ts'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {globalSearchUrl,parseZhihuSearchPayload} from '../zhihu.adapter.ts'
@@ -46,29 +47,29 @@ test('collection-only route and concept inherit owned scope with zero external s
     if(c.citationCatalog)return {kind:'completed',text:JSON.stringify(placeAnswer(c))}
     if(c.read_card_scope){return {kind:'completed',text:JSON.stringify({sourceReview:c.read_card_scope.cards.map(x=>({ref:x.ref,contribution:'解释坐标'})),sections:[{after:'C1',title:'理解坐标',text:'坐标表示基下的分量。'}]})}}
     if(c.angle)return {kind:'completed',text:'根据所选收藏，坐标表示基下的分量。'}
-    if(c.newerRoundPreferred)return {kind:'completed',text:JSON.stringify(goalPlan())}
-    if(c.exploration)return {kind:'completed',text:JSON.stringify(goalInterview())}
-    if(c.searchGroups)return {kind:'completed',text:JSON.stringify(goalExploration())}
-    return {kind:'completed',text:JSON.stringify({queries:[0,1,2,3].map(i=>({id:String(i),text:`坐标学习${i}`,angle:i<2?'normal_learning':'pitfall_or_dispute'}))})}
+    if(c.newerRoundPreferred){const p=goalPlan();return {kind:'completed',text:JSON.stringify({...p,stages:p.stages.map(carriers=>({parallel:false,carriers}))})}}
+    if(c.catalogCarriers)return {kind:'completed',text:ROUTE_INTERVIEW_OUTPUT}
+    if(c.firstSearch)return {kind:'completed',text:JSON.stringify({carriers:[]})}
+    return {kind:'completed',text:JSON.stringify({queries:[0,1,2,3].map(i=>({id:String(i),text:`坐标学习课程推荐${i}`,purpose:'发现目标相关的学习选择',angle:i<2?'normal_learning':'pitfall_or_dispute'}))})}
   }}
   const noExternal={search:async()=>{throw new Error('unexpected external search')},globalSearch:async()=>{throw new Error('unexpected global search')},direct:async()=>{throw new Error('unexpected Zhihu direct')}}
   const worker=new DurableWorker(store,createFlows(new ProductTools(llm,noExternal)),1,()=>{})
   const app=await createProductApp({store,worker,identity:{production:false},providersReady:true})
   t.after(async()=>{await app.close();await db.close()})
-  const session=await app.inject({url:'/api/v2/session'}),cookie=session.headers['set-cookie'].split(';')[0],own=(await db.query('SELECT owner_id FROM tp_sessions'))[0].owner_id
+  const session=await app.inject({method:'POST',url:'/api/auth/guest'}),cookie=String(session.headers['set-cookie']).split(';')[0],own='account:zhihu:test-authorized'
+  await db.query('UPDATE tp_sessions SET owner_id=$1',[own])
   const material=await store.create(own,'attachment','selected-folder',{fileName:'线性代数收藏',origin:'collection',folderId:'55',status:'ready',mimeType:'text/markdown',content:'坐标表示基下的分量。',entries:[{id:'e',title:'坐标入门',summary:'坐标表示基下的分量。',url:'https://zhuanlan.zhihu.com/p/55',authorId:'https://www.zhihu.com/people/a',authorName:'作者甲',likes:1}]})
   const body={goal:'学会收藏夹内容',searchScope:{kind:'collections',folderIds:['55']},attachments:[{sourceId:material.id,fileName:'client name',content:'client text must not be used'}]}
   const bad=await app.inject({method:'POST',url:'/api/path-runs',headers:{cookie},payload:{...body,searchScope:{kind:'collections',folderIds:['forged']}}});assert.equal(bad.statusCode,400)
   const accepted=await app.inject({method:'POST',url:'/api/path-runs',headers:{cookie},payload:body});assert.equal(accepted.statusCode,202,accepted.body);const id=accepted.json().runId
   async function finish(id){for(let i=0;i<500;i++){const s=await store.snapshot(own,id);if(['completed','waiting'].includes(s.job?.status))return s;await new Promise(r=>setTimeout(r,10))}throw new Error('timeout')}
   let snapshot=await finish(id);assert.equal(snapshot.job.status,'completed',JSON.stringify(snapshot.job));assert.equal(snapshot.data.attachments[0].content,'坐标表示基下的分量。')
-  const q=snapshot.data.questionSets[0].questions[0]
-  await app.inject({method:'POST',url:`/api/path-runs/${id}/select`,headers:{cookie},payload:{questionId:q.id,optionId:q.options[0].id}})
+  for(const q of snapshot.data.questionSets[0].questions)await app.inject({method:'POST',url:`/api/path-runs/${id}/select`,headers:{cookie},payload:{questionId:q.id,optionId:q.options[0].id}})
   snapshot=await finish(id);assert.equal(snapshot.data.status,'published',JSON.stringify(snapshot.job))
   assert.equal(inputs.find(c=>c.newerRoundPreferred).attachments[0].contentBasis,'source_summary')
   assert.equal(snapshot.data.route.concepts[0].goalAlignment.materialAnchors[0].evidenceKind,'context_summary')
   const enter=await app.inject({method:'POST',url:'/api/v2/learning/enter',headers:{cookie},payload:{routeId:snapshot.data.document.id,conceptId:snapshot.data.route.concepts[0].id}})
-  assert.equal(enter.statusCode,200,enter.body);const learning=await finish(enter.json().id);assert.equal(learning.job.status,'completed',JSON.stringify(learning.job));assert.deepEqual(learning.data.searchScope,body.searchScope);assert.equal(learning.data.articles.length,1);assert.equal(inputs.filter(c=>c.angle).length,3)
+  assert.equal(enter.statusCode,200,enter.body);const learning=await finish(enter.json().id);assert.equal(learning.job.status,'completed',JSON.stringify(learning.job));assert.deepEqual(learning.data.searchScope,body.searchScope);assert.equal(learning.data.articles.length,1);assert.equal(inputs.filter(c=>c.angle).length,0)
   assert.ok(inputs.every(c=>JSON.stringify(c).includes('坐标')))
   const fakeWeb={...learning.data,articles:learning.data.articles.map(a=>({...a,sourceKind:'web',author:'伪作者'}))}
   await store.edit(own,enter.json().id,undefined,()=>fakeWeb)

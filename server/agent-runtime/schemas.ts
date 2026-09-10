@@ -1,4 +1,4 @@
-import { LearningGoalSchema, ConceptAlignmentSchema } from '@threadpeak/contracts/learning-goal'
+import { LearningGoalSchema, ConceptAlignmentSchema, ConceptLearningSummarySchema } from '@threadpeak/contracts/learning-goal'
 import { z } from 'zod'
 import { isLiuKanshanName } from '../ports.ts'
 import type { AgentId, AuthorCandidate, L0aAngle } from './types.ts'
@@ -24,8 +24,9 @@ export const R1OutputSchema = z
         z
           .object({
             id: IdSchema,
-            text: NonEmptyText,
+            text: NonEmptyText.max(45),
             angle: QueryAngleSchema,
+            purpose: NonEmptyText.max(300),
           })
 ,
       )
@@ -152,6 +153,7 @@ const ConceptSchema = z
     title: NonEmptyText,
     hasDispute: z.boolean(),
     detailedDescription: NonEmptyText,
+    learningSummary:ConceptLearningSummarySchema.optional(),
     attachmentSourceIds: z.array(IdSchema),
     goalAlignment: ConceptAlignmentSchema.optional(),
   })

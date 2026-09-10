@@ -19,18 +19,19 @@ export function registerAuthorRoutes(app:FastifyInstance,store:DurableStore,work
       return store.snapshot(own,previous.resource_id)
     }
     let goalContext:GoalContext|undefined
-    let selectedContext:{id:string;title:string;content:string}[]=[],conceptTitle:string|undefined
+    let selectedContext:{id:string;title:string;content:string}[]=[],conceptTitle:string|undefined,concept:unknown
     if(input.learningId){
       const learning=await hydrateLearningGoal(store,own,input.learningId)
       if(learning.kind!=='learning')throw new CommandError('NOT_FOUND',404)
       const cards=input.selected.map(id=>learning.body.nodes.find(n=>n.id===id))
       if(cards.some(n=>!n))throw new CommandError('MATERIAL_NOT_FOUND',400)
       goalContext=learning.body.goalContext
+      concept={id:learning.body.conceptId,title:learning.body.title,description:learning.body.description,learningSummary:learning.body.learningSummary}
       selectedContext=cards.map(n=>({id:n!.id,title:n!.title,content:n!.text}));conceptTitle=learning.body.title
     }else if(input.selected.length)throw new CommandError('LEARNING_REQUIRED',400)
     const resource=await store.create(own,'authors',commandKey,{version:3,brief:input,question:input.question,topic:'',topicId:'',needs:[],candidates:[],results:[],unresolved:'',discoveredAt:0})
     // Same key must freeze the original context, even if its cards were edited after acceptance.
-    await store.enqueue(own,resource.id,'authors.search',commandKey,{...input,intent:input,selectedContext,conceptTitle,goalContext});worker.wake();return store.snapshot(own,resource.id)
+    await store.enqueue(own,resource.id,'authors.search',commandKey,{...input,intent:input,selectedContext,conceptTitle,concept,goalContext});worker.wake();return store.snapshot(own,resource.id)
   })
   async function mutate(request:FastifyRequest,input:unknown,action:(tx:DurableStore['db'])=>Promise<void>){
     const own=owner(request),commandKey=key(request),hash=digest(input)

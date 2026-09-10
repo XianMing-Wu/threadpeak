@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { fromMarkdown } from 'mdast-util-from-markdown'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
-const ignored = new Set(['node_modules', '.git', '.tmp-chrome', '.data', 'dist', 'coverage', 'raw', '.vite'])
+const ignored = new Set(['node_modules', '.git', '.tmp-chrome', '.data', 'dist', 'coverage', 'raw', '.vite', '.local-backend-review'])
 
 export async function repositoryFiles(directory = root, prefix = '') {
   const files = []

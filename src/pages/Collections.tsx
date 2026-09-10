@@ -48,7 +48,7 @@ export function KnowledgePage() {
         else openConceptKnowledge(book.target.knowledgeId, book.target.conceptId)
       }}
       loading={!data && !error}
-      error={error ? <EmptyStatus headingLevel={2} kind="error" density="inline" title={data?'暂时无法更新你的知识脉络':'暂时无法读取你的知识脉络'} body={data?'已读取的内容仍然保留，可继续浏览。':'下方编选示例仍可浏览，你的内容读取失败，请重新连接。'} action="重新连接" onAction={()=>void reload()}/> : undefined}
+      error={error ? <EmptyStatus headingLevel={2} kind="error" density="inline" title={data?'暂时无法更新你的知识脉络':'暂时无法读取你的知识脉络'} body={data?'已读取的内容仍然保留，可继续浏览。':'下方示例仍可浏览，你的内容读取失败，请重新连接。'} action="重新连接" onAction={()=>void reload()}/> : undefined}
       footer={<LocalArchive/>}
     />
   </ProductWorkspace>
@@ -106,7 +106,7 @@ export function KnowledgeConceptsPage() {
         title: item.title,
         desc: item.description,
         author: '问山',
-        badge: knowledge?.owner==='example'?'编选讲解 · 可核对知乎来源':`最终概念 · ${item.type} · ${item.sources} 个来源`,
+        badge: knowledge?.owner==='example'?'学习示例 · 知乎来源':`最终概念 · ${item.type} · ${item.sources} 个来源`,
         onOpen: () => { openConceptKnowledge(knowledgeId, item.id) },
       }))}
       total={cards.length}

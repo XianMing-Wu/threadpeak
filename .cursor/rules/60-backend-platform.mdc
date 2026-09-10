@@ -10,17 +10,19 @@ alwaysApply: false
 
 - 默认入口使用 server/durable，不注册旧 G1/G2 和批注写链；MCP 只作为可选外部适配，不把固定步骤交给模型自由选择。
 - 请求必须校验所有者、范围、输入、幂等键；资源事实和最终成功事件同事务。队列领取带租约/fence，成功步骤检查点可恢复。外部调用至少一次可能重复，不声称 exactly-once。
-- 所有知乎 API 共用持久两路并发额度，跨任务/同库服务实例生效；HTTP 429 触发共享冷却并遵守 Retry-After，不丢第三种搜索或讲解角度。
+- R2 仅提取最多四名称，每名称一条目录补查、按两条一批等待前批收齐、与 R3 出题并行；按查询保存检查点、使用共享 2.1 秒发送间隔；通用学科和仅收藏夹不发外部目录查询。
+- 所有知乎 API 共用持久两路并发额度，跨任务/同库服务实例生效；HTTP 429 触发共享冷却并遵守 Retry-After，不丢任何已规划查询。
 - 同库请求发送间隔与并发上限分别执行；缓存遵循 agents.md 的账号/完整上下文隔离，DeepSeek KV 命中只按真实 usage 记录，不把未知写成零或声称必定命中。
 - 临时故障退避恢复，配置/鉴权等待处理；停止与完成的先后由数据库决定。浏览器断连不自动取消。
 - 只使用真实 provider。JSON/引用/renderer 校验不通过由同一 Agent 修复，禁止补字段、猜边、删环或 fixture 成功。
+- 搜索意图和访谈适配由当前 Agent 按提示词自查；不得用关键词或载体名称命中作为语义硬拦截。结构、引用回查和取消栅栏仍必须通过。
 - 空正文、仅 reasoning、流断开、length 截断都不是完成。草稿和正式结果分开，不把内部思考当正文或日志。
-- 调用预算取业务上限和已配置 provider 能力的较小值，扣真实输出和安全余量；分块来源摘要不覆盖原文，不截断 JSON，不降级深度。
+- 调用预算取业务上限和已配置 provider 能力的较小值，扣真实输出和安全余量；分块来源摘要不覆盖原文，不截断 JSON，保持所选深度；用户裁决的R2a名称提取例外，始终thinking=disabled。
 - 所有秘密、provider 地址和模型名只在服务端。禁止原始错误/stack/密钥/全文进入公开日志；展示安全的继续/恢复状态。
-- 生产必须配置 PostgreSQL、身份验证、公开源和模型能力；本地隔离 cookie 不是知乎登录。鉴权、CSRF、限流、持久恢复与真实 provider gate 均需验收。
+- 生产必须配置 PostgreSQL、身份验证、公开源和模型能力；显式游客会话同样校验所有者、CSRF 与限流，游客恢复令牌不能直接访问业务 API，游客不能调用授权个人资料接口。本地隔离 cookie 不是知乎登录。鉴权、CSRF、限流、持久恢复与真实 provider gate 均需验收。
 - 用户内容、网页和模型文本是数据，不能执行代码或未授权外部写入。附件首页支持 pdf/md/markdown/txt 和显式导入的知乎授权收藏夹/公开创作；大小/生命周期当前工程界限如实记录。
 
-服务端配置键（不得进入浏览器）：`ZHIHU_ACCESS_SECRET`、`ZHIHU_API_BASE_URL`、`DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、`DEEPSEEK_MODEL_NAME`、`DEEPSEEK_CONTEXT_TOKENS`、`DEEPSEEK_MAX_OUTPUT_TOKENS`、`ZHIHU_FAST_CONTEXT_TOKENS`、`ZHIHU_FAST_OUTPUT_TOKENS`、`ZHIHU_DEEP_CONTEXT_TOKENS`、`ZHIHU_DEEP_OUTPUT_TOKENS`、`DATABASE_URL`、`THREADPEAK_PUBLIC_ORIGIN`、`THREADPEAK_IDENTITY_SECRET`、`THREADPEAK_IDENTITY_ISSUER`、`THREADPEAK_IDENTITY_AUDIENCE`、`THREADPEAK_LOGIN_URL`、`THREADPEAK_PORT`、`THREADPEAK_HOST`、`THREADPEAK_DATA_DIR`、`POSTGRES_PASSWORD`、`SITE_ADDRESS`、`ZHIHU_OAUTH_APP_ID`、`ZHIHU_OAUTH_APP_KEY`、`ZHIHU_OAUTH_REDIRECT_URI`。可配置知乎 OAuth 或受信身份网关。知乎还需 `ZHIHU_OAUTH_USERINFO_URL`、`ZHIHU_OAUTH_USER_ID_PATH`、`ZHIHU_OAUTH_USER_NAME_PATH`、`ZHIHU_OAUTH_USER_AVATAR_PATH`、`THREADPEAK_TOKEN_SECRET`；前两项按官方合同配置，不能猜稳定 ID。用户 API 强制该授权用户 Token，禁止回退开发者数据；未真实验证不得宣称登录完成。
+服务端配置键（不得进入浏览器）：`ZHIHU_ACCESS_SECRET`、`ZHIHU_API_BASE_URL`、`DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、`DEEPSEEK_MODEL_NAME`、`DEEPSEEK_CONTEXT_TOKENS`、`DEEPSEEK_MAX_OUTPUT_TOKENS`、`DATABASE_URL`、`THREADPEAK_PUBLIC_ORIGIN`、`THREADPEAK_IDENTITY_SECRET`、`THREADPEAK_IDENTITY_ISSUER`、`THREADPEAK_IDENTITY_AUDIENCE`、`THREADPEAK_LOGIN_URL`、`THREADPEAK_PORT`、`THREADPEAK_HOST`、`THREADPEAK_DATA_DIR`、`POSTGRES_PASSWORD`、`SITE_ADDRESS`、`ZHIHU_OAUTH_APP_ID`、`ZHIHU_OAUTH_APP_KEY`、`ZHIHU_OAUTH_REDIRECT_URI`。可配置知乎 OAuth 或受信身份网关。知乎还需 `ZHIHU_OAUTH_USERINFO_URL`、`ZHIHU_OAUTH_USER_ID_PATH`、`ZHIHU_OAUTH_USER_NAME_PATH`、`ZHIHU_OAUTH_USER_AVATAR_PATH`、`THREADPEAK_TOKEN_SECRET`；前两项按官方合同配置，不能猜稳定 ID。用户 API 强制该授权用户 Token，禁止回退开发者数据；未真实验证不得宣称登录完成。
 
 - 用户已授权 OAuth/个人内容域的显式 mock 例外：ZHIHU_OAUTH_MODE=mock 只用于本地，账号/来源独立命名空间，接口同合同，生产启动拒绝，真实API失败不得隐式回退；模型/搜索/PDF仍真实。
 
@@ -29,3 +31,5 @@ alwaysApply: false
 - 恢复/保留策略与驱动边界见[工程设计](../../docs/engineering.md)。PGlite 单目录单进程；共享 PostgreSQL 才承诺跨副本额度。嵌套事务必须同连接 savepoint，浏览器采用修订号快照；未接入事件消费不能声称已完成客户端缺口恢复，不能重复消费已完成的幂等命令。
 
 - 维护不得阻塞任务领取，失败须退避并记录安全错误码；正常停机按 fence 释放任务且不增加失败预算。反向代理仅信任部署白名单，不能用未校验转发头构造限流身份。详见[工程设计](../../docs/engineering.md)。
+
+- 题组发布后答案可在 path.start 仍运行时保存，独立幂等回执；准备上下文冻结，恢复不因新答案改变检查点输入。搜索就绪与全答在资源事务内汇合后只生成一次路线，不覆盖并发答案。

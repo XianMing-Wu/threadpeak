@@ -13,6 +13,7 @@ export type AuthStartResult =
 
 export type AuthSessionView =
   | { kind: 'anonymous' }
+  | { kind: 'guest' }
   | { kind: 'authenticated'; provider: 'zhihu' | 'account' }
   | AuthSessionResolution
 
@@ -64,7 +65,15 @@ export async function requestAuthSession(fetchPort?: FetchPort): Promise<AuthSes
     return { kind: 'authenticated', provider: body.provider }
   }
   if (posted.ok && body?.kind === 'anonymous') return { kind: 'anonymous' }
+  if (posted.ok && body?.kind === 'guest') return { kind: 'guest' }
   return resolveAuthSession()
+}
+
+export async function requestGuestSession(): Promise<void> {
+  const response=await fetch('/api/auth/guest',{method:'POST',credentials:'same-origin',signal:AbortSignal.timeout(15000)})
+  if(!response.ok)throw new Error('暂时无法进入，请稍后重试。')
+  resetSession()
+  await ensureSession()
 }
 
 export async function requestAuthLogout(fetchPort?: FetchPort): Promise<void> {

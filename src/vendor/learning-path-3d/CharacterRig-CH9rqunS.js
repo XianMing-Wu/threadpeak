@@ -1,4 +1,4 @@
-import { A as e, C as t, E as n, L as r, S as i, T as a, U as o, _ as s, a as c, b as l, c as u, j as d, m as f, n as p, o as m, s as h, u as g, w as _, x as v, z as y } from "./three-runtime-CHDI8JSc.js";
+import { A as e, C as t, E as n, L as r, S as i, T as a, U as o, _ as s, a as c, b as l, c as u, j as d, m as f, n as p, o as m, s as h, u as g, w as _, x as v, z as y } from "./three-runtime-DPnU7la1.js";
 //#region src/render/objects/CharacterRig.ts
 var b = 2.8, x = .8, S = 1 / 30, C = .4, w = .4, T = "Armature|run_fast_3_inplace|baselayer", E = "Armature|Idle_11|baselayer", ee = "rigify_clip", te = "rigify_clip", D = Object.freeze([
 	"Hips",
@@ -656,4 +656,4 @@ var b = 2.8, x = .8, S = 1 / 30, C = .4, w = .4, T = "Armature|run_fast_3_inplac
 //#endregion
 export { le as t };
 
-//# sourceMappingURL=CharacterRig-BpJUYaY6.js.map
+//# sourceMappingURL=CharacterRig-CH9rqunS.js.map

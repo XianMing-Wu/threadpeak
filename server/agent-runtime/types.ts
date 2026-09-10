@@ -166,21 +166,9 @@ export type ZhihuSearchResult = (
   | { kind: 'failed'; message: string; code?: string; retryable?: boolean }
   ) & ProviderMetadata
 
-export type ZhihuDirectInput = {
-  messages: readonly ChatMessage[]
-  thinkingDepth: ThinkingDepth
-  signal?: AbortSignal
-}
-
-export type ZhihuDirectResult = (
-  | { kind: 'completed'; text: string }
-  | { kind: 'failed'; message: string; code?: string; retryable?: boolean }
-  ) & ProviderMetadata
-
 export type ZhihuProvider = {
   globalSearch?(query: string, count: number, signal?: AbortSignal): Promise<ZhihuSearchResult>
   search(query: string, count: number, signal?: AbortSignal): Promise<ZhihuSearchResult>
-  direct(input: ZhihuDirectInput): Promise<ZhihuDirectResult>
 }
 
 export type AgentFailureCode =

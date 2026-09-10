@@ -8,8 +8,8 @@ type Presentation={id:string;data:{status:string;metadata:{avatar?:string;badge?
 const pending=new Map<string,Promise<Presentation>>()
 let metadataQueue=Promise.resolve()
 function permitted(url?:string){try{const u=new URL(url!);return u.protocol==='https:'&&(u.hostname==='zhihu.com'||u.hostname.endsWith('.zhihu.com'))}catch{return false}}
-function load(url:string,includeReading:boolean,retry=false){
-  const key=`v${READING_POLICY_VERSION}:${localStorage.getItem('tp-server-workspace')??''}:${includeReading}:${url}`
+function load(url:string,includeReading:boolean,retry=false,source?:string){
+  const key=`v${READING_POLICY_VERSION}:${localStorage.getItem('tp-server-workspace')??''}:${includeReading}:${url}:${source??''}`
   if(retry)pending.delete(key)
   if(!pending.has(key)){
     const run=async()=>{
@@ -32,17 +32,17 @@ function load(url:string,includeReading:boolean,retry=false){
   }
   return pending.get(key)!
 }
-export function useSourcePresentation(url?:string,enabled=true,includeReading=false){
-  const signature=`${READING_POLICY_VERSION}:${url}:${includeReading}`, [record,setRecord]=useState<{signature:string;value:Presentation}>();const [failed,setFailed]=useState(false),[attempt,setAttempt]=useState(0)
-  useEffect(()=>{setRecord(undefined);setFailed(false);if(!enabled||!permitted(url))return;let live=true;void load(url!,includeReading,attempt>0).then(v=>{if(live)setRecord({signature,value:v})}).catch(()=>{if(live)setFailed(true)});return()=>{live=false}},[url,enabled,includeReading,attempt])
+export function useSourcePresentation(url?:string,enabled=true,includeReading=false,source?:string){
+  const signature=`${READING_POLICY_VERSION}:${url}:${includeReading}:${source??''}`, [record,setRecord]=useState<{signature:string;value:Presentation}>();const [failed,setFailed]=useState(false),[attempt,setAttempt]=useState(0)
+  useEffect(()=>{setRecord(undefined);setFailed(false);if(!enabled||!permitted(url))return;let live=true;void load(url!,includeReading,attempt>0,source).then(v=>{if(live)setRecord({signature,value:v})}).catch(()=>{if(live)setFailed(true)});return()=>{live=false}},[url,enabled,includeReading,attempt,source])
   return {value:enabled&&record?.signature===signature?record.value:undefined,failed,retry:()=>setAttempt(n=>n+1)}
 }
 export function SourceReading({url,source,curated,allowPresentation=true}:{url?:string;source:string;curated?:string;allowPresentation?:boolean}){
-  const missing=hasMissingSourceExcerptMath(source),{value,failed,retry}=useSourcePresentation(url,allowPresentation&&missing&&!curated,true)
+  const missing=hasMissingSourceExcerptMath(source),{value,failed,retry}=useSourcePresentation(url,allowPresentation&&missing&&!curated,true,source)
   const reading=curated?{content:curated}:value?.data.reading
   if(!missing&&!curated)return <MarkdownMath source={source} sourceExcerpt/>
   return <div className="tp-source-reading">
-    <div className="tp-source-reading-label">{curated?'编选讲解':reading?'AI 公式讲解':'原摘要缺少部分公式'}<span>{curated?'根据资料与目标编选，非作者原文':reading?'根据摘要主题整理，非作者原文':'原始内容保留在下方'}</span></div>
+    <div className="tp-source-reading-label">{curated?'学习导读':reading?'AI 公式讲解':'原摘要缺少部分公式'}<span>{curated?'刘看山 · 基于所选资料的讲解':reading?'根据摘要主题整理，非作者原文':'原始内容保留在下方'}</span></div>
     {reading?<MarkdownMath source={reading.content}/>:<div className="tp-source-reading-state" role="status">
       {!allowPresentation||!permitted(url)?'可前往原文查看完整内容。':failed||value?<><p>公式讲解尚未准备好。</p><button type="button" onClick={retry}>继续整理公式</button></>:<p>正在整理完整的公式讲解…</p>}
     </div>}

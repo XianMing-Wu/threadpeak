@@ -1,4 +1,5 @@
 import { productRequest } from '../learning-v2/client'
+import {pollResource,foregroundDelay,taskPollInterval} from '../learning-v2/poll'
 import { refreshProductLibrary } from '../learning-v2/library'
 import { useEffect, useRef, useState } from 'react'
 import { AgentStatus } from '../components/AgentStatus'
@@ -253,6 +254,21 @@ export function ChatRoutePanel(props: {
     void run((watch) => startPathRun({ goal: props.query, thinkingDepth: props.thinkingDepth, ...(attachments ? { attachments } : {}) }, watch))
   }, [props.existingRouteId, props.conversationId, props.query])
 
+  const preparingRun = !pending && view?.status === 'awaiting_answers' && view.preparing ? view.runId : undefined
+  useEffect(() => {
+    if (!preparingRun) return
+    const abort = new AbortController()
+    // Keep catalog progress/retry visible without blocking answers. A submission
+    // cancels this reader so its older snapshot cannot overwrite the saved answer.
+    void pollResource(async () => {
+      const next = await getPathRun(preparingRun, abort.signal)
+      if (abort.signal.aborted) return false
+      apply(next)
+      return next.preparing === true && next.status === 'awaiting_answers'
+    }, {signal: abort.signal, wait: foregroundDelay, intervalMs: () => taskPollInterval('running')})
+    return () => abort.abort()
+  }, [preparingRun])
+
   useEffect(() => {
     props.onSender?.(async (text) => {
       if (!view) return false
@@ -304,7 +320,7 @@ export function ChatRoutePanel(props: {
                 <div className="clarification-card__main">
                   <div className="clarification-card__copy">
                     <h3 className="clarification-card__question">{question.prompt}</h3>
-                    <p className="clarification-card__description">选一个贴近你的，也可以用自己的话说</p>
+                    <p className="clarification-card__description">{question.reason ?? "选一个贴近你的，也可以用自己的话说"}</p>
                   </div>
                 </div>
               </div>
@@ -357,7 +373,7 @@ export function ChatRoutePanel(props: {
     ))}
     {view?.followUpMessage && !view.questionSets.some(s=>s.message===view.followUpMessage) && view.status === 'awaiting_answers' && <article className="chat-answer"><MarkdownMath source={view.followUpMessage}/></article>}
     {afterAnswers.length > 0 ? <AgentStatus steps={afterAnswers} /> : null}
-    {view?.status === 'failed' && <section className="route-ready-card" role="alert">
+    {(view?.status === 'failed' || view?.error) && <section className="route-ready-card" role="alert">
       <EmptyStatus
         kind="error"
         eyebrow="本次生成未完成"

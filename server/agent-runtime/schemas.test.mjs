@@ -10,10 +10,10 @@ import {
 
 const r1Valid = {
   queries: [
-    { id: 'q1', text: '线性映射怎么入门', angle: 'normal_learning' },
-    { id: 'q2', text: '线性映射常见理解路径', angle: 'normal_learning' },
-    { id: 'q3', text: '线性映射容易踩的坑', angle: 'pitfall_or_dispute' },
-    { id: 'q4', text: '线性映射有哪些误导学法', angle: 'pitfall_or_dispute' },
+    { id: 'q1', text: '线性映射怎么入门', purpose: '发现入门方式与载体', angle: 'normal_learning' },
+    { id: 'q2', text: '线性映射常见理解路径', purpose: '发现入门方式与载体', angle: 'normal_learning' },
+    { id: 'q3', text: '线性映射容易踩的坑', purpose: '发现选择差异与理由', angle: 'pitfall_or_dispute' },
+    { id: 'q4', text: '线性映射有哪些误导学法', purpose: '发现选择差异与理由', angle: 'pitfall_or_dispute' },
   ],
 }
 
@@ -52,10 +52,10 @@ test('R1 accepts 4–5 unique queries covering both angles and extracts extra ke
   assert.equal(parseAgentOutput('R1', { ...r1Valid, extra: true }).ok, true)
   assert.equal(parseAgentOutput('R1', { queries: r1Valid.queries.slice(0, 3) }).ok, false)
   assert.equal(parseAgentOutput('R1', {
-    queries: [...r1Valid.queries, { id: 'q5', text: '五', angle: 'normal_learning' }, { id: 'q6', text: '六', angle: 'pitfall_or_dispute' }],
+    queries: [...r1Valid.queries, { id: 'q5', text: '五', purpose: '发现入门方式与载体', angle: 'normal_learning' }, { id: 'q6', text: '六', purpose: '发现选择差异与理由', angle: 'pitfall_or_dispute' }],
   }).ok, false)
   assert.equal(parseAgentOutput('R1', {
-    queries: r1Valid.queries.map((item, index) => ({ ...item, angle: 'normal_learning', text: `t${index}` })),
+    queries: r1Valid.queries.map((item, index) => ({ ...item, purpose: '发现入门方式与载体', angle: 'normal_learning', text: `t${index}` })),
   }).ok, false)
 })
 

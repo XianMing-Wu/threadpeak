@@ -12,4 +12,10 @@ export type SearchMetadata = {
   commentCount?: number; editedAt?: number; contentType?: string; contentId?: string;
   authorityLevel?: string; rankingScore?: number; comments?: string[];
   sourceKind?: 'zhihu' | 'web'; site?: string;
+  authorSignature?: string;
+}
+
+export const SEARCH_METADATA_FIELDS = ['avatar','badge','badgeIcon','likes','commentCount','editedAt','contentType','contentId','authorityLevel','rankingScore','comments','sourceKind','site','authorSignature'] as const
+export function searchMetadataOf(source:SearchMetadata):SearchMetadata {
+  return Object.fromEntries(SEARCH_METADATA_FIELDS.filter(key=>source[key]!==undefined).map(key=>[key,source[key]]))
 }

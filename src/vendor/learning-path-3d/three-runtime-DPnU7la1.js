@@ -7986,7 +7986,7 @@ function Ns(e) {
 }
 typeof __THREE_DEVTOOLS__ < "u" && __THREE_DEVTOOLS__.dispatchEvent(new CustomEvent("register", { detail: { revision: "185" } })), typeof window < "u" && (window.__THREE__ ? R("WARNING: Multiple instances of Three.js being imported.") : window.__THREE__ = "185");
 //#endregion
-//#region node_modules/three/build/three.module.js
+//#region ../../../Users/wxm/project/FullStack/学习理念/知乎项目/zhihu_3D_path/node_modules/three/build/three.module.js
 function Ps() {
 	let e = null, t = !1, n = null, r = null;
 	function i(t, a) {
@@ -13879,7 +13879,7 @@ var Yu = class {
 	}
 };
 //#endregion
-//#region node_modules/three/examples/jsm/utils/BufferGeometryUtils.js
+//#region ../../../Users/wxm/project/FullStack/学习理念/知乎项目/zhihu_3D_path/node_modules/three/examples/jsm/utils/BufferGeometryUtils.js
 function Xu(e, t = !1) {
 	let n = e[0].index !== null, r = new Set(Object.keys(e[0].attributes)), i = new Set(Object.keys(e[0].morphAttributes)), a = {}, o = {}, s = e[0].morphTargetsRelative, c = new Ln(), l = 0;
 	for (let u = 0; u < e.length; ++u) {
@@ -13977,7 +13977,7 @@ function Qu(e, t) {
 	return console.error("THREE.BufferGeometryUtils.toTrianglesDrawMode(): Unknown draw mode:", t), e;
 }
 //#endregion
-//#region node_modules/three/examples/jsm/utils/SkeletonUtils.js
+//#region ../../../Users/wxm/project/FullStack/学习理念/知乎项目/zhihu_3D_path/node_modules/three/examples/jsm/utils/SkeletonUtils.js
 function $u(e) {
 	let t = /* @__PURE__ */ new Map(), n = /* @__PURE__ */ new Map(), r = e.clone();
 	return ed(e, r, function(e, r) {
@@ -13995,7 +13995,7 @@ function ed(e, t, n) {
 	for (let r = 0; r < e.children.length; r++) ed(e.children[r], t.children[r], n);
 }
 //#endregion
-//#region node_modules/three/examples/jsm/loaders/GLTFLoader.js
+//#region ../../../Users/wxm/project/FullStack/学习理念/知乎项目/zhihu_3D_path/node_modules/three/examples/jsm/loaders/GLTFLoader.js
 var td = class extends Eo {
 	constructor(e) {
 		super(e), this.dracoLoader = null, this.ktx2Loader = null, this.meshoptDecoder = null, this.pluginCallbacks = [], this.register(function(e) {
@@ -15331,7 +15331,7 @@ function $d(e, t, n) {
 	});
 }
 //#endregion
-//#region node_modules/three/examples/jsm/loaders/SVGLoader.js
+//#region ../../../Users/wxm/project/FullStack/学习理念/知乎项目/zhihu_3D_path/node_modules/three/examples/jsm/loaders/SVGLoader.js
 var ef = F, tf = class e extends Eo {
 	constructor(e) {
 		super(e), this.defaultDPI = 90, this.defaultUnit = "px";
@@ -16160,4 +16160,4 @@ function of(e, t) {
 //#endregion
 export { xs as A, ss as B, lr as C, Ji as D, Ya as E, Yi as F, G as H, Fa as I, xr as L, Es as M, F as N, Ko as O, Ht as P, La as R, W as S, Xa as T, K as U, Ra as V, Nt as _, bo as a, T as b, rn as c, X as d, vi as f, Vt as g, Tn as h, Yu as i, Re as j, Pa as k, Ln as l, ht as m, td as n, ws as o, $o as p, Xu as r, ao as s, tf as t, _i as u, Po as v, Zn as w, E as x, Na as y, et as z };
 
-//# sourceMappingURL=three-runtime-CHDI8JSc.js.map
+//# sourceMappingURL=three-runtime-DPnU7la1.js.map

@@ -9,18 +9,16 @@
 | `DEEPSEEK_API_KEY` | 模型 API 凭证 |
 | `DEEPSEEK_BASE_URL` | 模型服务地址；按所用服务的接口配置 |
 | `DEEPSEEK_MODEL_NAME` | 实际可用的模型标识 |
-| `DEEPSEEK_CONTEXT_TOKENS` | 已确认的上下文窗口；显式配置，不依据产品名称猜测 |
+| `DEEPSEEK_CONTEXT_TOKENS` | 本轮按用户指定显式设为 `500000`；它是上下文窗口，单次输出上限独立，其他provider仍需配置各自能力 |
 | `DEEPSEEK_MAX_OUTPUT_TOKENS` | 模型单次最大输出；发送的 max_tokens 不超过此值 |
-| `ZHIHU_FAST_CONTEXT_TOKENS` / `ZHIHU_FAST_OUTPUT_TOKENS` | 快速直答的上下文窗口与输出预留 |
-| `ZHIHU_DEEP_CONTEXT_TOKENS` / `ZHIHU_DEEP_OUTPUT_TOKENS` | 深度直答的上下文窗口与输出预留 |
 | `ZHIHU_ACCESS_SECRET` | 知乎开发者 API 凭证 |
-| `ZHIHU_API_BASE_URL` | 知乎检索与直答服务地址 |
+| `ZHIHU_API_BASE_URL` | 知乎检索与资料服务地址 |
 
 五个 provider 连接字段必须完整，生成管线才进入就绪状态。生产还必须显式填写上述六个窗口/输出字段；窗口接受 32,000–2,000,000，输出接受 1,024–131,072，输出加 4,096 必须小于有效窗口（业务上限 500,000）。配置依据应记录实际服务、模型、能力文档及核对日期，不按模型名字推测。
 
-本地未配置时使用应用保守默认：模型 64,000 / 16,384，知乎快速和深度直答均为 32,000 / 8,192。这些值不是厂商能力声明。模型摘要使用模型窗口，最终直答按对应直答窗口再次预检；UTF-8 字节上界用于保守估算，真实 usage 单独记录。知乎输出字段是上下文预算预留，当前 API 不发送 max_tokens；应填写所用服务已确认的输出上界。网关能力不同须显式调整。校验入口见 [capabilities.ts](../server/durable/capabilities.ts)、[config.ts](../server/config.ts) 和 [bootstrap.ts](../server/durable/bootstrap.ts)。
+本地模型未配置时使用应用保守默认窗口64,000、输出16,384；这不是厂商能力声明。配置的窗口与业务上限500,000取较小值，再扣输出与安全余量；UTF-8字节上界是保守预检，真实usage单独记录。所有讲解由LLM生成，知乎仅用于搜索及资料接口；已移除直答和四项ZHIHU_FAST/DEEP窗口配置，生产只需明确LLM窗口与输出上限。校验入口见 [capabilities.ts](../server/durable/capabilities.ts)、[config.ts](../server/config.ts) 和 [bootstrap.ts](../server/durable/bootstrap.ts)。
 
-PDF 使用知乎异步解析 API，默认管线不依赖本机 pdftotext。全网检索沿用知乎开发者服务中的站外检索能力。模型、检索、直答和 PDF 服务不可用时不会自动切换示例结果。
+PDF 使用知乎异步解析 API，默认管线不依赖本机 pdftotext。全网检索沿用知乎开发者服务中的站外检索能力。模型、检索和 PDF 服务不可用时不会自动切换示例结果。
 
 ## 本地运行与数据库
 
@@ -45,7 +43,7 @@ THREADPEAK_PORT=4313 npm run server
 THREADPEAK_API_TARGET=http://127.0.0.1:4313 npm run dev -- --port 4302
 ```
 
-PGlite 数据目录只允许一个进程持有；多个 API/worker 实例使用同一个 PostgreSQL。`.env`、`server/.data` 与本地浏览器资料不属于可清理的构建产物。匿名本地工作区依靠 Cookie 恢复身份，清除 Cookie 不等于删除数据库，也不提供正式账号找回。
+PGlite 数据目录只允许一个进程持有；多个 API/worker 实例使用同一个 PostgreSQL。`.env`、`server/.data` 与本地浏览器资料不属于可清理的构建产物。游客显式登录后以 Cookie 恢复身份；退出撤销活动会话并保留当前浏览器的恢复凭据。清除 Cookie 不等于删除数据库，也无法凭空找回游客身份。知乎与游客记录分别保存，详情见[身份与所有权](engineering.md#本地存储与所有权)。
 
 ## 知乎账号与演示模式
 

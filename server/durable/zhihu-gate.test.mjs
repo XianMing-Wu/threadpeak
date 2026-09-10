@@ -8,7 +8,7 @@ import {pause} from './limits.ts'
 
 async function fixture(t){const db=await openDatabase();await migrate(db);t.after(()=>db.close());return db}
 
-test('search, global search, direct, user data, PDF and OAuth share two permits through body consumption across gate instances',async t=>{
+test('search, global search, user data, PDF and OAuth share two permits through body consumption across gate instances',async t=>{
   const db=await fixture(t),gate=createZhihuGate(db,0),gate2=createZhihuGate(db,0)
   let active=0,maximum=0;const requests=[]
   const fetcher=async url=>{
@@ -22,11 +22,11 @@ test('search, global search, direct, user data, PDF and OAuth share two permits 
   const login=new ZhihuLogin(db,{mode:'real',appId:'app',appKey:'test-key',redirectUri:'http://127.0.0.1/api/auth/zhihu/callback',origin:'http://127.0.0.1',userInfoUrl:'https://openapi.zhihu.com/profile',userIdPath:'id',tokenSecret:'x'.repeat(32),production:false},fetcher,createZhihuGate(db,0))
   const start=await login.start(),state=new URL(start.authorizeUrl).searchParams.get('state'),binding=start.cookie.split(';')[0].split('=')[1]
   await Promise.all([
-    ...['first','second','third'].map(q=>provider.search(q,10)),provider.globalSearch('全网',20),provider.direct({messages:[]}),
+    ...['first','second','third'].map(q=>provider.search(q,10)),provider.globalSearch('全网',20),
     data.user('favlists','test-token',{}),data.json('/api/pdf/task',{body:{id:'pdf'}}),data.pdfResult('https://result.bcebos.com/result',new AbortController().signal),
     login.callback('code',state,binding),
   ])
-  assert.equal(maximum,2);assert.equal(active,0);assert.equal(requests.length,10)
+  assert.equal(maximum,2);assert.equal(active,0);assert.equal(requests.length,9)
   for(const q of ['first','second','third'])assert.equal(requests.filter(p=>p===`/search/${q}`).length,1)
   const slots=await db.query("SELECT * FROM tp_provider_slots WHERE pool='zhihu'")
   assert.equal(slots.length,2);assert.ok(slots.every(s=>!s.token&&Number(s.lease_until)===0))
@@ -56,10 +56,10 @@ test('Retry-After supports seconds and HTTP dates with a conservative fallback',
   for(const value of [null,'invalid','-5','0','Sun, 06 Sep 2026 12:00:00 GMT'])assert.equal(retryAfterUntil(value,now),now+10_000)
 })
 
-test('HTTP 200 business-level direct throttling cools all interfaces before another request starts',async t=>{
+test('HTTP 200 business-level search throttling cools all interfaces before another request starts',async t=>{
   const db=await fixture(t),gate=createZhihuGate(db,0)
-  const provider=limitZhihuProvider({direct:async()=>({kind:'failed',code:'ZHIHU_RATE_LIMITED',diagnostic:{httpStatus:200,retryAfter:'0.12'}}),search:async()=>({kind:'empty'})},gate)
-  const result=await provider.direct({messages:[],thinkingDepth:'fast'})
+  const provider=limitZhihuProvider({search:async()=>({kind:'failed',code:'ZHIHU_RATE_LIMITED',diagnostic:{httpStatus:200,retryAfter:'0.12'}})},gate)
+  const result=await provider.search('测试问题',10)
   assert.equal(result.code,'ZHIHU_RATE_LIMITED')
   const [cooldown]=await db.query("SELECT until_at FROM tp_provider_cooldowns WHERE pool='zhihu'")
   assert.ok(Number(cooldown.until_at)>Date.now())

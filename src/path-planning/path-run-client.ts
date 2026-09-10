@@ -23,6 +23,7 @@ export type PathQuestionSet = {
   questions: {
     id: string
     prompt: string
+    reason?: string
     options: { id: string; label: string }[]
   }[]
   selectedOptionIds: Record<string, string>
@@ -31,6 +32,7 @@ export type PathQuestionSet = {
 export type PathRunView = {
   runId: string
   recoverable?:boolean
+  preparing?:boolean
   goal: string
   status: 'running' | 'awaiting_answers' | 'published' | 'failed'
   stage: string

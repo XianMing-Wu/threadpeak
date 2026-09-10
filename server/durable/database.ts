@@ -83,6 +83,9 @@ export async function migrate(db: Sql) {
       UNIQUE(owner_id, command_key))`)
     await tx.query(`CREATE UNIQUE INDEX IF NOT EXISTS tp_one_active_job ON tp_jobs(resource_id)
       WHERE status IN ('queued','running','waiting')`)
+    await tx.query(`CREATE TABLE IF NOT EXISTS tp_path_answer_commands (
+      owner_id text NOT NULL, command_key text NOT NULL, resource_id text NOT NULL REFERENCES tp_resources(id),
+      input_hash text NOT NULL, created_at bigint NOT NULL, PRIMARY KEY(owner_id,command_key))`)
     await tx.query(`CREATE INDEX IF NOT EXISTS tp_jobs_resource_latest ON tp_jobs(resource_id,created_at DESC,id DESC)`)
     await tx.query(`CREATE INDEX IF NOT EXISTS tp_jobs_owner_recent ON tp_jobs(owner_id,created_at)`)
     await tx.query(`CREATE INDEX IF NOT EXISTS tp_jobs_owner_active ON tp_jobs(owner_id) WHERE status IN ('queued','running')`)

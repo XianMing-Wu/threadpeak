@@ -54,9 +54,6 @@ export type ZhihuSearchResult =
   | { kind: 'empty' }
   | { kind: 'failed'; message: string }
 
-export type ZhihuDirectResult =
-  | { kind: 'completed'; text: string }
-  | { kind: 'failed'; message: string }
 
 export type ModelResult =
   | { kind: 'completed'; text: string }
@@ -92,9 +89,6 @@ export type EvidenceSearchProvider = {
   searchContent(query: string, count: number, signal?: AbortSignal): Promise<ZhihuSearchResult>
 }
 
-export type ZhihuDirectAnswerProvider = {
-  answer(question: string, evidence: readonly EvidenceHit[], signal?: AbortSignal): Promise<ZhihuDirectResult>
-}
 
 export type AnswerModelProvider = {
   answer(input: AnswerModelInput, signal?: AbortSignal): Promise<ModelResult>

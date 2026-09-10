@@ -43,6 +43,6 @@ export function OrdinaryChat({chatId,question,initialDepth}:{chatId:string;quest
       {snapshot?.data.messages.map(m=>m.role==='user'?<div className="query-user-bubble" key={m.id}>{m.text}</div>:<article className="chat-answer" key={m.id}><MarkdownMath source={m.text}/>{m.incomplete&&<small>已停止 · 回答尚未完成</small>}</article>)}
       {busy&&<article className="chat-answer" aria-busy="true">{snapshot?.job?.draft?<MarkdownMath source={snapshot.job.draft}/>:<p role="status">{snapshot?.job?.phase??'正在读取对话'}</p>}</article>}
     </div></section>
-    <div className="query-chat-composer"><Composer compact value={value} onChange={setValue} onSend={()=>void send()} showAttachment={false} thinkingDepth={depth} onThinkingDepth={setDepth} busy={busy} onStop={()=>void action('cancel')}/></div>
+    <div className="query-chat-composer"><Composer compact value={value} onChange={setValue} onSend={()=>void send()} showAttachment={false} thinkingDepth={depth} onThinkingDepth={setDepth} busy={busy} sendDisabled={sending||snapshot?.job?.status==='waiting'} onStop={()=>void action('cancel')}/></div>
   </main></ProductWorkspace>
 }

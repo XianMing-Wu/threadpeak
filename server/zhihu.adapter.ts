@@ -5,8 +5,6 @@ import {
   type EvidenceHit,
   type EvidenceSearchProvider,
   type HttpPort,
-  type ZhihuDirectAnswerProvider,
-  type ZhihuDirectResult,
   type ZhihuSearchResult,
 } from './ports.ts'
 
@@ -64,9 +62,7 @@ export function zhihuSearchUrl(baseUrl: string, query: string, count: number): s
   return url.toString()
 }
 
-export function zhihuDirectUrl(baseUrl: string): string {
-  return new URL(DIRECT_PATH, `${new URL(baseUrl).origin}/`).toString()
-}
+
 
 function authorKeyOf(name: string, profileUrl: string): string | null {
   if (isLiuKanshanName(name)) return null
@@ -122,6 +118,7 @@ export function parseZhihuSearchPayload(payload: unknown, source: 'zhihu'|'web' 
       commentCount:number('CommentCount'),editedAt:number('EditTime'),rankingScore:number('RankingScore'),
       authorityLevel:asText(item.AuthorityLevel)||undefined,
       comments:Array.isArray(item.CommentInfoList)?item.CommentInfoList.map(c=>asText(asRecord(c)?.Content)).filter(Boolean):undefined,
+      authorSignature:source==='zhihu'?asText(item.AuthorSignature)||undefined:undefined,
       ...(source==='zhihu'&&/^https:\/\/[^/]+\.zhimg\.com\//.test(badgeIcon)?{badgeIcon}:{}),
       ...(source==='zhihu'&&/^https:\/\/[^/]+\.zhimg\.com\//.test(avatar)?{avatar}:{}),...(source==='zhihu'&&badge?{badge}:{}),...(typeof likes==='number'&&Number.isFinite(likes)?{likes:Math.max(0,likes)}:{}),
       title,
@@ -182,60 +179,6 @@ export function createZhihuSearchAdapter(ports: {
       } catch (cause) {
         if (cause instanceof Error && cause.name === 'AbortError') return { kind: 'failed', message: 'Zhihu search was aborted.' }
         return { kind: 'failed', message: 'Zhihu search is unavailable.' }
-      }
-    },
-  }
-}
-
-export function createZhihuDirectAdapter(ports: {
-  config: ProviderConfig
-  http: HttpPort
-  clock: ClockPort
-}): ZhihuDirectAnswerProvider {
-  const origin = allowedOrigin(ports.config.zhihuApiBaseUrl)
-  return {
-    async answer(question, evidence, signal): Promise<ZhihuDirectResult> {
-      const url = new URL(zhihuDirectUrl(ports.config.zhihuApiBaseUrl))
-      const citations = evidence
-        .slice(0, 6)
-        .map((item, index) => `${index + 1}. ${item.title} ${item.url}`)
-        .join('\n')
-      try {
-        assertAllowed(url.toString(), origin)
-        const response = await ports.http(url.toString(), {
-          method: 'POST',
-          headers: zhihuHeaders(ports.config, ports.clock),
-          signal,
-          body: JSON.stringify({
-            model: 'zhida-fast-1p5',
-            messages: [
-              {
-                role: 'user',
-                content: citations
-                  ? `${question.trim()}\n\n公开证据：\n${citations}`
-                  : question.trim(),
-              },
-            ],
-          }),
-        })
-        const text = await response.text()
-        if (!response.ok) return { kind: 'failed', message: 'Zhihu direct answer returned a non-success status.' }
-        let payload: unknown
-        try {
-          payload = JSON.parse(text) as unknown
-        } catch {
-          return { kind: 'failed', message: 'Zhihu direct answer returned invalid JSON.' }
-        }
-        const root = asRecord(payload)
-        const choices = pick(root, 'choices', 'Choices')
-        const first = Array.isArray(choices) ? asRecord(choices[0]) : undefined
-        const message = asRecord(pick(first, 'message', 'Message'))
-        const content = asText(pick(message, 'content', 'Content') ?? pick(root, 'answer', 'Answer', 'output', 'Output'))
-        if (!content) return { kind: 'failed', message: 'Zhihu direct answer returned an empty body.' }
-        return { kind: 'completed', text: content }
-      } catch (cause) {
-        if (cause instanceof Error && cause.name === 'AbortError') return { kind: 'failed', message: 'Zhihu direct answer was aborted.' }
-        return { kind: 'failed', message: 'Zhihu direct answer is unavailable.' }
       }
     },
   }

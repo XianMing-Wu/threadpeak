@@ -9,6 +9,7 @@
     "./host-subject-flow": "./src/host-subject-flow.ts",
     "./learning-goal": "./src/learning-goal.ts",
     "./learning-v2": "./src/learning-v2.ts",
+    "./learning-markdown": "./src/learning-markdown.ts",
     "./markdown-source": "./src/markdown-source.ts",
     "./math-normalize": "./src/math-normalize.ts",
     "./node-edits": "./src/node-edits.ts",

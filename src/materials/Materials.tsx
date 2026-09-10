@@ -1,6 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { productRequest } from '../learning-v2/client'
+import { useWorkspaceSession } from '../runtime/workspace-session'
 import { requestAuthStart } from '../runtime/request-auth-session'
 import { MarkdownMath } from '../lib/MarkdownMath'
 import { Glyph } from '../learning-v2/atoms'
@@ -20,6 +21,8 @@ const scopeLabel = (model: MaterialsModel) => model.searchScope.kind === 'collec
 
 /** A portal keeps the menu out of the composer's animated border and scroll clipping. */
 export function MaterialScope({ model }: { model: MaterialsModel }) {
+  const session = useWorkspaceSession()
+  const canReadZhihu = session?.provider === 'zhihu' && session.capabilities?.zhihuMaterials === true
   const [open, setOpen] = useState(false)
   const [position, setPosition] = useState<CSSProperties>({ visibility: 'hidden' })
   const [authConfig, setAuthConfig] = useState<{ zhihuDemo?: boolean; zhihuMode?: string } | null>(null)
@@ -50,19 +53,19 @@ export function MaterialScope({ model }: { model: MaterialsModel }) {
   }, [open])
   useEffect(() => {
     if (!open) return
-    void model.loadFolders()
+    if (canReadZhihu) void model.loadFolders()
     // Positioning removes the initial visibility guard before keyboard focus enters the portal.
     const frame = requestAnimationFrame(() => menu.current?.querySelector<HTMLElement>('[role="menuitemradio"][aria-checked="true"]')?.focus())
     return () => cancelAnimationFrame(frame)
-  }, [open, model.loadFolders])
+  }, [open, model.loadFolders, canReadZhihu])
   useEffect(() => {
-    if (!open) return
+    if (!open || !canReadZhihu) return
     const abort = new AbortController()
     void fetch('/api/auth/config', { credentials: 'same-origin', signal: AbortSignal.any([abort.signal, AbortSignal.timeout(15000)]) }).then(async response => {
       if (response.ok) setAuthConfig(await response.json())
     }).catch(() => { /* Keep a neutral connection label until the mode is known. */ })
     return () => abort.abort()
-  }, [open])
+  }, [open, canReadZhihu])
   const connect = async () => {
     const result = await requestAuthStart()
     if (result.kind === 'redirect') location.href = result.authorizeUrl
@@ -82,7 +85,7 @@ export function MaterialScope({ model }: { model: MaterialsModel }) {
       choices[next]?.focus()
     }}>
       <div className="material-scope-options">{(['zhihu', 'web'] as const).map(kind => <button type="button" key={kind} role="menuitemradio" aria-checked={model.searchScope.kind === kind} onClick={() => { model.setKind(kind); close(true) }}><span className="material-radio"/><ScopeIcon kind={kind}/><span>{kind === 'zhihu' ? '全知乎' : '全网'}</span>{model.searchScope.kind === kind && <Glyph name="check" size={16}/>}</button>)}</div>
-      <div className="material-scope-divider" role="separator"/>
+      {canReadZhihu && <><div className="material-scope-divider" role="separator"/>
       <button type="button" className="material-scope-heading" role="menuitemradio" aria-checked={model.searchScope.kind === 'collections'} onClick={() => model.setKind('collections')}><span>仅知乎收藏夹</span><span>{demo ? '演示数据 · ' : ''}{selected.length ? `已选 ${selected.length}` : '可多选'}</span></button>
       <div className="material-folder-list" role="group" aria-label="我的公开收藏夹">
         {model.foldersStatus === 'loading' && !model.folders.length && <p role="status">正在读取收藏夹…</p>}
@@ -90,7 +93,7 @@ export function MaterialScope({ model }: { model: MaterialsModel }) {
         {model.foldersStatus === 'ready' && !model.folders.length && <p>还没有公开收藏夹。</p>}
         {model.foldersStatus === 'error' && <div className="material-folder-notice"><p role="status">{model.foldersError}</p><button type="button" role="menuitem" onClick={() => void model.loadFolders()}>重新读取</button><button type="button" role="menuitem" onClick={() => void connect()}>{demo ? '连接演示账号' : authConfig ? '连接知乎账号' : '连接账号'}</button></div>}
       </div>
-      {model.searchScope.kind === 'collections' && <p className="material-scope-hint" role="status">{selected.length ? '仅使用所选收藏夹与附件，不进行外部搜索。' : '请选择至少一个收藏夹，不进行外部搜索。'}</p>}
+      {model.searchScope.kind === 'collections' && <p className="material-scope-hint" role="status">{selected.length ? '仅使用所选收藏夹与附件，不进行外部搜索。' : '请选择至少一个收藏夹，不进行外部搜索。'}</p>}</>}
       <div className="material-scope-divider" role="separator"/>
       <button type="button" className="material-saved-entry" role="menuitem" onClick={() => { close(true); model.setLibraryOpen(true) }}><Glyph name="clock" size={16}/><span>已保存的文件</span><Glyph name="chevron" size={13}/></button>
     </div>, document.body)}

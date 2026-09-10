@@ -1,8 +1,6 @@
-import { productRequest } from '../learning-v2/client'
-import { requestAuthStart } from '../runtime/request-auth-session'
+import { useWorkspaceSession } from '../runtime/workspace-session'
 import { useEffect, useRef, useState } from 'react'
 import { clearChatHistory } from '../history'
-import { requestAuthSession } from '../runtime/request-auth-session'
 
 export function SettingsPage({
   theme,
@@ -18,10 +16,9 @@ export function SettingsPage({
   const confirmRef = useRef<HTMLDialogElement>(null)
   const cancelRef = useRef<HTMLButtonElement>(null)
   const openerRef = useRef<HTMLButtonElement | null>(null)
-  const [oauthSignedIn, setOauthSignedIn] = useState(false)
-  const [account,setAccount]=useState<{name?:string;demo?:boolean;mode?:'real'|'mock'}|null>(null),[connected,setConnected]=useState(false),[demoMode,setDemoMode]=useState(false)
-  useEffect(()=>{void productRequest<any>('/api/v2/session').then(s=>{setAccount(s.profile??null);setOauthSignedIn(s.provider==='zhihu')}).catch(()=>setNotice('账号信息暂未读取完成，请稍后重新进入设置。'));void fetch('/api/auth/config').then(r=>r.json()).then(c=>{setConnected(c.zhihuAvailable);setDemoMode(c.zhihuMode==='mock')}).catch(()=>setConnected(false))},[])
-  const connect=async()=>{const result=await requestAuthStart();if(result.kind==='redirect')location.href=result.authorizeUrl;else setNotice(result.message)}
+  const session=useWorkspaceSession(),account=session?.profile
+  const oauthSignedIn=session?.provider==='zhihu'
+
 
   useEffect(() => {
     if (!confirm) return
@@ -34,19 +31,15 @@ export function SettingsPage({
       openerRef.current?.focus()
     }
   }, [confirm])
-  useEffect(() => {
-    void requestAuthSession().then((session) => {
-      setOauthSignedIn(session.kind === 'authenticated'&&session.provider==='zhihu')
-    })
-  }, [])
+
 
   return <main className="settings-page">
     <header><h1>设置</h1></header>
     <section>
       <h2>个人信息</h2>
-      <article className="setting-row"><div><b>{oauthSignedIn?account?.name??'已连接知乎':'本地工作区'}{account?.demo&&<span> · 演示账号</span>}</b><small>{account?.demo?'当前使用示例收藏与创作，演示作者不代表真实博主。':oauthSignedIn?'已连接你的知乎账号，公开收藏与创作需由你主动选择后读取。':'学习内容保存在当前工作区。'}</small></div>{!oauthSignedIn&&<button disabled={!connected} onClick={()=>void connect()}>{connected?demoMode?'体验演示账号':'连接知乎账号':'知乎连接暂未开放'}</button>}</article>
+      <article className="setting-row"><div><b>{oauthSignedIn?account?.name??'已连接知乎':'游客'}{account?.demo&&<span> · 演示账号</span>}</b><small>{account?.demo?'当前使用示例收藏与创作，演示作者不代表真实博主。':oauthSignedIn?'已连接你的知乎账号，公开收藏与创作需由你主动选择后读取。':'路线、知识脉络与学习进度会自动保存；在此浏览器继续使用。'}</small></div></article>
       <h2>资料范围</h2>
-      <article className="setting-row"><div><b>文件、公开收藏夹与创作</b><small>在首页选择资料，生成路线后可在每个概念中继续阅读与引用。不会自动读取未选择的收藏夹。</small></div></article>
+      <article className="setting-row"><div><b>{oauthSignedIn?'文件、公开收藏夹与创作':'学习文件'}</b><small>在首页添加资料，生成路线后可在每个概念中继续阅读与引用。{oauthSignedIn?'不会自动读取未选择的收藏夹。':''}</small></div></article>
       <h2>界面</h2>
       <div className="setting-row">
         <div><b>夜间模式</b><small>只改变本机外观，不改变学习内容</small></div>

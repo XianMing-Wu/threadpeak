@@ -64,7 +64,7 @@ export function exampleKnowledgeRecord(blueprint: RouteBlueprint): KnowledgeReco
     description: blueprint.summary,
     icon: blueprint.icon,
     sources: showcaseSourceCount(blueprint.id),
-    type: blueprint.id === 'attention-paper' ? '知乎来源 · 论文' : '知乎来源',
+    type: '知乎来源',
     seedConceptId: seed,
     graph: cloneGraph(graph),
     graphs,

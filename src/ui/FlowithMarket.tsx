@@ -99,7 +99,7 @@ export function FlowithMarket({
     if (query.trim()) {
       emptyContent = <EmptyStatus kind="empty" headingLevel={3} title="没有找到匹配内容" body="试试更短的关键词，或清空搜索查看全部内容。" action="清空搜索" onAction={() => setQuery('')} />
     } else if (tab === 'example') {
-      emptyContent = <EmptyStatus kind="empty" headingLevel={3} title={`暂无示例${copy.noun}`} body="编选内容暂时不可用，你仍可以从首页制定自己的学习路线。" action="回到首页" onAction={() => { location.hash = 'home' }} />
+      emptyContent = <EmptyStatus kind="empty" headingLevel={3} title={`暂无示例${copy.noun}`} body="示例内容暂时不可用，你仍可以从首页制定自己的学习路线。" action="回到首页" onAction={() => { location.hash = 'home' }} />
     }
     results = <div className="ux-flowith-empty square-empty">{emptyContent}</div>
   }

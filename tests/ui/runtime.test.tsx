@@ -22,7 +22,7 @@ afterEach(()=>{cleanup();localStorage.clear();sessionStorage.clear();resetSessio
 const document=buildPathDocument({id:'doc',title:'服务端路线',description:'目标',goalTitle:'完成目标',goalSummary:'成果',startSummary:'开始',carriers:[{id:'carrier',title:'载体',summary:'载体',concepts:[['concept','概念','说明']]}]})
 const empty=()=>({version:1 as const,routes:[],knowledge:[],conversations:[],lessons:{}})
 async function backend(){
- const db=await openDatabase();await migrate(db);const store=new DurableStore(db),worker=new DurableWorker(store,createFlows(new ProductTools({complete:async input=>{input.onText?.('这是 provider 边界的离线回答。');return {kind:'completed',text:'这是 provider 边界的离线回答。'}}},{search:async()=>({kind:'empty'}),direct:async()=>({kind:'failed',message:'unexpected direct call'})},64000)),1,()=>{}),app=await createProductApp({store,worker,providersReady:true,identity:{production:false}})
+ const db=await openDatabase();await migrate(db);const store=new DurableStore(db),worker=new DurableWorker(store,createFlows(new ProductTools({complete:async input=>{input.onText?.('这是 provider 边界的离线回答。');return {kind:'completed',text:'这是 provider 边界的离线回答。'}}},{search:async()=>({kind:'empty'})},64000)),1,()=>{}),app=await createProductApp({store,worker,providersReady:true,identity:{production:false}})
  let cookie='';const calls:string[]=[]
  vi.stubGlobal('fetch',async(url:string,init:RequestInit={})=>{
   calls.push(url)
@@ -31,6 +31,7 @@ async function backend(){
   if(response.headers['set-cookie'])cookie=String(response.headers['set-cookie']).split(';')[0]
   return new Response(response.body,{status:response.statusCode,headers:response.headers as Record<string,string>})
  })
+ await fetch('/api/auth/guest',{method:'POST'})
  return {store,app,calls,close:async()=>{await app.close();await db.close();vi.unstubAllGlobals()}}
 }
 
@@ -130,4 +131,23 @@ test.each(['knowledge','app'])('offline %s entry discovers a persisted recovery 
  render(createElement(Page))
  await screen.findByRole('alert')
  expect(await screen.findByRole('button',{name:'导出本地备份'})).toBeTruthy()
+})
+
+test('an interview remains usable while catalogs are running and shows why each question matters',async()=>{
+ const server=await backend()
+ try{
+  await fetch('/api/v2/session')
+  const owner=(await server.store.db.query<{owner_id:string}>('SELECT owner_id FROM tp_sessions'))[0].owner_id
+  const questions=Array.from({length:4},(_,i)=>({id:`q${i}`,prompt:`目标条件${i}`,reason:`这会改变第${i}部分的学习范围`,options:[0,1,2].map(j=>({id:`q${i}-o${j}`,label:`我的条件${i}-${j}`,routeEffect:`影响${j}`}))}))
+  const resource=await server.store.create(owner,'path','parallel-ui',{workflow:'route-direct-v6',goal:'做网页',depth:'fast',attachments:[],status:'awaiting_answers',research:{firstSearch:{summary:'选择差异'},catalogSearch:{summary:''},catalogCarriers:['课A','课B'],ready:false},questionSets:[{round:1,status:'active',message:'确认几个会影响路线的条件',questions,selectedOptionIds:{},customAnswers:{}}],conversation:[]})
+  await server.store.enqueue(owner,resource.id,'path.start','preparing-ui',{depth:'fast'});await server.store.claim()
+  const conversation=createHomeConversation('做网页','route');saveConversation(conversation.id,{pathRunId:resource.id})
+  render(createElement(ChatRoutePanel,{conversationId:conversation.id,query:'做网页',onRouteReady:()=>{}}))
+  await screen.findByText('这会改变第0部分的学习范围')
+  const option=screen.getByRole('button',{name:/我的条件0-0/}) as HTMLButtonElement
+  expect(option.disabled).toBe(false);fireEvent.click(option)
+  fireEvent.click(screen.getAllByRole('button',{name:'继续'})[0])
+  await waitFor(async()=>expect((await server.store.snapshot(owner,resource.id)).data.questionSets[0].selectedOptionIds.q0).toBe('q0-o0'))
+  const saved=await server.store.snapshot(owner,resource.id);expect(saved.job?.status).toBe('running');expect(saved.data.research.ready).toBe(false)
+ }finally{cleanup();await server.close()}
 })

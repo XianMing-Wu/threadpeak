@@ -371,3 +371,86 @@ for(const sample of readingCorpus)test(`reading corpus ${sample.id}: ${sample.la
  }
  if(sample.incomplete)assert.ok(html.indexOf('role="note"')<html.indexOf('<ul>')||!html.includes('<ul>'),'notice must precede incomplete prose')
 })
+
+test('autograd excerpt gaps are detected without mistaking intact equations, prose or code for loss',()=>{
+ const lost=['一个简单的求导例子是： ，计算  ，假设给定  \n先画出计算图','高阶求导的例子：  ，计算  ，假设给定','返回值就是  这一梯度，完整返回值是元组。','手算的话，  ，  ，\n求一阶导可以用backward()']
+ for(const source of lost)assert.equal(hasMissingSourceExcerptMath(source),true,source)
+ for(const source of ['求导例子是：$y=x^2$，计算 $dy/dx$，假设给定 $x=2$。','求导例子是：`y=x*x`，计算 `dy/dx`。','求导是一个例子，计算之前请先画图。','梯度的返回值就是这一梯度，不需要额外处理。',...lost.map(s=>'```text\n'+s+'\n```')])assert.equal(hasMissingSourceExcerptMath(source),false,source)
+})
+test('multiline inline delimiters remain one complete expression',async()=>{
+ for(const source of ['求导：\\(\n\\frac{dy}{dx}=2x\n\\)\n后面的正文。','求导：$\n\\frac{dy}{dx}=2x\n$\n后面的正文。']){
+  const html=await renderActual(source)
+  assert.equal((html.match(/class="katex"/g)||[]).length,1,html)
+  assert.match(html,/encoding="application\/x-tex">\\frac\{dy\}\{dx\}=2x/)
+  assert.match(html,/后面的正文/)
+ }
+})
+test('Markdown container syntax stays outside formulas; nested math fences retain list membership',async()=>{
+ const quote=await renderActual('> $$\n> \\frac{dy}{dx}=2x\n> $$\n> 后文。')
+ assert.match(quote,/<blockquote>[\s\S]*tp-math is-display[\s\S]*后文。[\s\S]*<\/blockquote>/)
+ assert.doesNotMatch(quote,/application\/x-tex">&gt;/)
+ const list=await renderActual('1. 导数\n\n   ```latex\n   \\frac{dy}{dx}=2x\n   ```\n\n   继续推导。\n2. 完成')
+ assert.equal((list.match(/<li>/g)||[]).length,2,list)
+ assert.match(list,/<li>[\s\S]*tp-math is-display[\s\S]*继续推导。[\s\S]*<\/li>/)
+})
+test('bare math never consumes heading, list or emphasis markers',async()=>{
+ const html=await renderActual('## x^2 与导数\n\n**x^2**是例子。\n\n- x^2\n- 完成')
+ assert.match(html,/<h2>[\s\S]*class="katex"[\s\S]*<\/h2>/)
+ assert.match(html,/<strong><span class="tp-math/)
+ assert.equal((html.match(/<li>/g)||[]).length,2)
+ assert.doesNotMatch(html,/tp-math-unresolved|application\/x-tex">(?:##|\*\*|- )/)
+})
+test('Chinese currency stays literal and empty delimiters are visible rather than erased',async()=>{
+ const currency=await renderActual('预算 $20 和 $30，公式 $x^2$。')
+ assert.match(currency,/预算 \$20 和 \$30/)
+ assert.equal((currency.match(/class="katex"/g)||[]).length,1)
+ const empty=await renderActual('求导例子是：$ $，计算 $$ $$。',{sourceExcerpt:true})
+ assert.match(empty,/公式内容缺失/);assert.match(empty,/tp-source-excerpt-note/)
+})
+
+test('ordinary code languages containing math keep their code block and exact source',async()=>{
+ const code='f[x_] := x^2\n(* $a|b$ <tag> \\n *)'
+ const html=await renderActual('```mathematica\n'+code+'\n```')
+ assert.match(html,/<pre\b[^>]*><code class="language-mathematica">/)
+ assert.match(html,/f\[x_\] := x\^2/);assert.match(html,/\$a\|b\$ &lt;tag&gt;/)
+ assert.doesNotMatch(html,/class="katex"/)
+})
+test('mixed GFM structure preserves table columns, aligned code, tasks, references and footnotes',async()=>{
+ const source=String.raw`| 接口 | 公式 | 代码 |
+| :-- | :--: | --: |
+| **backward** | $\frac{\partial y}{\partial x}$ | \`x.grad\` |
+| grad | $\|x\|$ | \`a\|b\` |
+
+> **注意**：$x<y$；保留 *强调*。
+
+- [x] 已理解 $x_i$
+- [ ] 阅读 [原文](https://zhihu.com/question/1)
+
+---
+
+~~过时描述~~与脚注[^n]。
+
+[^n]: 有条件才可用。`.replace(/\\`/g,'`')
+ const html=await renderActual(source)
+ assert.equal((html.match(/<th\b/g)||[]).length,3)
+ assert.equal((html.match(/<td\b/g)||[]).length,6)
+ assert.match(html,/<code>a\|b<\/code>/);assert.match(html,/<code>x.grad<\/code>/)
+ assert.match(html,/<input type="checkbox" disabled="" checked=""/)
+ assert.match(html,/<del>过时描述<\/del>/);assert.match(html,/<hr\/>/)
+ assert.match(html,/href="https:\/\/zhihu.com\/question\/1"/)
+ assert.match(html,/data-footnotes="true"/);assert.match(html,/有条件才可用/)
+ assert.equal((html.match(/class="katex"/g)||[]).length,4)
+ assert.doesNotMatch(html,/tp-math-unresolved/)
+})
+
+test('a delimiter or label with no expression cannot become a successful blank KaTeX box',()=>{
+ for(const raw of ['\\(', '\\)', '\\label{empty}'])assert.equal(renderMath(raw).kind,'unresolved')
+})
+
+test('program names in headings, emphasis and lists stay code through structural math recovery',async()=>{
+ const html=await renderActual('## 高阶求导与 create_graph\n\n**requires_grad**属性。\n\n- scores_by_month\n- x_i')
+ assert.match(html,/<h2>高阶求导与 <code>create_graph<\/code><\/h2>/)
+ assert.match(html,/<strong><code>requires_grad<\/code><\/strong>/)
+ assert.match(html,/<li><code>scores_by_month<\/code><\/li>/)
+ assert.equal((html.match(/class="katex"/g)||[]).length,1)
+})

@@ -61,7 +61,7 @@ export function layoutTree(nodes:GraphNode[],collapsed:string[],expanded:string[
   assertTree(nodes)
   const map:Record<string,Placement>={},byId=new Map(nodes.map(n=>[n.id,n])),children=childrenByParent(nodes)
   const hidden=new Set(collapsed),open=new Set(expanded),pending=new Set(pendingIds),sizes=new Map<string,number>(),heights=new Map<string,number>()
-  const height=(n:GraphNode)=>pending.has(n.id)?238:n.id==='root'?108:open.has(n.id)?Math.min(560,Math.max(260,Math.ceil(n.text.length/22)*21+160)):n.type==='author'?276:n.type==='custom'?Math.max(64,Math.ceil(n.title.length/20)*22+32+(n.text?90:0)):240
+  const height=(n:GraphNode)=>pending.has(n.id)?238:n.id==='root'?108:open.has(n.id)?Math.min(560,Math.max(260,Math.ceil(n.text.length/22)*21+160)):n.type==='author'?340:n.type==='custom'?Math.max(64,Math.ceil(n.title.length/20)*22+32+(n.text?90:0)):240
   const order:string[]=byId.has('root')?['root']:[]
   for(let i=0;i<order.length;i++)if(!hidden.has(order[i]))for(const child of children.get(order[i])??[])order.push(child.id)
   for(let i=order.length-1;i>=0;i--){

@@ -202,8 +202,7 @@ export function protectedSourceRanges(source: string, options: { indentedCode?: 
 /** Conservative search-excerpt hint only; never repair operands or rewrite the source.
  * These literal gaps were observed in upstream summaries. Whitespace by itself is not a signal.
  */
-export function sourceExcerptIssues(source: string): SourceExcerptIssue[] {
-  if (!/即使|公式|矩阵|向量|方程|函数|交换律|结合律|分配律|概率|微积分/.test(source)) return []
+function sourceProse(source:string) {
   let prose = '', cursor = 0
   for (const [start, end] of protectedSourceRanges(source)) {
     // A non-space barrier prevents omitted code/images/links from creating a false gap.
@@ -211,6 +210,17 @@ export function sourceExcerptIssues(source: string): SourceExcerptIssue[] {
     cursor = end
   }
   prose += source.slice(cursor)
+  return prose
+}
+
+export function hasEmptySourceMath(source:string) {
+  return /(?<![\\$])\$(?!\$)[ \t\n]*\$(?!\$)|(?<!\$)\$\$[ \t\n]*\$\$(?!\$)|\\\([ \t\n]*\\\)|\\\[[ \t\n]*\\\]/.test(sourceProse(source))
+}
+
+export function sourceExcerptIssues(source: string): SourceExcerptIssue[] {
+  const emptyMath=hasEmptySourceMath(source)
+  if (!emptyMath&&!/即使|公式|矩阵|向量|方程|函数|交换律|结合律|分配律|概率|微积分|求导|阶导|梯度|导数|计算图/.test(source)) return []
+  let prose=sourceProse(source)
   prose = prose.replace(/\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|(?<!\\)\$(?:\\.|[^$\n])*?(?<!\\)\$/g, '\ufffc')
     .replace(/&nbsp;|&#(?:160|x0*a0);/gi, '\u00a0')
   const rules: Array<[SourceExcerptIssue['code'], RegExp]> = [
@@ -224,7 +234,13 @@ export function sourceExcerptIssues(source: string): SourceExcerptIssue[] {
     ['empty-math-law', /(?:满足|具有)(?:交换律|结合律|分配律)[ \t]*[：:][ \t\n]*(?:满足|具有|示例[：:]|重要注意[：:])/],
     ['missing-operands', /(?:设[ \t]*是|[，。][ \t]*是)[ \t]*(?:矩阵|向量)[，。；]/],
   ]
-  return rules.filter(([,pattern]) => pattern.test(prose)).map(([code]) => ({code}))
+  rules.push(
+    ['missing-operands', /(?:例子(?:是)?|表达式(?:是)?|函数(?:为|是)?)[：:][ \t\u00a0\u3000]*[，,]/],
+    ['missing-operands', /(?:计算|求导(?:得到|得)?)[ \t\u00a0\u3000]*[，,][ \t]*(?:假设|设|给定)/],
+    ['missing-operands', /返回值就是[ \t\u00a0\u3000]{2,}这一梯度/],
+    ['empty-formula-list', /手算的话[，,][ \t\u00a0\u3000]*[，,][ \t\u00a0\u3000]*[，,]/],
+  )
+  return [...new Set([...rules.filter(([,pattern]) => pattern.test(prose)).map(([code]) => code),...(emptyMath?['empty-formula-list' as const]:[])])].map(code=>({code}))
 }
 
 export type SourceExcerptIssue = {code:'missing-operands'|'empty-formula-list'|'empty-math-law'}

@@ -94,24 +94,42 @@ export class DurableStore {
       (SELECT COUNT(*)::integer FROM tp_jobs WHERE owner_id=$1 AND status IN ('queued','running')) AS active`, [owner, this.now()-3_600_000])
     if ((kind!=='path.answer' && (quota?.recent??0)>=120) || (quota?.active??0)>=6) throw new CommandError('ACCOUNT_BUSY',429)
   }
+  private async enqueueLocked(tx:Sql,resource:Resource,kind:string,key:string,input:unknown,update?:(resource:Resource,jobId:string)=>unknown){
+    const owner=resource.owner_id,id=resource.id
+    const hash = digest({ resourceId: id, kind, input })
+    const [previous] = await tx.query<Job>('SELECT * FROM tp_jobs WHERE owner_id=$1 AND command_key=$2', [owner, key])
+    if (previous) {
+      if (previous.input_hash !== hash && digest({resourceId:previous.resource_id,kind:previous.kind,input:previous.input})!==hash) throw new CommandError('COMMAND_CONFLICT')
+      return previous
+    }
+    await this.admit(tx, owner, kind)
+    const [active] = await tx.query<Job>("SELECT * FROM tp_jobs WHERE resource_id=$1 AND status IN ('queued','running','waiting')", [id])
+    if (active) throw new CommandError('BUSY')
+    const jobId = randomUUID()
+    const body = update ? update(resource, jobId) : resource.body
+    const [job] = await tx.query<Job>(`INSERT INTO tp_jobs(id,owner_id,resource_id,command_key,input_hash,kind,input,status,phase,created_at,updated_at)
+      VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,'queued','已接收，正在准备',$8,$8) RETURNING *`, [jobId, owner, id, key, hash, kind, JSON.stringify(input), this.now()])
+    await this.event(tx, resource, 'job.accepted', { jobId }, body)
+    return job!
+  }
   async enqueue(owner: string, id: string, kind: string, key: string, input: unknown, update?: (resource: Resource, jobId: string) => unknown) {
-    return this.db.transaction(async tx => {
-      const resource = await this.lockResource(tx, owner, id)
-      const hash = digest({ resourceId: id, kind, input })
-      const [previous] = await tx.query<Job>('SELECT * FROM tp_jobs WHERE owner_id=$1 AND command_key=$2', [owner, key])
-      if (previous) {
-        if (previous.input_hash !== hash && digest({resourceId:previous.resource_id,kind:previous.kind,input:previous.input})!==hash) throw new CommandError('COMMAND_CONFLICT')
-        return previous
-      }
-      await this.admit(tx, owner, kind)
-      const [active] = await tx.query<Job>("SELECT * FROM tp_jobs WHERE resource_id=$1 AND status IN ('queued','running','waiting')", [id])
-      if (active) throw new CommandError('BUSY')
-      const jobId = randomUUID()
-      const body = update ? update(resource, jobId) : resource.body
-      const [job] = await tx.query<Job>(`INSERT INTO tp_jobs(id,owner_id,resource_id,command_key,input_hash,kind,input,status,phase,created_at,updated_at)
-        VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,'queued','已接收，正在准备',$8,$8) RETURNING *`, [jobId, owner, id, key, hash, kind, JSON.stringify(input), this.now()])
-      await this.event(tx, resource, 'job.accepted', { jobId }, body)
-      return job!
+    return this.db.transaction(async tx=>this.enqueueLocked(tx,await this.lockResource(tx,owner,id),kind,key,input,update))
+  }
+  /** Accept immutable answers while the preparation job still owns the resource. */
+  async answerPath(owner:string,id:string,key:string,input:unknown,update:(resource:Resource)=>unknown){
+    return this.db.transaction(async tx=>{
+      const resource=await this.lockResource(tx,owner,id),hash=digest({resourceId:id,kind:'path.answer',input})
+      const [receipt]=await tx.query<{input_hash:string}>('SELECT input_hash FROM tp_path_answer_commands WHERE owner_id=$1 AND command_key=$2',[owner,key])
+      if(receipt){if(receipt.input_hash!==hash)throw new CommandError('COMMAND_CONFLICT');return}
+      if(resource.kind!=='path')throw new CommandError('NOT_FOUND',404)
+      const [active]=await tx.query<Job>("SELECT * FROM tp_jobs WHERE resource_id=$1 AND status IN ('queued','running','waiting')",[id])
+      if(active&&!['path.start','path.answer'].includes(active.kind))throw new CommandError('BUSY')
+      const body=update(resource)
+      await tx.query('INSERT INTO tp_path_answer_commands(owner_id,command_key,resource_id,input_hash,created_at) VALUES($1,$2,$3,$4,$5)',[owner,key,id,hash,this.now()])
+      await this.event(tx,resource,'path.answer.saved',{},body)
+      const set=resource.body.questionSets.find((s:any)=>s.status==='active')
+      const answered=set?.questions.every((q:any)=>set.selectedOptionIds[q.id]||set.customAnswers?.[q.id])
+      if(!active&&resource.body.research?.ready&&answered)await this.enqueueLocked(tx,resource,'path.answer',key,input)
     })
   }
   async claim(leaseMs = JOB_LEASE_MS): Promise<Job|undefined> {
@@ -172,7 +190,7 @@ export class DurableStore {
       await this.event(tx,resource,'job.activity',{jobId:job.id,activity},resource.body,false)
     })
   }
-  async commit(job: Job, update: (resource: Resource, tx: Sql) => unknown|Promise<unknown>) {
+  async commit(job: Job, update: (resource: Resource, tx: Sql) => unknown|Promise<unknown>, continuation?:(body:any)=>{kind:string;key:string;input:unknown}|undefined) {
     const started=Date.now()
     await this.db.transaction(async tx => {
       const resource = await this.lockResource(tx, job.owner_id, job.resource_id)
@@ -182,6 +200,8 @@ export class DurableStore {
       await tx.query('UPDATE tp_jobs SET activities=$2::jsonb WHERE id=$1',[job.id,JSON.stringify(activities)])
       await tx.query("UPDATE tp_jobs SET status='completed',phase='已完成',draft='',lease_until=0,error_code=NULL,updated_at=$2 WHERE id=$1", [job.id, this.now()])
       await this.event(tx, resource, 'job.completed', { jobId: job.id }, body)
+      const next=continuation?.(body)
+      if(next)await this.enqueueLocked(tx,resource,next.kind,next.key,next.input)
     })
     await recordMetric(this.db,job,'commit',{kind:'commit',durationMs:Date.now()-started})
   }

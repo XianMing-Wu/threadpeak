@@ -8,15 +8,26 @@ const definitions=[
   {key:'R3',title:'准备聊聊你的目标',kind:'agent',after:['R2']},
 ] as const
 const statusOf=(job:Pick<Job,'status'>,done:boolean):Step['status']=>done?'done':job.status==='waiting'?'failed':job.status==='cancelled'?'stopped':'running'
-export function pathTrace(jobs:Pick<Job,'id'|'kind'|'status'|'checkpoints'>[],path:{status:string;questionSets:any[];searchScope?:{kind:string}}):Step[]{
+export function pathTrace(jobs:Pick<Job,'id'|'kind'|'status'|'checkpoints'>[],path:{status:string;questionSets:any[];searchScope?:{kind:string};workflow?:string;research?:{ready:boolean}}):Step[]{
   const result:Step[]=[]
   for(const job of jobs){
-    const checkpoint=(key:string)=>Object.entries(job.checkpoints).find(([name])=>name.startsWith(`${key}@goal-v1:`))?.[1]??job.checkpoints[`${key}@goal-v1`]??job.checkpoints[key]
+    const checkpoint=(key:string)=>Object.entries(job.checkpoints).find(([name])=>name.startsWith(`${key}@goal-v1:`)||name.startsWith(`${key}:goal-choices-v2@goal-v1`))?.[1]??job.checkpoints[`${key}@goal-v1`]??job.checkpoints[key]
     const has=(key:string)=>!!checkpoint(key)
-    if(job.kind==='path.start')for(const step of (path.searchScope?.kind==='collections'?[definitions[0],{key:'R-materials',title:'读取所选收藏资料',kind:'search' as const,after:['R1']},{...definitions[3],after:['R-materials']},definitions[4]]:definitions)){
-      if(!has(step.key)&&!step.after.every(has))continue
-      const status=statusOf(job,has(step.key));const value=checkpoint(step.key)?.value
-      result.push({id:`${job.id}:${step.key}`,kind:step.kind,status,title:(status==='running'?'正在':'')+step.title,...(step.kind==='search'&&(Array.isArray(value)||value&&typeof value==='object'&&'count' in value)?{extra:`${Array.isArray(value)?value.length:(value as {count:number}).count} 条资料`}:{})})
+    const direct=path.workflow==='route-direct-v6'||Object.keys(job.checkpoints).some(k=>k.startsWith('R2-names:v6'))
+    if(job.kind==='path.start'){
+      const first=path.searchScope?.kind==='collections'?[definitions[0],{key:'R-materials',title:'读取所选收藏资料',kind:'search' as const,after:['R1']}]:definitions.slice(0,3)
+      const prerequisites=path.searchScope?.kind==='collections'?['R-materials']:['R-S:0','R-S:1']
+      const names=(checkpoint('R2-names:v6')?.value as {carriers?:string[]}|undefined)?.carriers??[]
+      const next=direct?[
+        {key:'R2-names:v6',title:'提取待补查载体',kind:'agent',after:prerequisites},
+        ...names.map((name,i)=>({key:`R-Catalog:v6:${i+1}`,title:`补查${name}`,kind:'search',after:i<2?['R2-names:v6']:['R-Catalog:v6:1','R-Catalog:v6:2']})),
+        {key:'R3:v6',title:'准备路线选择题',kind:'agent',after:['R2-names:v6']},
+      ]:[{...definitions[3],after:prerequisites},definitions[4]]
+      for(const step of [...first,...next]){
+        if(!has(step.key)&&!step.after.every(has))continue
+        const status=statusOf(job,has(step.key)),value=checkpoint(step.key)?.value
+        result.push({id:`${job.id}:${step.key}`,kind:step.kind as Step['kind'],status,title:(status==='running'?'正在':'')+step.title,...(step.kind==='search'&&Array.isArray(value)?{extra:`${value.length} 条资料`}:{})})
+      }
     }
     if(job.kind==='path.clarify')result.push({id:`${job.id}:clarify`,kind:'agent',status:statusOf(job,has('R3b')),title:has('R3b')?'已回应你的补充':'正在回应你的补充'})
   }

@@ -16,7 +16,7 @@ type Field = { object: Record<string, any>; key: string; path: string; length: n
 export function contextJson(value:unknown){
   if(!value||typeof value!=='object'||Array.isArray(value))return JSON.stringify(value)
   // Put long evidence first and the immutable task last. Do not bury user intent
-  // before dozens of articles, and do not duplicate it to gain recency.
+  // before dozens of articles. A caller may add a separately budgeted task reminder.
   const priority=(key:string)=>['currentQuestion','currentMessage','followUpMessage'].includes(key)?5:key==='conversation'?4:key==='goalContext'?3:protectedKeys.has(key)?2:0
   const canonical=(v:any):any=>Array.isArray(v)?v.map(canonical):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(key=>[key,canonical(v[key])])):v
   return JSON.stringify(Object.fromEntries(Object.entries(value).sort(([a],[b])=>priority(a)-priority(b)||a.localeCompare(b,'en')).map(([key,v])=>[key,canonical(v)])))
@@ -35,7 +35,7 @@ function fields(value: unknown, path = '', result: Field[] = []): Field[] {
 }
 export async function boundedSummary(llm:LlmProvider,ctx:TaskContext,text:string,source:string,target:number,depth:ThinkingDepth,configuredWindow:number,purpose:unknown={task:'保留整份资料的知识范围、关系和条件，尚未指定学习目标'},capability?:ProviderBudget):Promise<string>{
   const budget=Math.max(512,Math.floor(target)),window=effectiveWindow(configuredWindow)
-  const key=createHash('sha256').update(JSON.stringify({version:AGENT_CONTRACT_VERSION,policy:SUMMARY_POLICY,capability,source,text,budget,depth,window,purpose})).digest('hex')
+  const key=createHash('sha256').update(JSON.stringify({version:AGENT_CONTRACT_VERSION,requestVersion:2,policy:SUMMARY_POLICY,capability,source,text,budget,depth,window,purpose})).digest('hex')
   return ctx.step(`memory:${key}`,{source,budget,key},async()=>{
     const [memory]=await ctx.store.db.query<{summary:string}>('SELECT summary FROM tp_memories WHERE owner_id=$1 AND source_hash=$2',[ctx.job.owner_id,key])
     const started=Date.now()
@@ -53,7 +53,7 @@ export async function boundedSummary(llm:LlmProvider,ctx:TaskContext,text:string
       chunkCount+=parts.length
       const summarizePart=async(index:number)=>{
         const input={source,pass,part:index+1,parts:parts.length,maximumCharacters:Math.max(24,Math.floor(perPart/(pass>3?6:4))),text:parts[index]!,purpose}
-        const messages:ChatMessage[]=[{role:'system',content:SUMMARY_POLICY},{role:'user',content:JSON.stringify(input)}]
+        const messages:ChatMessage[]=[{role:'system',content:SUMMARY_POLICY},{role:'user',content:JSON.stringify(input)},{role:'user',content:`请现在只返回这段来源的摘要，最多${input.maximumCharacters}个字符。合并重复和无关铺陈，保留与purpose有关的条件差异；来源的营销结论注明“原文声称”。不要复述整段，不输出标题。`}]
         if(messages.reduce((n,m)=>n+tokenBound(m.content)+64,0)+output+1024>window)throw new ToolError('CONTEXT_REQUIRES_PARTITION',false)
         const result=await ctx.step(`memory-part:${key}:${pass}:${index}`,input,async()=>{
           modelCalls++

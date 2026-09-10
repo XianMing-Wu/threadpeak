@@ -17,3 +17,6 @@ qa/evidence/project-audit-fixes-2026-09-08/raw/
 coverage/
 *.threadpeak-owner
 *.threadpeak-lock
+
+# Local backend review workspace (workflow maps, notes, and follow-up audits).
+/.local-backend-review/

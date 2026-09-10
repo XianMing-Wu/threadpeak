@@ -1,37 +1,37 @@
 {
-  "_CharacterRig-BpJUYaY6.js": {
-    "file": "CharacterRig-BpJUYaY6.js",
+  "_CharacterRig-CH9rqunS.js": {
+    "file": "CharacterRig-CH9rqunS.js",
     "name": "CharacterRig",
     "imports": [
-      "_three-runtime-CHDI8JSc.js"
+      "_three-runtime-DPnU7la1.js"
     ]
   },
-  "_overpassSpec-3Tu8NqTy.js": {
-    "file": "overpassSpec-3Tu8NqTy.js",
+  "_overpassSpec-ieWQ-bKk.js": {
+    "file": "overpassSpec-ieWQ-bKk.js",
     "name": "overpassSpec"
   },
-  "_three-runtime-CHDI8JSc.js": {
-    "file": "three-runtime-CHDI8JSc.js",
+  "_three-runtime-DPnU7la1.js": {
+    "file": "three-runtime-DPnU7la1.js",
     "name": "three-runtime"
   },
   "src/app/LearningPathSession.ts": {
-    "file": "LearningPathSession-Cl847s7Y.js",
+    "file": "LearningPathSession-CnZDbDYR.js",
     "name": "LearningPathSession",
     "src": "src/app/LearningPathSession.ts",
     "isDynamicEntry": true,
     "imports": [
-      "_overpassSpec-3Tu8NqTy.js",
-      "_three-runtime-CHDI8JSc.js",
-      "_CharacterRig-BpJUYaY6.js"
+      "_overpassSpec-ieWQ-bKk.js",
+      "_three-runtime-DPnU7la1.js",
+      "_CharacterRig-CH9rqunS.js"
     ]
   },
   "src/infrastructure/three/character/prepareLearningPathCharacter.ts": {
-    "file": "prepareLearningPathCharacter-Bvm1PXv0.js",
+    "file": "prepareLearningPathCharacter-CoxBgT1d.js",
     "name": "prepareLearningPathCharacter",
     "src": "src/infrastructure/three/character/prepareLearningPathCharacter.ts",
     "isDynamicEntry": true,
     "imports": [
-      "_CharacterRig-BpJUYaY6.js"
+      "_CharacterRig-CH9rqunS.js"
     ]
   },
   "src/module/index.ts": {
@@ -40,7 +40,7 @@
     "src": "src/module/index.ts",
     "isEntry": true,
     "imports": [
-      "_overpassSpec-3Tu8NqTy.js"
+      "_overpassSpec-ieWQ-bKk.js"
     ],
     "dynamicImports": [
       "src/app/LearningPathSession.ts",

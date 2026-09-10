@@ -46,7 +46,7 @@ test('same start/callback/session endpoints complete an explicitly marked isolat
   const start=await app.inject({url:'/api/auth/zhihu/start'})
   assert.equal(start.statusCode,200);assert.equal(start.json().kind,'redirect')
   const redirect=new URL(start.json().authorizeUrl);assert.equal(redirect.origin,'http://localhost');assert.equal(redirect.pathname,'/api/auth/zhihu/callback')
-  const result=await app.inject({url:redirect.pathname+redirect.search,headers:{cookie:start.headers['set-cookie'].split(';')[0]}})
+  const result=await app.inject({url:redirect.pathname+redirect.search,headers:{cookie:String(start.headers['set-cookie']).split(';')[0]}})
   assert.equal(result.statusCode,302);assert.equal(result.headers.location,'/?oauth=success#home')
   const cookie=result.headers['set-cookie'].find(v=>v.startsWith('tp_workspace=')).split(';')[0]
   const session=await app.inject({url:'/api/v2/session',headers:{cookie}})
@@ -86,7 +86,7 @@ test('a local workspace needs login, while an expired connected account needs re
   const {db,login,app,authorize}=await fixture(t)
   const real=new ZhihuLogin(db,fakeRealConfig,unreachable)
   for(const provider of [login,real])await assert.rejects(provider.userToken('local:never-authorized'),e=>e.code==='ZHIHU_LOGIN_REQUIRED'&&e.status===401)
-  const session=await app.inject({url:'/api/v2/session'}),cookie=session.headers['set-cookie'].split(';')[0]
+  const session=await app.inject({method:'POST',url:'/api/auth/guest'}),cookie=String(session.headers['set-cookie']).split(';')[0]
   const folders=await app.inject({url:'/api/v2/zhihu/folders',headers:{cookie}})
   assert.equal(folders.statusCode,401);assert.equal(folders.json().code,'ZHIHU_LOGIN_REQUIRED')
   const account=await authorize();await db.query('UPDATE tp_zhihu_accounts SET token_expires_at=0 WHERE owner_id=$1',[account.owner])

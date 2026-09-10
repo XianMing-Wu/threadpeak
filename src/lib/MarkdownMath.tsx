@@ -31,6 +31,7 @@ function texOf(children: ReactNode) {
 
 function mathComponents(): Components {
   return {
+    table({children}) { return <table tabIndex={0}>{children}</table> },
     code({ className, children }: { className?: string; children?: ReactNode }) {
       const tex = texOf(children)
       if (className?.includes('math-display')) return <KatexView tex={tex} display />
@@ -39,7 +40,7 @@ function mathComponents(): Components {
     },
     pre({ children }: { children?: ReactNode }) {
       const child = Children.toArray(children)[0]
-      if (isValidElement<{ className?: string }>(child) && child.props.className?.includes('math')) {
+      if (isValidElement<{ className?: string }>(child) && /(?:^|\s)math-(?:display|inline)(?:\s|$)/.test(child.props.className??'')) {
         return <>{children}</>
       }
       return <pre tabIndex={0}>{children}</pre>

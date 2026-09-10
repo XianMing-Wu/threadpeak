@@ -1,3 +1,4 @@
+import { SendControl } from './SendControl'
 import { useRef, useState, type ReactNode } from 'react'
 import { Icon } from '../icons'
 import {
@@ -56,9 +57,7 @@ export function Composer({ value, onChange, onSend, compact = false, quote, onCl
                 <button type="button" className="composer-icon" aria-label="添加附件" title="上传 PDF、MD、Markdown 或 TXT" onClick={() => fileInput.current?.click()}><Icon name="prod-home-attachment" size={16}/></button>
               </>
               : <button type="button" className="composer-icon" aria-label="添加附件" onClick={() => setAttachmentNotice(resolveComposerAttachment())}><Icon name="prod-home-attachment" size={16}/></button>)}
-            {busy
-              ? <button type="button" className="composer-send is-stop" aria-label="停止生成" onClick={() => onStop?.()}><Icon name="stop" size={14}/></button>
-              : <button type="button" className="composer-send" disabled={!enabled} aria-label={sendLabel} onClick={onSend}><Icon name="prod-home-send-disabled" size={14}/></button>}
+            <SendControl busy={busy} disabled={!enabled} submitting={busy&&sendDisabled} onSend={onSend} onStop={onStop} sendLabel={sendLabel}/>
           </div>
         </div>
         {bottomContent}

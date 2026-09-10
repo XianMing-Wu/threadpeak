@@ -44,12 +44,14 @@ export function registerMaterialRoutes(app:FastifyInstance,store:DurableStore,wo
     return {...materialView({id:snapshot.id,body:snapshot.data} as Resource<Material>),job:snapshot.job,notice:task?messages[task.error_code]:undefined}
   })
   app.get('/api/v2/zhihu/folders',async request=>{
+    if(!owner(request).startsWith('account:zhihu:'))throw new CommandError('ZHIHU_LOGIN_REQUIRED',401)
     if(!api||!login)throw new CommandError('ZHIHU_NOT_CONFIGURED',503)
     const token=await login.userToken(owner(request)),data=await api.user('favlists',token,{Limit:100})
     if(!Array.isArray(data.Items))throw new CommandError('ZHIHU_CONTENT_INVALID',502)
     return {items:data.Items.filter((f:any)=>f.IsPublic===true&&Number.isSafeInteger(f.UrlToken)&&f.UrlToken>0).map((f:any)=>({id:String(f.UrlToken),title:String(f.Title??'收藏夹'),description:String(f.Description??''),url:safeZhihuUrl(f.Url,isMockZhihuOwner(owner(request))),demo:isMockZhihuOwner(owner(request))}))}
   })
   app.post('/api/v2/materials/zhihu',async request=>{
+    if(!owner(request).startsWith('account:zhihu:'))throw new CommandError('ZHIHU_LOGIN_REQUIRED',401)
     if(!api||!login)throw new CommandError('ZHIHU_NOT_CONFIGURED',503)
     const input=z.object({kind:z.enum(['collection','creation','recent']),folderId:z.string().regex(/^[1-9]\d{0,15}$/).optional()}).parse(request.body),own=owner(request)
     const token=await login.userToken(own)

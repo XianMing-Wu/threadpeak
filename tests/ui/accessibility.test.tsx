@@ -199,7 +199,7 @@ test('knowledge library failures render a retryable error instead of an endless 
   render(<KnowledgePage/>)
   const error = await screen.findByRole('alert')
   expect(within(error).getByRole('heading', {name: '暂时无法读取你的知识脉络'})).toBeTruthy()
-  expect(within(error).getByText('下方编选示例仍可浏览，你的内容读取失败，请重新连接。')).toBeTruthy()
+  expect(within(error).getByText('下方示例仍可浏览，你的内容读取失败，请重新连接。')).toBeTruthy()
   expect(screen.queryByText('正在读取你的知识脉络…')).toBeNull()
   fireEvent.click(within(error).getByRole('button', {name: '重新连接'}))
   await waitFor(() => expect(boundary.reload).toHaveBeenCalledOnce())

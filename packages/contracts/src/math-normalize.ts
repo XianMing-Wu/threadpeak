@@ -19,6 +19,7 @@ export type MathRendering={kind:'rendered';html:string;tex:string;repaired:boole
 export function renderMath(source:string,display=false):MathRendering{
   if(!source.trim()||source.length>30000)return {kind:'unresolved',source}
   const normalized=normalizeTex(source),withoutSizing=normalized.replace(/\\(?:left|right)\b/g,'')
+  if(!normalized)return {kind:'unresolved',source}
   const attempts=[normalized,closeGroups(normalized),closeGroups(withoutSizing)]
   for(const tex of [...new Set(attempts)])try{
     const html=katex.renderToString(tex,{displayMode:display,throwOnError:true,trust:false,strict:'ignore',maxExpand:1000,maxSize:20,output:'htmlAndMathml',macros:{}})

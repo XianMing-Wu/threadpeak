@@ -1,4 +1,4 @@
-import { c as e, d as t, f as n, g as r, h as i, i as a, l as o, m as s, p as c, r as l, u } from "./overpassSpec-3Tu8NqTy.js";
+import { c as e, d as t, f as n, g as r, h as i, i as a, l as o, m as s, p as c, r as l, u } from "./overpassSpec-ieWQ-bKk.js";
 //#region src/content/types.ts
 var d = "learning-path", f = Object.freeze({
 	maxSubjects: 128,
@@ -6928,12 +6928,12 @@ var fo = class {
 	}
 }, po = null, mo = null;
 function ho() {
-	return po ??= import("./LearningPathSession-Cl847s7Y.js").catch((e) => {
+	return po ??= import("./LearningPathSession-CnZDbDYR.js").catch((e) => {
 		throw po = null, e;
 	}), po;
 }
 function go() {
-	return mo ??= import("./prepareLearningPathCharacter-Bvm1PXv0.js").catch((e) => {
+	return mo ??= import("./prepareLearningPathCharacter-CoxBgT1d.js").catch((e) => {
 		throw mo = null, e;
 	}), mo;
 }

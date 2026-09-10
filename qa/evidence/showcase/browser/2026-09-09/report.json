@@ -1,0 +1,498 @@
+{
+  "date": "2026-09-09T14:17:50.879Z",
+  "version": "2026-09-09.1",
+  "url": "http://127.0.0.1:4399/",
+  "concepts": [
+    {
+      "route": "llm-application",
+      "concept": "llm-application-concept-1",
+      "nodes": 12,
+      "articles": 5,
+      "authorCards": 0
+    },
+    {
+      "route": "llm-application",
+      "concept": "llm-application-concept-2",
+      "nodes": 12,
+      "articles": 5,
+      "authorCards": 0
+    },
+    {
+      "route": "llm-application",
+      "concept": "llm-application-concept-3",
+      "nodes": 10,
+      "articles": 3,
+      "authorCards": 0
+    },
+    {
+      "route": "llm-application",
+      "concept": "llm-application-concept-4",
+      "nodes": 15,
+      "articles": 6,
+      "authorCards": 0
+    },
+    {
+      "route": "llm-application",
+      "concept": "llm-application-concept-5",
+      "nodes": 11,
+      "articles": 5,
+      "authorCards": 0
+    },
+    {
+      "route": "llm-application",
+      "concept": "llm-application-concept-6",
+      "nodes": 13,
+      "articles": 6,
+      "authorCards": 0
+    },
+    {
+      "route": "llm-application",
+      "concept": "llm-application-concept-7",
+      "nodes": 17,
+      "articles": 3,
+      "authorCards": 3
+    },
+    {
+      "route": "llm-application",
+      "concept": "llm-application-concept-8",
+      "nodes": 15,
+      "articles": 7,
+      "authorCards": 0
+    },
+    {
+      "route": "llm-application",
+      "concept": "llm-application-concept-9",
+      "nodes": 12,
+      "articles": 5,
+      "authorCards": 0
+    },
+    {
+      "route": "ming-history",
+      "concept": "ming-history-concept-1",
+      "nodes": 13,
+      "articles": 6,
+      "authorCards": 0
+    },
+    {
+      "route": "ming-history",
+      "concept": "ming-history-concept-2",
+      "nodes": 13,
+      "articles": 6,
+      "authorCards": 0
+    },
+    {
+      "route": "ming-history",
+      "concept": "ming-history-concept-3",
+      "nodes": 9,
+      "articles": 3,
+      "authorCards": 0
+    },
+    {
+      "route": "ming-history",
+      "concept": "ming-history-concept-4",
+      "nodes": 13,
+      "articles": 6,
+      "authorCards": 0
+    },
+    {
+      "route": "ming-history",
+      "concept": "ming-history-concept-5",
+      "nodes": 13,
+      "articles": 6,
+      "authorCards": 0
+    },
+    {
+      "route": "ming-history",
+      "concept": "ming-history-concept-6",
+      "nodes": 12,
+      "articles": 5,
+      "authorCards": 0
+    },
+    {
+      "route": "ming-history",
+      "concept": "ming-history-concept-7",
+      "nodes": 19,
+      "articles": 6,
+      "authorCards": 3
+    },
+    {
+      "route": "ming-history",
+      "concept": "ming-history-concept-8",
+      "nodes": 13,
+      "articles": 6,
+      "authorCards": 0
+    },
+    {
+      "route": "ming-history",
+      "concept": "ming-history-concept-9",
+      "nodes": 12,
+      "articles": 5,
+      "authorCards": 0
+    },
+    {
+      "route": "ming-history",
+      "concept": "ming-history-concept-10",
+      "nodes": 13,
+      "articles": 6,
+      "authorCards": 0
+    },
+    {
+      "route": "financial-decisions",
+      "concept": "financial-decisions-concept-1",
+      "nodes": 11,
+      "articles": 4,
+      "authorCards": 0
+    },
+    {
+      "route": "financial-decisions",
+      "concept": "financial-decisions-concept-2",
+      "nodes": 13,
+      "articles": 6,
+      "authorCards": 0
+    },
+    {
+      "route": "financial-decisions",
+      "concept": "financial-decisions-concept-3",
+      "nodes": 13,
+      "articles": 6,
+      "authorCards": 0
+    },
+    {
+      "route": "financial-decisions",
+      "concept": "financial-decisions-concept-4",
+      "nodes": 17,
+      "articles": 3,
+      "authorCards": 2
+    }
+  ],
+  "routes": [
+    {
+      "route": "llm-application",
+      "canvas": {
+        "width": 1328,
+        "height": 952
+      },
+      "runtime": {
+        "instanceId": "threadpeak-example-3",
+        "phase": "generating",
+        "sessionRevision": null,
+        "session": null,
+        "progress": null
+      },
+      "parallel": [
+        "Agent 循环与受控工具",
+        "检索增强生成 · RAG"
+      ]
+    },
+    {
+      "route": "ming-history",
+      "canvas": {
+        "width": 1328,
+        "height": 952
+      },
+      "runtime": {
+        "instanceId": "threadpeak-example-5",
+        "phase": "ready",
+        "sessionRevision": 1,
+        "session": {
+          "currentNodeId": "route-start",
+          "selectedNodeId": "route-start",
+          "targetNodeId": null,
+          "isRunning": false,
+          "visuallyIdle": true,
+          "modelLoaded": true,
+          "interactionEnabled": true,
+          "visibleNodeIds": [
+            "route-start",
+            "carrier-ming-overview",
+            "carrier-ming-politics",
+            "carrier-ming-society",
+            "carrier-ming-evidence",
+            "goal-understanding"
+          ],
+          "visibleEdgeIds": [
+            "flow-carrier-ming-evidence-goal-understanding",
+            "flow-carrier-ming-overview-carrier-ming-politics",
+            "flow-carrier-ming-overview-carrier-ming-society",
+            "flow-carrier-ming-politics-carrier-ming-evidence",
+            "flow-carrier-ming-society-carrier-ming-evidence",
+            "flow-route-start-carrier-ming-overview",
+            "parallel-peer:split-carrier-ming-overview:carrier-ming-politics:carrier-ming-society"
+          ]
+        },
+        "progress": {
+          "currentNodeId": "route-start",
+          "nodeStatusById": {
+            "route-start": "completed",
+            "carrier-ming-overview": "completed",
+            "carrier-ming-politics": "completed",
+            "carrier-ming-society": "completed",
+            "carrier-ming-evidence": "completed",
+            "goal-understanding": "completed",
+            "ming-history-concept-1": "in-progress",
+            "ming-history-concept-2": "in-progress",
+            "ming-history-concept-3": "in-progress",
+            "ming-history-concept-4": "in-progress",
+            "ming-history-concept-5": "in-progress",
+            "ming-history-concept-6": "in-progress",
+            "ming-history-concept-7": "in-progress",
+            "ming-history-concept-8": "in-progress",
+            "ming-history-concept-9": "in-progress",
+            "ming-history-concept-10": "in-progress"
+          },
+          "nodeLearningStateById": {
+            "route-start": {
+              "kind": "subject",
+              "status": "completed"
+            },
+            "carrier-ming-overview": {
+              "kind": "subject",
+              "status": "completed"
+            },
+            "carrier-ming-politics": {
+              "kind": "subject",
+              "status": "completed"
+            },
+            "carrier-ming-society": {
+              "kind": "subject",
+              "status": "completed"
+            },
+            "carrier-ming-evidence": {
+              "kind": "subject",
+              "status": "completed"
+            },
+            "goal-understanding": {
+              "kind": "goal",
+              "status": "completed"
+            },
+            "ming-history-concept-1": {
+              "kind": "concept",
+              "status": "in-progress"
+            },
+            "ming-history-concept-2": {
+              "kind": "concept",
+              "status": "in-progress"
+            },
+            "ming-history-concept-3": {
+              "kind": "concept",
+              "status": "in-progress"
+            },
+            "ming-history-concept-4": {
+              "kind": "concept",
+              "status": "in-progress"
+            },
+            "ming-history-concept-5": {
+              "kind": "concept",
+              "status": "in-progress"
+            },
+            "ming-history-concept-6": {
+              "kind": "concept",
+              "status": "in-progress"
+            },
+            "ming-history-concept-7": {
+              "kind": "concept",
+              "status": "in-progress"
+            },
+            "ming-history-concept-8": {
+              "kind": "concept",
+              "status": "in-progress"
+            },
+            "ming-history-concept-9": {
+              "kind": "concept",
+              "status": "in-progress"
+            },
+            "ming-history-concept-10": {
+              "kind": "concept",
+              "status": "in-progress"
+            }
+          },
+          "subjectStatusById": {
+            "route-start": "completed",
+            "carrier-ming-overview": "completed",
+            "carrier-ming-politics": "completed",
+            "carrier-ming-society": "completed",
+            "carrier-ming-evidence": "completed",
+            "goal-understanding": "completed"
+          },
+          "conceptStatusById": {
+            "ming-history-concept-1": "in-progress",
+            "ming-history-concept-2": "in-progress",
+            "ming-history-concept-3": "in-progress",
+            "ming-history-concept-4": "in-progress",
+            "ming-history-concept-5": "in-progress",
+            "ming-history-concept-6": "in-progress",
+            "ming-history-concept-7": "in-progress",
+            "ming-history-concept-8": "in-progress",
+            "ming-history-concept-9": "in-progress",
+            "ming-history-concept-10": "in-progress"
+          },
+          "celebration": {
+            "seen": false,
+            "count": 0
+          },
+          "lastNavigationDecision": null,
+          "lastCatchUpResult": null,
+          "lastConceptAction": null,
+          "pendingLearningIntent": null,
+          "lastLearningLaunch": null,
+          "pendingUnlockCommit": null,
+          "lastMovementCancellation": null,
+          "lastRejection": null
+        }
+      },
+      "parallel": [
+        "明代政治制度史",
+        "明代经济社会史"
+      ]
+    },
+    {
+      "route": "financial-decisions",
+      "canvas": {
+        "width": 1328,
+        "height": 952
+      },
+      "runtime": {
+        "instanceId": "threadpeak-example-7",
+        "phase": "ready",
+        "sessionRevision": 1,
+        "session": {
+          "currentNodeId": "route-start",
+          "selectedNodeId": "route-start",
+          "targetNodeId": null,
+          "isRunning": false,
+          "visuallyIdle": true,
+          "modelLoaded": true,
+          "interactionEnabled": true,
+          "visibleNodeIds": [
+            "route-start",
+            "carrier-finance-cashflow",
+            "carrier-finance-reserve",
+            "carrier-finance-costs",
+            "carrier-finance-decisions",
+            "goal-understanding"
+          ],
+          "visibleEdgeIds": [
+            "flow-carrier-finance-cashflow-carrier-finance-costs",
+            "flow-carrier-finance-cashflow-carrier-finance-reserve",
+            "flow-carrier-finance-costs-carrier-finance-decisions",
+            "flow-carrier-finance-decisions-goal-understanding",
+            "flow-carrier-finance-reserve-carrier-finance-decisions",
+            "flow-route-start-carrier-finance-cashflow",
+            "parallel-peer:split-carrier-finance-cashflow:carrier-finance-reserve:carrier-finance-costs"
+          ]
+        },
+        "progress": {
+          "currentNodeId": "route-start",
+          "nodeStatusById": {
+            "route-start": "completed",
+            "carrier-finance-cashflow": "completed",
+            "carrier-finance-reserve": "completed",
+            "carrier-finance-costs": "completed",
+            "carrier-finance-decisions": "completed",
+            "goal-understanding": "completed",
+            "financial-decisions-concept-1": "in-progress",
+            "financial-decisions-concept-2": "in-progress",
+            "financial-decisions-concept-3": "in-progress",
+            "financial-decisions-concept-4": "in-progress"
+          },
+          "nodeLearningStateById": {
+            "route-start": {
+              "kind": "subject",
+              "status": "completed"
+            },
+            "carrier-finance-cashflow": {
+              "kind": "subject",
+              "status": "completed"
+            },
+            "carrier-finance-reserve": {
+              "kind": "subject",
+              "status": "completed"
+            },
+            "carrier-finance-costs": {
+              "kind": "subject",
+              "status": "completed"
+            },
+            "carrier-finance-decisions": {
+              "kind": "subject",
+              "status": "completed"
+            },
+            "goal-understanding": {
+              "kind": "goal",
+              "status": "completed"
+            },
+            "financial-decisions-concept-1": {
+              "kind": "concept",
+              "status": "in-progress"
+            },
+            "financial-decisions-concept-2": {
+              "kind": "concept",
+              "status": "in-progress"
+            },
+            "financial-decisions-concept-3": {
+              "kind": "concept",
+              "status": "in-progress"
+            },
+            "financial-decisions-concept-4": {
+              "kind": "concept",
+              "status": "in-progress"
+            }
+          },
+          "subjectStatusById": {
+            "route-start": "completed",
+            "carrier-finance-cashflow": "completed",
+            "carrier-finance-reserve": "completed",
+            "carrier-finance-costs": "completed",
+            "carrier-finance-decisions": "completed",
+            "goal-understanding": "completed"
+          },
+          "conceptStatusById": {
+            "financial-decisions-concept-1": "in-progress",
+            "financial-decisions-concept-2": "in-progress",
+            "financial-decisions-concept-3": "in-progress",
+            "financial-decisions-concept-4": "in-progress"
+          },
+          "celebration": {
+            "seen": false,
+            "count": 0
+          },
+          "lastNavigationDecision": null,
+          "lastCatchUpResult": null,
+          "lastConceptAction": null,
+          "pendingLearningIntent": null,
+          "lastLearningLaunch": null,
+          "pendingUnlockCommit": null,
+          "lastMovementCancellation": null,
+          "lastRejection": null
+        }
+      },
+      "parallel": [
+        "应急资金管理",
+        "金融产品费用"
+      ]
+    }
+  ],
+  "screenshots": [
+    "home-desktop",
+    "home-examples",
+    "llm-application-source",
+    "llm-application-learning",
+    "ming-history-source",
+    "ming-history-learning",
+    "financial-decisions-source",
+    "financial-decisions-learning",
+    "llm-application-parallel-route",
+    "ming-history-parallel-route",
+    "financial-decisions-parallel-route",
+    "home-mobile",
+    "learning-mobile",
+    "chat-mobile"
+  ],
+  "checks": [
+    "exact six goals; three knowledge and three route examples; animation and focus pause; every suggestion prefills without sending",
+    "homepage carousel keyboard Enter opens a real prepared learning workspace",
+    "all 23 concepts open; tree node counts and source links match complete states; independent author cards; representative documents render",
+    "all three real WebGL routes render; 390px homepage and learning fit viewport; mobile chat tab works; no editorial process text in UI"
+  ],
+  "errors": [],
+  "passed": true
+}

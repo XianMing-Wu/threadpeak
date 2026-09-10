@@ -99,18 +99,18 @@ export function HomePage() {
             <h2 id="home-knowledge-heading">看见知识怎样连起来</h2>
             <a href="#knowledge?tab=example" aria-label="查看全部示例知识脉络">查看全部 <Icon name="arrow-right" size={14} /></a>
           </div>
-          <p className="home-curation-note">编选示例 · 从具体概念看解释与来源，从真实目标看学习路线。</p>
+          <p className="home-curation-note">从具体概念看解释与来源，从真实目标看学习路线。</p>
           {exampleKnowledge.length > 0 ? <HomeRecommendationFlow label="知识脉络" action="展开知识脉络" items={exampleKnowledge.map(item => ({
-            id: item.id, title: item.title, description: item.description, cover: coverForId(item.conceptId ?? item.id), meta: '编选知识脉络',
+            id: item.id, title: item.title, description: item.description, cover: coverForId(item.conceptId ?? item.id), meta: '示例知识脉络',
             open: () => { if (item.conceptId) openConceptKnowledge(item.id, item.conceptId); else openKnowledge(item.id, 'home'); location.hash = 'knowledge-detail' },
-          }))} /> : <EmptyStatus kind="empty" headingLevel={3} title="暂无编选知识脉络" body="你可以先制定一条自己的路线，开始积累知识。" action="输入学习目标" onAction={() => composerRef.current?.querySelector('textarea')?.focus()} />}
+          }))} /> : <EmptyStatus kind="empty" headingLevel={3} title="暂无示例知识脉络" body="你可以先制定一条自己的路线，开始积累知识。" action="输入学习目标" onAction={() => composerRef.current?.querySelector('textarea')?.focus()} />}
         </section>
         <section className="home-recommendations home-routes" aria-labelledby="home-routes-heading">
           <div className="home-section-heading"><h2 id="home-routes-heading">看看不同目标，怎样走</h2><a href="#paths?tab=example" aria-label="查看全部示例路线">查看全部 <Icon name="arrow-right" size={14} /></a></div>
           {exampleRoutes.length > 0 ? <HomeRecommendationFlow label="路线" action="查看路线" items={exampleRoutes.map(item => ({
             id: item.id, title: item.title, description: item.outcome, cover: coverForId(item.id), meta: `${item.concepts} 个必要概念`,
             open: () => { openRoute(item.id, 'home'); location.hash = 'path-3d' },
-          }))} /> : <EmptyStatus kind="empty" headingLevel={3} title="暂无编选路线" body="从你想完成的事开始，问山会据此组织学习路线。" action="输入学习目标" onAction={() => composerRef.current?.querySelector('textarea')?.focus()} />}
+          }))} /> : <EmptyStatus kind="empty" headingLevel={3} title="暂无示例路线" body="从你想完成的事开始，问山会据此组织学习路线。" action="输入学习目标" onAction={() => composerRef.current?.querySelector('textarea')?.focus()} />}
         </section>
       </div>
     </div>

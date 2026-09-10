@@ -1,0 +1,754 @@
+[
+  {
+    "conceptId": "llm-application-concept-1",
+    "step": "L-search:0@goal-v1",
+    "query": "Python调用OpenAI API 消息角色 system user assistant 区别",
+    "candidateCount": 10,
+    "responseSha256": "735ef1fa08ffa690913eb796b633f6e56e59058342b47b8e975d294e9e112c0e",
+    "requestedAt": "2026-09-09T13:25:26.739Z"
+  },
+  {
+    "conceptId": "llm-application-concept-1",
+    "step": "L-search:1@goal-v1",
+    "query": "LLM API 请求参数 temperature max_tokens 如何设置",
+    "candidateCount": 10,
+    "responseSha256": "d50068fae737e88a5ee171873592246fcb0993af270aff0bc4ecf5e3a44f1df8",
+    "requestedAt": "2026-09-09T13:25:26.739Z"
+  },
+  {
+    "conceptId": "llm-application-concept-1",
+    "step": "L-search:2@goal-v1",
+    "query": "Python requests 调用LLM API 解析响应 JSON 示例",
+    "candidateCount": 10,
+    "responseSha256": "407e1aec4fc864a5031c4127941fac3c815f56f686e258cc99916610050236ad",
+    "requestedAt": "2026-09-09T13:25:26.739Z"
+  },
+  {
+    "conceptId": "llm-application-concept-1",
+    "step": "L-search:3@goal-v1",
+    "query": "LLM API 调用 常见错误 401 429 处理",
+    "candidateCount": 10,
+    "responseSha256": "577e094e6aee47d64d60dcd288d2e92eb2ebebe4702a9e604ee432b073a8d314",
+    "requestedAt": "2026-09-09T13:25:26.739Z"
+  },
+  {
+    "conceptId": "llm-application-concept-2",
+    "step": "L-search:0@goal-v1",
+    "query": "如何让LLM稳定返回JSON格式 提示词设计",
+    "candidateCount": 10,
+    "responseSha256": "c7bbd900cb7ae2b0bb9fd85b4b21e34a7ff38404a99ec186fd5149a651b6f9f4",
+    "requestedAt": "2026-09-09T13:26:12.965Z"
+  },
+  {
+    "conceptId": "llm-application-concept-2",
+    "step": "L-search:1@goal-v1",
+    "query": "LLM输出JSON解析失败 重试机制 默认值处理",
+    "candidateCount": 10,
+    "responseSha256": "b2466153111efb219fadbd3653f6452b045fb2eb215dc86da2958d8b49740658",
+    "requestedAt": "2026-09-09T13:26:12.965Z"
+  },
+  {
+    "conceptId": "llm-application-concept-2",
+    "step": "L-search:2@goal-v1",
+    "query": "Python调用LLM API 解析JSON响应 示例",
+    "candidateCount": 10,
+    "responseSha256": "efe15a5572019390d9f5f7bd2ccbe28ade7ca872b6edd86f7b06b359cd37b961",
+    "requestedAt": "2026-09-09T13:26:12.965Z"
+  },
+  {
+    "conceptId": "llm-application-concept-2",
+    "step": "L-search:3@goal-v1",
+    "query": "LLM结构化输出 工具调用 参数传递 实践",
+    "candidateCount": 10,
+    "responseSha256": "e36f4b72678966fffa901fd77b6acd92a0f390f9e30e1138a58ab4fac1ac9d79",
+    "requestedAt": "2026-09-09T13:26:12.965Z"
+  },
+  {
+    "conceptId": "llm-application-concept-3",
+    "step": "L-search:0@goal-v1",
+    "query": "Agent循环 工具调用 消息格式 如何实现",
+    "candidateCount": 10,
+    "responseSha256": "db8b9076c947be7986bcad0e97d12bccc3664c7e8e47e5b17df98f4131d52f82",
+    "requestedAt": "2026-09-09T13:27:12.034Z"
+  },
+  {
+    "conceptId": "llm-application-concept-3",
+    "step": "L-search:1@goal-v1",
+    "query": "Python 实现 单工具 Agent 天气查询 示例",
+    "candidateCount": 10,
+    "responseSha256": "2944b11b64fe6da8c4c766c4a310d607a1c23dc42fbdb2218285c4082c8d7e19",
+    "requestedAt": "2026-09-09T13:27:12.034Z"
+  },
+  {
+    "conceptId": "llm-application-concept-3",
+    "step": "L-search:2@goal-v1",
+    "query": "LLM 工具调用 失败 重试 错误处理",
+    "candidateCount": 10,
+    "responseSha256": "e8ccef3dfc2f2aa3f46d7b7d7ed54720528c35345c6e4780ee2168daae8bb0cd",
+    "requestedAt": "2026-09-09T13:27:12.034Z"
+  },
+  {
+    "conceptId": "llm-application-concept-3",
+    "step": "L-search:3@goal-v1",
+    "query": "工具调用 参数错误 如何排查",
+    "candidateCount": 10,
+    "responseSha256": "60e382836d4c4acb923865b3a3275b7840730456047a277955ff36fd5fc7c6f1",
+    "requestedAt": "2026-09-09T13:27:12.034Z"
+  },
+  {
+    "conceptId": "llm-application-concept-4",
+    "step": "L-search:0@goal-v1",
+    "query": "Agent工具调用失败 常见错误类型 重试策略",
+    "candidateCount": 10,
+    "responseSha256": "d6c0d95dc155a897678089d153d6a9de7b47a6684a04b35432c9b1623a3e0cb6",
+    "requestedAt": "2026-09-09T13:27:51.124Z"
+  },
+  {
+    "conceptId": "llm-application-concept-4",
+    "step": "L-search:1@goal-v1",
+    "query": "Python实现Agent工具调用重试 代码示例",
+    "candidateCount": 10,
+    "responseSha256": "b5325af859b0775189b3032f1f4050e0c583bb7cd94ca75c0c4b926e4529b4be",
+    "requestedAt": "2026-09-09T13:27:51.124Z"
+  },
+  {
+    "conceptId": "llm-application-concept-4",
+    "step": "L-search:2@goal-v1",
+    "query": "LLM Agent 工具调用失败 询问用户 最佳实践",
+    "candidateCount": 10,
+    "responseSha256": "9f88d5ddcdc3b2b0a1e5be626193f26af767d76a7e78f6da104e002e30c1fa6d",
+    "requestedAt": "2026-09-09T13:27:51.124Z"
+  },
+  {
+    "conceptId": "llm-application-concept-4",
+    "step": "L-search:3@goal-v1",
+    "query": "Agent工具调用 参数错误 处理方式",
+    "candidateCount": 10,
+    "responseSha256": "0145a642c420ac226de611df91319a7744ea88e4054687c0003e96102c128123",
+    "requestedAt": "2026-09-09T13:27:51.124Z"
+  },
+  {
+    "conceptId": "llm-application-concept-5",
+    "step": "L-search:0@goal-v1",
+    "query": "Python 加载 PDF 文档 提取文本 简单示例",
+    "candidateCount": 10,
+    "responseSha256": "f82973fc49312c7feed6007aa2d3672d0275a591e6ae91983b5d7c33ae3b6868",
+    "requestedAt": "2026-09-09T13:28:59.863Z"
+  },
+  {
+    "conceptId": "llm-application-concept-5",
+    "step": "L-search:1@goal-v1",
+    "query": "文本分块 固定大小 重叠 对检索效果的影响",
+    "candidateCount": 10,
+    "responseSha256": "bb6fd0e9a91d2f10234aa6f6965c63514765387c32f1c42edb8635062202d6e7",
+    "requestedAt": "2026-09-09T13:28:59.863Z"
+  },
+  {
+    "conceptId": "llm-application-concept-5",
+    "step": "L-search:2@goal-v1",
+    "query": "LangChain 文档加载器 文本分割器 基本用法",
+    "candidateCount": 10,
+    "responseSha256": "86ddf34b8c20e9f44892b56503141ed0705d4806668ef698e85f5775be6d89a1",
+    "requestedAt": "2026-09-09T13:28:59.863Z"
+  },
+  {
+    "conceptId": "llm-application-concept-5",
+    "step": "L-search:3@goal-v1",
+    "query": "RAG 中文档分块策略 如何选择块大小",
+    "candidateCount": 10,
+    "responseSha256": "226c2283f20e1a5b0c2510a8203e2bf91a2e6acd3efa91334b80c66f5d100d7b",
+    "requestedAt": "2026-09-09T13:28:59.863Z"
+  },
+  {
+    "conceptId": "llm-application-concept-6",
+    "step": "L-search:0@goal-v1",
+    "query": "文本块向量化 嵌入模型 如何生成向量",
+    "candidateCount": 10,
+    "responseSha256": "0c3d3b5b7885243f02920a08c004a8b3d0a6a15a28a8ed1e226a3350ffbe77e9",
+    "requestedAt": "2026-09-09T13:30:03.013Z"
+  },
+  {
+    "conceptId": "llm-application-concept-6",
+    "step": "L-search:1@goal-v1",
+    "query": "查询向量与文本块向量 余弦相似度 计算示例",
+    "candidateCount": 10,
+    "responseSha256": "ceea9facedff433bcfadff11ae91761d882aca388da5dc907b108f1393d30a0c",
+    "requestedAt": "2026-09-09T13:30:03.013Z"
+  },
+  {
+    "conceptId": "llm-application-concept-6",
+    "step": "L-search:2@goal-v1",
+    "query": "RAG 检索 如何返回最相关的Top-K文本块",
+    "candidateCount": 10,
+    "responseSha256": "07f4649744cf795da763d95322971bcd885fda9e70452c0de640475414cc202e",
+    "requestedAt": "2026-09-09T13:30:03.013Z"
+  },
+  {
+    "conceptId": "llm-application-concept-6",
+    "step": "L-search:3@goal-v1",
+    "query": "嵌入模型 选择 影响检索效果 因素",
+    "candidateCount": 10,
+    "responseSha256": "306c2acb729443c297e5c41bcb15ed7653d13f00f1f9ffb613e4d8c1bec31a42",
+    "requestedAt": "2026-09-09T13:30:03.013Z"
+  },
+  {
+    "conceptId": "llm-application-concept-7",
+    "step": "L-search:0@goal-v1",
+    "query": "RAG 检索增强生成 如何让模型基于检索到的文档块回答并标注引用来源",
+    "candidateCount": 10,
+    "responseSha256": "b9c37989b02a2a5b2d879373d557eed8363b67e9394678b205e173a8a0fd220e",
+    "requestedAt": "2026-09-09T13:31:06.791Z"
+  },
+  {
+    "conceptId": "llm-application-concept-7",
+    "step": "L-search:1@goal-v1",
+    "query": "LLM 引用来源 提示词 构造 示例",
+    "candidateCount": 10,
+    "responseSha256": "7e732a50603fc242e0c27222825c28ec4aea3f5d29b3da093f9f7a65cda90af4",
+    "requestedAt": "2026-09-09T13:31:06.791Z"
+  },
+  {
+    "conceptId": "llm-application-concept-7",
+    "step": "L-search:2@goal-v1",
+    "query": "如何检查大模型回答中的引用是否与证据一致",
+    "candidateCount": 10,
+    "responseSha256": "32c4e67cef2939d8f3ae9f51008c2aa6465967a251ee9b53f612271396b8741e",
+    "requestedAt": "2026-09-09T13:31:06.791Z"
+  },
+  {
+    "conceptId": "llm-application-concept-7",
+    "step": "L-search:3@goal-v1",
+    "query": "基于检索的问答 产品价格查询 实现步骤",
+    "candidateCount": 10,
+    "responseSha256": "d35abb8c93481ff3b4dc6dcc19d17bd0b1f544afc55a8e437ea0b034825f39fa",
+    "requestedAt": "2026-09-09T13:31:06.791Z"
+  },
+  {
+    "conceptId": "llm-application-concept-8",
+    "step": "L-search:0@goal-v1",
+    "query": "Agent 工具调用 资料检索 如何根据用户意图选择能力",
+    "candidateCount": 10,
+    "responseSha256": "ff435838f1192bf175b9df6637c92f3b9c7357b108929e724ddc1c865861a786",
+    "requestedAt": "2026-09-09T13:31:19.567Z"
+  },
+  {
+    "conceptId": "llm-application-concept-8",
+    "step": "L-search:1@goal-v1",
+    "query": "LangChain Agent 同时支持工具和检索 示例",
+    "candidateCount": 10,
+    "responseSha256": "85cce7517e74e6f5b13b2271ba1f9bd4dc12456718f3b21b42bc94ed75a90b56",
+    "requestedAt": "2026-09-09T13:31:19.567Z"
+  },
+  {
+    "conceptId": "llm-application-concept-8",
+    "step": "L-search:2@goal-v1",
+    "query": "LLM 判断何时使用工具还是检索 提示词设计",
+    "candidateCount": 10,
+    "responseSha256": "ebb73dd899e529a36a416d190e6edc4d0c321f34e3a5a24b9423b0a0261958d6",
+    "requestedAt": "2026-09-09T13:31:19.567Z"
+  },
+  {
+    "conceptId": "llm-application-concept-8",
+    "step": "L-search:3@goal-v1",
+    "query": "Agent 混合查询 工具调用失败 检索结果不可信 处理",
+    "candidateCount": 10,
+    "responseSha256": "c9b5cea3bf965cad9d88a55f0d5dc5a70fafee3f68ebfbc0c223809c75b99e77",
+    "requestedAt": "2026-09-09T13:31:19.567Z"
+  },
+  {
+    "conceptId": "llm-application-concept-9",
+    "step": "L-search:0@goal-v1",
+    "query": "如何向面试官解释一个Agent项目的架构和关键决策",
+    "candidateCount": 10,
+    "responseSha256": "0503dfd669be1b3ae0761c73b3ffe354d4326318e2b1714143295736e97cbc7d",
+    "requestedAt": "2026-09-09T13:32:35.301Z"
+  },
+  {
+    "conceptId": "llm-application-concept-9",
+    "step": "L-search:1@goal-v1",
+    "query": "Agent项目常见故障排查 日志定位问题层次",
+    "candidateCount": 10,
+    "responseSha256": "7fbfe0bcdbfffe155e51102feb51574c616524cfa9e27b538ce525be5da9ea0b",
+    "requestedAt": "2026-09-09T13:32:35.301Z"
+  },
+  {
+    "conceptId": "llm-application-concept-9",
+    "step": "L-search:2@goal-v1",
+    "query": "工具调用失败 排查方法 日志分析",
+    "candidateCount": 10,
+    "responseSha256": "67b6287ed3f9cd33ee4a31561592c622c24ff8e49972a04833ac892e77b880b1",
+    "requestedAt": "2026-09-09T13:32:35.301Z"
+  },
+  {
+    "conceptId": "llm-application-concept-9",
+    "step": "L-search:3@goal-v1",
+    "query": "检索结果不可信 如何验证和修复",
+    "candidateCount": 10,
+    "responseSha256": "f616cd27f6bdc648a44b4557c529bbd9322587e750a98ca1790cb34c125bbe2a",
+    "requestedAt": "2026-09-09T13:32:35.301Z"
+  },
+  {
+    "conceptId": "llm-application-concept-9",
+    "step": "L-search:4@goal-v1",
+    "query": "初级Agent开发 项目讲解 面试准备",
+    "candidateCount": 10,
+    "responseSha256": "a61ae88493f13f406f290896357ee0af75503d6cdd4ab35e44aa4b7d5ca90a7a",
+    "requestedAt": "2026-09-09T13:32:35.301Z"
+  },
+  {
+    "conceptId": "ming-history-concept-1",
+    "step": "L-search:0@goal-v1",
+    "query": "元末农民起义 红巾军 朱元璋 如何崛起 通俗解释",
+    "candidateCount": 10,
+    "responseSha256": "b70bcf5de1b99522805ec6bbe36afe63569ffcd208c4c00ba4690c23f248df73",
+    "requestedAt": "2026-09-09T13:34:55.501Z"
+  },
+  {
+    "conceptId": "ming-history-concept-1",
+    "step": "L-search:1@goal-v1",
+    "query": "朱元璋统一江南 关键战役 顺序 鄱阳湖之战",
+    "candidateCount": 10,
+    "responseSha256": "b38dd8177c0802ab6602eed4b03fd88875108dd23bfbc53b7edc1320c8693f8b",
+    "requestedAt": "2026-09-09T13:34:55.501Z"
+  },
+  {
+    "conceptId": "ming-history-concept-1",
+    "step": "L-search:2@goal-v1",
+    "query": "明朝建立 1368年 应天府 称帝 标志事件",
+    "candidateCount": 10,
+    "responseSha256": "595fe433460771ac11059756dafe1eaf8e13243e6baab33025f6650d10e430db",
+    "requestedAt": "2026-09-09T13:34:55.501Z"
+  },
+  {
+    "conceptId": "ming-history-concept-1",
+    "step": "L-search:3@goal-v1",
+    "query": "元末群雄 陈友谅 张士诚 方国珍 势力对比",
+    "candidateCount": 10,
+    "responseSha256": "9e613ffacf7647800e8045533035e5b63ca7bb9cf400cf025aa484b2467674e5",
+    "requestedAt": "2026-09-09T13:34:55.501Z"
+  },
+  {
+    "conceptId": "ming-history-concept-2",
+    "step": "L-search:0@goal-v1",
+    "query": "明初废丞相 为什么朱元璋要废除丞相制度",
+    "candidateCount": 10,
+    "responseSha256": "4d13365dfb7853fca5eaa2a40447599601d5f0649bcc99b5df54c71d2dcc5a4f",
+    "requestedAt": "2026-09-09T13:36:13.228Z"
+  },
+  {
+    "conceptId": "ming-history-concept-2",
+    "step": "L-search:1@goal-v1",
+    "query": "靖难之役 朱棣起兵原因 通俗解释",
+    "candidateCount": 10,
+    "responseSha256": "102ae60d973b583068803403d0ce97b9d5d15794c27e2aa962e2f0b943e85e93",
+    "requestedAt": "2026-09-09T13:36:13.228Z"
+  },
+  {
+    "conceptId": "ming-history-concept-2",
+    "step": "L-search:2@goal-v1",
+    "query": "永乐迁都北京 政治意义 简单说明",
+    "candidateCount": 10,
+    "responseSha256": "bccf6fcd816a75ebfb25f0eb5b1753b260456049a673f7186cf751cfa3f43c41",
+    "requestedAt": "2026-09-09T13:36:13.228Z"
+  },
+  {
+    "conceptId": "ming-history-concept-2",
+    "step": "L-search:3@goal-v1",
+    "query": "明初政治制度变化 洪武到永乐 时间顺序",
+    "candidateCount": 10,
+    "responseSha256": "c54b1c41304a908482744c6fe519866b3066004716dab234e2f46526aff5d071",
+    "requestedAt": "2026-09-09T13:36:13.228Z"
+  },
+  {
+    "conceptId": "ming-history-concept-3",
+    "step": "L-search:0@goal-v1",
+    "query": "土木之变 明朝 通俗解释 背景 经过 影响",
+    "candidateCount": 10,
+    "responseSha256": "929d654dd18230bfb3568e48e3e724cc10d9e9ef85e54dd3658921908ce9d584",
+    "requestedAt": "2026-09-09T13:37:19.942Z"
+  },
+  {
+    "conceptId": "ming-history-concept-3",
+    "step": "L-search:1@goal-v1",
+    "query": "明朝中期 宦官专权 王振 刘瑾 具体事例",
+    "candidateCount": 10,
+    "responseSha256": "e07dc5c94ac64f74879b28faa3fa823c96455b7f981e590454c37c1f2b5f32df",
+    "requestedAt": "2026-09-09T13:37:19.942Z"
+  },
+  {
+    "conceptId": "ming-history-concept-3",
+    "step": "L-search:2@goal-v1",
+    "query": "嘉靖朝 大礼议 政治斗争 通俗解读",
+    "candidateCount": 10,
+    "responseSha256": "a5fe7718d8765250e33b4603ea677e7d8ab0723e6727ce2843a3f8680f1d879a",
+    "requestedAt": "2026-09-09T13:37:19.942Z"
+  },
+  {
+    "conceptId": "ming-history-concept-3",
+    "step": "L-search:3@goal-v1",
+    "query": "明朝中期 社会经济变化 一条鞭法 背景",
+    "candidateCount": 10,
+    "responseSha256": "7fc7fc4024f1a35f6386e713866b0d8aea02ddb26d3b606177c3faa5b2535acd",
+    "requestedAt": "2026-09-09T13:37:19.942Z"
+  },
+  {
+    "conceptId": "ming-history-concept-4",
+    "step": "L-search:0@goal-v1",
+    "query": "万历怠政 具体表现 对明朝衰落的影响",
+    "candidateCount": 10,
+    "responseSha256": "d4d2530f8ab9b1fa0a86dab748658fda01eac00e3ed1df75ecf4c0dfb0ee8599",
+    "requestedAt": "2026-09-09T13:38:16.314Z"
+  },
+  {
+    "conceptId": "ming-history-concept-4",
+    "step": "L-search:1@goal-v1",
+    "query": "明末党争 东林党 阉党 如何加剧政治危机",
+    "candidateCount": 10,
+    "responseSha256": "0977e6dc5ddc8a6705e2198aea85a19e6d2a3c874c4cd06910ffc9194af5c317",
+    "requestedAt": "2026-09-09T13:38:16.314Z"
+  },
+  {
+    "conceptId": "ming-history-concept-4",
+    "step": "L-search:2@goal-v1",
+    "query": "萨尔浒之战 明朝辽东战事 失败原因 后果",
+    "candidateCount": 10,
+    "responseSha256": "f22133aedf8881eceb6dcf1c663764db2af976a3bcfe7f3070cfb0046ac47e1e",
+    "requestedAt": "2026-09-09T13:38:16.314Z"
+  },
+  {
+    "conceptId": "ming-history-concept-4",
+    "step": "L-search:3@goal-v1",
+    "query": "李自成 张献忠 农民起义 发展过程 攻入北京",
+    "candidateCount": 10,
+    "responseSha256": "829135d51f81327a19d5051743b7f5541b74cac6a0b906ae7fb2f6b7aba866dc",
+    "requestedAt": "2026-09-09T13:38:16.314Z"
+  },
+  {
+    "conceptId": "ming-history-concept-4",
+    "step": "L-search:4@goal-v1",
+    "query": "崇祯皇帝 煤山自缢 明朝灭亡 时间 标志事件",
+    "candidateCount": 10,
+    "responseSha256": "6685eb861fc41e624de6a3f5f8b76fe11b83b80bc977b37e37df7b72074d5a5f",
+    "requestedAt": "2026-09-09T13:38:16.314Z"
+  },
+  {
+    "conceptId": "ming-history-concept-5",
+    "step": "L-search:0@goal-v1",
+    "query": "南明主要政权有哪些 弘光 隆武 永历 时间顺序",
+    "candidateCount": 10,
+    "responseSha256": "2a4d55252587058e7567ab3b241819d6eafc01a4928f86205d8c89d9b37928e8",
+    "requestedAt": "2026-09-09T13:39:25.498Z"
+  },
+  {
+    "conceptId": "ming-history-concept-5",
+    "step": "L-search:1@goal-v1",
+    "query": "南明抗清活动 主要人物 史可法 郑成功 通俗解释",
+    "candidateCount": 10,
+    "responseSha256": "03485970c851fd16564f9a00fcb64d51b1c3155bfbfacd142cd154c572235ce3",
+    "requestedAt": "2026-09-09T13:39:25.498Z"
+  },
+  {
+    "conceptId": "ming-history-concept-5",
+    "step": "L-search:2@goal-v1",
+    "query": "南明政权兴亡 简单时间线 从弘光到永历",
+    "candidateCount": 10,
+    "responseSha256": "a43bf80517f50b4e76338f1ebd9853d1ef2ce9c9bb225631799603766a3d886e",
+    "requestedAt": "2026-09-09T13:39:25.498Z"
+  },
+  {
+    "conceptId": "ming-history-concept-5",
+    "step": "L-search:3@goal-v1",
+    "query": "南明与清朝对峙 关键战役 通俗历史",
+    "candidateCount": 10,
+    "responseSha256": "45aa30175c0281ec8fed800e57612226bf3b51c09888e52b1b01c98696b2fd91",
+    "requestedAt": "2026-09-09T13:39:25.498Z"
+  },
+  {
+    "conceptId": "ming-history-concept-6",
+    "step": "L-search:0@goal-v1",
+    "query": "明代内阁制度 通俗解释 职能演变",
+    "candidateCount": 10,
+    "responseSha256": "1d077c5f81f42a1d82aa34e4718f282e90145fa255534f580c2d737c45457779",
+    "requestedAt": "2026-09-09T13:40:12.937Z"
+  },
+  {
+    "conceptId": "ming-history-concept-6",
+    "step": "L-search:1@goal-v1",
+    "query": "明代宦官权力 司礼监 批红 如何影响朝政",
+    "candidateCount": 10,
+    "responseSha256": "a568558d41fd4b466640878fff480801f8be95fa278f6c01cc160410009a0a3d",
+    "requestedAt": "2026-09-09T13:40:12.937Z"
+  },
+  {
+    "conceptId": "ming-history-concept-6",
+    "step": "L-search:2@goal-v1",
+    "query": "明代六部 职能 与内阁关系 变化",
+    "candidateCount": 10,
+    "responseSha256": "53043233966f981aa6b5e8c25e259d2460cb7b563d06daeea675cd73a251cc42",
+    "requestedAt": "2026-09-09T13:40:12.937Z"
+  },
+  {
+    "conceptId": "ming-history-concept-6",
+    "step": "L-search:3@goal-v1",
+    "query": "明代政治制度 皇帝 官员 权力关系 变化",
+    "candidateCount": 10,
+    "responseSha256": "d2cc2a5520eafe6ec7b3bdb24b8ce9a54045873e7312e821d5206617702297c9",
+    "requestedAt": "2026-09-09T13:40:12.937Z"
+  },
+  {
+    "conceptId": "ming-history-concept-7",
+    "step": "L-search:0@goal-v1",
+    "query": "明代一条鞭法 主要内容 社会影响",
+    "candidateCount": 10,
+    "responseSha256": "c7508dcdec997cdbe8fabac7d96e9fbc14838387d06516aac08f513ed1778e09",
+    "requestedAt": "2026-09-09T13:41:17.873Z"
+  },
+  {
+    "conceptId": "ming-history-concept-7",
+    "step": "L-search:1@goal-v1",
+    "query": "明代商业发展 市镇经济 通俗解释",
+    "candidateCount": 10,
+    "responseSha256": "04c9ffff5393e32896f853f4867f827cce91add5da3545587df714d67ad45eb0",
+    "requestedAt": "2026-09-09T13:41:17.873Z"
+  },
+  {
+    "conceptId": "ming-history-concept-7",
+    "step": "L-search:2@goal-v1",
+    "query": "明代财政危机 原因 与政治关系",
+    "candidateCount": 10,
+    "responseSha256": "0b738f74b1545820aca7c00331abb11750c84c72a1a6329e2cbf178f8b63d8f0",
+    "requestedAt": "2026-09-09T13:41:17.873Z"
+  },
+  {
+    "conceptId": "ming-history-concept-7",
+    "step": "L-search:3@goal-v1",
+    "query": "明代农业变化 新作物 人口增长",
+    "candidateCount": 10,
+    "responseSha256": "b5399f83d34a6807dc2dbae163ceeeb215c5d0d3f1135dc5491151439db169bb",
+    "requestedAt": "2026-09-09T13:41:17.873Z"
+  },
+  {
+    "conceptId": "ming-history-concept-8",
+    "step": "L-search:0@goal-v1",
+    "query": "张居正改革 一条鞭法 对明代财政和社会的影响",
+    "candidateCount": 10,
+    "responseSha256": "13c3a2357bf9cf3e13583df9f01cb1acdaff76ad31701c446736cc62e5a8d240",
+    "requestedAt": "2026-09-09T13:43:02.210Z"
+  },
+  {
+    "conceptId": "ming-history-concept-8",
+    "step": "L-search:1@goal-v1",
+    "query": "明末财政危机 加派三饷 如何激化社会矛盾",
+    "candidateCount": 10,
+    "responseSha256": "5f755a57c9d4cb6d172d5243eea0a200e0f889e81f5a73280bbf12ff6748da47",
+    "requestedAt": "2026-09-09T13:43:02.210Z"
+  },
+  {
+    "conceptId": "ming-history-concept-8",
+    "step": "L-search:2@goal-v1",
+    "query": "明代政治制度 内阁与宦官 如何影响经济政策",
+    "candidateCount": 10,
+    "responseSha256": "c65fa468e3120d6c1e95aa7c2be6354a2525dea170efcb9ce9a44a6f22898ab9",
+    "requestedAt": "2026-09-09T13:43:02.210Z"
+  },
+  {
+    "conceptId": "ming-history-concept-8",
+    "step": "L-search:3@goal-v1",
+    "query": "张居正改革 通俗解释 政治与经济互动",
+    "candidateCount": 10,
+    "responseSha256": "f1bb820d03f247491a8b0926a63b64f20b36ff72645acaa4f5d2576d5b311f46",
+    "requestedAt": "2026-09-09T13:43:02.210Z"
+  },
+  {
+    "conceptId": "ming-history-concept-9",
+    "step": "L-search:0@goal-v1",
+    "query": "历史解释 依据 史料 视角 通俗例子",
+    "candidateCount": 10,
+    "responseSha256": "78ef6ec4ac0dfae3360fd994daa3d9ad32e305bba871b5ffd6838e78399360fd",
+    "requestedAt": "2026-09-09T13:44:07.823Z"
+  },
+  {
+    "conceptId": "ming-history-concept-9",
+    "step": "L-search:1@goal-v1",
+    "query": "同一历史事件 不同叙述 原因 史料选择",
+    "candidateCount": 10,
+    "responseSha256": "b2253c54313840e4087dc77e3e228452a1bbac62da9670328cc012e2fb4dec05",
+    "requestedAt": "2026-09-09T13:44:07.823Z"
+  },
+  {
+    "conceptId": "ming-history-concept-9",
+    "step": "L-search:2@goal-v1",
+    "query": "明代 历史事件 不同解释 比较 通俗",
+    "candidateCount": 10,
+    "responseSha256": "be1e6c14206a29d0119808a834f5c85bab8e552d781d218210eb412d75a4d8fd",
+    "requestedAt": "2026-09-09T13:44:07.823Z"
+  },
+  {
+    "conceptId": "ming-history-concept-9",
+    "step": "L-search:3@goal-v1",
+    "query": "历史解释 局限性 识别 方法",
+    "candidateCount": 10,
+    "responseSha256": "5435c1841d256c895cc486952252c138dcda8138c25bc2e2d0e6ef5880084490",
+    "requestedAt": "2026-09-09T13:44:07.823Z"
+  },
+  {
+    "conceptId": "ming-history-concept-10",
+    "step": "L-search:0@goal-v1",
+    "query": "万历怠政 不同历史解释 依据 差异",
+    "candidateCount": 10,
+    "responseSha256": "cd80f69618b3d10c3808e96f71e051548ce2630d8521bc2aa989e324fcde6fa0",
+    "requestedAt": "2026-09-09T13:45:10.070Z"
+  },
+  {
+    "conceptId": "ming-history-concept-10",
+    "step": "L-search:1@goal-v1",
+    "query": "明末党争 东林党 阉党 不同观点 原因",
+    "candidateCount": 10,
+    "responseSha256": "56d2bd325207bade6162ab1458ab6e22c65e326cc2961e6801f50b636e263152",
+    "requestedAt": "2026-09-09T13:45:10.070Z"
+  },
+  {
+    "conceptId": "ming-history-concept-10",
+    "step": "L-search:2@goal-v1",
+    "query": "明代政治制度 经济社会 联系 通俗解释",
+    "candidateCount": 10,
+    "responseSha256": "879c9f180a4bafe85482a6613bed94cc0e5cd4fa6080c634f13df138cfafa285",
+    "requestedAt": "2026-09-09T13:45:10.070Z"
+  },
+  {
+    "conceptId": "ming-history-concept-10",
+    "step": "L-search:3@goal-v1",
+    "query": "如何比较同一历史事件的不同解释 方法",
+    "candidateCount": 10,
+    "responseSha256": "e108109b9637d54ea5150da4baab45c1d1fc82a7b48a33263495e2e563b0c732",
+    "requestedAt": "2026-09-09T13:45:10.070Z"
+  },
+  {
+    "conceptId": "financial-decisions-concept-1",
+    "step": "L-search:0@goal-v1",
+    "query": "个人收支记录 必要支出 弹性支出 分类方法",
+    "candidateCount": 10,
+    "responseSha256": "93b7684c79eedce1471eea906ebaf1b9b947f8efa5ec6238c9b2cca8a9b2baa5",
+    "requestedAt": "2026-09-09T13:46:53.466Z"
+  },
+  {
+    "conceptId": "financial-decisions-concept-1",
+    "step": "L-search:1@goal-v1",
+    "query": "虚拟月度收支清单 如何区分必要支出和弹性支出",
+    "candidateCount": 10,
+    "responseSha256": "0f57e0457c7bd5c23850cf43d09c07e5fd80c34c0c1d31f113efe029acbb8e33",
+    "requestedAt": "2026-09-09T13:46:53.466Z"
+  },
+  {
+    "conceptId": "financial-decisions-concept-1",
+    "step": "L-search:2@goal-v1",
+    "query": "找出可减少的非必要开销 案例",
+    "candidateCount": 10,
+    "responseSha256": "c928ee74561499c08aa51f37679fd1e2b001987666b4d380d761d1f63c9fc037",
+    "requestedAt": "2026-09-09T13:46:53.466Z"
+  },
+  {
+    "conceptId": "financial-decisions-concept-1",
+    "step": "L-search:3@goal-v1",
+    "query": "零基础 个人收支分类 练习",
+    "candidateCount": 10,
+    "responseSha256": "72c410dc807eaa433f78c5972e813797d02fbaa21abb49109891ca306788d98f",
+    "requestedAt": "2026-09-09T13:46:53.466Z"
+  },
+  {
+    "conceptId": "financial-decisions-concept-2",
+    "step": "L-search:0@goal-v1",
+    "query": "应急资金 用途 收入中断 突发支出 案例",
+    "candidateCount": 10,
+    "responseSha256": "011a05a54da156c57c8a33a56f6e62eef73d948f1e565ff174c2dbe189b52b8e",
+    "requestedAt": "2026-09-09T13:47:46.737Z"
+  },
+  {
+    "conceptId": "financial-decisions-concept-2",
+    "step": "L-search:1@goal-v1",
+    "query": "应急资金 储备几个月 收入稳定性 必要支出",
+    "candidateCount": 10,
+    "responseSha256": "0798c78927c8f914f505d498c88b4f3d8deb58ce86f7a6fcd1832dcf589f9c1a",
+    "requestedAt": "2026-09-09T13:47:46.737Z"
+  },
+  {
+    "conceptId": "financial-decisions-concept-2",
+    "step": "L-search:2@goal-v1",
+    "query": "应急资金 支持条件 家庭 影响储备月数",
+    "candidateCount": 10,
+    "responseSha256": "9a17a3ae7d6ad9b6930d634f74eb6a517a95308ae53fe725b76633c0e7c77a97",
+    "requestedAt": "2026-09-09T13:47:46.737Z"
+  },
+  {
+    "conceptId": "financial-decisions-concept-2",
+    "step": "L-search:3@goal-v1",
+    "query": "应急资金 误区 与投资资金 区别",
+    "candidateCount": 10,
+    "responseSha256": "f55e0f09cf688c3218f09c4ab62886c86da2def565c74bdab061166422c3bb11",
+    "requestedAt": "2026-09-09T13:47:46.737Z"
+  },
+  {
+    "conceptId": "financial-decisions-concept-3",
+    "step": "L-search:0@goal-v1",
+    "query": "理财产品条款中常见费用项目有哪些 管理费 申购费 赎回费 如何影响实际收益",
+    "candidateCount": 10,
+    "responseSha256": "967195180be8251c4459c23064f9e421b5874041408ecf43af9617ec7f3628d7",
+    "requestedAt": "2026-09-09T13:48:30.751Z"
+  },
+  {
+    "conceptId": "financial-decisions-concept-3",
+    "step": "L-search:1@goal-v1",
+    "query": "基金申购费和赎回费如何减少实际到手收益 举例说明",
+    "candidateCount": 10,
+    "responseSha256": "3c0ee77da10a20efef1f25e060bb1d2f13819247211151a4186e6e7701ae3a07",
+    "requestedAt": "2026-09-09T13:48:30.751Z"
+  },
+  {
+    "conceptId": "financial-decisions-concept-3",
+    "step": "L-search:2@goal-v1",
+    "query": "理财产品管理费和托管费是按什么方式收取 对收益的影响",
+    "candidateCount": 10,
+    "responseSha256": "6bed7ea01bbe0a1d1fa442483cf57a2f3bf74e0ad994913c74ab8422b79211c9",
+    "requestedAt": "2026-09-09T13:48:30.751Z"
+  },
+  {
+    "conceptId": "financial-decisions-concept-3",
+    "step": "L-search:3@goal-v1",
+    "query": "如何从基金招募说明书或产品条款中快速找到所有费用项目",
+    "candidateCount": 10,
+    "responseSha256": "4b1ca6874a80c755fe05af3674438d29d25a694e5067037940ec8622b71c0d19",
+    "requestedAt": "2026-09-09T13:48:30.751Z"
+  },
+  {
+    "conceptId": "financial-decisions-concept-4",
+    "step": "L-search:0@goal-v1",
+    "query": "理财产品 到账时间 提前支取 限制 如何理解",
+    "candidateCount": 10,
+    "responseSha256": "d43fcf90f7b417197a3a1a896de592ba32dff3290d03f4a2109a5bf82aa82101",
+    "requestedAt": "2026-09-09T13:48:32.713Z"
+  },
+  {
+    "conceptId": "financial-decisions-concept-4",
+    "step": "L-search:1@goal-v1",
+    "query": "理财产品 提前支取 可能损失 本金 利息 例子",
+    "candidateCount": 10,
+    "responseSha256": "6da5d46bcff774a7a1162588b6b9924390fa5d944cc4ab1568e0c92167b4d4ca",
+    "requestedAt": "2026-09-09T13:48:32.713Z"
+  },
+  {
+    "conceptId": "financial-decisions-concept-4",
+    "step": "L-search:2@goal-v1",
+    "query": "理财产品 条款 不确定信息 如何识别",
+    "candidateCount": 10,
+    "responseSha256": "d58b5fa9d4b1a5fe56c8d70704cbcee6e9e1d1b83329aeb2a8387da741a67b86",
+    "requestedAt": "2026-09-09T13:48:32.713Z"
+  },
+  {
+    "conceptId": "financial-decisions-concept-4",
+    "step": "L-search:3@goal-v1",
+    "query": "不同理财产品 流动性 损失风险 比较 案例",
+    "candidateCount": 10,
+    "responseSha256": "df2ab7774aec92fe86e4c9c25cd7ad58e5f3210c8b0b77282afba0969ef7d718",
+    "requestedAt": "2026-09-09T13:48:32.713Z"
+  }
+]

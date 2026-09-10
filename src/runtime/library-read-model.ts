@@ -1,3 +1,4 @@
+import {showcaseRoute} from '../showcase/content'
 import {
   listExampleKnowledge,
   listReadOnlyConceptCards,
@@ -23,8 +24,8 @@ export function projectLibraryReadModel(): LibraryReadModel {
     routes,
     recommendedKnowledge: exampleKnowledge.flatMap(k=>{
       const cards=listReadOnlyConceptCards(k.id)
-      const concept=cards.find(c=>['attention-scale','array-broadcast'].includes(c.id))??cards[0]
-      return concept?[{...k,title:concept.title,description:concept.description,conceptId:concept.id}]:[]
+      const concept=cards.find(c=>c.id===showcaseRoute(k.routeId)?.featuredConceptId)??cards[0]
+      return concept?[{...k,conceptId:concept.id}]:[]
     }),
     recommendedRoutes: routes.example,
   }

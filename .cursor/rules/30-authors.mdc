@@ -1,5 +1,5 @@
 ---
-description: "约束 A1–A3 问博主、N0–N2 博主搜索、作者证据 ID、请教简报和主题来源网络。"
+description: "约束 A-card 问博主、N0–N2 博主搜索、作者证据 ID、私聊内容和主题来源网络。"
 globs: "src/learning-v2/**,src/components/AuthorNetworkGraph.tsx,src/session/*author*.ts,server/durable/authors*.ts,server/durable/flows.ts,server/durable/tools.ts,server/durable/http.ts,server/durable/learning-goal.ts,server/durable/zhihu*.ts,server/agent-runtime/**,packages/contracts/src/authors.ts"
 alwaysApply: false
 ---
@@ -8,11 +8,11 @@ alwaysApply: false
 
 合同见 [agents.md](../../docs/agents.md) 第 3、4 节；状态见 [product.md](../../docs/product.md)。
 
-- 问博主以所选卡和问题为输入，A-card-plan 拆问 → 两路知乎搜索 → A-card-select 选本次 1–3 位新作者。
+- 问博主以所选卡和问题为输入，A-card-plan设计2–4项 → 两条一批知乎搜索 → A-card-select 选本次 1–3 位新作者。
 - ID/作者名/完整总结/链接从同一真实候选回查；模型只选择证据 ID，不重写资料。排除原卡作者和已有分支作者，不按名字合并身份。
 - 真实作者各自一张卡接在宿主后，并与聊天原子提交并成为已发现来源。此功能是检索公开文章，不是发送消息或本人实时回复。
-- 仅正常零合适候选走 A3，刘看山不是博主、无作者身份、不入网。provider 失败不能转换为零人。
-- 搜索博主 network-first 后仍检索新材料；最多三人，适配优先、同相关性才参考可撤销主题偏好。不得用使用次数冒充权威，不能编造咨询入口或联系结果；简报先可编辑再复制，网络图谱样式保留。网络不可用不得伪装空结果。
+- 有真实候选至少选择相对最适合的一位，至多三位，每位独立卡；说明适配原因和覆盖局限。绝对零候选不虚构卡片，provider失败不能冒充零结果；无知乎直答兜底。
+- 搜索博主 network-first 后仍检索新材料；最多三人，适配优先、同相关性才参考可撤销主题偏好。不得用使用次数冒充权威，不能编造咨询入口或联系结果；私聊内容先可编辑再复制，明确来意且不虚构用户经历，网络图谱样式保留。网络不可用不得伪装空结果。
 - 同一稳定作者可关联多篇文章、多个主题和多个问题；每次搜索、当前/归档对话的实际引用分别保留，不以作者或文章为键覆盖旧问题。模型选择材料和段落编号，程序回查来源并按人去重；作者网络允许多重关系，知识卡仍为单父树。
 - 验证 1–3 人、真实零人、异常、重复/错误 ID、原作者排除、单父树和事务回滚。
 
@@ -20,4 +20,6 @@ alwaysApply: false
 
 - 作者卡的昵称、头像、认证图标和文案来自实际知乎字段；没有认证不得补造。内容权威等级与排序分数不是用户身份证明。旧来源头像回查严格匹配原文 URL，阅读补充不改变身份或使用分。
 
-- 若由学习资源发起，N1/N2/A-card/A3 均带服务端 goalContext，按用户成果、基础和作者建议适用条件评估；当前请教的新明确要求优先，不把作者观点冒充用户目标。
+- 若由学习资源发起，N1/N2/A-card 均带服务端 goalContext，按用户成果、基础和作者建议适用条件评估；当前请教的新明确要求优先，不把作者观点冒充用户目标。
+
+- A-card 保留当前对话与宿主来源来理解指代；N2 使用真实来源元数据和对应学习足迹，评论与作者观点分开。同一 N2 生成 messageBody，程序补真实称呼/链接和咨询或邀请结尾；身份仍回查，不能将 AuthorSignature 猜成主页。详见唯一 Agent 合同。

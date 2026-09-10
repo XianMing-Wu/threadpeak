@@ -78,6 +78,7 @@ test('invalid R4 stays waiting after same-agent repairs and never fabricates a r
   const original=structuredClone(state),r=await store.create('owner','path','strict-route',state)
   await store.enqueue('owner',r.id,'path.answer','answer',{depth:'deep'})
   const tools=new ProductTools({complete:async input=>{calls.push(input);return {kind:'completed',text:output}}},{})
+  tools.catalogNames=async()=>({carriers:[]});tools.catalogSearches=async()=>[];tools.routeInterview=async()=>interview()
   const worker=new DurableWorker(store,createFlows(tools),1,()=>{})
   await worker.execute(await store.claim())
   const result=await store.snapshot('owner',r.id)
@@ -101,7 +102,7 @@ test('first teaching reviews every source without turning every source into anot
     assert.equal(cards.length,10);assert.equal(input.answerBounds.maxCards,8)
     return {kind:'completed',text:JSON.stringify({sourceReview:cards.map(c=>({ref:c.ref,contribution:'重复定义，只选择其中的清晰例子讲解'})),sections:cards.slice(0,calls.length===1?10:2).map(c=>({after:c.ref,title:'当前概念的解释',text:'围绕当前问题说明一个要点。'}))})}
   }},{})
-  const output=await tools.answerCards(ctx,{allowedCards,directAnswers:[],concept:{title:'当前概念'},currentQuestion:'这个概念怎样用于目标？'})
+  const output=await tools.answerCards(ctx,{allowedCards,mode:'first_learning',concept:{title:'当前概念'},currentQuestion:'这个概念怎样用于目标？'})
   assert.equal(calls.length,3);assert.equal(output.paragraphs.length,2)
   assert.equal(calls[0].messages[0].content,calls[1].messages[0].content)
 })
@@ -109,7 +110,7 @@ test('compression preserves complete intent and user negatives, and purpose isol
   const store=await fixture(t),ctx=await context(store),calls=[]
   const llm={complete:async call=>{calls.push(call);assert.ok(call.messages.reduce((n,m)=>n+tokenBound(m.content)+64,0)+call.maxTokens+1024<=32000);return {kind:'completed',text:'材料仅在已知基且线性独立时适用，不能推广到任意向量组。'}}}
   const core={rawGoal:'我只想画可旋转的图，不准备考试。',userStatements:[{id:'custom',question:'怎样算学会？',text:'能在电脑上拖动它就够了，不要求推导。'}]}
-  const input={goalContext:core,concept:{id:'c',title:'旋转',description:'只学习作品需要的变换'},currentQuestion:'为什么要变换坐标？',conversation:[{role:'user',messageId:'u',content:'不要先讲完整的高等数学。'}],attachments:[{...material,content:'原始正文。'.repeat(12000)+'末尾限定条件。'}]}
+  const input={goalContext:core,concept:{id:'c',title:'旋转',description:'只学习作品需要的变换',learningSummary:{focus:'保留旋转解释。'.repeat(80),boundary:'只学当前变换。',routeConnection:'连接作品操作。',materialConnection:'来自用户资料。'}},currentQuestion:'为什么要变换坐标？',conversation:[{role:'user',messageId:'u',content:'不要先讲完整的高等数学。'}],attachments:[{...material,content:'原始正文。'.repeat(12000)+'末尾限定条件。'}]}
   const before=structuredClone(input),result=JSON.parse((await packContext(llm,ctx,'任务',input,'fast',{window:32000,output:4096,margin:2048}))[1].content)
   assert.deepEqual(input,before);assert.deepEqual(result.goalContext,core);assert.deepEqual(result.conversation,input.conversation);assert.deepEqual(result.concept,input.concept)
   assert.ok(calls.some(c=>JSON.parse(c.messages[1].content).text.includes('末尾限定条件')))
@@ -146,10 +147,11 @@ test('old learning records recover only their own original route goal, never ano
 })
 test('HTTP custom submission survives reload, auto-plans, carries owned goal into learning and keeps it after new chat',async t=>{
   const store=await fixture(t),seen=[]
-  const tools={planStep:async(_ctx,agent,input)=>{if(agent==='R1')return {queries:[0,1,2,3].map(i=>({id:String(i),text:`坐标 ${i}`,angle:i<2?'normal_learning':'pitfall_or_dispute'}))};if(agent==='R2')return exploration();return interview()},search:async()=>[],routePlan:async(_ctx,input)=>{seen.push(input);const output=plan();output.learningGoal=goal('只看懂论文，不准备面试');return compileStagedPlan(output,'published',['owned-file'])}}
+  const tools={planStep:async(_ctx,agent,input)=>{if(agent==='R1')return {queries:[0,1,2,3].map(i=>({id:String(i),text:`坐标 ${i}`,purpose:'发现目标相关的学习选择',angle:i<2?'normal_learning':'pitfall_or_dispute'}))};if(agent==='R2')return exploration();return interview()},search:async()=>[],routePlan:async(_ctx,input)=>{seen.push(input);const output=plan();output.learningGoal=goal('只看懂论文，不准备面试');return compileStagedPlan(output,'published',['owned-file'])}}
+  tools.catalogNames=async()=>({carriers:[]});tools.catalogSearches=async()=>[];tools.routeInterview=async()=>interview()
   const worker=new DurableWorker(store,createFlows(tools),1,()=>{})
   const app=await createProductApp({store,worker,providersReady:true,identity:{production:false}});t.after(async()=>{await worker.stop();await app.close()})
-  const session=await app.inject({url:'/api/v2/session'}),headers={cookie:session.headers['set-cookie'].split(';')[0]}
+  const session=await app.inject({method:'POST',url:'/api/auth/guest'}),headers={cookie:String(session.headers['set-cookie']).split(';')[0]}
   const owner=(await store.db.query('SELECT owner_id FROM tp_sessions'))[0].owner_id
   async function finish(id){for(let i=0;i<300;i++){const s=await store.snapshot(owner,id);if(s.job?.status==='completed')return s;if(s.job?.status==='waiting')throw Error(s.job.error_code);await new Promise(r=>setTimeout(r,10))}throw Error('timeout')}
   const started=await app.inject({method:'POST',url:'/api/path-runs',headers,payload:{goal:'为了读论文学习数学'}});assert.equal(started.statusCode,202)

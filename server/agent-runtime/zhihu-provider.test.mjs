@@ -13,32 +13,30 @@ const config = {
 test('HTTP 200 business errors keep their real code, retry policy and Retry-After',async()=>{
   for(const [upstream,code,retryable] of [['30001','ZHIHU_RATE_LIMITED',true],['90001','ZHIHU_CODE_90001',true],['20001','AUTH_INVALID',false]]){
     const provider=createAgentZhihuProvider({config,clock:{unixSeconds:()=>1},http:async()=>({ok:true,status:200,headers:new Headers({'Retry-After':'12'}),text:async()=>JSON.stringify({Code:upstream,Message:'upstream failure'})})})
-    for(const result of [await provider.direct({messages:[],thinkingDepth:'fast'}),await provider.search('概念',10)]){
+    for(const result of [await provider.search('概念',10)]){
       assert.equal(result.kind,'failed');assert.equal(result.code,code);assert.equal(result.retryable,retryable)
       assert.equal(result.diagnostic.httpStatus,200);assert.equal(result.diagnostic.upstreamCode,upstream);assert.equal(result.diagnostic.retryAfter,'12')
     }
   }
 })
 
-test('malformed, empty and incomplete direct responses are distinct failures with HTTP diagnostics',async()=>{
-  for(const [body,code] of [['not-json','ZHIHU_INVALID_JSON'],['{}','ZHIHU_EMPTY_RESPONSE'],[JSON.stringify({choices:[{message:{content:'未完整结束'},finish_reason:'length'}]}),'ZHIHU_INCOMPLETE_RESPONSE']]){
-    const provider=createAgentZhihuProvider({config,clock:{unixSeconds:()=>1},http:async()=>({ok:true,status:200,headers:new Headers({'x-request-id':'test-id'}),text:async()=>body})})
-    const result=await provider.direct({messages:[],thinkingDepth:'fast'})
-    assert.equal(result.code,code);assert.equal(result.diagnostic.httpStatus,200);assert.equal(result.diagnostic.requestId,'test-id');assert.notEqual(result.cacheable,true)
-  }
+test('malformed search JSON retains diagnostics and direct capability is absent',async()=>{
+ const provider=createAgentZhihuProvider({config,clock:{unixSeconds:()=>1},http:async()=>({ok:true,status:200,headers:new Headers({'x-request-id':'test-id'}),text:async()=>'not-json'})})
+ const result=await provider.search('概念',10)
+ assert.equal(result.code,'ZHIHU_INVALID_JSON');assert.equal(result.diagnostic.requestId,'test-id');assert.equal(provider.direct,undefined)
 })
 
 test('transport timeout, connection reset and user cancellation do not collapse to an unknown service error',async()=>{
   for(const [cause,signal,code,retryable] of [[new DOMException('private detail','TimeoutError'),undefined,'ZHIHU_TIMEOUT',true],[Object.assign(new TypeError('fetch failed'),{cause:{code:'ECONNRESET'}}),undefined,'ZHIHU_NETWORK_UNAVAILABLE',true],[new DOMException('private detail','AbortError'),AbortSignal.abort(),'CANCELLED',false]]){
     const provider=createAgentZhihuProvider({config,clock:{unixSeconds:()=>1},http:async()=>{throw cause}})
-    for(const result of [await provider.direct({messages:[],thinkingDepth:'fast',signal}),await provider.search('概念',10,signal)]){
+    for(const result of [await provider.search('概念',10,signal)]){
       assert.equal(result.code,code);assert.equal(result.retryable,retryable);assert.equal(result.diagnostic.httpStatus,undefined)
       assert.ok(!JSON.stringify(result).includes('private detail'));assert.ok(!JSON.stringify(result).includes('secret'))
     }
   }
 })
 
-test('zhihu direct reports retryable 429 to the durable worker without hidden retries', { timeout: 8_000 }, async () => {
+test('zhihu search reports retryable 429 to the durable worker without hidden retries', { timeout: 8_000 }, async () => {
   let calls = 0
   const zhihu = createAgentZhihuProvider({
     config,
@@ -55,10 +53,7 @@ test('zhihu direct reports retryable 429 to the durable worker without hidden re
       }
     },
   })
-  const result = await zhihu.direct({
-    messages: [{ role: 'user', content: '线性映射' }],
-    thinkingDepth: 'fast',
-  })
+  const result = await zhihu.search('线性映射',10)
   assert.equal(result.kind, 'failed')
   assert.equal(result.code, 'ZHIHU_RATE_LIMITED')
   assert.equal(result.retryable, true)

@@ -1,6 +1,6 @@
-import { a as e, n as t, o as n, s as r, t as i } from "./overpassSpec-3Tu8NqTy.js";
-import { B as a, C as o, D as s, E as c, F as l, H as u, I as d, M as f, N as p, O as m, P as h, R as g, S as _, T as v, U as y, V as b, _ as x, d as S, f as C, g as w, h as T, i as E, k as D, l as O, p as k, r as A, t as j, u as M, v as N, w as P, y as F, z as ee } from "./three-runtime-CHDI8JSc.js";
-import { t as te } from "./CharacterRig-BpJUYaY6.js";
+import { a as e, n as t, o as n, s as r, t as i } from "./overpassSpec-ieWQ-bKk.js";
+import { B as a, C as o, D as s, E as c, F as l, H as u, I as d, M as f, N as p, O as m, P as h, R as g, S as _, T as v, U as y, V as b, _ as x, d as S, f as C, g as w, h as T, i as E, k as D, l as O, p as k, r as A, t as j, u as M, v as N, w as P, y as F, z as ee } from "./three-runtime-DPnU7la1.js";
+import { t as te } from "./CharacterRig-CH9rqunS.js";
 //#region src/runtime/gateway/LearningPathSceneRuntimePort.ts
 var I = class {
 	handlers;
@@ -338,13 +338,13 @@ function le(t) {
 function ue(e) {
 	return e === "awaiting-character-settle" || e === "awaiting-linked-cleanup" ? "awaiting-settle" : e === "failed" ? "planning" : e;
 }
-function de(e) {
+function V(e) {
 	return e === "inactive" || e === "active" ? e : e === "planningRevealFromInactive" || e === "planningRevealFromActive" ? "planning-reveal" : e === "selectingRevealBeforeAction" || e === "revealBeforeBridge" || e === "selectingRevealStep" || e === "revealing" ? "revealing" : e === "planningDismissFromInactive" || e === "planningDismissFromActive" ? "planning-dismiss" : "dismissing";
 }
-function fe(e) {
+function de(e) {
 	return e.hasTag("character-settling") ? "settling" : e.hasTag("character-moving") ? e.context.arrivedNodeId === null ? "running" : "settling" : e.context.characterVisualIdle ? "idle" : "running";
 }
-function V(t) {
+function H(t) {
 	let r = t.context, i = z(t), a = ae(t), o = i ? n(i) : null, s = a ? e(a) : null, c = o?.command ?? r.navigationWorkflowCommand, l = c ? c.type === "CHARACTER.FORCE_SETTLE" ? c.attemptId : c.token : null;
 	return Object.freeze({
 		stateValue: t.value,
@@ -355,7 +355,7 @@ function V(t) {
 		currentNodeId: o?.currentNodeId ?? r.currentNodeId,
 		queuedTargetNodeId: o?.queuedTargetNodeId ?? r.pendingNavigationTargetNodeId,
 		character: Object.freeze({
-			phase: fe(t),
+			phase: de(t),
 			visualIdle: o?.characterVisualIdle ?? r.characterVisualIdle,
 			motionToken: r.motionCommandToken
 		}),
@@ -370,7 +370,7 @@ function V(t) {
 			linkedZoneCleanupComplete: o?.linkedCleanupComplete ?? r.linkedZoneCleanupComplete
 		}),
 		zoneSession: Object.freeze({
-			phase: de(s?.phase ?? (r.zoneInitiallyActive ? "active" : "inactive")),
+			phase: V(s?.phase ?? (r.zoneInitiallyActive ? "active" : "inactive")),
 			revealPlanId: s?.revealPlan?.id ?? r.zoneRevealPlan?.id ?? null,
 			revealStepIndex: s?.revealStepIndex ?? r.zoneRevealStepIndex,
 			dismissPlanId: s?.dismissPlan?.id ?? r.zoneDismissPlan?.id ?? null,
@@ -387,7 +387,7 @@ function V(t) {
 }
 //#endregion
 //#region src/diagnostics/PerformanceMeter.ts
-var pe = class {
+var fe = class {
 	fps = 0;
 	accumulatedSeconds = 0;
 	accumulatedFrames = 0;
@@ -397,7 +397,7 @@ var pe = class {
 			this.fps = this.fps === 0 ? e : this.fps * .72 + e * .28, this.accumulatedSeconds = 0, this.accumulatedFrames = 0;
 		}
 	}
-}, me = Object.freeze({ kind: "pass" }), he = Object.freeze([]), ge = Object.freeze({
+}, pe = Object.freeze({ kind: "pass" }), me = Object.freeze([]), he = Object.freeze({
 	PRESENTATION_COMMAND: "presentation.command",
 	PRESENTATION_ACK: "presentation.ack",
 	MOTION_COMMAND: "motion.command",
@@ -405,10 +405,10 @@ var pe = class {
 	MOTION_ARRIVED: "motion.arrived",
 	CHARACTER_STOP_FINISHED: "character.stop.finished",
 	CHARACTER_TURN_FINISHED: "character.turn.finished"
-}), H = Object.freeze(new class {
+}), U = Object.freeze(new class {
 	activeScenarioId = null;
 	decide(e) {
-		return me;
+		return pe;
 	}
 	intercept(e, t) {
 		return {
@@ -417,14 +417,14 @@ var pe = class {
 		};
 	}
 	getTimeline() {
-		return he;
+		return me;
 	}
 }());
 Object.freeze({ schedule(e, t) {
 	let n = globalThis.setTimeout(e, t);
 	return () => globalThis.clearTimeout(n);
 } });
-var _e = 6, ve = 64, ye = class {
+var ge = 6, _e = 64, ve = class {
 	canvas;
 	camera;
 	pickTargets;
@@ -469,14 +469,14 @@ var _e = 6, ve = 64, ye = class {
 		if (!this.enabled) return;
 		if (this.capturedPointerId === e.pointerId && e.buttons !== 0) {
 			let t = Math.hypot(e.clientX - this.pointerStartX, e.clientY - this.pointerStartY);
-			!this.isPanning && this.onPanByPixels !== void 0 && t >= _e && (this.isPanning = !0, this.pressedIndex = null, this.onPress(null), this.publishHover(null), this.canvas.style.cursor = "grabbing");
+			!this.isPanning && this.onPanByPixels !== void 0 && t >= ge && (this.isPanning = !0, this.pressedIndex = null, this.onPress(null), this.publishHover(null), this.canvas.style.cursor = "grabbing");
 			let n = e.clientX - this.pointerLastX, r = e.clientY - this.pointerLastY;
 			this.pointerLastX = e.clientX, this.pointerLastY = e.clientY, this.isPanning && (e.preventDefault(), this.onPanByPixels?.(-n, -r));
 			return;
 		}
 		if (e.pointerType !== "mouse" && e.buttons === 0) return;
 		let t = this.pickNode(e);
-		if (t === null && e.pointerType === "mouse" && this.hoveredIndex !== null && Math.hypot(e.clientX - this.hoverLatchClientX, e.clientY - this.hoverLatchClientY) < ve) {
+		if (t === null && e.pointerType === "mouse" && this.hoveredIndex !== null && Math.hypot(e.clientX - this.hoverLatchClientX, e.clientY - this.hoverLatchClientY) < _e) {
 			this.canvas.style.cursor = "pointer";
 			return;
 		}
@@ -584,7 +584,7 @@ var _e = 6, ve = 64, ye = class {
 	isNodeVisible(e) {
 		return this.isNodeVisibleOverride ? this.isNodeVisibleOverride(e) : this.pickTargets.some((t) => this.resolveNodeIndex(t) === e && t.visible && t.userData.pathNodeVisible !== !1);
 	}
-}, be = class {
+}, ye = class {
 	#e;
 	#t;
 	#n;
@@ -633,7 +633,7 @@ var _e = 6, ve = 64, ye = class {
 	#d() {
 		for (let [e, t] of this.#i) t.nativeHandle === null && this.#l(e, t);
 	}
-}, xe = class {
+}, be = class {
 	#e;
 	#t;
 	#n;
@@ -673,21 +673,21 @@ var _e = 6, ve = 64, ye = class {
 		});
 		this.#n.updateSimulation(r), this.#n.updateCamera(r), this.#n.updateCharacter(r), this.#n.publishVisualIdleEdge(r), this.#n.updatePathView(r), this.#n.updateRuntime(r), this.#n.updatePerformanceMeter(r), this.#n.renderScene(r), this.#n.afterRender?.(r);
 	};
-}, Se = (e) => ({
+}, xe = (e) => ({
 	start: (t) => e.setAnimationLoop(t),
 	stop: () => e.setAnimationLoop(null)
-}), Ce = (e) => {
+}), Se = (e) => {
 	let t = new a();
 	return t.connect(e), {
 		reset: () => t.reset(),
 		update: (e) => (t.update(e), t.getDelta()),
 		dispose: () => t.dispose()
 	};
-}, we = () => new DOMException("Presentation cancelled.", "AbortError"), Te = (e) => ({
+}, Ce = () => new DOMException("Presentation cancelled.", "AbortError"), we = (e) => ({
 	now: () => e.performance.now(),
 	request: (t) => e.requestAnimationFrame(t),
 	cancel: (t) => e.cancelAnimationFrame(t)
-}), Ee = class {
+}), Te = class {
 	presentation;
 	#e;
 	#t;
@@ -707,7 +707,7 @@ var _e = 6, ve = 64, ye = class {
 	#h = !1;
 	#g = !1;
 	constructor(e) {
-		this.#e = e.initialNodeId, this.#t = e.nodeExists, this.#n = new Map(e.edges.map((e) => [e.id, e])), this.#r = e.pathView, this.#i = e.characterStage, this.#a = e.setSemanticNodeVisible, this.#o = e.publishState, this.#s = e.frameScheduler ?? Te(window), this.#c = e.presenceSpeedMultiplier ?? 1, this.#l = e.characterDropHeight ?? 5.4, this.#u = Math.max(0, e.characterDropDurationSeconds ?? .48), this.#f = new Promise((e, t) => {
+		this.#e = e.initialNodeId, this.#t = e.nodeExists, this.#n = new Map(e.edges.map((e) => [e.id, e])), this.#r = e.pathView, this.#i = e.characterStage, this.#a = e.setSemanticNodeVisible, this.#o = e.publishState, this.#s = e.frameScheduler ?? we(window), this.#c = e.presenceSpeedMultiplier ?? 1, this.#l = e.characterDropHeight ?? 5.4, this.#u = Math.max(0, e.characterDropDurationSeconds ?? .48), this.#f = new Promise((e, t) => {
 			this.#p = e, this.#m = t;
 		}), this.#f.catch(() => {}), this.presentation = Object.freeze({
 			revealNode: this.#_,
@@ -724,7 +724,7 @@ var _e = 6, ve = 64, ye = class {
 	dispose() {
 		if (this.#g) return;
 		this.#g = !0;
-		let e = we();
+		let e = Ce();
 		this.#h || (this.#h = !0, this.#m?.(e), this.#T()), [...this.#d].forEach((t) => {
 			this.#C(t, e);
 		});
@@ -774,7 +774,7 @@ var _e = 6, ve = 64, ye = class {
 				active: !0,
 				...t ? { signal: t } : {},
 				abort: () => {
-					this.#C(a, we());
+					this.#C(a, Ce());
 				},
 				reject: r
 			}, o = (r) => {
@@ -810,7 +810,7 @@ var _e = 6, ve = 64, ye = class {
 		return this.#w(e), e ? new Promise((t, n) => {
 			let r = !1, i = (i) => {
 				r || (r = !0, e.removeEventListener("abort", a), i === void 0 ? t() : n(i));
-			}, a = () => i(we());
+			}, a = () => i(Ce());
 			e.addEventListener("abort", a, { once: !0 }), this.#f.then(() => i(), (e) => i(e));
 		}) : this.#f;
 	}
@@ -818,21 +818,21 @@ var _e = 6, ve = 64, ye = class {
 		e.active && (e.active = !1, this.#s.cancel(e.frameId), e.signal?.removeEventListener("abort", e.abort), this.#d.delete(e), t !== void 0 && e.reject(t));
 	}
 	#w(e) {
-		if (this.#g || e?.aborted) throw we();
+		if (this.#g || e?.aborted) throw Ce();
 	}
 	#T() {
 		this.#p = null, this.#m = null;
 	}
-}, De = () => Object.freeze({
+}, Ee = () => Object.freeze({
 	sequence: 0,
 	modelPhase: "not-started",
 	modelError: null,
 	presentationPhase: "not-started",
 	presentationError: null,
 	contextAvailable: !0
-}), Oe = class {
+}), De = class {
 	#e = /* @__PURE__ */ new Set();
-	#t = De();
+	#t = Ee();
 	#n = !1;
 	getSnapshot() {
 		return this.#t;
@@ -929,7 +929,7 @@ var _e = 6, ve = 64, ye = class {
 			case "CONTEXT.RESTORED": return !t.contextAvailable;
 		}
 	}
-}, ke = "(prefers-reduced-motion: reduce)", Ae = (e) => e.matchMedia(ke).matches, je = () => typeof ResizeObserver > "u" ? null : (e) => new ResizeObserver((t) => e(t)), Me = class {
+}, Oe = "(prefers-reduced-motion: reduce)", ke = (e) => e.matchMedia(Oe).matches, Ae = () => typeof ResizeObserver > "u" ? null : (e) => new ResizeObserver((t) => e(t)), je = class {
 	#e;
 	#t;
 	#n;
@@ -943,8 +943,8 @@ var _e = 6, ve = 64, ye = class {
 	#u = !1;
 	#d = !1;
 	constructor(e) {
-		this.#e = e.browserWindow, this.#t = e.document, this.#n = e.canvas, this.#r = e.viewport, this.#i = e.frameLoop, this.#a = e.callbacks, this.#c = !e.document.hidden, this.#o = e.browserWindow.matchMedia(ke);
-		let t = e.resizeObserverFactory === void 0 ? je() : e.resizeObserverFactory;
+		this.#e = e.browserWindow, this.#t = e.document, this.#n = e.canvas, this.#r = e.viewport, this.#i = e.frameLoop, this.#a = e.callbacks, this.#c = !e.document.hidden, this.#o = e.browserWindow.matchMedia(Oe);
+		let t = e.resizeObserverFactory === void 0 ? Ae() : e.resizeObserverFactory;
 		this.#s = t?.(this.#p) ?? null;
 	}
 	get reducedMotion() {
@@ -997,7 +997,7 @@ var _e = 6, ve = 64, ye = class {
 		}
 		this.#i.start();
 	}
-}, Ne = (e) => e === "purple" ? "紫色，上次学习" : e === "green" ? "绿色" : e === "brown" ? "知乎蓝" : "灰色", Pe = class {
+}, Me = (e) => e === "purple" ? "紫色，上次学习" : e === "green" ? "绿色" : e === "brown" ? "知乎蓝" : "灰色", Ne = class {
 	#e = [];
 	#t = /* @__PURE__ */ new Map();
 	#n;
@@ -1033,7 +1033,7 @@ var _e = 6, ve = 64, ye = class {
 			let { node: n, nodeIndex: r, option: i } = t, a = !e.isRunning && e.currentNodeId === n.id, o = e.targetNodeId === n.id || e.queuedTargetNodeId === n.id;
 			i.textContent = [
 				n.label,
-				Ne(e.getNodeColor(r)),
+				Me(e.getNodeColor(r)),
 				a ? "当前位置" : null,
 				o ? "目标位置" : null
 			].filter(Boolean).join("，"), a ? i.setAttribute("aria-current", "step") : i.removeAttribute("aria-current");
@@ -1051,11 +1051,11 @@ var _e = 6, ve = 64, ye = class {
 			this.#e.length = 0, this.#t.clear();
 		}
 	}
-}, Fe = class {
+}, Pe = class {
 	controller;
 	disposed = !1;
 	constructor(e) {
-		let t = Ie(e, new Map(e.nodes.map((e, t) => [e.id, t]))), n = e.createController ?? ((e) => new ye(e));
+		let t = Fe(e, new Map(e.nodes.map((e, t) => [e.id, t]))), n = e.createController ?? ((e) => new ve(e));
 		this.controller = n({
 			canvas: e.canvas,
 			camera: e.camera,
@@ -1090,7 +1090,7 @@ var _e = 6, ve = 64, ye = class {
 		this.disposed || (this.disposed = !0, this.controller.dispose());
 	}
 };
-function Ie(e, t) {
+function Fe(e, t) {
 	let n = new y(), r = new y(), i = new u(), a = new u();
 	return (o, s) => {
 		if (s === "home" || s === "end") {
@@ -1117,8 +1117,15 @@ function Ie(e, t) {
 	};
 }
 //#endregion
+//#region src/render/app/ShadowResources.ts
+function Ie(e) {
+	let t = /* @__PURE__ */ new Set([e.map, e.mapPass]);
+	for (let e of t) e && (e.depthTexture?.dispose(), e.depthTexture = null, e.dispose());
+	e.map = null, e.mapPass = null, e.needsUpdate = !0;
+}
+//#endregion
 //#region src/render/app/SceneBounds.ts
-function Le(e, t) {
+function W(e, t) {
 	if (e.length === 0) throw Error("Learning scene requires at least one path node.");
 	let n = t.minimumHorizontalMargin ?? 1.35, r = t.proportionalHorizontalMargin ?? .035, i = Infinity, a = -Infinity, o = Infinity, s = -Infinity;
 	e.forEach((e, t) => {
@@ -1144,7 +1151,7 @@ function Le(e, t) {
 }
 //#endregion
 //#region src/render/app/ViewportPanPolicy.ts
-function U(e) {
+function G(e) {
 	if (![
 		e.contentMin,
 		e.contentMax,
@@ -1172,13 +1179,13 @@ function U(e) {
 }
 //#endregion
 //#region src/render/app/LearningScene.ts
-var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be = -.05, W = .92, G = 1.35, Ve = 30, K = 24, He = 1e-4, Ue = Object.freeze({
+var Le = new S("#fcfcfc"), Re = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), K = -.05, q = .92, ze = 1.35, J = 30, Be = 24, Ve = 1e-4, He = Object.freeze({
 	position: Object.freeze({
 		x: 0,
 		z: 0
 	}),
 	initiallyVisible: !0
-}), We = class {
+}), Ue = class {
 	renderer;
 	scene = new h();
 	camera = new m(42, 1, .1, 500);
@@ -1216,14 +1223,14 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 		let r = Array.isArray(t) ? {
 			nodes: t,
 			viewport: n
-		} : t, i = r.nodes?.length ? r.nodes : [Ue], a = this.resolvePathBounds(i);
+		} : t, i = r.nodes?.length ? r.nodes : [He], a = this.resolvePathBounds(i);
 		this.fullBounds = a.full, this.initialBounds = a.initial, this.cameraTarget.copy(this.initialBounds.center), this.viewportElement = r.viewport ?? e.parentElement ?? e, this.renderer = new E({
 			canvas: e,
 			antialias: !0,
 			alpha: !1,
 			powerPreference: "high-performance",
 			stencil: !1
-		}), this.renderer.outputColorSpace = p, this.renderer.toneMapping = 7, this.renderer.toneMappingExposure = 1.14, this.renderer.shadowMap.enabled = !0, this.renderer.shadowMap.type = 3, this.scene.background = Re, this.scene.fog = new w(Re, 100, 300), this.scene.name = "liu-kanshan-learning-path-scene", this.createLighting(), this.createGround(), this.resize();
+		}), this.renderer.outputColorSpace = p, this.renderer.toneMapping = 7, this.renderer.toneMappingExposure = 1.14, this.renderer.shadowMap.enabled = !0, this.renderer.shadowMap.type = 3, this.scene.background = Le, this.scene.fog = new w(Le, 100, 300), this.scene.name = "liu-kanshan-learning-path-scene", this.createLighting(), this.createGround(), this.resize();
 	}
 	setPathNodes(e, t = {}) {
 		if (this.disposed) throw Error("Cannot replace path nodes after the learning scene is disposed.");
@@ -1253,7 +1260,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 		this.desiredFov = this.getFramingFov(e);
 	}
 	panByScreenPixels(e, t) {
-		if (this.disposed || !Number.isFinite(e) || !Number.isFinite(t) || Math.abs(e) < He && Math.abs(t) < He) return this.getViewportPanSnapshot();
+		if (this.disposed || !Number.isFinite(e) || !Number.isFinite(t) || Math.abs(e) < Ve && Math.abs(t) < Ve) return this.getViewportPanSnapshot();
 		let n = this.intersectGroundAtNdc(0, 0), r = this.intersectGroundAtNdc(e / this.viewportWidthPixels * 2, -(t / this.viewportHeightPixels) * 2);
 		return !n || !r ? this.getViewportPanSnapshot() : (this.viewportPanOffset.x += r.x - n.x, this.viewportPanOffset.z += r.z - n.z, this.applyPathFraming(), this.applyCompositionOffset(), this.getViewportPanSnapshot());
 	}
@@ -1309,25 +1316,25 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 		this.currentFov = _.lerp(this.currentFov, this.desiredFov, n), this.currentOverlayFovBonusDegrees = _.lerp(this.currentOverlayFovBonusDegrees, this.desiredOverlayFovBonusDegrees, n), Math.abs(this.currentOverlayFovBonusDegrees - this.desiredOverlayFovBonusDegrees) < .01 && (this.currentOverlayFovBonusDegrees = this.desiredOverlayFovBonusDegrees), this.camera.fov = Math.min(82, this.currentFov + this.currentOverlayFovBonusDegrees);
 		let r = this.framingExpansionTarget - this.framingExpansionProgress;
 		if (Math.abs(r) > 2 ** -52) {
-			let n = t ? Math.abs(r) : Math.max(0, e) / G;
+			let n = t ? Math.abs(r) : Math.max(0, e) / ze;
 			this.framingExpansionProgress = Math.abs(r) <= n ? this.framingExpansionTarget : this.framingExpansionProgress + Math.sign(r) * n, this.applyPathFraming();
 		}
 		this.currentVerticalCompositionOffsetPixels = _.lerp(this.currentVerticalCompositionOffsetPixels, this.desiredVerticalCompositionOffsetPixels, n), Math.abs(this.currentVerticalCompositionOffsetPixels - this.desiredVerticalCompositionOffsetPixels) < .05 && (this.currentVerticalCompositionOffsetPixels = this.desiredVerticalCompositionOffsetPixels), this.currentHorizontalCompositionOffsetPixels = _.lerp(this.currentHorizontalCompositionOffsetPixels, this.desiredHorizontalCompositionOffsetPixels, n), Math.abs(this.currentHorizontalCompositionOffsetPixels - this.desiredHorizontalCompositionOffsetPixels) < .05 && (this.currentHorizontalCompositionOffsetPixels = this.desiredHorizontalCompositionOffsetPixels), this.applyCompositionOffset(), this.applyPathFraming();
 	}
 	dispose() {
 		this.disposed || (this.disposed = !0, this.renderer.setAnimationLoop(null), this.ground &&= (this.scene.remove(this.ground), this.ground.geometry.dispose(), this.ground.material.dispose(), null), this.shadowLights.forEach((e) => {
-			e.shadow.map?.dispose(), e.shadow.mapPass?.dispose(), e.shadow.map = null, e.shadow.mapPass = null, e.shadow.dispose(), this.scene.remove(e, e.target);
+			Ie(e.shadow), e.shadow.dispose(), this.scene.remove(e, e.target);
 		}), this.shadowLights.length = 0, this.keyLight = null, this.fillLight = null, this.renderer.dispose(), this.renderer.getContext().isContextLost() || this.renderer.forceContextLoss());
 	}
 	resolvePathBounds(e) {
 		if (e.length === 0) throw Error("Learning scene requires at least one injected path node.");
 		let t = e.some((e) => e.initiallyVisible === !0) ? e.filter((e) => e.initiallyVisible !== !1) : e, n = {
-			floorY: Be,
-			topY: ze
+			floorY: K,
+			topY: Re
 		};
 		return {
-			full: Le(e, n),
-			initial: Le(t, n)
+			full: W(e, n),
+			initial: W(t, n)
 		};
 	}
 	measureViewport() {
@@ -1341,14 +1348,14 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 		return e !== void 0 && Number.isFinite(e) && e > 0 ? e : t;
 	}
 	calculateFitDistance(e, t, n, r, i) {
-		let a = new y(1, 0, 0), o = new y().crossVectors(n, a).normalize(), s = Math.tan(_.degToRad(i) / 2) * W, c = s * r, l = 0;
+		let a = new y(1, 0, 0), o = new y().crossVectors(n, a).normalize(), s = Math.tan(_.degToRad(i) / 2) * q, c = s * r, l = 0;
 		return e.corners.forEach((e) => {
 			let r = e.clone().sub(t), i = r.dot(n), u = Math.abs(r.dot(a)), d = Math.abs(r.dot(o));
 			l = Math.max(l, i + u / c, i + d / s);
 		}), l;
 	}
 	createCameraFrame(e, t, n, r) {
-		let i = e.center.clone(), a = this.calculateFitDistance(e, i, t, n, r), o = this.getPortraitCameraBlend(n), s = _.lerp(Ve, K, o), c = Math.min(a, s), l = e.radius * 1.8;
+		let i = e.center.clone(), a = this.calculateFitDistance(e, i, t, n, r), o = this.getPortraitCameraBlend(n), s = _.lerp(J, Be, o), c = Math.min(a, s), l = e.radius * 1.8;
 		return {
 			target: i,
 			direction: t.clone(),
@@ -1366,7 +1373,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 	}
 	clampViewportPanToBounds(e) {
 		let t = this.resolveViewportPanConstraints(), n = t.x.target, r = t.z.target, i = n - this.cameraTarget.x, a = r - this.cameraTarget.z;
-		Math.abs(i) <= He && Math.abs(a) <= He || (this.viewportPanOffset.x += i, this.viewportPanOffset.z += a, this.cameraTarget.x = n, this.cameraTarget.z = r, this.camera.position.copy(this.cameraTarget).addScaledVector(e, this.fittedCameraDistance), this.camera.lookAt(this.cameraTarget), this.camera.updateMatrixWorld(!0));
+		Math.abs(i) <= Ve && Math.abs(a) <= Ve || (this.viewportPanOffset.x += i, this.viewportPanOffset.z += a, this.cameraTarget.x = n, this.cameraTarget.z = r, this.camera.position.copy(this.cameraTarget).addScaledVector(e, this.fittedCameraDistance), this.camera.lookAt(this.cameraTarget), this.camera.updateMatrixWorld(!0));
 	}
 	resolveViewportPanConstraints() {
 		this.camera.updateMatrixWorld(!0);
@@ -1383,14 +1390,14 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 			e && (e.enabled = !0, this.camera.updateProjectionMatrix());
 		}
 		if (t.length === 0) return {
-			x: U({
+			x: G({
 				contentMin: this.cameraTarget.x,
 				contentMax: this.cameraTarget.x,
 				viewportMinOffset: 0,
 				viewportMaxOffset: 0,
 				proposedTarget: this.cameraTarget.x
 			}),
-			z: U({
+			z: G({
 				contentMin: this.cameraTarget.z,
 				contentMax: this.cameraTarget.z,
 				viewportMinOffset: 0,
@@ -1400,14 +1407,14 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 		};
 		let n = t.map((e) => e.x - this.cameraTarget.x), r = t.map((e) => e.z - this.cameraTarget.z);
 		return {
-			x: U({
+			x: G({
 				contentMin: this.fullBounds.minX,
 				contentMax: this.fullBounds.maxX,
 				viewportMinOffset: Math.min(...n),
 				viewportMaxOffset: Math.max(...n),
 				proposedTarget: this.cameraTarget.x
 			}),
-			z: U({
+			z: G({
 				contentMin: this.fullBounds.minZ,
 				contentMax: this.fullBounds.maxZ,
 				viewportMinOffset: Math.min(...r),
@@ -1419,8 +1426,8 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 	intersectGroundAtNdc(e, t) {
 		this.panRaycaster.setFromCamera(new u(e, t), this.camera);
 		let { origin: n, direction: r } = this.panRaycaster.ray;
-		if (Math.abs(r.y) <= He) return null;
-		let i = (Be - n.y) / r.y;
+		if (Math.abs(r.y) <= Ve) return null;
+		let i = (K - n.y) / r.y;
 		return !Number.isFinite(i) || i <= 0 ? null : n.clone().addScaledVector(r, i);
 	}
 	applyCompositionOffset() {
@@ -1445,8 +1452,8 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 	}
 	updateShadowQuality(e) {
 		if (!this.keyLight) return;
-		let t = e >= 1100 ? 4096 : 2048;
-		this.keyLight.shadow.mapSize.width !== t && (this.keyLight.shadow.mapSize.set(t, t), this.keyLight.shadow.map?.dispose(), this.keyLight.shadow.map = null, this.keyLight.shadow.needsUpdate = !0);
+		let t = Math.min(e >= 1100 ? 4096 : 2048, this.renderer.capabilities.maxTextureSize);
+		this.keyLight.shadow.mapSize.width !== t && (this.keyLight.shadow.mapSize.set(t, t), Ie(this.keyLight.shadow));
 	}
 	getFramingFov(e) {
 		let t = _.smoothstep(this.framingExpansionProgress, 0, 1), n = _.inverseLerp(_.lerp(this.initialBounds.minZ, this.fullBounds.minZ, t), _.lerp(this.initialBounds.maxZ, this.fullBounds.maxZ, t), e);
@@ -1474,7 +1481,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 		let e = Math.max(12, this.fullBounds.radius * .24), t = new D(this.fullBounds.spanX + e * 2, this.fullBounds.spanZ + e * 2);
 		this.ground.geometry.dispose(), this.ground.geometry = t, this.ground.position.set(this.fullBounds.center.x, -.01, this.fullBounds.center.z);
 	}
-}, q = {
+}, Y = {
 	purpleTop: new S("#9468db"),
 	purpleSide: new S("#724ab4"),
 	purpleHighlight: new S("#c3a5ee"),
@@ -1494,12 +1501,12 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 	overpassSide: new S("#789ed5"),
 	overpassBottom: new S("#6489c2"),
 	current: new S("#ffc928")
-}, Ge = .523, J = .026, Ke = .64, qe = .693, Je = .66, Ye = 24, Xe = 160, Y = 10, Ze = .18 / Y, Qe = .08 / Y, $e = .25 / Y, et = .08 / Y, tt = 0, nt = 0, rt = 1.4, it = 1.85, at = .965, ot = .24, st = .22, ct = 1.4, lt = .97, ut = .702, dt = .022, ft = .052, pt = Math.PI * 1.72, mt = .116, ht = -(Math.PI * 2) / 1.6, gt = _.degToRad(-90.4), _t = .18, vt = .96, yt = .471, bt = .007999999999999896, xt = .38, St = {
+}, We = .523, Ge = .026, Ke = .64, qe = .693, Je = .66, Ye = 24, Xe = 160, Ze = 10, Qe = .18 / Ze, $e = .08 / Ze, et = .25 / Ze, tt = .08 / Ze, nt = 0, rt = 0, it = 1.4, at = 1.85, ot = .965, st = .24, ct = .22, lt = 1.4, ut = .97, dt = .702, ft = .022, pt = .052, mt = Math.PI * 1.72, ht = .116, gt = -(Math.PI * 2) / 1.6, _t = _.degToRad(-90.4), vt = .18, yt = .96, bt = .471, xt = .007999999999999896, St = .38, Ct = {
 	locked: "\n    <svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\">\n      <path d=\"M7 10V7a5 5 0 0 1 10 0v3h2v11H5V10h2zm3 0h4V7a2 2 0 0 0-4 0v3z\"/>\n    </svg>\n  ",
 	available: "\n    <svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\">\n      <path d=\"M7 4.7 20 12 7 19.3z\"/>\n    </svg>\n  ",
 	"in-progress": "\n    <svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\">\n      <path d=\"M6 3h12v3c0 2.6-1.4 4.5-3.6 6 2.2 1.5 3.6 3.4 3.6 6v3H6v-3c0-2.6 1.4-4.5 3.6-6C7.4 10.5 6 8.6 6 6V3zm3 3c0 1.6 1 2.8 3 4 2-1.2 3-2.4 3-4H9zm3 8c-2 1.2-3 2.4-3 4h6c0-1.6-1-2.8-3-4z\"/>\n    </svg>\n  ",
 	completed: "\n    <svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\">\n      <path d=\"m3.6 12.2 3-3 3.2 3.2 7.7-7.7 3 3L9.8 18.4z\"/>\n    </svg>\n  "
-}, Ct = {
+}, wt = {
 	carrier: "<svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M2 4c3-1 6-.5 9 1v15c-3-1.5-6-2-9-1V4Zm11 1c3-1.5 6-2 9-1v15c-3-1-6-.5-9 1V5Z\"/><path d=\"M3 21h18v1H3z\"/></svg>",
 	concept: "<svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 5 19 12 12 19 5 12Z M11 0h2v3h-2z M11 21h2v3h-2z M0 11h3v2H0z M21 11h3v2h-3z M3 2l3 3-1 1-3-3z M18 19l1-1 3 3-1 1z M18 5l3-3 1 1-3 3z M2 21l3-3 1 1-3 3z\"/></svg>",
 	start: "<svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 1 15 9 23 12 15 15 12 23 9 15 1 12 9 9Z\"/><path d=\"M3 2h3v1H3z M2 3h1v3H2z M18 21h3v1h-3z M21 18h1v3h-1z\"/></svg>",
@@ -1516,10 +1523,10 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 	pca: "\n    <svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\">\n      <path d=\"M3 19h18v2H3v-2zm2-2 4-5 3 2 6-9 3 2-8 11-4-2-2 3-2-2z\"/>\n    </svg>\n  ",
 	projection: "\n    <svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\">\n      <path d=\"M4 4h3v13h13v3H4V4zm5 9 4-6 3 2-4 6-3-2zm7-4 4-5 2 2-4 5-2-2z\"/>\n    </svg>\n  ",
 	goal: "<svg viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M10 2h2v14h-2z M13 3h9l-3 4 3 4h-9z M2 22l6-8 4 5 3-4 7 7H2z\"/></svg>"
-}, wt = {
-	...St,
-	...Ct
-}, Tt = class {
+}, Tt = {
+	...Ct,
+	...wt
+}, Et = class {
 	root = new x();
 	pickTargets;
 	nodes;
@@ -1529,25 +1536,25 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 	badgeGeometryCache = /* @__PURE__ */ new Map();
 	badgeGeometrySource = typeof DOMParser > "u" ? "shape-fallback" : "svg-loader";
 	connectorTopMaterial = new c({
-		color: q.pathTop,
+		color: Y.pathTop,
 		metalness: 0,
 		roughness: .98,
 		depthWrite: !0
 	});
 	connectorSideMaterial = new c({
-		color: q.pathSide,
+		color: Y.pathSide,
 		metalness: 0,
 		roughness: .93,
 		depthWrite: !0
 	});
 	overpassSideMaterial = new c({
-		color: q.overpassSide,
+		color: Y.overpassSide,
 		metalness: 0,
 		roughness: .94,
 		depthWrite: !0
 	});
 	overpassBottomMaterial = new c({
-		color: q.overpassBottom,
+		color: Y.overpassBottom,
 		metalness: 0,
 		roughness: .97,
 		depthWrite: !0
@@ -1662,7 +1669,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 			}
 			let n = .06 + (t === this.currentIndex ? 0 : e.pressed ? -.01 : e.hovered ? .012 : 0);
 			e.buttonGroup.position.y = _.lerp(e.buttonGroup.position.y, n, r);
-			let i = t === this.targetIndex, a = e.hovered || i, o = e.tone === "brown" ? q.brownHighlight : e.tone === "green" ? q.greenHighlight : q.grayHighlight;
+			let i = t === this.targetIndex, a = e.hovered || i, o = e.tone === "brown" ? Y.brownHighlight : e.tone === "green" ? Y.greenHighlight : Y.grayHighlight;
 			e.topMaterial.emissive.copy(o), e.topMaterial.emissiveIntensity = a ? e.hovered ? .11 : .065 : 0;
 		}), this.updateCurrentSpinner(e, t, n);
 	}
@@ -1676,7 +1683,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 		(u || d) && (o.transitionElapsed = 0), o.characterSideNodeId = l, o.desiredVisible = a.desiredVisible;
 		let f = Math.max(0, i), p = o.transitionElapsed, m = p + f;
 		o.transitionElapsed = m;
-		let h = a.reducedMotion ? tt : a.desiredVisible ? Ze : $e, g = a.reducedMotion ? nt : a.desiredVisible ? Qe : et;
+		let h = a.reducedMotion ? nt : a.desiredVisible ? Qe : et, g = a.reducedMotion ? rt : a.desiredVisible ? $e : tt;
 		this.getOrderedOverpassPieces(o).forEach((e, t) => {
 			let n = t * g, r = n + h, i = h <= 0 ? 0 : Math.max(0, Math.min(m, r) - Math.max(p, n)), o = h <= 0 ? 1 : i / h;
 			e.progress = a.desiredVisible ? Math.min(1, e.progress + o) : Math.max(0, e.progress - o), this.applyOverpassPieceTransform(e);
@@ -1785,7 +1792,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 			id: e,
 			group: t,
 			restingY: t.position.y,
-			dropHeight: ct,
+			dropHeight: lt,
 			hitTarget: n,
 			materials: [...i].map((e) => {
 				let t = e.opacity, n = e.depthWrite;
@@ -1802,13 +1809,13 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 	}
 	updatePresence(e, t, n) {
 		e.desiredVisible = n.desiredVisible;
-		let r = Number.isFinite(n.speedMultiplier) && (n.speedMultiplier ?? 0) > 0 ? n.speedMultiplier : 1, i = n.reducedMotion ? 0 : n.desiredVisible ? ot / r : st / r, a = i <= 0 ? 1 : Math.max(0, t) / i;
+		let r = Number.isFinite(n.speedMultiplier) && (n.speedMultiplier ?? 0) > 0 ? n.speedMultiplier : 1, i = n.reducedMotion ? 0 : n.desiredVisible ? st / r : ct / r, a = i <= 0 ? 1 : Math.max(0, t) / i;
 		return e.progress = n.desiredVisible ? Math.min(1, e.progress + a) : Math.max(0, e.progress - a), this.applyPresenceTransform(e), !n.desiredVisible && e.id === this.nodes[this.currentIndex]?.id && this.hideCurrentSpinner(), this.readPresenceState(e);
 	}
 	applyPresenceTransform(e) {
 		let t = _.smoothstep(e.progress, 0, 1);
 		e.group.visible = e.progress > 1e-5, e.group.position.y = e.restingY + e.dropHeight * (1 - t);
-		let n = _.lerp(lt, 1, t);
+		let n = _.lerp(ut, 1, t);
 		e.group.scale.set(n, n, n), e.materials.forEach(({ material: e, restingOpacity: n, restingDepthWrite: r }) => {
 			e.opacity = n * t, e.depthWrite = r && t >= .99999;
 		});
@@ -1835,7 +1842,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 			visible: !1,
 			interactive: !1,
 			progress: 0,
-			yOffset: ct
+			yOffset: lt
 		};
 	}
 	createMissingOverpassState(e) {
@@ -1871,13 +1878,13 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 		return this.nodeBadgeIconById[e] ?? t.status;
 	}
 	getNodeTopColor(e) {
-		return e === "purple" ? q.purpleTop : e === "green" ? q.greenTop : e === "brown" ? q.brownTop : q.grayTop;
+		return e === "purple" ? Y.purpleTop : e === "green" ? Y.greenTop : e === "brown" ? Y.brownTop : Y.grayTop;
 	}
 	getNodeSideColor(e) {
-		return e === "purple" ? q.purpleSide : e === "green" ? q.greenSide : e === "brown" ? q.brownSide : q.graySide;
+		return e === "purple" ? Y.purpleSide : e === "green" ? Y.greenSide : e === "brown" ? Y.brownSide : Y.graySide;
 	}
 	getNodeTopSpecularColor(e) {
-		return e === "purple" ? q.purpleHighlight : e === "green" ? q.greenHighlight : e === "brown" ? q.brownHighlight : q.grayTop;
+		return e === "purple" ? Y.purpleHighlight : e === "green" ? Y.greenHighlight : e === "brown" ? Y.brownHighlight : Y.grayTop;
 	}
 	getNodeBadgeColor(e, t) {
 		return t === "gray" ? new S(e === "locked" ? "#747d76" : "#354139") : new S("#fffdf7");
@@ -1887,7 +1894,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 	}
 	createNodeLearningBadge(e, t) {
 		let n = new x();
-		n.position.y = yt, n.rotation.x = -Math.PI / 2, n.userData.nodeLearningBadge = !0;
+		n.position.y = bt, n.rotation.x = -Math.PI / 2, n.userData.nodeLearningBadge = !0;
 		let r = new P({
 			color: this.getNodeBadgeColor(e, t),
 			transparent: !0,
@@ -1917,7 +1924,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 		return n = this.badgeGeometrySource === "svg-loader" ? this.createNodeBadgeGeometryFromSvg(e) : this.createFallbackNodeBadgeGeometry(e), this.normalizeNodeBadgeGeometry(n), n.name = `node-learning-badge-${e}-${this.badgeGeometrySource}`, this.badgeGeometryCache.set(e, n), n;
 	}
 	createNodeBadgeGeometryFromSvg(e) {
-		let t = new j().parse(wt[e]).paths.flatMap((e) => e.toShapes().map((e) => new d(e, 12))), n = t.length === 1 ? t[0] : A(t, !1);
+		let t = new j().parse(Tt[e]).paths.flatMap((e) => e.toShapes().map((e) => new d(e, 12))), n = t.length === 1 ? t[0] : A(t, !1);
 		return n ? (t.length > 1 && t.forEach((e) => e.dispose()), n) : (t.forEach((e) => e.dispose()), this.createFallbackNodeBadgeGeometry(e));
 	}
 	createFallbackNodeBadgeGeometry(e) {
@@ -1938,7 +1945,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 		if (!t) return;
 		let n = t.getCenter(new y()), r = t.getSize(new y());
 		e.translate(-n.x, -n.y, -n.z);
-		let i = xt / Math.max(r.x, r.y, 1e-6);
+		let i = St / Math.max(r.x, r.y, 1e-6);
 		e.scale(i, i, i), e.computeBoundingBox(), e.computeBoundingSphere();
 	}
 	readNodeLearningBadgeDebugInfo(e, t) {
@@ -1950,7 +1957,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 			icon: t.badge.icon,
 			visible: t.group.visible && t.badge.group.visible && t.badge.mesh.visible,
 			meshCount: 1,
-			surfaceOffset: Number(bt.toFixed(3)),
+			surfaceOffset: Number(xt.toFixed(3)),
 			source: this.badgeGeometrySource,
 			color: `#${t.badge.material.color.getHexString()}`
 		});
@@ -1959,7 +1966,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 		let n = new x();
 		n.name = e.id, n.position.set(e.position.x, 0, e.position.z), n.userData.nodeIndex = t;
 		let r = new v({
-			color: q.baseTop,
+			color: Y.baseTop,
 			metalness: 0,
 			roughness: .7,
 			clearcoat: .12,
@@ -2023,7 +2030,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 		let r = new x();
 		r.name = `connector-${e.id}`;
 		let i = n.position.x - t.position.x, a = n.position.z - t.position.z, s = Math.hypot(i, a), c = -Math.atan2(a, i), l = (t.position.x + n.position.x) / 2, u = (t.position.z + n.position.z) / 2, d = this.createAnimatedMaterialCopies([this.connectorTopMaterial, this.connectorSideMaterial]), f = new o(this.createConnectorGeometry(s), d);
-		if (f.position.set(l, J, u), f.rotation.y = c, f.receiveShadow = !0, f.castShadow = !1, r.add(f), this.straightEdgePresences.has(e.id)) throw Error(`Duplicate straight learning-path edge id: ${e.id}`);
+		if (f.position.set(l, Ge, u), f.rotation.y = c, f.receiveShadow = !0, f.castShadow = !1, r.add(f), this.straightEdgePresences.has(e.id)) throw Error(`Duplicate straight learning-path edge id: ${e.id}`);
 		return this.straightEdgePresences.set(e.id, this.createPresenceAnimation(e.id, r, null, e.initiallyVisible)), r;
 	}
 	createOverpassConnector(e, t, n) {
@@ -2036,9 +2043,9 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 		}
 		let v = (g + _) / 2, b = 1 - v, S = -Math.atan2(c, s), C = (t, n, i, a, s, c) => {
 			let l = new x();
-			l.name = `${e.id}-${t}-animation`, l.position.set((i.x + a.x) / 2, J, (i.y + a.y) / 2), l.rotation.y = S;
+			l.name = `${e.id}-${t}-animation`, l.position.set((i.x + a.x) / 2, Ge, (i.y + a.y) / 2), l.rotation.y = S;
 			let u = this.createAnimatedMaterialCopies([this.connectorTopMaterial, this.connectorSideMaterial], !0), d = new o(this.createConnectorGeometry(p, s, c), u);
-			return d.name = n, d.receiveShadow = !0, d.castShadow = !1, l.add(d), r.add(l), this.createOverpassAnimatedPiece(t, l, u, rt);
+			return d.name = n, d.receiveShadow = !0, d.castShadow = !1, l.add(d), r.add(l), this.createOverpassAnimatedPiece(t, l, u, it);
 		}, w = C("from-approach", `${e.id}-left-ground-approach`, new u(t.position.x, t.position.z), m, !0, !1), T = C("to-approach", `${e.id}-right-ground-approach`, h, new u(n.position.x, n.position.z), !1, !0), E = this.createOverpassGeometry(e, v, b, a);
 		E.computeBoundingBox();
 		let D = E.boundingBox?.getCenter(new y()) ?? new y();
@@ -2051,7 +2058,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 		k.name = `${e.id}-symmetric-arch-deck`, k.castShadow = !0, k.receiveShadow = !0;
 		let A = new x();
 		A.name = `${e.id}-arch-animation`, A.position.copy(D), A.add(k), r.add(A);
-		let j = this.createOverpassAnimatedPiece("arch", A, O, it);
+		let j = this.createOverpassAnimatedPiece("arch", A, O, at);
 		if (this.overpassAnimations.has(e.id)) throw Error(`Duplicate overpass learning-path edge id: ${e.id}`);
 		let M = e.initiallyVisible, N = {
 			edge: e,
@@ -2123,7 +2130,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 	applyOverpassPieceTransform(e) {
 		let t = this.getOverpassPieceEasing(e.progress);
 		e.group.visible = e.progress > 1e-5, e.group.position.y = e.restingY + e.dropHeight * (1 - t);
-		let n = _.lerp(at, 1, t);
+		let n = _.lerp(ot, 1, t);
 		e.group.scale.set(n, n, n), e.materials.forEach((e) => {
 			e.opacity = t, e.depthWrite = t >= .99999;
 		});
@@ -2237,29 +2244,29 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 		let e = new x();
 		e.name = "current-node-ring", e.visible = !1;
 		let t = new x();
-		t.name = "idle-spinner-arc", t.rotation.y = gt;
+		t.name = "idle-spinner-arc", t.rotation.y = _t;
 		let n = new v({
-			color: q.current,
-			emissive: q.current,
+			color: Y.current,
+			emissive: Y.current,
 			emissiveIntensity: .12,
 			metalness: 0,
 			roughness: .36,
 			clearcoat: .16,
 			clearcoatRoughness: .58,
 			specularIntensity: .3,
-			specularColor: q.current,
+			specularColor: Y.current,
 			transparent: !0,
 			opacity: 0,
 			depthTest: !0,
 			depthWrite: !1
-		}), r = new b(ut, dt, 16, 96, pt);
+		}), r = new b(dt, ft, 16, 96, mt);
 		r.rotateX(Math.PI / 2);
 		let i = new o(r, n);
 		i.name = "idle-spinner-ring", i.castShadow = !1, t.add(i);
-		let a = new g(dt, 16, 12), s = new o(a, n);
-		s.name = "idle-spinner-start-cap", s.position.set(ut, 0, 0), s.castShadow = !1, t.add(s);
-		let c = new g(ft, 18, 14), l = new o(c, n);
-		return l.name = "idle-spinner-end-cap", l.position.set(Math.cos(pt) * ut, 0, Math.sin(pt) * ut), l.castShadow = !1, t.add(l), e.add(t), {
+		let a = new g(ft, 16, 12), s = new o(a, n);
+		s.name = "idle-spinner-start-cap", s.position.set(dt, 0, 0), s.castShadow = !1, t.add(s);
+		let c = new g(pt, 18, 14), l = new o(c, n);
+		return l.name = "idle-spinner-end-cap", l.position.set(Math.cos(mt) * dt, 0, Math.sin(mt) * dt), l.castShadow = !1, t.add(l), e.add(t), {
 			group: e,
 			arcGroup: t,
 			material: n
@@ -2267,16 +2274,16 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 	}
 	moveCurrentSpinner(e) {
 		let t = this.nodes[e];
-		t && this.currentSpinner.group.position.set(t.position.x, mt, t.position.z);
+		t && this.currentSpinner.group.position.set(t.position.x, ht, t.position.z);
 	}
 	updateCurrentSpinner(e, t, n) {
 		if (!n) {
 			this.hideCurrentSpinner();
 			return;
 		}
-		this.currentSpinner.group.visible || (this.currentSpinner.group.visible = !0, this.currentSpinner.arcGroup.rotation.y = gt, this.currentIndicatorReveal = +!!t), t ? (this.currentIndicatorMode = "static", this.currentIndicatorReveal = 1) : (this.currentIndicatorMode = "spinning", this.currentIndicatorReveal = Math.min(1, this.currentIndicatorReveal + e / _t), this.currentSpinner.arcGroup.rotation.y = _.euclideanModulo(this.currentSpinner.arcGroup.rotation.y + ht * e + Math.PI, Math.PI * 2) - Math.PI);
+		this.currentSpinner.group.visible || (this.currentSpinner.group.visible = !0, this.currentSpinner.arcGroup.rotation.y = _t, this.currentIndicatorReveal = +!!t), t ? (this.currentIndicatorMode = "static", this.currentIndicatorReveal = 1) : (this.currentIndicatorMode = "spinning", this.currentIndicatorReveal = Math.min(1, this.currentIndicatorReveal + e / vt), this.currentSpinner.arcGroup.rotation.y = _.euclideanModulo(this.currentSpinner.arcGroup.rotation.y + gt * e + Math.PI, Math.PI * 2) - Math.PI);
 		let r = _.smoothstep(this.currentIndicatorReveal, 0, 1);
-		this.currentSpinner.material.opacity = r * vt;
+		this.currentSpinner.material.opacity = r * yt;
 	}
 	hideCurrentSpinner() {
 		this.currentIndicatorMode = "hidden", this.currentIndicatorReveal = 0, this.currentSpinner.material.opacity = 0, this.currentSpinner.group.visible = !1;
@@ -2286,7 +2293,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 			e.buttonGroup.scale.set(1, 1, 1);
 		});
 	}
-}, Et = class {
+}, Dt = class {
 	rig;
 	listeners = /* @__PURE__ */ new Set();
 	lastPhase = null;
@@ -2340,7 +2347,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 	emit(e) {
 		this.listeners.forEach((t) => t(e));
 	}
-}, Dt = class {
+}, Ot = class {
 	view;
 	nodeById;
 	edgeById;
@@ -2353,7 +2360,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 	faultInjection;
 	disposed = !1;
 	constructor(e) {
-		this.view = e.view, this.nodeById = this.createUniqueCatalog(e.nodes, "node"), this.edgeById = this.createUniqueCatalog(e.edges, "edge"), this.reducedMotion = e.reducedMotion ?? !1, this.faultInjection = e.faultInjection ?? H, e.onEvent && this.listeners.add(e.onEvent);
+		this.view = e.view, this.nodeById = this.createUniqueCatalog(e.nodes, "node"), this.edgeById = this.createUniqueCatalog(e.edges, "edge"), this.reducedMotion = e.reducedMotion ?? !1, this.faultInjection = e.faultInjection ?? U, e.onEvent && this.listeners.add(e.onEvent);
 	}
 	subscribe(e) {
 		return this.disposed ? () => void 0 : (this.listeners.add(e), () => this.listeners.delete(e));
@@ -2395,7 +2402,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 		};
 		if (this.intents.set(t, i), this.commandIntentById.set(e.commandId, i), this.publishEvent(this.createStartedEvent(i)), this.disposed || this.intents.get(t) !== i) return;
 		let a = this.faultInjection.decide({
-			point: ge.PRESENTATION_COMMAND,
+			point: he.PRESENTATION_COMMAND,
 			operation: e.operationId,
 			attempt: e.attempt,
 			transactionId: e.transactionId,
@@ -2490,7 +2497,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 	}
 	collectAckWithFault(e, t, n) {
 		let r = this.faultInjection.decide({
-			point: ge.PRESENTATION_ACK,
+			point: he.PRESENTATION_ACK,
 			operation: e.command.operationId,
 			attempt: e.command.attempt,
 			transactionId: e.command.transactionId,
@@ -2635,7 +2642,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 			n.set(e.id, e);
 		}), n;
 	}
-}, Ot = class {
+}, kt = class {
 	coordinator;
 	simulation;
 	pathView;
@@ -2684,7 +2691,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 			discardPendingAfterRecovery: () => {
 				this.coordinator.discardPendingTransactionsAfterRecovery();
 			}
-		}), this.simulation = e.simulation, this.pathView = e.pathView, this.character = e.character, this.faultInjection = e.faultInjection ?? H, this.presentationAckTimeoutSeconds = e.presentationAckTimeoutSeconds ?? .8, this.motionRouteTimeoutMs = (e.motionTimeoutSeconds ?? 12) * 1e3;
+		}), this.simulation = e.simulation, this.pathView = e.pathView, this.character = e.character, this.faultInjection = e.faultInjection ?? U, this.presentationAckTimeoutSeconds = e.presentationAckTimeoutSeconds ?? .8, this.motionRouteTimeoutMs = (e.motionTimeoutSeconds ?? 12) * 1e3;
 		let t = (e.characterSettleTimeoutSeconds ?? 1.2) * 1e3;
 		if (this.characterNaturalSettleTimeoutMs = e.characterNaturalSettleTimeoutMs ?? t, this.characterForceSettleAckTimeoutMs = e.characterForceSettleAckTimeoutMs ?? t, this.recoverySessionRevision = e.sessionRevision ?? 1, !Number.isSafeInteger(this.recoverySessionRevision) || this.recoverySessionRevision < 0) throw Error("sessionRevision must be a non-negative safe integer.");
 		this.reducedMotion = e.reducedMotion ?? !1, this.onPhysicalArrival = e.onPhysicalArrival, this.onPresentationSettled = e.onPresentationSettled, this.onNavigationSettled = e.onNavigationSettled, this.onNavigationRejected = e.onNavigationRejected, this.onTransition = e.onTransition, this.edgeById = this.createUniqueCatalog(e.edges, "edge"), this.diagnosticLedger = new L({
@@ -2692,7 +2699,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 			edges: e.edges,
 			initialCharacterPhase: this.character.getAnimationPhase(),
 			initiallyCharacterVisuallyIdle: this.character.isVisuallyIdle()
-		}), this.characterAdapter = new Et(this.character), this.stopCharacterSubscription = this.characterAdapter.subscribe((e) => {
+		}), this.characterAdapter = new Dt(this.character), this.stopCharacterSubscription = this.characterAdapter.subscribe((e) => {
 			this.diagnosticLedger.acceptCharacterEvent(e), e.type === "CHARACTER.PHASE" && e.visuallyIdle ? this.settlePendingCharacterCommands() : e.type === "CHARACTER.FAILED" && this.failPendingCharacterCommands(e.error), e.type === "CHARACTER.PHASE" ? ((!e.visuallyIdle || this.motionDeliveryLease === null) && this.actor?.send({
 				type: "ORCHESTRATION.CHARACTER.VISUAL_IDLE_CHANGED",
 				visuallyIdle: e.visuallyIdle
@@ -2703,7 +2710,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 				type: "ORCHESTRATION.CHARACTER.VISUAL_IDLE_CHANGED",
 				visuallyIdle: !1
 			});
-		}), this.presentation = new Dt({
+		}), this.presentation = new Ot({
 			view: e.pathView,
 			nodes: e.nodes,
 			edges: e.edges,
@@ -2846,7 +2853,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 	getDebugSnapshot() {
 		let e = this.diagnosticLedger.snapshot(), t = this.recoveryBoundaryStore.getSnapshot();
 		return Object.freeze({
-			orchestration: V(this.requireOrchestrationActor().getSnapshot()),
+			orchestration: H(this.requireOrchestrationActor().getSnapshot()),
 			motionDeliveryLease: this.motionDeliveryLease ? Object.freeze({
 				token: this.motionDeliveryLease.command.token,
 				fromNodeId: this.motionDeliveryLease.command.fromNodeId,
@@ -3186,7 +3193,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 			progress35Observed: !1
 		};
 		let t = this.faultInjection.decide({
-			point: ge.MOTION_COMMAND,
+			point: he.MOTION_COMMAND,
 			operation: e.operationId,
 			attempt: e.attempt,
 			transactionId: e.transactionId,
@@ -3577,7 +3584,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 	assertLive() {
 		if (this.disposed) throw Error("LearningPathXStateRuntime is disposed.");
 	}
-}, kt = class {
+}, At = class {
 	adjacencyByNodeId = /* @__PURE__ */ new Map();
 	constructor(e, t) {
 		let n = /* @__PURE__ */ new Set();
@@ -3591,7 +3598,7 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 			if (e.id.trim().length === 0 || r.has(e.id)) throw Error(`Base path has an invalid or duplicate edge at index ${t}.`);
 			if (!n.has(e.fromNodeId) || !n.has(e.toNodeId)) throw Error(`Base path edge "${e.id}" references a missing endpoint.`);
 			if (e.fromNodeId === e.toNodeId) throw Error(`Base path edge "${e.id}" is a self-loop.`);
-			let a = jt(e.fromNodeId, e.toNodeId);
+			let a = Mt(e.fromNodeId, e.toNodeId);
 			if (i.has(a)) throw Error(`Base path repeats the physical connection between "${e.fromNodeId}" and "${e.toNodeId}".`);
 			r.add(e.id), i.add(a), this.adjacencyByNodeId.get(e.fromNodeId).push({
 				nodeId: e.toNodeId,
@@ -3602,8 +3609,8 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 			});
 		}), this.adjacencyByNodeId.forEach((e) => {
 			e.sort((e, t) => {
-				let n = Mt(e.nodeId, t.nodeId);
-				return n === 0 ? Mt(e.edgeId, t.edgeId) : n;
+				let n = Nt(e.nodeId, t.nodeId);
+				return n === 0 ? Nt(e.edgeId, t.edgeId) : n;
 			});
 		});
 	}
@@ -3628,14 +3635,14 @@ var Re = new S("#fcfcfc"), ze = Math.max(4.6, t.bridgeSurfaceY + 2.8 + .15), Be 
 				if (n.add(a.nodeId), r.set(a.nodeId, {
 					nodeId: o,
 					edgeId: a.edgeId
-				}), a.nodeId === t) return At(e, t, r);
+				}), a.nodeId === t) return jt(e, t, r);
 				i.push(a.nodeId);
 			}
 		}
 		return null;
 	}
 };
-function At(e, t, n) {
+function jt(e, t, n) {
 	let r = [t], i = [], a = t;
 	for (; a !== e;) {
 		let e = n.get(a);
@@ -3655,15 +3662,15 @@ function At(e, t, n) {
 		hopCount: i.length
 	});
 }
-function jt(e, t) {
+function Mt(e, t) {
 	return e < t ? `${e}\u0000${t}` : `${t}\u0000${e}`;
 }
-function Mt(e, t) {
+function Nt(e, t) {
 	return e < t ? -1 : +(e > t);
 }
 //#endregion
 //#region src/simulation/PathGeometryRegistry.ts
-var Nt = .523, Pt = .026, Ft = .64, It = .52, X = 1e-6, Lt = 4096, Rt = class {
+var Pt = .523, Ft = .026, It = .64, Lt = .52, X = 1e-6, Rt = 4096, zt = class {
 	edge;
 	lutSegments;
 	evaluateCurve;
@@ -3680,12 +3687,12 @@ var Nt = .523, Pt = .026, Ft = .64, It = .52, X = 1e-6, Lt = 4096, Rt = class {
 		let r = [], i = 0, a = null;
 		for (let e = 0; e <= t; e += 1) {
 			let o = e / t, s = n(o);
-			a !== null && (i += Qt(a, s.position)), r.push({
+			a !== null && (i += $t(a, s.position)), r.push({
 				sourceT: o,
 				normalizedDistance: 0,
 				distance: i,
 				position: s.position,
-				tangent: Zt(s.derivative),
+				tangent: Qt(s.derivative),
 				surfaceY: s.position.y
 			}), a = s.position;
 		}
@@ -3696,14 +3703,14 @@ var Nt = .523, Pt = .026, Ft = .64, It = .52, X = 1e-6, Lt = 4096, Rt = class {
 		})));
 	}
 	sample(e) {
-		$t(e, `Normalized distance for edge "${this.id}"`);
-		let t = Z(e), n = this.findRightSampleIndex(t), r = this.samples[n], i = this.samples[Math.max(0, n - 1)], a = r.normalizedDistance - i.normalizedDistance, o = a > X ? (t - i.normalizedDistance) / a : 0, s = nn(i.sourceT, r.sourceT, o), c = this.evaluateCurve(s);
+		en(e, `Normalized distance for edge "${this.id}"`);
+		let t = Z(e), n = this.findRightSampleIndex(t), r = this.samples[n], i = this.samples[Math.max(0, n - 1)], a = r.normalizedDistance - i.normalizedDistance, o = a > X ? (t - i.normalizedDistance) / a : 0, s = rn(i.sourceT, r.sourceT, o), c = this.evaluateCurve(s);
 		return {
 			sourceT: s,
 			normalizedDistance: t,
 			distance: t * this.length,
 			position: c.position,
-			tangent: Zt(c.derivative),
+			tangent: Qt(c.derivative),
 			surfaceY: c.position.y
 		};
 	}
@@ -3718,7 +3725,7 @@ var Nt = .523, Pt = .026, Ft = .64, It = .52, X = 1e-6, Lt = 4096, Rt = class {
 		}
 		return t;
 	}
-}, zt = class {
+}, Bt = class {
 	lutSegments;
 	edgeById = /* @__PURE__ */ new Map();
 	nodeById;
@@ -3741,7 +3748,7 @@ var Nt = .523, Pt = .026, Ft = .64, It = .52, X = 1e-6, Lt = 4096, Rt = class {
 	registerEdge(e) {
 		let t = this.edgeById.get(e.id);
 		if (t) {
-			if (t === e || en(t, e)) return !1;
+			if (t === e || tn(t, e)) return !1;
 			throw Error(`Path geometry edge id "${e.id}" is already registered.`);
 		}
 		if (e.id.trim().length === 0) throw Error("Path geometry cannot register an edge with an empty id.");
@@ -3758,7 +3765,7 @@ var Nt = .523, Pt = .026, Ft = .64, It = .52, X = 1e-6, Lt = 4096, Rt = class {
 	}
 	sampleRoute(e, t, n) {
 		let r = this.get(e);
-		$t(n, `Normalized route distance for edge "${e}"`);
+		en(n, `Normalized route distance for edge "${e}"`);
 		let i = Z(n), a = t === r.fromNodeId;
 		if (!a && t !== r.toNodeId) throw Error(`Node "${t}" is not an endpoint of path edge "${e}".`);
 		let o = a ? i : 1 - i, s = r.sample(o), c = a ? 1 : -1;
@@ -3789,7 +3796,7 @@ var Nt = .523, Pt = .026, Ft = .64, It = .52, X = 1e-6, Lt = 4096, Rt = class {
 	compile(e) {
 		let t = this.edgeById.get(e);
 		if (!t) return null;
-		let n = this.nodeById.get(t.fromNodeId), r = this.nodeById.get(t.toNodeId), i = t.pathKind === "overpass" ? this.createOverpassEvaluator(t, n.position, r.position) : this.createStraightEvaluator(n.position, r.position), a = new Rt(t, this.lutSegments, i);
+		let n = this.nodeById.get(t.fromNodeId), r = this.nodeById.get(t.toNodeId), i = t.pathKind === "overpass" ? this.createOverpassEvaluator(t, n.position, r.position) : this.createStraightEvaluator(n.position, r.position), a = new zt(t, this.lutSegments, i);
 		if (this.compiledById.set(t.id, a), t.pathKind !== "overpass") return a;
 		let o = this.auditOverpassProfile(t, a, this.nodeById);
 		if (this.overpassProfileAudits.push(o), !o.passed) throw this.compiledById.delete(t.id), Error(`Overpass "${t.id}" profile failed: pitch ${o.maximumSurfacePitchDegrees.toFixed(3)}° / ${o.allowedSurfacePitchDegrees.toFixed(3)}°, symmetry error ${o.maximumSymmetryError.toExponential(3)}.`);
@@ -3806,7 +3813,7 @@ var Nt = .523, Pt = .026, Ft = .64, It = .52, X = 1e-6, Lt = 4096, Rt = class {
 		let t = /* @__PURE__ */ new Map();
 		return e.nodes.forEach((e, n) => {
 			if (e.id.trim().length === 0 || t.has(e.id)) throw Error(`Path geometry has an invalid or duplicate node at index ${n}.`);
-			tn(e.position, `Node "${e.id}"`), $t(e.surfaceY, `Node "${e.id}" surfaceY`), t.set(e.id, e);
+			nn(e.position, `Node "${e.id}"`), en(e.surfaceY, `Node "${e.id}" surfaceY`), t.set(e.id, e);
 		}), t;
 	}
 	validateEdgeIdentities(e, t) {
@@ -3835,7 +3842,7 @@ var Nt = .523, Pt = .026, Ft = .64, It = .52, X = 1e-6, Lt = 4096, Rt = class {
 			["maximumSurfacePitchDegrees", e.maximumSurfacePitchDegrees],
 			["routingCost", e.routingCost],
 			["requiredClearance", e.requiredClearance]
-		]) $t(n, `Overpass "${e.id}" ${t}`);
+		]) en(n, `Overpass "${e.id}" ${t}`);
 		if (e.width <= 0 || e.deckThickness <= 0 || e.platformEdgeOffset <= 0 || e.straightApproachLength <= 0 || e.maximumSurfacePitchDegrees <= 0 || e.maximumSurfacePitchDegrees >= 90 || e.routingCost <= 0 || e.requiredClearance <= 0) throw Error(`Overpass "${e.id}" dimensions and clearance must be positive.`);
 		if (e.curveStyle !== "symmetric-eased-arch") throw Error(`Overpass "${e.id}" has an unsupported curve style.`);
 		if (Math.abs(e.width - .64) > X) throw Error(`Overpass "${e.id}" must match the ordinary road width.`);
@@ -3863,16 +3870,16 @@ var Nt = .523, Pt = .026, Ft = .64, It = .52, X = 1e-6, Lt = 4096, Rt = class {
 		let n = t.x - e.x, r = t.z - e.z, i = Math.hypot(n, r);
 		if (!Number.isFinite(i) || i <= X) throw Error("Straight path endpoints must not coincide.");
 		return (a) => {
-			let o = Z(a), s = (Math.min(o, 1 - o) * i - It) / .29999999999999993, c = Z(s), l = nn(Pt, Nt, 1 - Yt(c)), u = 0;
+			let o = Z(a), s = (Math.min(o, 1 - o) * i - Lt) / .29999999999999993, c = Z(s), l = rn(Ft, Pt, 1 - Xt(c)), u = 0;
 			if (s > 0 && s < 1) {
 				let e = (o < .5 ? i : -i) / .29999999999999993;
-				u = -.497 * Xt(c) * e;
+				u = -.497 * Zt(c) * e;
 			}
 			return {
 				position: {
-					x: nn(e.x, t.x, o),
+					x: rn(e.x, t.x, o),
 					y: l,
-					z: nn(e.z, t.z, o)
+					z: rn(e.z, t.z, o)
 				},
 				derivative: {
 					x: n,
@@ -3887,11 +3894,11 @@ var Nt = .523, Pt = .026, Ft = .64, It = .52, X = 1e-6, Lt = 4096, Rt = class {
 		if (a <= X) throw Error(`Overpass "${e.id}" endpoints must not coincide.`);
 		let o = e.platformEdgeOffset + e.straightApproachLength;
 		if (o * 2 >= a) throw Error(`Overpass "${e.id}" approaches consume its entire span.`);
-		let s = r / a, c = i / a, l = (t.x + n.x) / 2, u = (t.z + n.z) / 2, d = a / 2 - o, f = e.bridgeSurfaceY - Pt, p = Kt(d, f), m = Math.hypot(o, .497), h = m / (p + m * 2), g = h, _ = 1 - h, v = _ - g;
+		let s = r / a, c = i / a, l = (t.x + n.x) / 2, u = (t.z + n.z) / 2, d = a / 2 - o, f = e.bridgeSurfaceY - Ft, p = qt(d, f), m = Math.hypot(o, .497), h = m / (p + m * 2), g = h, _ = 1 - h, v = _ - g;
 		return (e) => {
 			let r = Z(e);
 			if (r < g) {
-				let e = r / h, n = o * e, i = Gt(n), a = o / h;
+				let e = r / h, n = o * e, i = Kt(n), a = o / h;
 				return {
 					position: {
 						x: t.x + s * n,
@@ -3906,7 +3913,7 @@ var Nt = .523, Pt = .026, Ft = .64, It = .52, X = 1e-6, Lt = 4096, Rt = class {
 				};
 			}
 			if (r > _) {
-				let e = (r - _) / h, t = o * (1 - e), i = Gt(t), a = o / h;
+				let e = (r - _) / h, t = o * (1 - e), i = Kt(t), a = o / h;
 				return {
 					position: {
 						x: n.x - s * t,
@@ -3920,7 +3927,7 @@ var Nt = .523, Pt = .026, Ft = .64, It = .52, X = 1e-6, Lt = 4096, Rt = class {
 					}
 				};
 			}
-			let i = Ht((r - g) / v, d), a = d * i.normalizedX, p = l + s * a, m = u + c * a, y = Pt + f * i.normalizedHeight, b = d * i.normalizedXDerivative / v;
+			let i = Ut((r - g) / v, d), a = d * i.normalizedX, p = l + s * a, m = u + c * a, y = Ft + f * i.normalizedHeight, b = d * i.normalizedXDerivative / v;
 			return {
 				position: {
 					x: p,
@@ -3938,9 +3945,9 @@ var Nt = .523, Pt = .026, Ft = .64, It = .52, X = 1e-6, Lt = 4096, Rt = class {
 	auditOverpassClearance(e, t) {
 		let n = this.compiledById.get(e.id), r = this.compiledById.get(t);
 		if (!r) throw Error(`Missing compiled underpass "${t}".`);
-		let i = (qt(n.edge) + qt(r.edge)) / 2, a = Infinity, o = -Infinity, s = Infinity, c = Infinity, l = -Infinity, u = Infinity, d = 0, f = 0;
-		for (let t = 0; t <= Lt; t += 1) {
-			let p = t / Lt, m = n.sampleSourceT(p).position, h = Jt(m, r.samples);
+		let i = (Jt(n.edge) + Jt(r.edge)) / 2, a = Infinity, o = -Infinity, s = Infinity, c = Infinity, l = -Infinity, u = Infinity, d = 0, f = 0;
+		for (let t = 0; t <= Rt; t += 1) {
+			let p = t / Rt, m = n.sampleSourceT(p).position, h = Yt(m, r.samples);
 			if (h.distanceXZ < u && (u = h.distanceXZ, d = p, f = h.sourceT), h.distanceXZ > i + X) continue;
 			a = Math.min(a, p), o = Math.max(o, p);
 			let g = m.y - e.deckThickness, _ = g - h.surfaceY;
@@ -3964,9 +3971,9 @@ var Nt = .523, Pt = .026, Ft = .64, It = .52, X = 1e-6, Lt = 4096, Rt = class {
 			passed: m
 		});
 	}
-}, Bt = .08, Vt = .65;
-function Ht(e, t) {
-	let n = Z(e), r = n <= .5, a = r ? n * 2 : (n - .5) * 2, o = (r ? a : 1 - a) * t, s = t > 2.3 ? t / i : 1, c = Ut(Z(t > 2.3 ? o / i : o / t));
+}, Vt = .08, Ht = .65;
+function Ut(e, t) {
+	let n = Z(e), r = n <= .5, a = r ? n * 2 : (n - .5) * 2, o = (r ? a : 1 - a) * t, s = t > 2.3 ? t / i : 1, c = Wt(Z(t > 2.3 ? o / i : o / t));
 	return {
 		normalizedX: r ? -1 + a : a,
 		normalizedHeight: c.height,
@@ -3974,13 +3981,13 @@ function Ht(e, t) {
 		normalizedHeightDerivative: (r ? 1 : -1) * c.derivative * s * 2
 	};
 }
-function Ut(e) {
-	let t = Z(e), n = Bt, r = Vt, i = 1 / .7850000000000001;
+function Wt(e) {
+	let t = Z(e), n = Vt, r = Ht, i = 1 / .7850000000000001;
 	if (t < n) {
 		let e = t / n;
 		return {
-			height: i * n * Wt(e),
-			derivative: i * Yt(e)
+			height: i * n * Gt(e),
+			derivative: i * Xt(e)
 		};
 	}
 	if (t <= r) return {
@@ -3989,37 +3996,37 @@ function Ut(e) {
 	};
 	let a = .35, o = (t - r) / a;
 	return {
-		height: i * (r - n / 2) + i * a * (o - Wt(o)),
-		derivative: i * (1 - Yt(o))
+		height: i * (r - n / 2) + i * a * (o - Gt(o)),
+		derivative: i * (1 - Xt(o))
 	};
 }
-function Wt(e) {
+function Gt(e) {
 	let t = Z(e);
 	return t ** 6 - 3 * t ** 5 + 2.5 * t ** 4;
 }
-function Gt(e) {
-	let t = (e - It) / .29999999999999993, n = Z(t), r = 1 - Yt(n), i = t > 0 && t < 1 ? -.497 * Xt(n) / .29999999999999993 : 0;
+function Kt(e) {
+	let t = (e - Lt) / .29999999999999993, n = Z(t), r = 1 - Xt(n), i = t > 0 && t < 1 ? -.497 * Zt(n) / .29999999999999993 : 0;
 	return {
-		surfaceY: nn(Pt, Nt, r),
+		surfaceY: rn(Ft, Pt, r),
 		derivativePerDistance: i
 	};
 }
-function Kt(e, t) {
-	let n = 0, r = Ht(0, e);
+function qt(e, t) {
+	let n = 0, r = Ut(0, e);
 	for (let i = 1; i <= 256; i += 1) {
-		let a = Ht(i / 256, e);
+		let a = Ut(i / 256, e);
 		n += Math.hypot((a.normalizedX - r.normalizedX) * e, (a.normalizedHeight - r.normalizedHeight) * t), r = a;
 	}
 	return n;
 }
-function qt(e) {
-	return e.pathKind === "overpass" ? e.width : Ft;
+function Jt(e) {
+	return e.pathKind === "overpass" ? e.width : It;
 }
-function Jt(e, t) {
+function Yt(e, t) {
 	let n = Infinity, r = t[0].surfaceY, i = t[0].sourceT;
 	for (let a = 1; a < t.length; a += 1) {
 		let o = t[a - 1], s = t[a], c = s.position.x - o.position.x, l = s.position.z - o.position.z, u = c * c + l * l, d = u > X ? Z(((e.x - o.position.x) * c + (e.z - o.position.z) * l) / u) : 0, f = o.position.x + c * d, p = o.position.z + l * d, m = e.x - f, h = e.z - p, g = m * m + h * h;
-		g < n && (n = g, r = nn(o.surfaceY, s.surfaceY, d), i = nn(o.sourceT, s.sourceT, d));
+		g < n && (n = g, r = rn(o.surfaceY, s.surfaceY, d), i = rn(o.sourceT, s.sourceT, d));
 	}
 	return {
 		distanceXZ: Math.sqrt(n),
@@ -4027,15 +4034,15 @@ function Jt(e, t) {
 		sourceT: i
 	};
 }
-function Yt(e) {
+function Xt(e) {
 	let t = Z(e);
 	return t * t * t * (t * (t * 6 - 15) + 10);
 }
-function Xt(e) {
+function Zt(e) {
 	let t = Z(e);
 	return 30 * t * t * (t - 1) * (t - 1);
 }
-function Zt(e) {
+function Qt(e) {
 	let t = Math.hypot(e.x, e.y, e.z);
 	if (!Number.isFinite(t) || t <= X) throw Error("Path curve produced a zero or non-finite tangent.");
 	return {
@@ -4044,22 +4051,22 @@ function Zt(e) {
 		z: e.z / t
 	};
 }
-function Qt(e, t) {
+function $t(e, t) {
 	return Math.hypot(t.x - e.x, t.y - e.y, t.z - e.z);
 }
-function $t(e, t) {
+function en(e, t) {
 	if (!Number.isFinite(e)) throw Error(`${t} must be finite.`);
 }
-function en(e, t) {
+function tn(e, t) {
 	return e.pathKind === t.pathKind && e.fromNodeId === t.fromNodeId && e.toNodeId === t.toNodeId && JSON.stringify(e) === JSON.stringify(t);
 }
-function tn(e, t) {
-	$t(e.x, `${t} x`), $t(e.z, `${t} z`);
+function nn(e, t) {
+	en(e.x, `${t} x`), en(e.z, `${t} z`);
 }
 function Z(e) {
 	return Math.max(0, Math.min(1, e));
 }
-function nn(e, t, n) {
+function rn(e, t, n) {
 	return e + (t - e) * n;
 }
 //#endregion
@@ -4069,7 +4076,7 @@ var Q = class extends Error {
 	constructor(e, t) {
 		super(t), this.reason = e;
 	}
-}, rn = class {
+}, an = class {
 	nodes;
 	authoredStraightEdges;
 	authoredLogicalEdges;
@@ -4111,7 +4118,7 @@ var Q = class extends Error {
 		return this.activeZoneSession?.zoneId === e && this.activeZoneSession.state !== "revealing";
 	}
 	getActiveBridgeInstances() {
-		return Object.freeze([...this.bridgeRegistry.values()].filter((e) => e.active).sort(bn).map(mn));
+		return Object.freeze([...this.bridgeRegistry.values()].filter((e) => e.active).sort(xn).map(hn));
 	}
 	createRecoveryCheckpoint() {
 		this.assertInvariants();
@@ -4120,12 +4127,12 @@ var Q = class extends Error {
 			revision: this.revision,
 			unlockedNodeIds: [...this.unlockedNodeIds],
 			unlockedStraightEdgeIds: [...this.unlockedStraightEdgeIds],
-			bridgeRegistry: [...this.bridgeRegistry.values()].map(on),
-			activeZoneSession: sn(this.activeZoneSession),
+			bridgeRegistry: [...this.bridgeRegistry.values()].map(sn),
+			activeZoneSession: cn(this.activeZoneSession),
 			entryConnectorIdByZoneId: [...this.entryConnectorIdByZoneId.entries()],
-			pendingNavigation: cn(this.pendingNavigation),
-			pendingZoneReveals: [...this.pendingZoneRevealById.entries()].map(([e, t]) => [e, ln(t)]),
-			pendingZoneDismissals: [...this.pendingZoneDismissById.entries()].map(([e, t]) => [e, un(t)])
+			pendingNavigation: ln(this.pendingNavigation),
+			pendingZoneReveals: [...this.pendingZoneRevealById.entries()].map(([e, t]) => [e, un(t)]),
+			pendingZoneDismissals: [...this.pendingZoneDismissById.entries()].map(([e, t]) => [e, dn(t)])
 		}), e;
 	}
 	restoreRecoveryCheckpoint(e) {
@@ -4134,7 +4141,7 @@ var Q = class extends Error {
 		let t = this.recoveryPayloadByCheckpoint.get(e);
 		if (!t) throw Error("Path-rule recovery checkpoint belongs to another coordinator or is invalid.");
 		let n = Math.max(this.revision, t.revision) + 1;
-		dn(this.unlockedNodeIds, t.unlockedNodeIds), dn(this.unlockedStraightEdgeIds, t.unlockedStraightEdgeIds), fn(this.bridgeRegistry, t.bridgeRegistry.map((e) => [e.bridgeId, on(e)])), this.activeZoneSession = sn(t.activeZoneSession), fn(this.entryConnectorIdByZoneId, t.entryConnectorIdByZoneId), this.pendingNavigation = cn(t.pendingNavigation), fn(this.pendingZoneRevealById, t.pendingZoneReveals.map(([e, t]) => [e, ln(t)])), fn(this.pendingZoneDismissById, t.pendingZoneDismissals.map(([e, t]) => [e, un(t)])), this.revision = n, this.rebuildActiveStraightPathIndex(), this.assertInvariants(), this.restoredRecoveryCheckpoints.add(e);
+		fn(this.unlockedNodeIds, t.unlockedNodeIds), fn(this.unlockedStraightEdgeIds, t.unlockedStraightEdgeIds), pn(this.bridgeRegistry, t.bridgeRegistry.map((e) => [e.bridgeId, sn(e)])), this.activeZoneSession = cn(t.activeZoneSession), pn(this.entryConnectorIdByZoneId, t.entryConnectorIdByZoneId), this.pendingNavigation = ln(t.pendingNavigation), pn(this.pendingZoneRevealById, t.pendingZoneReveals.map(([e, t]) => [e, un(t)])), pn(this.pendingZoneDismissById, t.pendingZoneDismissals.map(([e, t]) => [e, dn(t)])), this.revision = n, this.rebuildActiveStraightPathIndex(), this.assertInvariants(), this.restoredRecoveryCheckpoints.add(e);
 	}
 	discardPendingTransactionsAfterRecovery() {
 		this.pendingNavigation = null, this.pendingZoneRevealById.clear(), this.pendingZoneDismissById.clear(), this.activeZoneSession && this.stabilizeActiveZoneSessionAfterRecovery(this.activeZoneSession), this.nextRevision(), this.rebuildActiveStraightPathIndex(), this.assertInvariants();
@@ -4150,7 +4157,7 @@ var Q = class extends Error {
 		if (t && this.isSessionEntryConnectorActive(t) && !i) return null;
 		let a = this.nextRevision(), o = t ?? this.createZoneSession(n, e, a), s = this.snapshotActiveBridges(), c = [...s.values()].filter((e) => e.role !== "zone-entry" || e.zoneSessionId !== o.id).sort((t, n) => this.compareBridgesByCharacterProximity(t, n, e)).map((t) => this.makeRetireBridgeAction(t, e));
 		c.forEach((e) => {
-			hn(e, s);
+			gn(e, s);
 		});
 		let l = (t ? [Object.freeze({ kind: "session-entry-connector" })] : n.revealSequence.slice(o.revealProgress)).map((t, r) => {
 			let i = this.resolveRevealStep(t, o), a = i.kind === "bridge" ? this.makeEnsureBridgeAction(i.endpoints.fromNodeId, i.endpoints.toNodeId, o.activationNodeId, "zone-entry", n.id, o.id, e, s) : null;
@@ -4270,11 +4277,11 @@ var Q = class extends Error {
 		for (; t.nextStepIndex < t.plan.steps.length;) this.commitZoneDismissStep(e, t.nextStepIndex);
 	}
 	planNavigation(e, t) {
-		if (this.pendingNavigation || this.pendingZoneRevealById.size > 0 || this.pendingZoneDismissById.size > 0) return pn("rule-conflict", "A rule transaction is already awaiting visual or movement commits.");
-		if (!this.nodeById.has(e) || !this.nodeById.has(t)) return pn("unknown-node", "Navigation references an unknown node.");
-		if (!this.unlockedNodeIds.has(e)) return pn("locked-node", `Current node "${e}" is locked.`);
-		if (!this.unlockedNodeIds.has(t)) return pn("locked-node", `Target node "${t}" is locked.`);
-		if (this.hasActivatedZoneOutsideCharacter(e)) return pn("rule-conflict", "A completed zone exit must finish its idle dismissal before navigation.");
+		if (this.pendingNavigation || this.pendingZoneRevealById.size > 0 || this.pendingZoneDismissById.size > 0) return mn("rule-conflict", "A rule transaction is already awaiting visual or movement commits.");
+		if (!this.nodeById.has(e) || !this.nodeById.has(t)) return mn("unknown-node", "Navigation references an unknown node.");
+		if (!this.unlockedNodeIds.has(e)) return mn("locked-node", `Current node "${e}" is locked.`);
+		if (!this.unlockedNodeIds.has(t)) return mn("locked-node", `Target node "${t}" is locked.`);
+		if (this.hasActivatedZoneOutsideCharacter(e)) return mn("rule-conflict", "A completed zone exit must finish its idle dismissal before navigation.");
 		let n = this.resolveConcurrentZoneDeparture(e, t), r = this.nextRevision(), i = {
 			activeBridges: this.snapshotActiveBridges(),
 			stages: [],
@@ -4297,7 +4304,7 @@ var Q = class extends Error {
 				concurrentZoneDismissalPlan: o
 			};
 		} catch (e) {
-			if (e instanceof Q) return pn(e.reason, e.message);
+			if (e instanceof Q) return mn(e.reason, e.message);
 			throw e;
 		}
 	}
@@ -4393,7 +4400,7 @@ var Q = class extends Error {
 			unlockedNodeIds: Object.freeze([...this.unlockedNodeIds].sort()),
 			unlockedStraightEdgeIds: Object.freeze([...this.unlockedStraightEdgeIds].sort()),
 			zones: Object.freeze(e),
-			bridges: Object.freeze([...this.bridgeRegistry.values()].sort(bn).map(mn)),
+			bridges: Object.freeze([...this.bridgeRegistry.values()].sort(xn).map(hn)),
 			invariants: this.getInvariantDebug()
 		});
 	}
@@ -4447,7 +4454,7 @@ var Q = class extends Error {
 		let r = e.entryConnector.kind === "overpass" ? this.bridgeRegistry.get(e.entryConnector.edgeId) ?? null : null, i = r?.active === !0 && r.role === "zone-entry" && r.zoneSessionId === e.id ? r.bridgeId : null, a = (e) => e.filter((e) => e.kind !== "retire-bridge" || e.bridgeId !== i);
 		t.stages.forEach((e) => {
 			e.beforeTravelBridgeActions = a(e.beforeTravelBridgeActions), e.afterArrivalBridgeActions = a(e.afterArrivalBridgeActions);
-		}), t.pendingBeforeActions = a(t.pendingBeforeActions), n.beforeTravelBridgeActions = [...i && r ? [this.makeRetireBridgeAction(mn(r), e.activationNodeId)] : [], ...n.beforeTravelBridgeActions], i && t.activeBridges.delete(i);
+		}), t.pendingBeforeActions = a(t.pendingBeforeActions), n.beforeTravelBridgeActions = [...i && r ? [this.makeRetireBridgeAction(hn(r), e.activationNodeId)] : [], ...n.beforeTravelBridgeActions], i && t.activeBridges.delete(i);
 	}
 	validateConcurrentDepartureTransaction(e, t, n) {
 		if (n.trigger !== "concurrent-departure-from-session-envelope" || n.linkedNavigationPlanId !== t.id || t.linkedZoneDismissalPlanId !== n.id) throw new Q("rule-conflict", "Concurrent zone departure plans are not linked symmetrically.");
@@ -4468,9 +4475,9 @@ var Q = class extends Error {
 					let t = [...s.values()].find((t) => t.active && t.zoneSessionId === e.id);
 					if (t) throw new Q("rule-conflict", `Ordinary bridge was ensured before session bridge "${t.bridgeId}" retired.`);
 				}
-				hn(t, s);
+				gn(t, s);
 			}), t.afterArrivalBridgeActions.forEach((e) => {
-				hn(e, s);
+				gn(e, s);
 			});
 		});
 	}
@@ -4508,17 +4515,17 @@ var Q = class extends Error {
 		this.addBaseStage(r, "zone-base-route", i, n);
 	}
 	planZoneTransientOverpass(e, t, n, r, i, a = !1) {
-		let o = gn(r.activeBridges, t, n);
+		let o = _n(r.activeBridges, t, n);
 		if (o) {
 			this.addOverpassStage(t, n, o.edge, "reuse-overpass", r, i);
 			return;
 		}
 		let s = this.requireOverpass(t, n);
 		this.planRetireUnservedTransientBridges(s.id, t, r);
-		let c = _n(r.activeBridges, t), l = a && c?.role === "zone-entry";
+		let c = vn(r.activeBridges, t), l = a && c?.role === "zone-entry";
 		c && c.bridgeId !== s.id && !l && this.queueBridgeAction(this.makeRetireBridgeAction(c, t), r);
 		let u = this.requireActiveSessionForZone(e.id), d = this.planEnsureBridge(t, n, t, "zone-transient", e.id, u.id, t, r, a);
-		if (!d && !gn(r.activeBridges, t, n)) throw new Q("rule-conflict", `Node "${t}" already owns a different transient bridge.`);
+		if (!d && !_n(r.activeBridges, t, n)) throw new Q("rule-conflict", `Node "${t}" already owns a different transient bridge.`);
 		let f = this.requireOverpass(t, n);
 		this.addOverpassStage(t, n, f, d ? "zone-transient-overpass" : "reuse-overpass", r, i);
 	}
@@ -4541,9 +4548,9 @@ var Q = class extends Error {
 		}
 		let c = this.requireOverpass(n, r);
 		this.planRetireUnservedTransientBridges(c.id, n, i), this.planRetireZoneLineageBeforeExternalBridge(e, t, i);
-		let l = _n(i.activeBridges, n);
+		let l = vn(i.activeBridges, n);
 		l && l.bridgeId !== c.id && this.queueBridgeAction(this.makeRetireBridgeAction(l, n), i);
-		let u = gn(i.activeBridges, n, r), d = this.planEnsureBridge(n, r, n, "ordinary", null, null, n, i);
+		let u = _n(i.activeBridges, n, r), d = this.planEnsureBridge(n, r, n, "ordinary", null, null, n, i);
 		this.addOverpassStage(n, r, c, u && !d ? "reuse-overpass" : "leave-zone-overpass", i);
 	}
 	planSafeMemberDepartureAfterEntryPreclear(e, t, n, r, i, a) {
@@ -4557,9 +4564,9 @@ var Q = class extends Error {
 		}).filter((e) => e !== null).sort((e, t) => e.groundRoute.hopCount - t.groundRoute.hopCount || e.bridgeFromNodeId.localeCompare(t.bridgeFromNodeId))[0] ?? null, c = o ? n : s?.bridgeFromNodeId, l = o ?? s?.edge ?? null;
 		if (!c || !l) throw new Q("missing-overpass", `No safe post-preclear departure exists from "${n}" to "${r}".`);
 		this.planRetireUnservedTransientBridges(l.id, n, a), this.planRetireZoneLineageBeforeExternalBridge(e, t, a), s && s.groundRoute.hopCount > 0 && this.addBaseStage(s.groundRoute, "leave-zone-base-route", s.groundRoute.hopCount, a);
-		let u = _n(a.activeBridges, c);
+		let u = vn(a.activeBridges, c);
 		u && u.bridgeId !== l.id && this.queueBridgeAction(this.makeRetireBridgeAction(u, n), a);
-		let d = gn(a.activeBridges, c, r), f = this.planEnsureBridge(c, r, c, "ordinary", null, null, n, a);
+		let d = _n(a.activeBridges, c, r), f = this.planEnsureBridge(c, r, c, "ordinary", null, null, n, a);
 		this.addOverpassStage(c, r, l, d && !f ? "reuse-overpass" : "leave-zone-overpass", a, o ? i : void 0);
 	}
 	canLeaveZoneViaAdjacentActivation(e, t, n, r) {
@@ -4584,7 +4591,7 @@ var Q = class extends Error {
 		}
 		let s = this.requireOverpass(e, t);
 		this.planRetireUnservedTransientBridges(s.id, e, n);
-		let c = gn(n.activeBridges, e, t), l = _n(n.activeBridges, e);
+		let c = _n(n.activeBridges, e, t), l = vn(n.activeBridges, e);
 		l && l.bridgeId !== s.id && this.queueBridgeAction(this.makeRetireBridgeAction(l, e), n);
 		let u = this.planEnsureBridge(e, t, e, "ordinary", null, null, e, n);
 		this.addOverpassStage(e, t, s, c && !u ? "reuse-overpass" : i, n);
@@ -4616,7 +4623,7 @@ var Q = class extends Error {
 		}), "zone-entry", 1, r);
 	}
 	planRetireUnservedTransientBridges(e, t, n) {
-		[...n.activeBridges.values()].filter((t) => t.role !== "zone-entry" && t.bridgeId !== e).sort(bn).forEach((e) => {
+		[...n.activeBridges.values()].filter((t) => t.role !== "zone-entry" && t.bridgeId !== e).sort(xn).forEach((e) => {
 			this.queueBridgeAction(this.makeRetireBridgeAction(e, t), n);
 		});
 	}
@@ -4630,9 +4637,9 @@ var Q = class extends Error {
 		return l && this.queueBridgeAction(l, s), l;
 	}
 	makeEnsureBridgeAction(e, t, n, r, i, a, o, s, c = !1) {
-		let l = this.requireOverpass(e, t), u = gn(s, e, t), d = n, f = r, p = i, m = a;
+		let l = this.requireOverpass(e, t), u = _n(s, e, t), d = n, f = r, p = i, m = a;
 		if (u && u.role === f && u.zoneId === p && u.zoneSessionId === m) return null;
-		let h = _n(s, d), g = c && h?.role === "zone-entry" && f === "zone-transient" && h.zoneId === p && h.zoneSessionId === m;
+		let h = vn(s, d), g = c && h?.role === "zone-entry" && f === "zone-transient" && h.zoneId === p && h.zoneSessionId === m;
 		if (h && h.bridgeId !== l.id && !g) throw new Q("rule-conflict", `Node "${d}" already owns bridge "${h.bridgeId}".`);
 		return Object.freeze({
 			kind: "ensure-bridge",
@@ -4658,11 +4665,11 @@ var Q = class extends Error {
 		});
 	}
 	compareBridgesByCharacterProximity(e, t, n) {
-		return this.bridgeEndpointDistanceSquared(e.edge, n) - this.bridgeEndpointDistanceSquared(t.edge, n) || bn(e, t);
+		return this.bridgeEndpointDistanceSquared(e.edge, n) - this.bridgeEndpointDistanceSquared(t.edge, n) || xn(e, t);
 	}
 	bridgeEndpointDistanceSquared(e, t) {
 		let n = this.nodeById.get(t), r = this.nodeById.get(e.fromNodeId), i = this.nodeById.get(e.toNodeId);
-		return !n || !r || !i ? Infinity : Math.min(Cn(n, r), Cn(n, i));
+		return !n || !r || !i ? Infinity : Math.min(wn(n, r), wn(n, i));
 	}
 	resolveBridgeAnimationSideNodeId(e, t) {
 		if (t === e.fromNodeId || t === e.toNodeId) return t;
@@ -4671,13 +4678,13 @@ var Q = class extends Error {
 		if (r !== null && (n === null || r < n)) return e.toNodeId;
 		let i = this.nodeById.get(t), a = this.nodeById.get(e.fromNodeId), o = this.nodeById.get(e.toNodeId);
 		if (i && a && o) {
-			let t = Cn(i, a), n = Cn(i, o);
+			let t = wn(i, a), n = wn(i, o);
 			if (t !== n) return t < n ? e.fromNodeId : e.toNodeId;
 		}
 		return e.fromNodeId < e.toNodeId ? e.fromNodeId : e.toNodeId;
 	}
 	queueBridgeAction(e, t) {
-		t.pendingBeforeActions.push(e), hn(e, t.activeBridges);
+		t.pendingBeforeActions.push(e), gn(e, t.activeBridges);
 	}
 	addBaseStage(e, t, n, r) {
 		e.hopCount !== 0 && r.stages.push({
@@ -4717,7 +4724,7 @@ var Q = class extends Error {
 		if (r.length === 0 && t !== n) throw new Q("unreachable", `No route was produced from "${t}" to "${n}".`);
 		let a = new Set(r.flatMap((e) => e.beforeTravelBridgeActions.filter((e) => e.kind === "retire-bridge").map((e) => e.bridgeId))), o = r.flatMap((e) => e.routeEdgeIds).find((e) => a.has(e));
 		if (o) throw new Q("rule-conflict", `Navigation cannot retire route edge "${o}" before travel.`);
-		let s = vn(r).map((t, n) => Object.freeze({
+		let s = yn(r).map((t, n) => Object.freeze({
 			id: `navigation-stage:${e}:${n}`,
 			index: n,
 			decisionKind: t.decisionKind,
@@ -4728,7 +4735,7 @@ var Q = class extends Error {
 			baseHopCount: t.baseHopCount,
 			beforeTravelBridgeActions: Object.freeze([...t.beforeTravelBridgeActions]),
 			afterArrivalBridgeActions: Object.freeze([...t.afterArrivalBridgeActions])
-		})), c = yn(s, t);
+		})), c = bn(s, t);
 		return Object.freeze({
 			id: `navigation-plan:${e}`,
 			revision: e,
@@ -4773,11 +4780,11 @@ var Q = class extends Error {
 		return n;
 	}
 	snapshotActiveBridges() {
-		return new Map([...this.bridgeRegistry.values()].filter((e) => e.active).map((e) => [e.bridgeId, mn(e)]));
+		return new Map([...this.bridgeRegistry.values()].filter((e) => e.active).map((e) => [e.bridgeId, hn(e)]));
 	}
 	buildActiveStraightPathIndex() {
 		let e = this.authoredStraightEdges.filter((e) => this.unlockedStraightEdgeIds.has(e.id) && this.unlockedNodeIds.has(e.fromNodeId) && this.unlockedNodeIds.has(e.toNodeId));
-		return new kt(this.nodes, e);
+		return new At(this.nodes, e);
 	}
 	rebuildActiveStraightPathIndex() {
 		this.activeStraightPathIndex = this.buildActiveStraightPathIndex();
@@ -4794,7 +4801,7 @@ var Q = class extends Error {
 		}), this.specialZones.forEach((e) => this.validateAndIndexZone(e)), this.validateAuthoredLogicalIndex();
 	}
 	validateAuthoredLogicalIndex() {
-		let e = new kt(this.nodes, this.authoredLogicalEdges);
+		let e = new At(this.nodes, this.authoredLogicalEdges);
 		if (new Map(this.authoredLogicalEdges.map((e) => [e.id, e])).size !== this.authoredLogicalEdges.length) throw Error("Authored logical path repeats an edge id.");
 		let t = new Set(this.specialZones.flatMap((e) => e.entryConnections.filter((e) => e.kind === "straight-edge").map((e) => e.edgeId)));
 		this.authoredLogicalEdges.forEach((e) => {
@@ -4803,8 +4810,8 @@ var Q = class extends Error {
 			if (t.has(e.id)) throw Error(`Session entry road "${e.id}" cannot enter authored logical hop truth.`);
 		}), this.nodes.forEach((t) => {
 			this.nodes.forEach((n) => {
-				let r = e.shortestRoute(t.id, n.id), i = this.basePathIndex.shortestRoute(t.id, n.id), a = Sn(r);
-				if (Sn(i) !== a) throw Error(`Supplied BasePathIndex differs from authored logical truth for "${t.id}" -> "${n.id}".`);
+				let r = e.shortestRoute(t.id, n.id), i = this.basePathIndex.shortestRoute(t.id, n.id), a = Cn(r);
+				if (Cn(i) !== a) throw Error(`Supplied BasePathIndex differs from authored logical truth for "${t.id}" -> "${n.id}".`);
 			});
 		});
 	}
@@ -4815,7 +4822,7 @@ var Q = class extends Error {
 	}
 	validateAndIndexZone(e) {
 		if (e.id.trim().length === 0 || this.zoneById.has(e.id)) throw Error(`Special path zone has invalid or duplicate id "${e.id}".`);
-		if (e.unlockPolicy !== "repeatable-session" || e.retention !== "retain-inside-session-envelope" || e.externalBridgeReplacement !== "retire-entry-overpass-before-ensure" || e.dismissalTrigger !== "departure-from-session-envelope" || e.dismissalBridgeOrder !== "entry-left-to-right-preclear" || e.dismissalConstructOrder !== "reverse-reveal-right-to-left" || e.lockHiddenMembersAfterDismissal !== !0 || e.activationTrigger !== "idle-at-any-activation-node" || !an(e.activationMemberRoutingPolicy) || e.memberDynamicBridgeLifetime !== "retire-at-physical-arrival" || e.entryConnectorRevealPolicy !== "first" || e.retainEntryConnectorDuringMemberRoutes !== !0 || e.retainedEntryOverpassCountsTowardOrdinaryLimit !== !1 || e.entryConnectorAffectsAuthoredHopDistance !== !1) throw Error(`Zone "${e.id}" does not satisfy the repeatable-session lifecycle contract.`);
+		if (e.unlockPolicy !== "repeatable-session" || e.retention !== "retain-inside-session-envelope" || e.externalBridgeReplacement !== "retire-entry-overpass-before-ensure" || e.dismissalTrigger !== "departure-from-session-envelope" || e.dismissalBridgeOrder !== "entry-left-to-right-preclear" || e.dismissalConstructOrder !== "reverse-reveal-right-to-left" || e.lockHiddenMembersAfterDismissal !== !0 || e.activationTrigger !== "idle-at-any-activation-node" || !on(e.activationMemberRoutingPolicy) || e.memberDynamicBridgeLifetime !== "retire-at-physical-arrival" || e.entryConnectorRevealPolicy !== "first" || e.retainEntryConnectorDuringMemberRoutes !== !0 || e.retainedEntryOverpassCountsTowardOrdinaryLimit !== !1 || e.entryConnectorAffectsAuthoredHopDistance !== !1) throw Error(`Zone "${e.id}" does not satisfy the repeatable-session lifecycle contract.`);
 		let t = new Set(e.activationNodeIds);
 		if (t.size === 0 || t.size !== e.activationNodeIds.length) throw Error(`Zone "${e.id}" must contain unique activation nodes.`);
 		let n = /* @__PURE__ */ new Map();
@@ -5014,7 +5021,7 @@ var Q = class extends Error {
 		if (n !== t.toNodeId) throw Error(`Navigation stage ${t.index} expected arrival at "${t.toNodeId}", received "${n}".`);
 	}
 	getInvariantDebug() {
-		let e = [...this.bridgeRegistry.values()].filter((e) => e.active), t = e.filter((e) => e.role === "ordinary"), n = this.activeZoneSession, r = n ? this.zoneById.get(n.zoneId) ?? null : null, i = e.filter((e) => e.role === "zone-entry"), a = e.filter((e) => e.role === "zone-transient"), o = xn(e, (e) => e.ownerSourceNodeId), s = xn(e, (e) => $(e.edge.fromNodeId, e.edge.toNodeId)), c = Math.max(0, ...o.values()), l = [...s.values()].filter((e) => e > 1).length, u = [], d = e.length === 2 && n !== null && r !== null && n.entryConnector.kind === "overpass" && i.length === 1 && a.length === 1 && i[0]?.bridgeId === n.entryConnector.edgeId && a[0]?.zoneSessionId === n.id && a[0]?.zoneId === r.id && a[0]?.ownerSourceNodeId === n.activationNodeId && $(a[0].edge.fromNodeId, a[0].edge.toNodeId) === $(n.activationNodeId, a[0].edge.fromNodeId === n.activationNodeId ? a[0].edge.toNodeId : a[0].edge.fromNodeId) && r.memberNodeIds.includes(a[0].edge.fromNodeId === n.activationNodeId ? a[0].edge.toNodeId : a[0].edge.fromNodeId) && (() => {
+		let e = [...this.bridgeRegistry.values()].filter((e) => e.active), t = e.filter((e) => e.role === "ordinary"), n = this.activeZoneSession, r = n ? this.zoneById.get(n.zoneId) ?? null : null, i = e.filter((e) => e.role === "zone-entry"), a = e.filter((e) => e.role === "zone-transient"), o = Sn(e, (e) => e.ownerSourceNodeId), s = Sn(e, (e) => $(e.edge.fromNodeId, e.edge.toNodeId)), c = Math.max(0, ...o.values()), l = [...s.values()].filter((e) => e > 1).length, u = [], d = e.length === 2 && n !== null && r !== null && n.entryConnector.kind === "overpass" && i.length === 1 && a.length === 1 && i[0]?.bridgeId === n.entryConnector.edgeId && a[0]?.zoneSessionId === n.id && a[0]?.zoneId === r.id && a[0]?.ownerSourceNodeId === n.activationNodeId && $(a[0].edge.fromNodeId, a[0].edge.toNodeId) === $(n.activationNodeId, a[0].edge.fromNodeId === n.activationNodeId ? a[0].edge.toNodeId : a[0].edge.fromNodeId) && r.memberNodeIds.includes(a[0].edge.fromNodeId === n.activationNodeId ? a[0].edge.toNodeId : a[0].edge.fromNodeId) && (() => {
 			let e = a[0].edge.fromNodeId === n.activationNodeId ? a[0].edge.toNodeId : a[0].edge.fromNodeId, t = this.sessionAwareHopDistance(n.activationNodeId, e);
 			return t !== null && this.requiresDynamicBridge(t);
 		})(), f = [...this.pendingZoneDismissById.values()];
@@ -5048,10 +5055,10 @@ var Q = class extends Error {
 		return this.revision += 1, this.revision;
 	}
 };
-function an(e) {
+function on(e) {
 	return e === "entry-then-existing-chain" || e === "direct-only-from-activation-to-far-member-otherwise-existing-chain";
 }
-function on(e) {
+function sn(e) {
 	return {
 		bridgeId: e.bridgeId,
 		edge: e.edge,
@@ -5064,7 +5071,7 @@ function on(e) {
 		changedRevision: e.changedRevision
 	};
 }
-function sn(e) {
+function cn(e) {
 	return e === null ? null : {
 		id: e.id,
 		zoneId: e.zoneId,
@@ -5075,7 +5082,7 @@ function sn(e) {
 		revealProgress: e.revealProgress
 	};
 }
-function cn(e) {
+function ln(e) {
 	return e === null ? null : {
 		plan: e.plan,
 		nextStageIndex: e.nextStageIndex,
@@ -5085,35 +5092,35 @@ function cn(e) {
 		departureCommitted: e.departureCommitted
 	};
 }
-function ln(e) {
+function un(e) {
 	return {
 		plan: e.plan,
 		nextBeforeActionIndex: e.nextBeforeActionIndex,
 		nextStepIndex: e.nextStepIndex
 	};
 }
-function un(e) {
+function dn(e) {
 	return {
 		plan: e.plan,
 		nextStepIndex: e.nextStepIndex
 	};
 }
-function dn(e, t) {
+function fn(e, t) {
 	e.clear();
 	for (let n of t) e.add(n);
 }
-function fn(e, t) {
+function pn(e, t) {
 	e.clear();
 	for (let [n, r] of t) e.set(n, r);
 }
-function pn(e, t) {
+function mn(e, t) {
 	return {
 		accepted: !1,
 		reason: e,
 		detail: t
 	};
 }
-function mn(e) {
+function hn(e) {
 	return Object.freeze({
 		bridgeId: e.bridgeId,
 		edge: e.edge,
@@ -5126,17 +5133,17 @@ function mn(e) {
 		changedRevision: e.changedRevision
 	});
 }
-function hn(e, t) {
+function gn(e, t) {
 	e.kind === "retire-bridge" ? t.delete(e.bridgeId) : t.set(e.bridge.bridgeId, e.bridge);
 }
-function gn(e, t, n) {
+function _n(e, t, n) {
 	let r = $(t, n);
 	return [...e.values()].find((e) => e.active && $(e.edge.fromNodeId, e.edge.toNodeId) === r) ?? null;
 }
-function _n(e, t) {
+function vn(e, t) {
 	return [...e.values()].find((e) => e.active && e.ownerSourceNodeId === t) ?? null;
 }
-function vn(e) {
+function yn(e) {
 	let t = [];
 	return e.forEach((e) => {
 		let n = {
@@ -5156,7 +5163,7 @@ function vn(e) {
 		r.toNodeId = n.toNodeId, r.routeNodeIds.push(...n.routeNodeIds.slice(1)), r.routeEdgeIds.push(...n.routeEdgeIds), r.beforeTravelBridgeActions.push(...n.beforeTravelBridgeActions), r.afterArrivalBridgeActions = n.afterArrivalBridgeActions, r.baseHopCount = r.baseHopCount === null || n.baseHopCount === null ? null : r.baseHopCount + n.baseHopCount;
 	}), t;
 }
-function yn(e, t) {
+function bn(e, t) {
 	let n = [t], r = [];
 	return e.forEach((e) => {
 		if (n.at(-1) !== e.routeNodeIds[0]) throw new Q("rule-conflict", `Navigation stages are discontinuous at "${e.id}".`);
@@ -5166,10 +5173,10 @@ function yn(e, t) {
 		edgeIds: r
 	};
 }
-function bn(e, t) {
+function xn(e, t) {
 	return e.bridgeId.localeCompare(t.bridgeId);
 }
-function xn(e, t) {
+function Sn(e, t) {
 	let n = /* @__PURE__ */ new Map();
 	return e.forEach((e) => {
 		let r = t(e);
@@ -5179,23 +5186,23 @@ function xn(e, t) {
 function $(e, t) {
 	return e < t ? `${e}\u0000${t}` : `${t}\u0000${e}`;
 }
-function Sn(e) {
+function Cn(e) {
 	return e === null ? "unreachable" : `${e.nodeIds.join("")}\u0002${e.edgeIds.join("")}`;
 }
-function Cn(e, t) {
+function wn(e, t) {
 	let n = e.position.x - t.position.x, r = e.position.z - t.position.z;
 	return n * n + r * r;
 }
 //#endregion
 //#region src/simulation/PathSimulation.ts
-var wn = 1e-5, Tn = 1e-7, En = .1;
-function Dn(e, t) {
+var Tn = 1e-5, En = 1e-7, Dn = .1;
+function On(e, t) {
 	return e < t ? `${e}\u0000${t}` : `${t}\u0000${e}`;
 }
-function On(e, t) {
+function kn(e, t) {
 	return e.pathKind === t.pathKind && e.fromNodeId === t.fromNodeId && e.toNodeId === t.toNodeId && JSON.stringify(e) === JSON.stringify(t);
 }
-var kn = class {
+var An = class {
 	geometryRegistry;
 	nodes;
 	nodeIndexById = /* @__PURE__ */ new Map();
@@ -5215,14 +5222,14 @@ var kn = class {
 	routeRevision = 0;
 	positionX;
 	positionZ;
-	surfaceY = Nt;
+	surfaceY = Pt;
 	surfacePitchRadians = 0;
 	activePathKind = null;
 	facingX = 0;
 	facingZ = -1;
 	arrivalListeners = /* @__PURE__ */ new Set();
 	nodeTraversedListeners = /* @__PURE__ */ new Set();
-	constructor(e, t = 13.25, n = new zt(e)) {
+	constructor(e, t = 13.25, n = new Bt(e)) {
 		if (!Number.isFinite(t) || t <= 0) throw Error("PathSimulation speed must be a positive finite number.");
 		this.nodes = e.nodes, this.speed = t, this.geometryRegistry = n, this.adjacency = e.nodes.map(() => []), this.nodeTieRanks = new Int32Array(e.nodes.length), this.validateAndBuildGraph(e);
 		let r = this.nodeIndexById.get(e.initialNodeId);
@@ -5265,7 +5272,7 @@ var kn = class {
 			accepted: !1,
 			reason: "unreachable"
 		};
-		let c = o ? this.edgeProgress * a.length + o.distance : Infinity, l = s ? (1 - this.edgeProgress) * a.length + s.distance : Infinity, u = c + Tn < l, d = u ? o : s;
+		let c = o ? this.edgeProgress * a.length + o.distance : Infinity, l = s ? (1 - this.edgeProgress) * a.length + s.distance : Infinity, u = c + En < l, d = u ? o : s;
 		if (!d) return {
 			accepted: !1,
 			reason: "unreachable"
@@ -5289,11 +5296,11 @@ var kn = class {
 		let t = this.edgeIndexById.get(e.id);
 		if (t !== void 0) {
 			let n = this.runtimeEdges[t]?.source;
-			if (n === e || n && On(n, e)) return !1;
+			if (n === e || n && kn(n, e)) return !1;
 			throw Error(`PathSimulation edge id "${e.id}" is already registered.`);
 		}
 		this.validateRuntimeEdgeIdentity(e);
-		let n = Dn(e.fromNodeId, e.toNodeId);
+		let n = On(e.fromNodeId, e.toNodeId);
 		if (this.physicalPairKeys.has(n)) throw Error(`Duplicate physical edge between "${e.fromNodeId}" and "${e.toNodeId}".`);
 		return this.geometryRegistry.registerEdge(e), this.installRuntimeEdge(e), this.sortAdjacencyForNode(e.fromNodeId), this.sortAdjacencyForNode(e.toNodeId), !0;
 	}
@@ -5387,12 +5394,12 @@ var kn = class {
 	}
 	update(e) {
 		if (!this.isRunning || this.targetNodeIndex === null || !Number.isFinite(e) || e <= 0) return;
-		let t = Math.min(e, En) * this.speed;
+		let t = Math.min(e, Dn) * this.speed;
 		for (; t > 0 && this.isRunning;) {
 			let e = this.routeEdgeIndices[this.routeCursor], n = this.routeNodeIndices[this.routeCursor + 1], r = e === void 0 ? void 0 : this.runtimeEdges[e];
 			if (e === void 0 || n === void 0 || !r) throw Error("PathSimulation encountered an invalid active route leg.");
 			let i = Math.max(0, (1 - this.edgeProgress) * r.length);
-			if (t + wn < i) {
+			if (t + Tn < i) {
 				this.edgeProgress += t / r.length, t = 0;
 				break;
 			}
@@ -5454,11 +5461,11 @@ var kn = class {
 		let r = this.runtimeEdges[n], i = this.geometryRegistry.sampleRoute(r.source.id, this.nodes[e].id, this.edgeProgress);
 		this.positionX = i.position.x, this.positionZ = i.position.z, this.surfaceY = i.surfaceY, this.surfacePitchRadians = Math.atan2(i.tangent.y, Math.hypot(i.tangent.x, i.tangent.z)), this.activePathKind = i.pathKind;
 		let a = Math.hypot(i.tangent.x, i.tangent.z);
-		a > wn && (this.facingX = i.tangent.x / a, this.facingZ = i.tangent.z / a);
+		a > Tn && (this.facingX = i.tangent.x / a, this.facingZ = i.tangent.z / a);
 	}
 	setFacingToward(e) {
 		let t = e.x - this.positionX, n = e.z - this.positionZ, r = Math.hypot(t, n);
-		r > wn && (this.facingX = t / r, this.facingZ = n / r);
+		r > Tn && (this.facingX = t / r, this.facingZ = n / r);
 	}
 	finishAt(e) {
 		let t = this.isRunning || this.currentNodeIndex !== e, n = this.nodes[e];
@@ -5498,7 +5505,7 @@ var kn = class {
 			let e = -1, s = Infinity;
 			for (let t = 0; t < n; t += 1) {
 				if (i[t] === 1) continue;
-				let n = r[t], a = n + Tn < s, o = Math.abs(n - s) <= Tn && e >= 0 && this.nodeTieRanks[t] < this.nodeTieRanks[e];
+				let n = r[t], a = n + En < s, o = Math.abs(n - s) <= En && e >= 0 && this.nodeTieRanks[t] < this.nodeTieRanks[e];
 				(a || o) && (e = t, s = n);
 			}
 			if (e < 0 || !Number.isFinite(s) || e === t) break;
@@ -5507,7 +5514,7 @@ var kn = class {
 			for (let t = 0; t < c.length; t += 1) {
 				let n = c[t];
 				if (i[n.nodeIndex] === 1) continue;
-				let l = s + n.routingCost, u = r[n.nodeIndex], d = l + Tn < u, f = a[n.nodeIndex], p = Math.abs(l - u) <= Tn && (f < 0 || this.nodeTieRanks[e] < this.nodeTieRanks[f] || this.nodeTieRanks[e] === this.nodeTieRanks[f] && this.runtimeEdges[n.edgeIndex].source.id < this.runtimeEdges[o[n.nodeIndex]].source.id);
+				let l = s + n.routingCost, u = r[n.nodeIndex], d = l + En < u, f = a[n.nodeIndex], p = Math.abs(l - u) <= En && (f < 0 || this.nodeTieRanks[e] < this.nodeTieRanks[f] || this.nodeTieRanks[e] === this.nodeTieRanks[f] && this.runtimeEdges[n.edgeIndex].source.id < this.runtimeEdges[o[n.nodeIndex]].source.id);
 				(d || p) && (r[n.nodeIndex] = l, a[n.nodeIndex] = e, o[n.nodeIndex] = n.edgeIndex);
 			}
 		}
@@ -5542,7 +5549,7 @@ var kn = class {
 			this.nodeTieRanks[e] = t;
 		}), e.edges.forEach((e) => {
 			this.validateRuntimeEdgeIdentity(e);
-			let t = Dn(e.fromNodeId, e.toNodeId);
+			let t = On(e.fromNodeId, e.toNodeId);
 			if (this.physicalPairKeys.has(t)) throw Error(`Duplicate physical edge between "${e.fromNodeId}" and "${e.toNodeId}".`);
 			this.installRuntimeEdge(e);
 		}), this.adjacency.forEach((e) => {
@@ -5563,11 +5570,11 @@ var kn = class {
 		let t = this.nodeIndexById.get(e.fromNodeId), n = this.nodeIndexById.get(e.toNodeId), r = this.geometryRegistry.get(e.id);
 		if (r.fromNodeId !== e.fromNodeId || r.toNodeId !== e.toNodeId || r.pathKind !== e.pathKind) throw Error(`Geometry registry edge "${e.id}" does not match the graph.`);
 		let i = r.length;
-		if (!Number.isFinite(i) || i <= wn) throw Error(`Edge "${e.id}" has zero or non-finite length.`);
+		if (!Number.isFinite(i) || i <= Tn) throw Error(`Edge "${e.id}" has zero or non-finite length.`);
 		let a = e.pathKind === "overpass" ? e.routingCost : i;
-		if (!Number.isFinite(a) || a <= wn) throw Error(`Edge "${e.id}" has an invalid routing cost.`);
+		if (!Number.isFinite(a) || a <= Tn) throw Error(`Edge "${e.id}" has an invalid routing cost.`);
 		let o = this.runtimeEdges.length;
-		this.edgeIndexById.set(e.id, o), this.physicalPairKeys.add(Dn(e.fromNodeId, e.toNodeId)), this.runtimeEdges.push({
+		this.edgeIndexById.set(e.id, o), this.physicalPairKeys.add(On(e.fromNodeId, e.toNodeId)), this.runtimeEdges.push({
 			source: e,
 			fromNodeIndex: t,
 			toNodeIndex: n,
@@ -5610,7 +5617,7 @@ var kn = class {
 		}
 		if (a !== this.nodes.length) throw Error("Learning path progression edges must form a directed acyclic graph.");
 	}
-}, An = class {
+}, jn = class {
 	app;
 	canvas;
 	nodeOptions;
@@ -5734,7 +5741,7 @@ var kn = class {
 			this.app.dataset.hud = "hidden";
 		}, 3200));
 	}
-}, jn = .79, Mn = .593, Nn = 12, Pn = Math.PI * 2, Fn = class {
+}, Mn = .79, Nn = .593, Pn = 12, Fn = Math.PI * 2, In = class {
 	worldPoint = new y();
 	result = {
 		nodeId: "",
@@ -5752,11 +5759,11 @@ var kn = class {
 	};
 	project(e, t, n, r) {
 		let i = typeof r == "function" ? r(e) : r.get(e);
-		if (!i || !Ln(n) || !Rn(i)) return null;
-		let a = In(i.overlayRadius) ? i.overlayRadius : jn, o = Number.isFinite(i.overlayBottomY) ? i.overlayBottomY : i.surfaceY - Mn, s = Infinity, c = -Infinity, l = Infinity, u = -Infinity, d = Infinity, f = !1;
+		if (!i || !Rn(n) || !zn(i)) return null;
+		let a = Ln(i.overlayRadius) ? i.overlayRadius : Mn, o = Number.isFinite(i.overlayBottomY) ? i.overlayBottomY : i.surfaceY - Nn, s = Infinity, c = -Infinity, l = Infinity, u = -Infinity, d = Infinity, f = !1;
 		t.updateMatrixWorld();
-		for (let e = 0; e < Nn; e += 1) {
-			let r = e / Nn * Pn;
+		for (let e = 0; e < Pn; e += 1) {
+			let r = e / Pn * Fn;
 			this.worldPoint.set(i.position.x + Math.cos(r) * a, o, i.position.z + Math.sin(r) * a).project(t);
 			let p = n.left + (this.worldPoint.x + 1) * .5 * n.width, m = n.top + (1 - this.worldPoint.y) * .5 * n.height;
 			s = Math.min(s, p), c = Math.max(c, p), l = Math.min(l, m), u = Math.max(u, m), d = Math.min(d, this.worldPoint.z), this.worldPoint.z >= -1 && this.worldPoint.z <= 1 && (f = !0);
@@ -5765,18 +5772,18 @@ var kn = class {
 		return this.result.nodeId = e, this.result.visible = f && p, this.result.left = s, this.result.top = l, this.result.right = c, this.result.bottom = u, this.result.width = c - s, this.result.height = u - l, this.result.centerX = (s + c) * .5, this.result.anchorClientX = this.result.centerX, this.result.anchorClientY = u, this.result.normalizedDepth = d, this.result;
 	}
 };
-function In(e) {
+function Ln(e) {
 	return e !== void 0 && Number.isFinite(e) && e > 0;
 }
-function Ln(e) {
+function Rn(e) {
 	return Number.isFinite(e.left) && Number.isFinite(e.top) && Number.isFinite(e.width) && Number.isFinite(e.height) && e.width > 0 && e.height > 0;
 }
-function Rn(e) {
+function zn(e) {
 	return Number.isFinite(e.position.x) && Number.isFinite(e.position.z) && Number.isFinite(e.surfaceY);
 }
 //#endregion
 //#region src/ui/RecoveryStatusOverlay.ts
-var zn = {
+var Bn = {
 	injected: {
 		title: "检测到故障",
 		message: "已暂停当前事务，正在检查故障",
@@ -5802,7 +5809,7 @@ var zn = {
 		message: "自动恢复未完成，请重新操作",
 		progress: null
 	}
-}, Bn = 240, Vn = class {
+}, Vn = 240, Hn = class {
 	app;
 	document;
 	browserWindow;
@@ -5847,7 +5854,7 @@ var zn = {
 	}
 	setPhase(e, t = {}) {
 		if (this.assertActive(), this.clearTimers(), e === "hidden") return this.hide(), this.snapshot;
-		let n = zn[e], r = t.progress === void 0 ? n.progress : this.normalizeProgress(t.progress), i = t.message ?? n.message;
+		let n = Bn[e], r = t.progress === void 0 ? n.progress : this.normalizeProgress(t.progress), i = t.message ?? n.message;
 		this.root.hidden = !1, this.root.dataset.phase = e, this.root.dataset.visible = "true", this.root.setAttribute("aria-live", e === "failed" ? "assertive" : "polite"), this.root.setAttribute("aria-label", `${n.title}。${i}`), this.titleElement.textContent = n.title, this.messageElement.textContent = i, this.renderProgress(r), this.state = Object.freeze({
 			phase: e,
 			title: n.title,
@@ -5869,7 +5876,7 @@ var zn = {
 			revision: this.state.revision + 1
 		}), this.hideTransitionTimer = this.browserWindow.setTimeout(() => {
 			this.hideTransitionTimer = 0, this.root.dataset.visible === "false" && (this.root.hidden = !0);
-		}, Bn));
+		}, Vn));
 	}
 	dispose() {
 		this.disposed || (this.clearTimers(), this.disposed = !0, this.root.remove(), this.styleElement.remove());
@@ -5906,33 +5913,33 @@ var zn = {
 };
 //#endregion
 //#region src/app/pathOrchestrationBindingBarrier.ts
-function Hn(e, t) {
+function Un(e, t) {
 	return e.isPathOrchestrationBound() ? (t(), !0) : !1;
 }
 //#endregion
 //#region src/app/LearningPathSession.ts
-var Un = _.degToRad(26), Wn = _.degToRad(48), Gn = 320, Kn = (e) => `/assets/${e}`, qn = () => ({
-	run: Kn("liu-kanshan-run.glb"),
-	runStop: Kn("liu-kanshan-run-stop.glb"),
-	idle: Kn("liu-kanshan-idle.glb"),
-	turn: Kn("liu-kanshan-turn.glb")
+var Wn = _.degToRad(26), Gn = _.degToRad(48), Kn = 320, qn = (e) => `/assets/${e}`, Jn = () => ({
+	run: qn("liu-kanshan-run.glb"),
+	runStop: qn("liu-kanshan-run-stop.glb"),
+	idle: qn("liu-kanshan-idle.glb"),
+	turn: qn("liu-kanshan-turn.glb")
 });
-function Jn(e) {
+function Yn(e) {
 	let t = e.canvas, n = t.ownerDocument, r = n.defaultView;
 	if (!r) throw Error("Learning-path session requires a browser window.");
-	let { runtimeBundle: i } = e, a = i.graph.initialNodeId, o = i.nodes, s = i.authoredStraightEdges, c = i.authoredLogicalEdges, l = i.runtimeStraightEdges, u = i.overpassCatalog, d = i.edges, f = i.graph, p = i.diagnostics, m = e.specialZones, h = e.dynamicBridgeRule, g = i.getNodeById, v = i.getNodeIndex, b = i.getOverpassEdgeBetween, S = new Fn(), C = v(a), w = g(a);
+	let { runtimeBundle: i } = e, a = i.graph.initialNodeId, o = i.nodes, s = i.authoredStraightEdges, c = i.authoredLogicalEdges, l = i.runtimeStraightEdges, u = i.overpassCatalog, d = i.edges, f = i.graph, p = i.diagnostics, m = e.specialZones, h = e.dynamicBridgeRule, g = i.getNodeById, v = i.getNodeIndex, b = i.getOverpassEdgeBetween, S = new In(), C = v(a), w = g(a);
 	if (C < 0 || !w) throw Error(`Initial learning-path node "${a}" is missing.`);
-	let T = new An(e.ui, e.instanceId);
+	let T = new jn(e.ui, e.instanceId);
 	T.configureNodes(o, w);
 	let E = new URLSearchParams(r.location.search), D = e.diagnostics ?? E.get("qa") === "1", O = null;
 	if (D) {
 		let t = `learning-path-${e.instanceId}-qa-debug`, r = e.ui.root.querySelector(`#${t}`);
 		r instanceof HTMLOutputElement ? O = r : (O = n.createElement("output"), O.id = t, O.hidden = !0, O.setAttribute("aria-hidden", "true"), e.ui.root.append(O));
 	}
-	let k = "booting", A = !1, j = null, M = !1, N = C, P = !1, F = new Oe(), ee = new be({ document: n }), I;
+	let k = "booting", A = !1, j = null, M = !1, N = C, P = !1, F = new De(), ee = new ye({ document: n }), I;
 	try {
 		let n = e.compiledPath.nodeById.get(a)?.layer ?? 0;
-		I = new We(t, o.map((t) => ({
+		I = new Ue(t, o.map((t) => ({
 			...t,
 			initiallyVisible: (() => {
 				let r = e.compiledPath.nodeById.get(t.id);
@@ -5942,20 +5949,20 @@ function Jn(e) {
 	} catch (e) {
 		throw k = "degraded", T.setError("当前浏览器无法启动 3D 显示，请启用 WebGL 后重试。"), e;
 	}
-	let ne = new zt(f), L = new kn(f, 13.25, ne), re = L.onNodeTraversed((t) => {
+	let ne = new Bt(f), L = new An(f, 13.25, ne), re = L.onNodeTraversed((t) => {
 		e.onNodeTraversed?.(Object.freeze({
 			nodeId: t.nodeId,
 			routeRevision: t.routeRevision
 		}));
-	}), R = new rn({
+	}), R = new an({
 		nodes: o,
 		authoredStraightEdges: l,
 		authoredLogicalEdges: c,
 		dynamicBridgeRule: h,
 		specialZones: m,
 		overpassPairLookup: b,
-		basePathIndex: new kt(o, c)
-	}), ie = e.introAnimation ?? !0, z = new Tt({
+		basePathIndex: new At(o, c)
+	}), ie = e.introAnimation ?? !0, z = new Et({
 		nodes: ie ? o.map((e) => ({
 			...e,
 			initiallyVisible: !1
@@ -5968,13 +5975,13 @@ function Jn(e) {
 		geometryRegistry: ne,
 		nodeBadgeIconById: e.nodeBadgeIconById,
 		lastLearningNodeId: e.lastLearningNodeId
-	}), B = e.preparedCharacter?.character ?? new te(I.renderer.capabilities.getMaxAnisotropy()), ae = new Vn({
+	}), B = e.preparedCharacter?.character ?? new te(I.renderer.capabilities.getMaxAnisotropy()), ae = new Hn({
 		app: e.ui.root,
 		recoveredAutoHideMs: 3200,
 		failedAutoHideMs: 8e3
-	}), oe = /* @__PURE__ */ new Set(), se = 0, ce = 0, le = 0, ue = 0, de = null, fe = () => {
-		se += 1, oe.forEach((e) => r.clearTimeout(e)), oe.clear(), ce = 0, le = 0, ue = 0, de = null;
-	}, V = (e, t, n = 0) => {
+	}), oe = /* @__PURE__ */ new Set(), se = 0, ce = 0, le = 0, ue = 0, V = null, de = () => {
+		se += 1, oe.forEach((e) => r.clearTimeout(e)), oe.clear(), ce = 0, le = 0, ue = 0, V = null;
+	}, H = (e, t, n = 0) => {
 		let i = se, a = ++le, o = performance.now(), s = Math.max(o, ce);
 		ce = s + Math.max(0, n);
 		let c = () => {
@@ -5988,14 +5995,14 @@ function Jn(e) {
 			oe.delete(u), c();
 		}, l);
 		oe.add(u);
-	}, me = E;
+	}, pe = E;
 	Object.freeze([
 		Object.freeze({
 			id: "presentation-failure",
 			label: "表现命令连续失败",
 			rules: Object.freeze([Object.freeze({
 				id: "fail-presentation-attempts",
-				point: ge.PRESENTATION_COMMAND,
+				point: he.PRESENTATION_COMMAND,
 				attempt: Object.freeze([1, 2]),
 				times: 2,
 				behavior: Object.freeze({
@@ -6022,7 +6029,7 @@ function Jn(e) {
 			label: "表现 ACK 超时与迟到 ACK",
 			rules: Object.freeze([Object.freeze({
 				id: "delay-first-presentation-ack",
-				point: ge.PRESENTATION_ACK,
+				point: he.PRESENTATION_ACK,
 				attempt: 1,
 				times: 1,
 				behavior: Object.freeze({
@@ -6036,7 +6043,7 @@ function Jn(e) {
 			label: "部分提交后的补偿回滚",
 			rules: Object.freeze([Object.freeze({
 				id: "fail-next-two-presentation-attempts",
-				point: ge.PRESENTATION_COMMAND,
+				point: he.PRESENTATION_COMMAND,
 				attempt: Object.freeze([1, 2]),
 				times: 2,
 				behavior: Object.freeze({
@@ -6056,25 +6063,25 @@ function Jn(e) {
 			rules: Object.freeze([])
 		})
 	]);
-	let he = new pe(), H = e.reducedMotion ?? Ae(r), _e = 0, ve = 0, ye = 0, we = new Map(u.map((e) => [e.id, e])), Te = (e) => {
-		let t = we.get(e);
+	let me = new fe(), U = e.reducedMotion ?? ke(r), ge = 0, _e = 0, ve = 0, Ce = new Map(u.map((e) => [e.id, e])), we = (e) => {
+		let t = Ce.get(e);
 		if (t) return t;
 		let n = i.overpassCatalog.find((t) => t.id === e);
-		return n && we.set(e, n), n;
-	}, De = [], ke = 0, je = (e, t, n) => {
-		D && (De.push(Object.freeze({
-			sequence: ++ke,
-			frame: ye,
-			time: Number(_e.toFixed(3)),
+		return n && Ce.set(e, n), n;
+	}, Ee = [], Oe = 0, Ae = (e, t, n) => {
+		D && (Ee.push(Object.freeze({
+			sequence: ++Oe,
+			frame: ve,
+			time: Number(ge.toFixed(3)),
 			type: e,
 			objectId: t,
 			...n ? { detail: n } : {}
-		})), De.length > Gn && De.splice(0, De.length - Gn));
-	}, Ne = /* @__PURE__ */ new Map();
+		})), Ee.length > Kn && Ee.splice(0, Ee.length - Kn));
+	}, Me = /* @__PURE__ */ new Map();
 	u.forEach((e) => {
 		let t = g(e.fromNodeId), n = g(e.toNodeId);
 		if (!t || !n) throw Error(`Overpass "${e.id}" has a missing endpoint.`);
-		Ne.set(e.id, {
+		Me.set(e.id, {
 			fromX: t.position.x,
 			fromZ: t.position.z,
 			toX: n.position.x,
@@ -6082,10 +6089,10 @@ function Jn(e) {
 			endInset: e.platformEdgeOffset + e.straightApproachLength
 		});
 	});
-	let Ie = (e) => {
-		let t = Ne.get(e);
+	let Fe = (e) => {
+		let t = Me.get(e);
 		if (t) return t;
-		let n = Te(e);
+		let n = we(e);
 		if (!n) return;
 		let r = g(n.fromNodeId), i = g(n.toNodeId);
 		if (!r || !i) return;
@@ -6096,26 +6103,26 @@ function Jn(e) {
 			toZ: i.position.z,
 			endInset: n.platformEdgeOffset + n.straightApproachLength
 		};
-		return Ne.set(e, a), a;
-	}, Le = /* @__PURE__ */ new Map();
+		return Me.set(e, a), a;
+	}, Ie = /* @__PURE__ */ new Map();
 	l.forEach((e) => {
-		Le.set(e.id, ne.get(e.id).length);
+		Ie.set(e.id, ne.get(e.id).length);
 	});
-	let U = o.map(() => []), Re = new Map(o.map((e) => [e.id, 0])), ze = new Map(o.map((e) => [e.id, 0]));
+	let W = o.map(() => []), G = new Map(o.map((e) => [e.id, 0])), Le = new Map(o.map((e) => [e.id, 0]));
 	s.forEach((e) => {
 		let t = v(e.fromNodeId), n = v(e.toNodeId);
 		if (t < 0 || n < 0) throw Error(`Edge "${e.id}" has a missing endpoint.`);
-		U[t].push(n), U[n].push(t), ze.set(e.fromNodeId, (ze.get(e.fromNodeId) ?? 0) + 1), Re.set(e.toNodeId, (Re.get(e.toNodeId) ?? 0) + 1);
-	}), U.forEach((e) => e.sort((e, t) => o[e].navigationOrder - o[t].navigationOrder));
-	let Be = new x();
-	Be.name = "learning-path-character-stage", Be.visible = !ie, Be.add(B.root), I.scene.add(z.root, Be), B.setPosition(w.position.x, w.position.z, w.surfaceY), B.setViewFacing(I.camera.position.x - w.position.x, I.camera.position.z - w.position.z, 1), B.setReducedMotion(H);
-	let W = null, G = () => {}, Ve = !1, K = !1, He = () => B.isVisuallyIdle(), Ue = (e) => {
+		W[t].push(n), W[n].push(t), Le.set(e.fromNodeId, (Le.get(e.fromNodeId) ?? 0) + 1), G.set(e.toNodeId, (G.get(e.toNodeId) ?? 0) + 1);
+	}), W.forEach((e) => e.sort((e, t) => o[e].navigationOrder - o[t].navigationOrder));
+	let Re = new x();
+	Re.name = "learning-path-character-stage", Re.visible = !ie, Re.add(B.root), I.scene.add(z.root, Re), B.setPosition(w.position.x, w.position.z, w.surfaceY), B.setViewFacing(I.camera.position.x - w.position.x, I.camera.position.z - w.position.z, 1), B.setReducedMotion(U);
+	let K = null, q = () => {}, ze = !1, J = !1, Be = () => B.isVisuallyIdle(), Ve = (e) => {
 		let t = o[e];
 		return !!(t && R.isNodeUnlocked(t.id) && z.getNodePresenceState(t.id).interactive);
-	}, q = (e) => {
+	}, He = (e) => {
 		let t = o[e];
 		return !!(t && z.getNodePresenceState(t.id).interactive);
-	}, J = new Ot({
+	}, Y = new kt({
 		coordinator: R,
 		simulation: L,
 		pathView: z,
@@ -6123,9 +6130,9 @@ function Jn(e) {
 		nodes: o,
 		edges: d,
 		initialNodeId: a,
-		reducedMotion: H,
+		reducedMotion: U,
 		onPhysicalArrival: ({ nodeId: t, finalStage: n, command: r, routeRevision: i }) => {
-			if (je("xstate-physical-arrival", r.token, `${t}; final=${n}`), !n) {
+			if (Ae("xstate-physical-arrival", r.token, `${t}; final=${n}`), !n) {
 				e.onNodeTraversed?.(Object.freeze({
 					nodeId: t,
 					routeRevision: i
@@ -6133,43 +6140,43 @@ function Jn(e) {
 				return;
 			}
 			let a = v(t), s = o[a];
-			a < 0 || !s || (z.commitArrival(a), I.settleAt(s.position.z), W?.setKeyboardIndex(a));
+			a < 0 || !s || (z.commitArrival(a), I.settleAt(s.position.z), K?.setKeyboardIndex(a));
 		},
 		onPresentationSettled: (e) => {
-			e.objectKind === "platform" && T.setNodeVisible(e.objectId, e.terminal === "visible"), e.metadata.lane === "zone-reveal" && e.terminal === "visible" && I.expandPathFraming(H), queueMicrotask(() => {
-				K || (e.metadata.lane === "zone-dismiss" && e.terminal === "hidden" && !R.hasVisibleZoneSession() && J.isNavigationIdle() && I.setPathFramingExpanded(!1, H), G());
+			e.objectKind === "platform" && T.setNodeVisible(e.objectId, e.terminal === "visible"), e.metadata.lane === "zone-reveal" && e.terminal === "visible" && I.expandPathFraming(U), queueMicrotask(() => {
+				J || (e.metadata.lane === "zone-dismiss" && e.terminal === "hidden" && !R.hasVisibleZoneSession() && Y.isNavigationIdle() && I.setPathFramingExpanded(!1, U), q());
 			});
 		},
 		onNavigationSettled: ({ nodeId: e }) => {
 			let t = v(e), n = o[t];
-			t < 0 || !n || (N = t, z.setTarget(null), W?.setKeyboardIndex(t), T.setArrived(n), G());
+			t < 0 || !n || (N = t, z.setTarget(null), K?.setKeyboardIndex(t), T.setArrived(n), q());
 		},
 		onNavigationRejected: ({ targetNodeId: t, detail: n }) => {
 			let r = L.getSnapshot().currentNodeId, i = v(r), a = o[i];
-			z.setTarget(null), i >= 0 && a && (N = i, W?.setKeyboardIndex(i), T.setArrived(a), I.settleAt(a.position.z)), console.warn(`[learning-path] Cannot route to ${t}: ${n}`), e.onMovementCancelled?.(Object.freeze({
+			z.setTarget(null), i >= 0 && a && (N = i, K?.setKeyboardIndex(i), T.setArrived(a), I.settleAt(a.position.z)), console.warn(`[learning-path] Cannot route to ${t}: ${n}`), e.onMovementCancelled?.(Object.freeze({
 				safeNodeId: r,
 				reason: "navigation-rejected"
-			})), G();
+			})), q();
 		},
 		onTransition: ({ type: t, objectId: n, detail: r }) => {
-			if (je(`xstate-${t}`, n, r), t === "presentation-failed" || t === "motion-failed" || t === "presentation-timeout" || t === "motion-timeout") {
-				V("injected", {
+			if (Ae(`xstate-${t}`, n, r), t === "presentation-failed" || t === "motion-failed" || t === "presentation-timeout" || t === "motion-timeout") {
+				H("injected", {
 					message: r ?? `故障步骤：${n}`,
 					autoHideMs: 0
 				}, 240);
 				return;
 			}
 			if (t === "operation-retrying") {
-				de = n;
+				V = n;
 				let e = r?.replace(/Presentation ACK timed out after ([\d.]+)s\./, "表现确认在 $1 秒内未返回");
-				V("retrying", {
+				H("retrying", {
 					message: e ?? "正在用新的尝试编号重试",
 					autoHideMs: 0
 				}, 240);
 				return;
 			}
 			if (t === "recovery-started") {
-				de = null, V("compensating", {
+				V = null, H("compensating", {
 					message: "事务已停止，正在逆序撤销未完成的视觉与规则状态",
 					progress: 0,
 					autoHideMs: 0
@@ -6178,7 +6185,7 @@ function Jn(e) {
 			}
 			if (t === "recovery-step") {
 				let e = r?.match(/(\d+)\/(\d+)/), t = e && Number(e[2]) > 0 ? Number(e[1]) / Number(e[2]) : null;
-				V("compensating", {
+				H("compensating", {
 					message: `正在补偿 ${n}`,
 					progress: t,
 					autoHideMs: 0
@@ -6186,8 +6193,8 @@ function Jn(e) {
 				return;
 			}
 			if (t === "recovery-complete") {
-				let t = J.getSnapshot().context.currentNodeId, n = v(t), i = o[n];
-				n >= 0 && i && (N = n, z.commitArrival(n), z.setTarget(null), W?.setKeyboardIndex(n), T.setArrived(i), I.settleAt(i.position.z));
+				let t = Y.getSnapshot().context.currentNodeId, n = v(t), i = o[n];
+				n >= 0 && i && (N = n, z.commitArrival(n), z.setTarget(null), K?.setKeyboardIndex(n), T.setArrived(i), I.settleAt(i.position.z));
 				let a = r?.match(/compensated=(\d+)/)?.[1] ?? "0", s = (() => {
 					switch (void 0) {
 						case "presentation-failure": return `两次表现尝试均失败；已逆序补偿 ${a} 项并回到安全节点`;
@@ -6196,76 +6203,76 @@ function Jn(e) {
 						default: return `已回到安全节点；逆序补偿 ${a} 项，状态一致性已恢复`;
 					}
 				})();
-				V("recovered", { message: s }), e.onMovementCancelled?.(Object.freeze({
+				H("recovered", { message: s }), e.onMovementCancelled?.(Object.freeze({
 					safeNodeId: t,
 					reason: "recovery-complete"
-				})), G();
+				})), q();
 				return;
 			}
 			if (t === "recovery-failed") {
-				de = null, k = "degraded", W?.setEnabled(!1), z.setTarget(null);
+				V = null, k = "degraded", K?.setEnabled(!1), z.setTarget(null);
 				let t = g(L.getSnapshot().currentNodeId), n = t ? `自动恢复失败，已停在「${t.label}」；请刷新后重试。` : "自动恢复失败；请刷新后重试。";
 				T.setError(n), e.onRuntimeError?.(Object.freeze({
 					error: r,
 					message: n
-				})), V("failed", { message: r ?? "恢复事务失败" }), e.onMovementCancelled?.(Object.freeze({
+				})), H("failed", { message: r ?? "恢复事务失败" }), e.onMovementCancelled?.(Object.freeze({
 					safeNodeId: L.getSnapshot().currentNodeId,
 					reason: "recovery-failed"
-				})), G();
+				})), q();
 				return;
 			}
 			if (t === "character-watchdog-recovered") {
 				ae.setPhase("recovered", { message: `动作完成事件缺失，已由帧驱动看门狗接管（${n}）` });
 				return;
 			}
-			if (t === "presentation-settled" && de !== null && r?.startsWith(`${de}:attempt:`)) {
-				de = null, V("recovered", { message: "重试成功；迟到或重复的确认信号将被忽略" });
+			if (t === "presentation-settled" && V !== null && r?.startsWith(`${V}:attempt:`)) {
+				V = null, H("recovered", { message: "重试成功；迟到或重复的确认信号将被忽略" });
 				return;
 			}
-			t === "stale-event-ignored" && r === "presentation ACK" && V("recovered", { message: "已忽略迟到确认；当前尝试的画面与业务状态保持不变" }, 900);
+			t === "stale-event-ignored" && r === "presentation ACK" && H("recovered", { message: "已忽略迟到确认；当前尝试的画面与业务状态保持不变" }, 900);
 		}
-	}), Ke = (t, n = "direct") => {
+	}), Ge = (t, n = "direct") => {
 		let r = o[t];
-		if (!r || !P || !A || M || !J.isPathOrchestrationBound() || J.getDebugSnapshot().orchestration.health.status !== "live" || !Ue(t) || e.canNavigateToNode?.(r.id, n) === !1) return !1;
-		N = t, W?.setKeyboardIndex(t), T.setActiveNode(r), G();
-		let i = L.getSnapshot(), a = J.getSnapshot();
-		if (!i.isRunning && J.isNavigationIdle() && a.context.characterVisualIdle && a.context.currentNodeId === r.id) return !0;
+		if (!r || !P || !A || M || !Y.isPathOrchestrationBound() || Y.getDebugSnapshot().orchestration.health.status !== "live" || !Ve(t) || e.canNavigateToNode?.(r.id, n) === !1) return !1;
+		N = t, K?.setKeyboardIndex(t), T.setActiveNode(r), q();
+		let i = L.getSnapshot(), a = Y.getSnapshot();
+		if (!i.isRunning && Y.isNavigationIdle() && a.context.characterVisualIdle && a.context.currentNodeId === r.id) return !0;
 		z.setTarget(t), T.setTravelling(r), I.prepareTravel(r.position.z);
-		let s = !J.isNavigationIdle() || !a.context.characterVisualIdle || a.context.zoneTransitionActive;
-		return J.requestNavigation(r.id), je("xstate-navigation-requested", r.id, s ? "latest-intent-queued" : "accepted-or-planning"), G(), !0;
-	}, qe = (t) => {
+		let s = !Y.isNavigationIdle() || !a.context.characterVisualIdle || a.context.zoneTransitionActive;
+		return Y.requestNavigation(r.id), Ae("xstate-navigation-requested", r.id, s ? "latest-intent-queued" : "accepted-or-planning"), q(), !0;
+	}, Ke = (t) => {
 		let n = o[t];
 		if (!n || !P || !A || M) return !1;
-		N = t, W?.setKeyboardIndex(t), T.setActiveNode(n);
+		N = t, K?.setKeyboardIndex(t), T.setActiveNode(n);
 		let r = L.getSnapshot().currentNodeId;
-		return G(), e.onNodeActivated?.(Object.freeze({
+		return q(), e.onNodeActivated?.(Object.freeze({
 			nodeId: n.id,
 			currentNodeId: r,
 			isCurrent: r === n.id
 		})), !0;
-	}, Je = new Pe({
+	}, qe = new Ne({
 		nodes: o,
 		resolveNodeIndex: v,
 		resolveOptionElement: (e) => T.getNodeOptionElement(e),
 		onInspectRequested: (e) => {
-			qe(e);
+			Ke(e);
 		},
 		announcements: { announceKeyboardSelection: (e) => T.announceKeyboardSelection(e) }
 	});
-	W = new Fe({
+	K = new Pe({
 		canvas: t,
 		camera: I.camera,
 		pickTargets: z.pickTargets,
 		nodes: o,
-		authoredAdjacencyByIndex: U,
+		authoredAdjacencyByIndex: W,
 		entryNodeId: f.entryNodeId,
 		goalNodeId: f.goalNodeId,
 		initialNodeIndex: C,
-		keyboardSurfaceY: Ge,
+		keyboardSurfaceY: We,
 		resolveNodeIndex: (e) => z.resolveNodeIndex(e),
-		isNodeInspectable: q,
+		isNodeInspectable: He,
 		inspectNode: (e) => {
-			qe(e);
+			Ke(e);
 		},
 		onBackgroundActivated: () => e.onBackgroundActivated?.(),
 		panByScreenPixels: (e, t) => I.panByScreenPixels(e, t),
@@ -6274,11 +6281,11 @@ function Jn(e) {
 		setPressedNode: (e) => z.setPressed(e),
 		onNodeHovered: (t) => e.onNodeHovered?.(Object.freeze({ nodeId: t })),
 		onKeyboardSelection: (e, t) => {
-			N = t, Je.announceKeyboardSelection(t), G();
+			N = t, qe.announceKeyboardSelection(t), q();
 		}
 	});
-	let Ye = () => {
-		let e = L.getSnapshot(), t = J.isPathOrchestrationBound() ? J.getSnapshot().context : null;
+	let Je = () => {
+		let e = L.getSnapshot(), t = Y.isPathOrchestrationBound() ? Y.getSnapshot().context : null;
 		return Object.freeze({
 			currentNodeId: e.currentNodeId,
 			selectedNodeId: o[N]?.id ?? e.currentNodeId,
@@ -6290,9 +6297,9 @@ function Jn(e) {
 			visibleNodeIds: Object.freeze(z.getNodePresenceStates().filter((e) => e.status === "visible").map((e) => e.id)),
 			visibleEdgeIds: Object.freeze(z.getStraightEdgePresenceStates().filter((e) => e.status === "visible").map((e) => e.id).concat(z.getOverpassAnimationStates().filter((e) => e.edgeId !== null && e.status !== "hidden").map((e) => e.edgeId)))
 		});
-	}, Xe = () => {
-		let e = L.getSnapshot(), t = J.isPathOrchestrationBound() ? J.getSnapshot().context : null;
-		Je.publish({
+	}, Ye = () => {
+		let e = L.getSnapshot(), t = Y.isPathOrchestrationBound() ? Y.getSnapshot().context : null;
+		qe.publish({
 			currentNodeId: e.currentNodeId,
 			isRunning: e.isRunning,
 			targetNodeId: t?.navigationPlan?.targetNodeId ?? null,
@@ -6300,17 +6307,17 @@ function Jn(e) {
 			getNodeColor: (e) => z.getNodeColor(e)
 		});
 	};
-	G = () => {
-		Xe(), e.onStateChanged?.(Ye());
+	q = () => {
+		Ye(), e.onStateChanged?.(Je());
 	};
-	let Y = new Ee({
+	let Xe = new Te({
 		initialNodeId: a,
 		nodeExists: (e) => g(e) !== void 0,
 		edges: d,
 		pathView: z,
-		characterStage: Be,
+		characterStage: Re,
 		setSemanticNodeVisible: (e, t) => T.setNodeVisible(e, t),
-		publishState: G,
+		publishState: q,
 		presenceSpeedMultiplier: 100,
 		characterDropDurationSeconds: .48 / 10
 	}), Ze = (e) => e instanceof Error ? e.message : String(e), Qe = (e) => e instanceof DOMException && e.name === "AbortError", $e = async (e, t) => {
@@ -6325,20 +6332,20 @@ function Jn(e) {
 			}), e;
 		}
 	}, et = Object.freeze({
-		revealNode: (t, n, r) => $e(() => Y.presentation.revealNode(t, n || !!e.resumePresentation, r), !1),
-		revealEdge: (t, n, r) => $e(() => Y.presentation.revealEdge(t, n || !!e.resumePresentation, r), !1),
-		revealCharacter: (t, n, r) => $e(() => Y.presentation.revealCharacter(t, n || !!e.resumePresentation, r), !0)
+		revealNode: (t, n, r) => $e(() => Xe.presentation.revealNode(t, n || !!e.resumePresentation, r), !1),
+		revealEdge: (t, n, r) => $e(() => Xe.presentation.revealEdge(t, n || !!e.resumePresentation, r), !1),
+		revealCharacter: (t, n, r) => $e(() => Xe.presentation.revealCharacter(t, n || !!e.resumePresentation, r), !0)
 	}), tt = (e, t) => {
 		if (!e) return 0;
 		let n = (1 - e.progress) * e.length;
 		for (let e = 1; e < t.length; e += 1) {
-			let r = t[e], i = Le.get(r);
-			i === void 0 && (i = ne.get(r).length, Le.set(r, i)), n += i;
+			let r = t[e], i = Ie.get(r);
+			i === void 0 && (i = ne.get(r).length, Ie.set(r, i)), n += i;
 		}
 		return n;
 	}, nt = () => {
-		let e = L.getSnapshot(), n = R.getDebugSnapshot(), r = J.getDebugSnapshot(), a = J.getSnapshot().context, c = a.navigationPlan, u = t.getBoundingClientRect(), d = B.root.position.clone().project(I.camera), h = new Map(n.bridges.map((e) => [e.bridgeId, e])), g = [.../* @__PURE__ */ new Set([...h.keys(), ...z.getOverpassAnimationStates().flatMap((e) => e.edgeId === null ? [] : [e.edgeId])])].map((e) => z.getOverpassAnimationState(e)), b = new Map(g.flatMap((e) => e.edgeId ? [[e.edgeId, e]] : [])), x = new Set(e.remainingRouteEdgeIds), S = g.filter((e) => e.edgeId !== null && (e.desiredVisible || e.status !== "hidden" || h.has(e.edgeId))).map((e) => {
-			let t = e.edgeId, n = h.get(t), r = n?.edge ?? Te(t), i = e.pieces.length === 0 ? +(e.status === "visible") : e.pieces.reduce((e, t) => e + t.progress, 0) / e.pieces.length;
+		let e = L.getSnapshot(), n = R.getDebugSnapshot(), r = Y.getDebugSnapshot(), a = Y.getSnapshot().context, c = a.navigationPlan, u = t.getBoundingClientRect(), d = B.root.position.clone().project(I.camera), h = new Map(n.bridges.map((e) => [e.bridgeId, e])), g = [.../* @__PURE__ */ new Set([...h.keys(), ...z.getOverpassAnimationStates().flatMap((e) => e.edgeId === null ? [] : [e.edgeId])])].map((e) => z.getOverpassAnimationState(e)), b = new Map(g.flatMap((e) => e.edgeId ? [[e.edgeId, e]] : [])), x = new Set(e.remainingRouteEdgeIds), S = g.filter((e) => e.edgeId !== null && (e.desiredVisible || e.status !== "hidden" || h.has(e.edgeId))).map((e) => {
+			let t = e.edgeId, n = h.get(t), r = n?.edge ?? we(t), i = e.pieces.length === 0 ? +(e.status === "visible") : e.pieces.reduce((e, t) => e + t.progress, 0) / e.pieces.length;
 			return {
 				id: t,
 				ownerSourceNodeId: n?.ownerSourceNodeId ?? null,
@@ -6365,7 +6372,7 @@ function Jn(e) {
 				phase: r.status,
 				progress: r.progress,
 				interactive: R.isNodeUnlocked(t.id) && r.interactive,
-				neighborIds: U[n].map((e) => o[e].id),
+				neighborIds: W[n].map((e) => o[e].id),
 				isCurrent: !e.isRunning && e.currentNodeId === t.id,
 				isTarget: c?.targetNodeId === t.id || a.queuedTargetNodeId === t.id,
 				isSelected: N === n,
@@ -6381,8 +6388,8 @@ function Jn(e) {
 			isRunning: e.isRunning,
 			modelLoaded: A,
 			readiness: k,
-			fps: Number(he.fps.toFixed(1)),
-			reducedMotion: H,
+			fps: Number(me.fps.toFixed(1)),
+			reducedMotion: U,
 			contextLost: M,
 			graph: {
 				nodeCount: o.length,
@@ -6392,8 +6399,8 @@ function Jn(e) {
 				initialNodeId: f.initialNodeId,
 				entryNodeId: f.entryNodeId,
 				goalNodeId: f.goalNodeId,
-				splitNodeIds: o.filter((e) => (ze.get(e.id) ?? 0) > 1).map((e) => e.id),
-				mergeNodeIds: o.filter((e) => (Re.get(e.id) ?? 0) > 1).map((e) => e.id),
+				splitNodeIds: o.filter((e) => (Le.get(e.id) ?? 0) > 1).map((e) => e.id),
+				mergeNodeIds: o.filter((e) => (G.get(e.id) ?? 0) > 1).map((e) => e.id),
 				authoredEdges: s.map((e) => ({
 					id: e.id,
 					fromNodeId: e.fromNodeId,
@@ -6518,7 +6525,7 @@ function Jn(e) {
 				activeDeferredPresentationCount: r.deferredPresentations.length,
 				passed: n.invariants.violations.length === 0 && w === 0 && T === 0
 			},
-			transitionEvents: Object.freeze([...De]),
+			transitionEvents: Object.freeze([...Ee]),
 			renderer: {
 				width: u.width,
 				height: u.height,
@@ -6530,8 +6537,8 @@ function Jn(e) {
 			}
 		});
 	}, rt = () => {
-		D && Hn(J, () => {
-			Xe(), O && (O.textContent = JSON.stringify(nt()));
+		D && Un(Y, () => {
+			Ye(), O && (O.textContent = JSON.stringify(nt()));
 		});
 	};
 	D && e.exposeGlobalDebug && (r.__LEARNING_PATH_DEBUG__ = Object.freeze({
@@ -6539,8 +6546,8 @@ function Jn(e) {
 			return L.getSnapshot().currentNodeId;
 		},
 		get targetNodeId() {
-			if (!J.isPathOrchestrationBound()) return null;
-			let e = J.getSnapshot().context;
+			if (!Y.isPathOrchestrationBound()) return null;
+			let e = Y.getSnapshot().context;
 			return e.navigationPlan?.targetNodeId ?? e.queuedTargetNodeId;
 		},
 		get selectedNodeId() {
@@ -6556,9 +6563,9 @@ function Jn(e) {
 			return k;
 		},
 		get fps() {
-			return Number(he.fps.toFixed(1));
+			return Number(me.fps.toFixed(1));
 		},
-		getState: () => J.isPathOrchestrationBound() ? nt() : Object.freeze({
+		getState: () => Y.isPathOrchestrationBound() ? nt() : Object.freeze({
 			phase: "binding-path-orchestration",
 			currentNodeId: L.getSnapshot().currentNodeId,
 			modelLoaded: A,
@@ -6566,50 +6573,50 @@ function Jn(e) {
 		}),
 		goToNode(e) {
 			let t = v(e);
-			return t >= 0 && Ke(t);
+			return t >= 0 && Ge(t);
 		}
 	}));
 	let it = async () => {
-		me.get("scenario");
-	}, at = L.getSnapshot(), ot = !1, st = !1, ct = new xe({
-		scheduler: Se(I.renderer),
-		clock: Ce(n),
+		pe.get("scenario");
+	}, at = L.getSnapshot(), ot = !1, st = !1, ct = new be({
+		scheduler: xe(I.renderer),
+		clock: Se(n),
 		steps: {
 			updateSimulation: (e) => {
-				D && (ye = e.sequence), _e = e.elapsedSeconds, D && (ve += e.deltaSeconds), L.update(e.deltaSeconds), at = L.getSnapshot();
+				D && (ve = e.sequence), ge = e.elapsedSeconds, D && (_e += e.deltaSeconds), L.update(e.deltaSeconds), at = L.getSnapshot();
 			},
 			updateCamera: (e) => {
-				I.updateCamera(e.deltaSeconds, H);
+				I.updateCamera(e.deltaSeconds, U);
 			},
 			updateCharacter: (e) => {
 				let t = at;
 				B.setPosition(t.position.x, t.position.z, t.surfaceY);
-				let n = t.activeLeg ? Ie(t.activeLeg.edgeId) : void 0, r = n !== void 0 && Math.hypot(t.position.x - n.fromX, t.position.z - n.fromZ) >= n.endInset - 1e-4 && Math.hypot(t.position.x - n.toX, t.position.z - n.toZ) >= n.endInset - 1e-4;
-				B.setSurfacePitch(t.surfacePitchRadians, e.deltaSeconds, r ? Wn : Un), B.setRunning(t.isRunning), B.setFacing(t.facing.x, t.facing.z, e.deltaSeconds), B.setViewFacing(I.camera.position.x - t.position.x, I.camera.position.z - t.position.z, e.deltaSeconds), B.update(e.deltaSeconds, e.elapsedSeconds);
+				let n = t.activeLeg ? Fe(t.activeLeg.edgeId) : void 0, r = n !== void 0 && Math.hypot(t.position.x - n.fromX, t.position.z - n.fromZ) >= n.endInset - 1e-4 && Math.hypot(t.position.x - n.toX, t.position.z - n.toZ) >= n.endInset - 1e-4;
+				B.setSurfacePitch(t.surfacePitchRadians, e.deltaSeconds, r ? Gn : Wn), B.setRunning(t.isRunning), B.setFacing(t.facing.x, t.facing.z, e.deltaSeconds), B.setViewFacing(I.camera.position.x - t.position.x, I.camera.position.z - t.position.z, e.deltaSeconds), B.update(e.deltaSeconds, e.elapsedSeconds);
 			},
 			publishVisualIdleEdge: () => {
-				ot = He(), ot !== Ve && (Ve = ot, queueMicrotask(() => {
-					K || G();
+				ot = Be(), ot !== ze && (ze = ot, queueMicrotask(() => {
+					J || q();
 				}));
 			},
 			updatePathView: (e) => {
 				let t = !at.isRunning && at.targetNodeId === null && at.activeLeg === null;
-				z.update(e.deltaSeconds, H, t && ot);
+				z.update(e.deltaSeconds, U, t && ot);
 			},
 			updateRuntime: (e) => {
-				P && J.frame(e.deltaSeconds);
+				P && Y.frame(e.deltaSeconds);
 			},
 			updatePerformanceMeter: (e) => {
-				D && he.update(e.rawDeltaSeconds);
+				D && me.update(e.rawDeltaSeconds);
 			},
 			renderScene: () => {
 				I.render();
 			},
 			afterRender: () => {
-				D && ve >= .1 && (ve = 0, rt());
+				D && _e >= .1 && (_e = 0, rt());
 			}
 		}
-	}), lt = new Me({
+	}), lt = new je({
 		browserWindow: r,
 		document: n,
 		canvas: t,
@@ -6625,47 +6632,47 @@ function Jn(e) {
 				e === void 0 || t === void 0 ? I.resize() : I.resize(e, t), I.render();
 			},
 			onReducedMotionChanged: (e) => {
-				H = e, B.setReducedMotion(H), J.setReducedMotion(H);
+				U = e, B.setReducedMotion(U), Y.setReducedMotion(U);
 			},
 			onContextLost: () => {
-				M = !0, F.record({ type: "CONTEXT.LOST" }), k = "context-lost", W?.setEnabled(!1), T.setContextPaused();
+				M = !0, F.record({ type: "CONTEXT.LOST" }), k = "context-lost", K?.setEnabled(!1), T.setContextPaused();
 			},
 			onContextRestored: () => {
 				M = !1, F.record({ type: "CONTEXT.RESTORED" }), k = j ? "degraded" : A ? "ready" : "loading-model";
-				let e = L.getSnapshot(), t = g(e.currentNodeId), n = J.isPathOrchestrationBound() ? J.getSnapshot().context : null, r = n?.navigationPlan?.targetNodeId ?? n?.queuedTargetNodeId, i = r ? g(r) : null;
-				j ? T.setError(j) : A && i ? T.setTravelling(i) : A && t ? T.setReady(t) : T.setLoading(null), W?.setEnabled(P && A && !j && (!J.isPathOrchestrationBound() || J.getDebugSnapshot().orchestration.health.status === "live")), I.resize();
+				let e = L.getSnapshot(), t = g(e.currentNodeId), n = Y.isPathOrchestrationBound() ? Y.getSnapshot().context : null, r = n?.navigationPlan?.targetNodeId ?? n?.queuedTargetNodeId, i = r ? g(r) : null;
+				j ? T.setError(j) : A && i ? T.setTravelling(i) : A && t ? T.setReady(t) : T.setLoading(null), K?.setEnabled(P && A && !j && (!Y.isPathOrchestrationBound() || Y.getDebugSnapshot().orchestration.health.status === "live")), I.resize();
 			}
 		}
 	}), ut = () => {
-		K || (K = !0, Y.dispose(), lt.dispose(), ee.dispose(), F.dispose(), re(), J.dispose(), e.exposeGlobalDebug && (delete r.__LEARNING_PATH_DEBUG__, delete r.__LEARNING_PATH_QA__), Je.dispose(), W?.dispose(), T.dispose(), fe(), ae.dispose(), B.dispose(), z.dispose(), ct.dispose(), I.dispose(), O?.remove(), O = null);
+		J || (J = !0, Xe.dispose(), lt.dispose(), ee.dispose(), F.dispose(), re(), Y.dispose(), e.exposeGlobalDebug && (delete r.__LEARNING_PATH_DEBUG__, delete r.__LEARNING_PATH_QA__), qe.dispose(), K?.dispose(), T.dispose(), de(), ae.dispose(), B.dispose(), z.dispose(), ct.dispose(), I.dispose(), O?.remove(), O = null);
 	};
-	k = "loading-model", F.record({ type: "MODEL.LOAD_STARTED" }), ie || T.setLoading(null), lt.start(), (e.preparedCharacter?.ready ?? B.load(e.characterAssetUrls ?? qn(), { onProgress: (e) => {
-		!K && !ie && T.setLoading(e);
+	k = "loading-model", F.record({ type: "MODEL.LOAD_STARTED" }), ie || T.setLoading(null), lt.start(), (e.preparedCharacter?.ready ?? B.load(e.characterAssetUrls ?? Jn(), { onProgress: (e) => {
+		!J && !ie && T.setLoading(e);
 	} })).then((e) => {
-		if (!K) {
-			if (A = !0, j = null, F.record({ type: "MODEL.READY" }), Y.markCharacterReady(), k = M ? "context-lost" : "ready", !M) {
+		if (!J) {
+			if (A = !0, j = null, F.record({ type: "MODEL.READY" }), Xe.markCharacterReady(), k = M ? "context-lost" : "ready", !M) {
 				let e = g(L.getSnapshot().currentNodeId);
-				e && P && T.setReady(e), W?.setEnabled(P);
+				e && P && T.setReady(e), K?.setEnabled(P);
 			}
 			D && rt(), it(), console.info(`[learning-path] Loaded run=${e.runClipName} (${e.runClipDuration.toFixed(3)}s), stop=${e.runStopClipName ?? "fallback"} (${e.runStopClipDuration.toFixed(3)}s), idle=${e.idleClipName} (${e.idleClipDuration.toFixed(3)}s), turn=${e.turnClipName ?? "fallback"} (${e.turnClipDuration.toFixed(3)}s).`), e.warnings.forEach((e) => console.warn(`[learning-path] ${e}`));
 		}
 	}).catch((t) => {
-		if (K || t instanceof DOMException && t.name === "AbortError") return;
-		Y.markCharacterFailed(t), J.isPathOrchestrationBound() && J.reportCharacterFailure(t), k = "degraded";
+		if (J || t instanceof DOMException && t.name === "AbortError") return;
+		Xe.markCharacterFailed(t), Y.isPathOrchestrationBound() && Y.reportCharacterFailure(t), k = "degraded";
 		let n = t instanceof Error ? t.message : String(t);
 		j = `刘看山模型加载失败。请刷新重试。${n ? `（${n}）` : ""}`, F.record({
 			type: "MODEL.FAILED",
 			error: j
-		}), W?.setEnabled(!1), console.error("[learning-path] Character model failed to load:", t), T.setError(j), e.onRuntimeError?.(Object.freeze({
+		}), K?.setEnabled(!1), console.error("[learning-path] Character model failed to load:", t), T.setError(j), e.onRuntimeError?.(Object.freeze({
 			error: t,
 			message: j
 		}));
 	});
 	let dt = () => {
-		if (K) return;
+		if (J) return;
 		P = !0;
 		let e = g(L.getSnapshot().currentNodeId);
-		e && A && !M && !j && (T.setReady(e), W?.setEnabled(!0)), G();
+		e && A && !M && !j && (T.setReady(e), K?.setEnabled(!0)), q();
 	}, ft = {
 		horizontalOffsetPixels: 0,
 		verticalOffsetPixels: 0
@@ -6685,27 +6692,27 @@ function Jn(e) {
 		presentation: et,
 		activate: dt,
 		reconcileRestoredProgress(t) {
-			if (K) return !1;
+			if (J) return !1;
 			let n = v(t), r = o[n];
 			if (n < 0 || !r || !L.abortToNode(t)) return !1;
-			let i = e.compiledPath.nodeById.get(t), a = J.reconcileRestoredRuleProjection(t, i?.ownerSubjectId), s = new Set(a.visibleNodeIds);
+			let i = e.compiledPath.nodeById.get(t), a = Y.reconcileRestoredRuleProjection(t, i?.ownerSubjectId), s = new Set(a.visibleNodeIds);
 			return o.forEach((e) => {
 				T.setNodeVisible(e.id, s.has(e.id));
-			}), at = L.getSnapshot(), N = n, z.commitArrival(n), z.setTarget(null), W?.setKeyboardIndex(n), B.setPosition(r.position.x, r.position.z, r.surfaceY), B.setRunning(!1), B.setSurfacePitch(0, 1), B.setViewFacing(I.camera.position.x - r.position.x, I.camera.position.z - r.position.z, 1), T.setArrived(r), I.setPathFramingExpanded(a.restoredZoneId !== null, !0), I.settleAt(r.position.z), I.updateCamera(0, !0), I.render(), !0;
+			}), at = L.getSnapshot(), N = n, z.commitArrival(n), z.setTarget(null), K?.setKeyboardIndex(n), B.setPosition(r.position.x, r.position.z, r.surfaceY), B.setRunning(!1), B.setSurfacePitch(0, 1), B.setViewFacing(I.camera.position.x - r.position.x, I.camera.position.z - r.position.z, 1), T.setArrived(r), I.setPathFramingExpanded(a.restoredZoneId !== null, !0), I.settleAt(r.position.z), I.updateCamera(0, !0), I.render(), !0;
 		},
 		markLastLearningNode(e) {
-			z.setLastLearningNode(e), G();
+			z.setLastLearningNode(e), q();
 		},
 		goToNode(e, t = "direct") {
 			let n = v(e);
-			return n >= 0 && Ke(n, t);
+			return n >= 0 && Ge(n, t);
 		},
 		selectNode(e) {
 			let t = v(e);
 			if (t < 0) return !1;
-			N = t, W?.setKeyboardIndex(t);
+			N = t, K?.setKeyboardIndex(t);
 			let n = o[t];
-			return n && T.setActiveNode(n), G(), !0;
+			return n && T.setActiveNode(n), q(), !0;
 		},
 		replaceNodeLearningStates(e) {
 			for (let t of e) z.setNodeLearningState(t.nodeId, t.learningState), T.setNodeLearningStatus(t.nodeId, t.learningState.status);
@@ -6714,23 +6721,23 @@ function Jn(e) {
 			for (let t of e) z.setNodeLearningState(t.nodeId, t.learningState), T.setNodeLearningStatus(t.nodeId, t.learningState.status);
 		},
 		getNodeLearningBadgeDebugInfos: () => z.getNodeLearningBadgeDebugInfos(),
-		bindSceneRuntimeGateway: (e, t) => J.bindSceneRuntimeGateway(e, t),
-		getSceneRuntimePort: () => J.getSceneRuntimePort(),
+		bindSceneRuntimeGateway: (e, t) => Y.bindSceneRuntimeGateway(e, t),
+		getSceneRuntimePort: () => Y.getSceneRuntimePort(),
 		getSceneRuntimeGatewayScheduler: () => ee,
 		getSceneSessionLifecycleSnapshot: () => F.getSnapshot(),
 		subscribeSceneSessionLifecycle: (e) => F.subscribe(e),
-		getPathOrchestrationBinding: () => J.getPathOrchestrationBinding(),
-		getSnapshot: Ye,
+		getPathOrchestrationBinding: () => Y.getPathOrchestrationBinding(),
+		getSnapshot: Je,
 		pause: () => {
 			st = !0, ct.stop();
 		},
 		resume: () => {
-			st = !1, !K && lt.visible && !lt.contextLost && ct.start();
+			st = !1, !J && lt.visible && !lt.contextLost && ct.start();
 		},
 		dispose: ut
 	});
 }
 //#endregion
-export { Jn as createLearningPathSession };
+export { Yn as createLearningPathSession };
 
-//# sourceMappingURL=LearningPathSession-Cl847s7Y.js.map
+//# sourceMappingURL=LearningPathSession-CnZDbDYR.js.map

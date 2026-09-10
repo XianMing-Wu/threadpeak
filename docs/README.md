@@ -11,6 +11,7 @@
 | [Agent 合同](agents.md) | 每个步骤的上下文、压缩、提示词和输出 |
 | [工程设计](engineering.md) | 持久任务、事务、版本、额度与浏览器投影 |
 | [阅读渲染](reading-rendering-standard.md) | Markdown、代码、公式与异常处理规范 |
+| [登录视觉](login-design.md) | 双入口的构图、中文字体、按钮与背景动效规则 |
 | [编选示例](showcase.md) | 示例设计、来源选择与维护方式 |
 | [验收](../qa/README.md) | 可执行页面、证据数据与复现命令 |
 | [界面修复方案](ux-ui-fix-plan-2026-09-07.md) | 2026-09-07 界面审查的缺陷清单、token 方案与审美提升；落地后退役 |

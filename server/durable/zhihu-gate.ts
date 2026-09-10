@@ -39,10 +39,5 @@ export function limitZhihuProvider(provider:ZhihuProvider,gate:ZhihuGate):ZhihuP
   return {
     search:(q,count,signal)=>search(q,count,signal),
     ...(provider.globalSearch?{globalSearch:(q:string,count:number,signal?:AbortSignal)=>search(q,count,signal,true)}:{}),
-    direct:input=>gate.run(input.signal,async signal=>{
-      const result=await provider.direct({...input,signal})
-      if(result.kind==='failed'&&result.code==='ZHIHU_RATE_LIMITED'&&result.diagnostic?.httpStatus===200)await gate.observe({status:429,headers:{get:()=>result.diagnostic?.retryAfter??null}})
-      return result
-    }),
   }
 }

@@ -2,72 +2,83 @@ import { requestAuthStart } from '../runtime/request-auth-session'
 import { useAccountRecovery } from '../learning-v2/account-storage'
 import { exportLocalArchive } from '../workspace/snapshot-cache'
 import { useEffect, useState } from 'react'
-import { EmptyStatus } from '../components/EmptyStatus'
 import { Icon, MountainMark } from '../icons'
-import { resolveAuthSession, type AuthSessionResolution } from '../resolve-auth-session'
+import { OrbitField } from '../components/OrbitField'
+import './auth-landing.css'
 
+type LoginConfig = { zhihuAvailable: boolean; zhihuMode?: 'real' | 'mock'; loginUrl?: string | null }
 export function AuthLanding({ theme, onThemeChange, onAuthorize }: {
   theme: 'light' | 'dark'
   onThemeChange: () => void
-  onAuthorize: () => void
+  onAuthorize: () => Promise<void>
 }) {
-  const recovery=useAccountRecovery()
-  const [config,setConfig]=useState<{mode:string;loginUrl:string|null;zhihuAvailable:boolean;zhihuMode?:'real'|'mock'|null}|null>(null)
-  useEffect(()=>{void fetch('/api/auth/config').then(r=>r.json()).then(setConfig).catch(()=>{})},[])
-  const [oauthNotice,setOauthNotice]=useState<AuthSessionResolution|null>(null)
-
-  useEffect(() => {
-    const failed = new URLSearchParams(location.search).get('oauth') === 'failed'
-    if (failed) setOauthNotice(resolveAuthSession())
-  }, [])
-
-  const startOauth = async () => {
-    if(config?.zhihuAvailable){const result=await requestAuthStart();if(result.kind==='redirect'){location.href=result.authorizeUrl;return}setOauthNotice(result);return}
-    if(config?.mode==='local'){onAuthorize();return}
-    if(config?.loginUrl){location.href=config.loginUrl;return}
-    setOauthNotice({...resolveAuthSession(),title:'登录服务尚未连接',message:'管理员完成账号服务配置后，即可登录并恢复你的学习内容。'})
+  const recovery = useAccountRecovery()
+  const [config, setConfig] = useState<LoginConfig | null>(null)
+  const [pending, setPending] = useState<'zhihu' | 'guest' | null>(null)
+  const [notice, setNotice] = useState(() => new URLSearchParams(location.search).get('oauth') === 'failed' ? '知乎登录未完成，请重新尝试。' : '')
+  const loadConfig = async () => {
+    const response = await fetch('/api/auth/config', { credentials: 'same-origin', signal: AbortSignal.timeout(15000) })
+    if (!response.ok) throw new Error('暂时无法连接登录服务，请重试。')
+    const value: LoginConfig = await response.json()
+    setConfig(value)
+    return value
   }
-
-  return <main className="auth-landing">
-    <button type="button" className="auth-theme" aria-label="切换夜间模式" aria-pressed={theme==='dark'} onClick={onThemeChange}>
-      <Icon name="moon" size={19}/><span>夜间模式</span>
-    </button>
-    <section className="auth-intro" aria-labelledby="auth-title">
-      <div className="auth-brand"><MountainMark size={42}/><strong>问山</strong></div>
-      <p className="auth-kicker">THREADPEAK · 知识探索伙伴</p>
-      <h1 id="auth-title">循着问题与答案的脉络，<br/>登上理解的高峰。</h1>
-      <p className="auth-description">连接知乎的优质内容与创作者，让每一次提问都能沉淀为清晰的知识脉络和学习路线。</p>
-      <div className="auth-features" aria-label="产品能力">
-        <span><Icon name="book" size={18}/>梳理知识脉络</span>
-        <span><Icon name="route" size={18}/>制定学习路线</span>
-        <span><Icon name="network" size={18}/>发现相关博主</span>
-      </div>
-    </section>
-    <section className="auth-card" aria-label="登录问山">
-      <span className="auth-card-mark">知</span>
-      <h2>{config?.zhihuMode==='mock'?'体验知乎演示账号':config?.mode==='local'?'进入本地工作区':'登录你的账号'}</h2>
-      <p>{config?.zhihuMode==='mock'?'使用示例收藏与创作体验学习流程，无需真实知乎账号。':'登录后即可保存你的知识脉络和路线进度。'}</p>
-      <button type="button" className="zhihu-authorize" onClick={startOauth}>
-        {config?.zhihuMode==='mock'?'进入演示账号':config?.zhihuAvailable?'使用知乎账号登录':config?.mode==='local'?'继续学习':'登录并继续'}<Icon name="arrow-right" size={18}/>
-      </button>
-      {config?.zhihuAvailable&&config.mode==='local'&&<button type="button" className="lp-text-button" onClick={onAuthorize}>继续使用本地工作区</button>}
-      {recovery&&<aside>
-        <p role="alert">本机有一份草稿备份尚未完整恢复。即使暂时无法登录，也可以先导出备份。</p>
-        <button type="button" className="lp-text-button" onClick={exportLocalArchive}>导出本地备份</button>
-      </aside>}
-      {oauthNotice && (
-        <EmptyStatus
-          kind="error"
-          density="inline"
-          title={oauthNotice.title}
-          body={oauthNotice.message}
-          action="重试"
-          onAction={startOauth}
-        />
-      )}
-
-      <small>{config?.zhihuMode==='mock'?'演示收藏和作者均为示例；内容保存在独立的演示工作区。':config?.mode==='local'?'内容保存在本机服务中。':'登录后即可保存你的路线和知识脉络。'}</small>
-    </section>
-    <footer>问山 · 让知识成为可以行走的路径</footer>
+  useEffect(() => { let live = true; void loadConfig().catch(() => { if (live) setNotice('暂时无法连接登录服务，请重试。') }); return () => { live = false } }, [])
+  const login = async (mode: 'zhihu' | 'guest') => {
+    if (pending) return
+    setPending(mode); setNotice('')
+    try {
+      if (mode === 'guest') { await onAuthorize(); return }
+      const current = config ?? await loadConfig()
+      if (!current.zhihuAvailable) throw new Error('知乎账号登录暂未开放，可先以游客身份开始学习。')
+      const result = await requestAuthStart()
+      if (result.kind !== 'redirect') throw new Error(result.message)
+      location.href = result.authorizeUrl
+    } catch (error) { setNotice(error instanceof Error ? error.message : '暂时无法进入，请稍后重试。') }
+    finally { setPending(null) }
+  }
+  return <main className="auth-landing auth-orbit-page">
+    <header className="auth-header">
+      <div className="auth-brand"><MountainMark size={30}/><strong>问山</strong><span>ThreadPeak</span></div>
+      <button type="button" className="auth-theme" aria-label="切换夜间模式" aria-pressed={theme === 'dark'} onClick={onThemeChange}><Icon name="moon" size={18}/><span>{theme === 'dark' ? '日间模式' : '夜间模式'}</span></button>
+    </header>
+    <div className="auth-content">
+      <section className="auth-intro" aria-labelledby="auth-title">
+        <div className="auth-intro-copy">
+          <h1 id="auth-title">循着脉络，<br/><span>登上高峰。</span></h1>
+          <p className="auth-description">从一个目标，走向真正的理解。</p>
+          <ul className="auth-capabilities" aria-label="在问山可以做什么">
+            <li><span>学习路线</span><small>从目标安排顺序</small></li>
+            <li><span>概念讲解</span><small>把关键知识讲清楚</small></li>
+            <li><span>相关博主</span><small>找到值得请教的人</small></li>
+          </ul>
+        </div>
+        <OrbitField dark={theme === 'dark'}/>
+      </section>
+      <section className="auth-entry" aria-labelledby="auth-entry-title" aria-busy={!!pending}>
+        <div className="auth-entry-content">
+          <h2 id="auth-entry-title">欢迎来到问山</h2>
+          <p className="auth-entry-description">选择一种方式，开始你的学习。</p>
+          <div className="auth-actions">
+            <button type="button" className="auth-login auth-login-zhihu" disabled={!!pending} onClick={() => void login('zhihu')}>
+              <span className="auth-zhihu-mark" aria-hidden="true">知</span><span>{pending === 'zhihu' ? '正在连接知乎…' : '知乎账号登录'}</span>{config?.zhihuMode === 'mock' && <span className="auth-demo-tag">演示</span>}
+            </button>
+            <p className="auth-login-caption">连接你在知乎收藏的好内容</p>
+            <div className="auth-choice-divider" aria-hidden="true"><span>或</span></div>
+            <button type="button" className="auth-login auth-login-guest" disabled={!!pending} onClick={() => void login('guest')}>
+              <Icon name="user" size={18}/><span>{pending === 'guest' ? '正在进入…' : '游客登录'}</span>
+            </button>
+            <p className="auth-login-caption">同样可以规划、学习和保存进度</p>
+          </div>
+          {notice && <p className="auth-notice" role="alert">{notice}</p>}
+          <details className="auth-help">
+            <summary>游客记录如何保存？<Icon name="prod-home-chevron-down" size={13}/></summary>
+            <p>游客记录保留在当前浏览器身份下。使用同一浏览器重新进入，即可继续学习；清除浏览器 Cookie 后无法自动找回。</p>
+          </details>
+          {recovery && <aside className="auth-recovery"><p role="alert">本机有一份草稿备份尚未完整恢复。</p><button type="button" onClick={exportLocalArchive}>导出本地备份</button></aside>}
+        </div>
+      </section>
+    </div>
+    <footer><span>问山 · 知识探索伙伴</span>{config?.zhihuMode === 'mock' && <span>知乎入口使用本地演示授权</span>}</footer>
   </main>
 }

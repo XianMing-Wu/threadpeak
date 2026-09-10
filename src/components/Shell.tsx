@@ -102,7 +102,7 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
     let current=true
     void productRequest<{kind:string;provider:string|null;demo?:boolean;profile?:{demo?:boolean}}>('/api/v2/session').then((session) => {
       if(!current)return
-      if (session.kind !== 'authenticated') {setAccountIdentity(prototypeAccount);return}
+      if (session.kind !== 'authenticated') {setAccountIdentity({...prototypeAccount,title:'游客'});return}
       const demo=session.demo===true||session.profile?.demo===true
       setAccountIdentity({
         kind: 'unavailable',
@@ -205,7 +205,7 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
         <button type="button" className="tp-profile user" aria-label="打开账号菜单" aria-expanded={profileOpen} aria-haspopup="menu" aria-controls={profileOpen?'account-menu':undefined} title={accountIdentity.message} onClick={()=>setProfileOpen((value)=>!value)}>
           <div className="user-ava"><span><Icon name="user" size={18} /></span></div>
           <div className="name"><b>{accountIdentity.title}</b></div>
-          <div className="free-chip">{accountIdentity.title==='演示账号'?'演示':accountIdentity.title === '已登录知乎' ? '知乎' : accountIdentity.title==='已登录账号'?'账号':'本地'}</div>
+          {['演示账号','已登录知乎','已登录账号'].includes(accountIdentity.title)&&<div className="free-chip">{accountIdentity.title==='演示账号'?'演示':accountIdentity.title === '已登录知乎' ? '知乎' : accountIdentity.title==='已登录账号'?'账号':''}</div>}
         </button>
       </div>
     </aside>

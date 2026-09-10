@@ -83,12 +83,12 @@ test('tree forbids multi-parent, cycles and a mismatched paragraph basis',()=>{
 function modelForLearning(calls){return {async complete(input){
   const system=input.messages[0].content,context=JSON.parse(input.messages[1].content);calls.push(system)
   let result
-  if(system.includes('恰好三条'))result={queries:['线性映射解释','线性映射应用','线性映射误区']}
+  if(system.includes('首次概念教学'))result={queries:['线性映射解释','线性映射应用','线性映射误区']}
   else if(system.includes('逐条阅读'))result={evidenceIds:context.candidates.map(e=>e.evidenceId)}
   else if(context.citationCatalog)result=placeAnswer(context)
   else if(context.read_card_scope)result={sections:[{after:context.read_card_scope.cards[0].ref,title:'解释',text:'基于这张卡的完整回答。'}]}
   else throw new Error('Unexpected model task')
-  if(context.directAnswers&&result.sections)result.sourceReview=context.read_card_scope.cards.map((c,i)=>({ref:c.ref,contribution:i===0?'用于讲解':'内容重复'}))
+  if(context.mode==='first_learning'&&result.sections)result.sourceReview=context.read_card_scope.cards.map((c,i)=>({ref:c.ref,contribution:i===0?'用于讲解':'内容重复'}))
   return {kind:'completed',text:JSON.stringify(result)}
 }}}
 test('real HTTP composition with isolated providers: three searches, persisted tree, new chat, node editing',async t=>{
@@ -96,7 +96,7 @@ test('real HTTP composition with isolated providers: three searches, persisted t
   const zhihu={async search(q){searches.push(q);return {kind:'hits',items:[{evidenceId:'article-1',authorId:'author-1',authorName:'测试作者',title:'线性映射说明',summary:'完整 API 总结。'.repeat(400),url:'https://www.zhihu.com/question/1/answer/2'}]}},async direct(){assert.equal(searches.length,3);return {kind:'completed',text:'不同角度的完整材料。'}}}
   const tools=new ProductTools(modelForLearning(calls),zhihu),handler=createFlows(tools),worker=new DurableWorker(store,handler,1,quiet)
   const app=await createProductApp({store,worker,providersReady:true,identity:{production:false}});t.after(()=>app.close())
-  const session=await app.inject({url:'/api/v2/session'}),cookie=session.headers['set-cookie'].split(';')[0],headers={cookie}
+  const session=await app.inject({method:'POST',url:'/api/auth/guest'}),cookie=String(session.headers['set-cookie']).split(';')[0],headers={cookie}
   const owner=(await store.db.query('SELECT owner_id FROM tp_sessions'))[0].owner_id
   await store.create(owner,'path','published',{status:'published',document:{id:'route-doc'},route:{concepts:[{id:'concept',title:'线性映射',detailedDescription:'理解概念',hasDispute:false}]}})
   const enter=await app.inject({method:'POST',url:'/api/v2/learning/enter',headers,payload:{routeId:'route-doc',conceptId:'concept'}})
@@ -210,13 +210,14 @@ test('production identity rejects unsigned, expired and wrong-audience tokens; r
 async function settled(s,owner,id){const deadline=Date.now()+30_000;while(Date.now()<deadline){const value=await s.snapshot(owner,id);if(!['queued','running'].includes(value.job?.status??''))return value;await new Promise(r=>setTimeout(r,10))}throw Error('test task did not settle')}
 test('route selection survives refresh and R4 recovery publishes exactly once without repeating searches',async t=>{
   const s=await fixture(t),calls=[],searches=[];let failR4=true
-  const r1={queries:[{id:'q1',text:'测试解释',angle:'normal_learning'},{id:'q2',text:'测试入门',angle:'normal_learning'},{id:'q3',text:'测试误区',angle:'pitfall_or_dispute'},{id:'q4',text:'测试应用',angle:'pitfall_or_dispute'}]}
+  const r1={queries:[{id:'q1',text:'入门课程推荐',purpose:'发现入门载体',angle:'normal_learning'},{id:'q2',text:'测试入门',purpose:'发现入门载体',angle:'normal_learning'},{id:'q3',text:'先学基础有必要吗',purpose:'发现选择差异',angle:'pitfall_or_dispute'},{id:'q4',text:'不同方法适合谁',purpose:'发现选择差异',angle:'pitfall_or_dispute'}]}
   const r3={round:1,status:'active',questions:[1,2].map(i=>({id:'q'+i,prompt:'目标 '+i,options:[{id:'a',label:'先看例子',routeEffect:'examples'},{id:'b',label:'先看定义',routeEffect:'definitions'}]}))}
   const r4={version:'1.0',routeId:'test-route',title:'测试路线',carriers:[{id:'c',title:'测试载体',description:'基础'}],concepts:[{id:'n',carrierId:'c',title:'测试概念',hasDispute:false,detailedDescription:'讲解',attachmentSourceIds:[]}],carrierEdges:[],conceptEdges:[],entryConceptIds:['n'],terminalConceptIds:['n']}
   const fixtureTools={planStep:async(ctx,id,input)=>ctx.step(id,input,async()=>{calls.push(id);if(id==='R4'&&failR4){failR4=false;throw new ToolError('TEMPORARY_GATE',false)}if(id==='R4'){assert.equal(input.questionSets[0].selectedOptions.length,2);assert.equal(input.questionSets[0].selectedOptions[1].routeEffect,'definitions')}return {R1:r1,R2:{测试载体:{测试概念:{争议:false}}},R3:r3,R4:r4}[id]}),search:async(ctx,name,q)=>ctx.step(name,{q},async()=>{searches.push(q);return []})}
+  fixtureTools.catalogNames=async()=>({carriers:[]});fixtureTools.catalogSearches=async()=>[];fixtureTools.routeInterview=(ctx,input)=>fixtureTools.planStep(ctx,'R3',input)
   fixtureTools.routePlan=(ctx,input)=>fixtureTools.planStep(ctx,'R4',input)
   const worker=new DurableWorker(s,createFlows(fixtureTools),1,quiet),app=await createProductApp({store:s,worker,providersReady:true,identity:{production:false}});t.after(()=>app.close())
-  const cookie=(await app.inject({url:'/api/v2/session'})).headers['set-cookie'].split(';')[0],headers={cookie,'idempotency-key':'route-request'},owner=(await s.db.query('SELECT owner_id FROM tp_sessions'))[0].owner_id
+  const cookie=String((await app.inject({method:'POST',url:'/api/auth/guest'})).headers['set-cookie']).split(';')[0],headers={cookie,'idempotency-key':'route-request'},owner=(await s.db.query('SELECT owner_id FROM tp_sessions'))[0].owner_id
   const started=await app.inject({method:'POST',url:'/api/path-runs',headers,payload:{goal:'测试路线'}}),id=started.json().runId
   let snapshot=await settled(s,owner,id);assert.equal(snapshot.data.questionSets.length,1)
   const questions=snapshot.data.questionSets[0].questions
@@ -234,12 +235,12 @@ test('route selection survives refresh and R4 recovery publishes exactly once wi
   assert.equal((await s.list(owner,'learning')).length,0)
 })
 
-test('learning command replay, author fallback, undo provenance and active-history switch are transactional',async t=>{
+test('learning command replay, empty author evidence, undo provenance and active-history switch are transactional',async t=>{
   const s=await fixture(t),seen=[]
   const zhihu={search:async()=>({kind:'empty'}),direct:async()=>({kind:'completed',text:'刘看山补充解释。'})}
-  const llm={complete:async input=>{const system=input.messages[0].content,context=JSON.parse(input.messages[1].content);seen.push(context);return {kind:'completed',text:JSON.stringify(system.includes('等价知乎检索')?{queries:['测试问题的解释','测试问题的误区']}:context.citationCatalog?placeAnswer(context):{sections:[{after:'C1',title:'回答',text:'依据卡片的回答。'}]})}}}
+  const llm={complete:async input=>{const system=input.messages[0].content,context=JSON.parse(input.messages[1].content);seen.push(context);return {kind:'completed',text:JSON.stringify(system.includes('已有的公开回答')?{queries:['测试问题的解释','测试问题的误区']}:context.citationCatalog?placeAnswer(context):{sections:[{after:'C1',title:'回答',text:'依据卡片的回答。'}]})}}}
   const worker=new DurableWorker(s,createFlows(new ProductTools(llm,zhihu)),1,quiet),app=await createProductApp({store:s,worker,providersReady:true,identity:{production:false}});t.after(()=>app.close())
-  const cookie=(await app.inject({url:'/api/v2/session'})).headers['set-cookie'].split(';')[0],owner=(await s.db.query('SELECT owner_id FROM tp_sessions'))[0].owner_id,headers={cookie}
+  const cookie=String((await app.inject({method:'POST',url:'/api/auth/guest'})).headers['set-cookie']).split(';')[0],owner=(await s.db.query('SELECT owner_id FROM tp_sessions'))[0].owner_id,headers={cookie}
   const article={id:'a',title:'测试文章',summary:'全部资料',author:'测试作者',authorId:'author-a',likes:null,url:'https://www.zhihu.com/question/1',topic:'测试'}
   const root={id:'root',type:'root',title:'概念',text:'',parents:[],sources:['a']},node={id:'a',type:'article',title:'测试文章',text:'全部资料',parents:['root'],sources:['a']}
   const state={version:2,routeId:'r',conceptId:'c',title:'概念',description:'描述',hasDispute:false,initialized:true,phase:'ready',articles:[article],nodes:[root,node],active:'new',conversations:[{id:'old',title:'历史',date:'today',messages:[{id:'old-question',role:'user',text:'不应进入新上下文的旧问题'}]},{id:'new',title:'新对话',date:'today',messages:[]}]}
@@ -255,7 +256,7 @@ test('learning command replay, author fallback, undo provenance and active-histo
   response=await app.inject({method:'PATCH',url:`/api/v2/learning/${id}/nodes`,headers,payload:{revision:response.json().revision,nodes:[...originalNodes,{...originalNodes[2],id:'forged-model-answer'}]}});assert.equal(response.statusCode,409)
   await app.inject({method:'POST',url:`/api/v2/learning/${id}/commands`,headers,payload:{kind:'author',question:'找其他解读',selected:['a'],conversationId:'new'}})
   await app.inject({method:'POST',url:`/api/v2/learning/${id}/commands`,headers,payload:{kind:'activate-conversation',conversationId:'old'}})
-  snapshot=await settled(s,owner,id);assert.equal(snapshot.job.status,'completed');assert.equal(snapshot.data.active,'old');assert.equal(snapshot.data.nodes.at(-1).origin,'direct')
+  snapshot=await settled(s,owner,id);assert.equal(snapshot.job.status,'completed');assert.equal(snapshot.data.active,'old');assert.equal(snapshot.data.nodes.length,originalNodes.length)
   assert.equal((await s.db.query('SELECT * FROM tp_author_network')).length,0)
   const unauth=await app.inject({url:`/api/v2/resources/${id}`});assert.equal(unauth.statusCode,401)
   const cross=await app.inject({method:'POST',url:`/api/v2/resources/${id}/cancel`,headers:{...headers,'sec-fetch-site':'cross-site'},payload:{}});assert.equal(cross.statusCode,403)
@@ -272,7 +273,7 @@ test('generated math repairs in the same answer agent before any formal result i
 test('route progress and library use resource identity when old documents share an id',async t=>{
   const store=await fixture(t),worker=new DurableWorker(store,async()=>{},1,quiet)
   const app=await createProductApp({store,worker,providersReady:true,identity:{production:false}});t.after(()=>app.close())
-  const cookie=(await app.inject({url:'/api/v2/session'})).headers['set-cookie'].split(';')[0],headers={cookie}
+  const cookie=String((await app.inject({method:'POST',url:'/api/auth/guest'})).headers['set-cookie']).split(';')[0],headers={cookie}
   const owner=(await store.db.query('SELECT owner_id FROM tp_sessions'))[0].owner_id
   const body={status:'published',goal:'route',document:buildPathDocument({id:'legacy-doc',title:'route',description:'goal',goalTitle:'done',goalSummary:'goal',carriers:[{id:'carrier',title:'part',summary:'part',concepts:[['concept','concept','body']]}]}),progress:'position-one'}
   const one=await store.create(owner,'path','scope-one',body),two=await store.create(owner,'path','scope-two',{...body,progress:'position-two'})
@@ -283,7 +284,7 @@ test('route progress and library use resource identity when old documents share 
   assert.equal((await app.inject({url:'/api/v2/paths/legacy-doc/progress',headers})).statusCode,404)
   assert.equal((await app.inject({method:'PUT',url:`/api/v2/paths/${one.id}/progress`,headers,payload:{value:'changed-one'}})).statusCode,200)
   assert.equal((await store.resource(owner,two.id)).body.progress,'position-two')
-  const foreign=(await app.inject({url:'/api/v2/session'})).headers['set-cookie'].split(';')[0]
+  const foreign=String((await app.inject({method:'POST',url:'/api/auth/guest'})).headers['set-cookie']).split(';')[0]
   assert.equal((await app.inject({url:`/api/v2/paths/${one.id}/progress`,headers:{cookie:foreign}})).statusCode,404)
 })
 
@@ -299,7 +300,7 @@ test('same-agent repairs wrong evidence before chat/tree commit and never reuses
   assert.equal(answer.paragraphs[0].basisId,'history');assert.equal(calls.length,3)
   assert.match(calls[2].messages.at(-1).content,/不在 C2/)
   assert.equal(calls[1].messages[0].content,calls[2].messages[0].content);assert.equal(calls[1].thinkingDepth,'deep')
-  assert.equal(Object.entries(job.checkpoints).find(([key])=>key.startsWith('L-answer:compose-v3@goal-v1:'))[1].value.answer.sections[0].after,'C2')
+  assert.equal(Object.entries(job.checkpoints).find(([key])=>key.startsWith('L-answer:compose-v4@goal-v1:'))[1].value.answer.sections[0].after,'C2')
   assert.deepEqual((await s.snapshot('owner',r.id)).data,{})
 })
 test('citation evidence uses the delivered compressed material version without relabelling it as original',async t=>{
@@ -316,8 +317,8 @@ test('citation evidence uses the delivered compressed material version without r
   const original='变量用于表示未知的数量。'.repeat(6000)
   const result=await new ProductTools(llm,{},32000).answerCards(ctx,{allowedCards:[{id:'long-article',title:'变量',content:original}]})
   assert.equal(result.paragraphs[0].basisId,'long-article');assert.match(modelView.cards[0].content,/上下文摘要/)
-  assert.match(Object.entries(job.checkpoints).find(([key])=>key.startsWith('L-answer:compose-v3@goal-v1:'))[1].value.view.cards[0].content,/上下文摘要/)
-  assert.match(Object.entries(job.checkpoints).find(([key])=>key.startsWith('L-answer:attach-v3@goal-v1:'))[1].value.catalog[0].excerpts[1].text,/上下文摘要/)
+  assert.match(Object.entries(job.checkpoints).find(([key])=>key.startsWith('L-answer:compose-v4@goal-v1:'))[1].value.view.cards[0].content,/上下文摘要/)
+  assert.match(Object.entries(job.checkpoints).find(([key])=>key.startsWith('L-answer:attach-v4@goal-v1:'))[1].value.catalog[0].excerpts[1].text,/上下文摘要/)
 })
 
 test('first entry repairs citation batching and mismatched evidence before publishing chat and the single-parent tree',async t=>{
@@ -334,7 +335,7 @@ test('first entry repairs citation batching and mismatched evidence before publi
   const llm={complete:async input=>{
     const context=JSON.parse(input.messages[1].content),system=input.messages[0].content
     let value
-    if(system.includes('恰好三条'))value={queries:['代数词源','代数基础解释','代数方程']}
+    if(system.includes('首次概念教学'))value={queries:['代数词源','代数基础解释','代数方程']}
     else if(system.includes('逐条阅读'))value={evidenceIds:articles.map(a=>a.evidenceId)}
     else{
       answerCalls++
@@ -347,11 +348,18 @@ test('first entry repairs citation batching and mismatched evidence before publi
     if(value.sections)value.sourceReview=context.read_card_scope.cards.map((c,i)=>({ref:c.ref,contribution:['课本分类不属于本次讲解重点','代数词源','方程的核心地位'][i]}))
     return {kind:'completed',text:JSON.stringify(value)}
   }}
-  const zhihu={search:async()=>{searches++;return {kind:'hits',items:articles}},direct:async()=>({kind:'completed',text:'组织讲解的参考角度，不能冒充文章依据。'})}
+  const angles=[]
+  const zhihu={search:async()=>{searches++;return {kind:'hits',items:articles}},direct:async input=>{
+    const content=input.messages[1].content,context=JSON.parse(content.slice(content.indexOf('\n{')+1))
+    assert.deepEqual(context.materials.map(m=>m.content),articles.map(a=>a.summary))
+    angles.push(context.angle)
+    return {kind:'completed',text:'组织讲解的参考角度，不能冒充文章依据。'}
+  }}
   const worker=new DurableWorker(s,createFlows(new ProductTools(llm,zhihu)),1,quiet)
   await worker.execute(await s.claim())
   const snapshot=await s.snapshot('owner',resource.id)
   assert.equal(snapshot.job.status,'completed');assert.equal(searches,3);assert.equal(answerCalls,4)
+  assert.deepEqual(angles,[])
   assert.deepEqual(snapshot.data.initialAnswer.map(p=>p.basisId),['history-id','equation-id'])
   const response=snapshot.data.conversations[0].messages[1]
   assert.deepEqual(response.paragraphs,snapshot.data.initialAnswer)

@@ -3,7 +3,7 @@ import { WideShell,type RouteName } from './components/Shell'
 import { IconSprite } from './icons'
 import { ensureSession } from './learning-v2/client'
 import { clearProductLibrary } from './learning-v2/library'
-import { requestAuthLogout,requestAuthSession } from './runtime/request-auth-session'
+import { requestAuthLogout,requestGuestSession } from './runtime/request-auth-session'
 import {PageBoundary} from './components/PageBoundary'
 
 
@@ -39,7 +39,7 @@ export function App(){
   const[notice,setNotice]=useState('')
   const[sessionReady,setSessionReady]=useState(false)
   const[route,setRoute]=useState<RouteName>(readRoute)
-  const[authenticated,setAuthenticated]=useState(()=>localStorage.getItem(AUTH_KEY)!=='false')
+  const[authenticated,setAuthenticated]=useState(false)
   const[themePreference,setThemePreference]=useState<Theme|null>(readThemePreference)
   const[systemAppearance,setSystemAppearance]=useState<Theme>(systemTheme)
   const theme=themePreference??systemAppearance
@@ -59,7 +59,7 @@ export function App(){
     return()=>{media.removeEventListener('change',update);removeEventListener('storage',sync)}
   },[])
   useEffect(()=>{
-    void ensureSession().then(async()=>{const session=await requestAuthSession();if(session.kind==='authenticated'){localStorage.setItem(AUTH_KEY,'true');setAuthenticated(true)}setSessionReady(true)}).catch(()=>{setAuthenticated(false);setSessionReady(true)})
+    void ensureSession().then(()=>{setAuthenticated(new URLSearchParams(location.search).get('oauth')!=='failed');setSessionReady(true)}).catch(()=>{setAuthenticated(false);setSessionReady(true)})
   },[])
   const toggleTheme=()=>{
     const next=theme==='dark'?'light':'dark'
@@ -69,7 +69,7 @@ export function App(){
   const logout=()=>{
     void requestAuthLogout().then(()=>{clearProductLibrary();localStorage.setItem(AUTH_KEY,'false');setAuthenticated(false)}).catch(e=>setNotice(e instanceof Error?e.message:'退出登录暂未完成。'))
   }
-  const authorize=()=>{void ensureSession().then(()=>{localStorage.setItem(AUTH_KEY,'true');setAuthenticated(true);location.hash='home'}).catch(()=>{})}
+  const authorize=async()=>{await requestGuestSession();localStorage.setItem(AUTH_KEY,'true');setAuthenticated(true);history.replaceState(null,'',`${location.pathname}#home`);setRoute('home')}
   const pages={home:<HomePage/>,chat:<ChatPage/>,knowledge:<KnowledgePage/>,'knowledge-detail':<KnowledgeDetailPage/>,paths:<PathsPage/>,'path-3d':<Path3DPage/>,'session-learning':<SessionPage/>,authors:<AuthorsPage/>,'not-found':<NotFoundPage/>,settings:<SettingsPage theme={theme} onThemeChange={toggleTheme} onLogout={logout}/>}
   const page=pages[route]
   return <><IconSprite/>{notice&&<div role="alert">{notice}<button onClick={()=>setNotice('')}>关闭</button></div>}<Suspense fallback={<p role="status">正在打开页面…</p>}>{!sessionReady?<main className="auth-landing"><p role="status">正在连接你的工作区…</p></main>:authenticated?<WideShell route={route} theme={theme} onThemeChange={toggleTheme} onLogout={logout}><PageBoundary key={route}>{page}</PageBoundary></WideShell>:<AuthLanding theme={theme} onThemeChange={toggleTheme} onAuthorize={authorize}/>}</Suspense></>

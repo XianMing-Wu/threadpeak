@@ -1,0 +1,83 @@
+--- a/src/render/app/LearningScene.ts
++++ b/src/render/app/LearningScene.ts
+@@ -1,4 +1,5 @@
+ import * as THREE from "three";
++import { releaseShadowTargets } from "./ShadowResources";
+ import { OVERPASS_BRIDGE_SPEC } from "../../config/overpassSpec";
+ import {
+   createSceneBounds,
+@@ -451,10 +452,7 @@
+     }
+ 
+     this.shadowLights.forEach((light) => {
+-      light.shadow.map?.dispose();
+-      light.shadow.mapPass?.dispose();
+-      light.shadow.map = null;
+-      light.shadow.mapPass = null;
++      releaseShadowTargets(light.shadow);
+       light.shadow.dispose();
+       this.scene.remove(light, light.target);
+     });
+@@ -804,14 +802,15 @@
+     if (!this.keyLight) {
+       return;
+     }
+-    const desiredSize = viewportWidth >= 1100 ? 4096 : 2048;
++    const desiredSize = Math.min(
++      viewportWidth >= 1100 ? 4096 : 2048,
++      this.renderer.capabilities.maxTextureSize,
++    );
+     if (this.keyLight.shadow.mapSize.width === desiredSize) {
+       return;
+     }
+     this.keyLight.shadow.mapSize.set(desiredSize, desiredSize);
+-    this.keyLight.shadow.map?.dispose();
+-    this.keyLight.shadow.map = null;
+-    this.keyLight.shadow.needsUpdate = true;
++    releaseShadowTargets(this.keyLight.shadow);
+   }
+ 
+   private getFramingFov(worldZ: number): number {
+--- /dev/null
++++ b/src/render/app/ShadowResources.ts
+@@ -0,0 +1,16 @@
++import type * as THREE from "three";
++
++/** VSM reads two equally-sized targets; retaining mapPass after a resize
++ * makes UV sampling use the old extent and darkens the entire scene. */
++export function releaseShadowTargets(shadow: THREE.LightShadow): void {
++  const targets = new Set([shadow.map, shadow.mapPass]);
++  for (const target of targets) {
++    if (!target) continue;
++    target.depthTexture?.dispose();
++    target.depthTexture = null;
++    target.dispose();
++  }
++  shadow.map = null;
++  shadow.mapPass = null;
++  shadow.needsUpdate = true;
++}
+--- /dev/null
++++ b/src/render/app/ShadowResources.smoke.mjs
+@@ -0,0 +1,21 @@
++import assert from "node:assert/strict";
++import * as THREE from "three";
++import { releaseShadowTargets } from "./ShadowResources";
++const shadow = new THREE.DirectionalLight().shadow;
++let disposed = 0;
++for (const size of [2048, 4096, 2048, 4096]) {
++  shadow.map = new THREE.WebGLRenderTarget(size, size);
++  shadow.map.depthTexture = new THREE.DepthTexture(size, size);
++  shadow.mapPass = new THREE.WebGLRenderTarget(size, size);
++  for (const resource of [shadow.map, shadow.map.depthTexture, shadow.mapPass])
++    resource.addEventListener("dispose", () => disposed++);
++  const before = disposed;
++  releaseShadowTargets(shadow);
++  assert.equal(disposed - before, 3);
++  assert.equal(shadow.map, null);
++  assert.equal(shadow.mapPass, null);
++  assert.equal(shadow.needsUpdate, true);
++  releaseShadowTargets(shadow);
++  assert.equal(disposed - before, 3, "double cleanup is harmless");
++}
++console.log("Shadow target resize/disposal regression passed");
