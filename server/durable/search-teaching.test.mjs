@@ -18,10 +18,10 @@ const wait=()=>new Promise(r=>setImmediate(r))
 const state=()=>({version:2,routeId:'r',conceptId:'c',title:'当前概念',description:'这节只解释目标需要的局部操作。',hasDispute:false,initialized:true,phase:'ready',active:'chat',conversations:[{id:'chat',title:'学习',date:'2026-09-09',messages:[]}],articles:[{id:'host',title:'当前材料',summary:'完整总结',author:'原作者',authorId:'old-author',likes:null,topic:'学习'}],nodes:[{id:'root',type:'root',title:'概念',text:'',parents:[],sources:['host']},{id:'host',type:'article',title:'当前材料',text:'完整总结',parents:['root'],sources:['host']}]})
 const source=(id,authorId)=>({evidenceId:id,title:`材料${id}`,summary:`真实边界替身的完整内容${id}`,authorId,authorName:`作者${authorId}`,url:`https://zhuanlan.zhihu.com/p/${id}`})
 
-test('lesson format rejects internal source prose and duplicate H2 but preserves heading examples inside code',()=>{
+test('lesson format rejects internal source prose, normalizes duplicate H2 and preserves heading examples inside code',()=>{
  const view={cards:[{ref:'C1',title:'材料',content:'操作与检验'}]},answer=text=>({sections:[{after:'C1',title:'本节要点',text}]})
  assert.throws(()=>validateComposition(answer('C1中提到应该这样做。'),view,8,false),/内部来源编号/)
- assert.throws(()=>validateComposition(answer('## 重复的标题\n正文'),view,8,false),/H1\/H2/)
+ assert.equal(validateComposition(answer('## 重复的标题\n正文'),view,8,false).sections[0].text,'### 重复的标题\n正文')
  assert.doesNotThrow(()=>validateComposition(answer('下面是Markdown示例：\n```markdown\n## 示例标题\n```'),view,8,false))
 })
 

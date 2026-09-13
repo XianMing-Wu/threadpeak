@@ -162,7 +162,7 @@ test('final route uses the saved goal when the model context cannot fit, without
  const tools=new ProductTools({complete:async()=>{calls++;throw Error('must not send oversized context')}},{},{llm:{window:2048,output:1024,namespace:'tiny'}})
  const route=await tools.routePlan(ctx,{goal:'解释二维矩阵缩放'},'tiny-route',[])
  assert.equal(route.concepts[0].title,'解释二维矩阵缩放');assert.equal(calls,0)
- assert.deepEqual(ctx.job.checkpoints['diagnostic:R4-recovery'].value,{basis:'goal',linear:true,providerStatus:'not_called',code:'MODEL_CAPABILITY_INVALID'})
+ assert.deepEqual(ctx.job.checkpoints['diagnostic:R4-recovery'].value,{basis:'goal',linear:true,stageWidths:[1],rejection:'',providerStatus:'not_called',code:'MODEL_CAPABILITY_INVALID'})
 })
 
 test('final route recovers available formal stream after provider failure and never parses reasoning as route content',async t=>{

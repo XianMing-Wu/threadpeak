@@ -85,3 +85,11 @@ PGlite 目录通过内核文件描述符锁限定一个持有者，进程退出�
 [QA 入口](../qa/README.md)区分离线行为测试、真实 PostgreSQL、真实 provider 和浏览器证据。[部署指南](../deploy/README.md)负责身份、备份和上线门槛。设计中的事务依据可查 [PostgreSQL 事务隔离](https://www.postgresql.org/docs/current/transaction-iso.html)，共享计数接口见 [Fastify rate-limit](https://github.com/fastify/fastify-rate-limit#custom-store)，目录锁接口见 [fs-native-extensions](https://github.com/holepunchto/fs-native-extensions)。
 
 3D renderer、Coverflow 和图标的来源/同步要求见 [vendor/SOURCE.md](../vendor/SOURCE.md)，品牌字体许可见[品牌说明](../src/ui/brand/README.md)。运行时不通过兄弟项目路径读取依赖。
+
+## 完整模型输出的格式恢复
+
+传输适配器原样保留正式 content，不选取内层 JSON，不把 reasoning 替作正文。L-answer 的数据解析上限 200 万字符，修复扫描嵌套上限 64；只处理完整对象，使用 jsonrepair 处理词法和分隔符，保留非法反斜线的原意。标题通过 Markdown AST 降级，代码片段不改；续写字段合并与引用排序均在原数据上执行，不另发格式重写请求。未给出的语义、出处和被截断的正文不能由格式算法凭空恢复。
+
+最终 R4 独立保留所有者作用域内的正式输出和阶段宽度诊断，区分模型原生计划、程序提取和目标保底；原文不进入公开日志。并列由明确依赖表达决定，容量修复先在载体内压缩概念，保留已确认分支。相关真实调用和异常回放记录放在本地 QA 目录，不能作为永久成功率承诺。
+
+官方接口依据：[DeepSeek JSON Output](https://api-docs.deepseek.com/zh-cn/guides/json_mode)、[思考模式](https://api-docs.deepseek.com/zh-cn/guides/thinking_mode)。JSON 模式仍需业务 schema、完整性和来源回查；空输出、传输中断、鉴权或额度故障不能被格式算法冒充有效教学。

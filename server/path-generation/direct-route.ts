@@ -5,12 +5,15 @@ export const DIRECT_ROUTE_VERSION='route-direct-v6' as const
 export function routeTaskFocus(input:{goal?:unknown;goalContext?:unknown;attachments?:unknown},stage:'interview'|'plan'){
  const context=input.goalContext as {rawGoal?:string;userStatements?:{text:string}[]}|undefined
  const intent={rawGoal:context?.rawGoal??input.goal,userStatements:[...new Set((context?.userStatements??[]).map(s=>s.text))]}
+ const sentences=[String(intent.rawGoal??''),...intent.userStatements].flatMap(text=>[...new Intl.Segmenter('zh',{granularity:'sentence'}).segment(text)].map(s=>s.segment.trim()).filter(Boolean))
+ const unique=[...new Set(sentences)]
+ const repetitionReminder=unique.length<sentences.length?'\n用户原话去除完全重复句后的核对（原文已完整保留在上方；后面的明确收窄优先，不能按重复频次扩大范围）：\n'+unique.join('\n'):''
  const task=stage==='plan'
   ?'请现在按这些用户原话生成路线。先在learningGoal逐字保留决定范围、深度和独立程度的明确条件，再规划。这是学习计划，不是提前撰写教材：说明学什么、用在哪里、学到哪里、如何检验即可，不在description展开公式推导、投资策略或平台政策。先选达到该成果的方法，再挑载体的相关部分。每个必学项必须直接服务这些条件或后续必要内容；仅因某课目录包含它不能入选。先安排即将用到而用户尚不会的定义和操作，再安排综合运用；从零者不能直接进入积分、矩阵分解或代码调试。检查前面是否真的安排了这些基础，不要仅写“需要补基础”。不要把上文的课程目录、未选选项或routeEffect变成用户的新要求。检查三个典型错误：①从零推导傅里叶与卷积关系，必须在推导前有明确的三角/复数/复指数、有限求和与矩阵运算、积分及二重积分学习位置；图像和小矩阵只是进入方式，不能据此擅自删除连续形式。②基础光栅渲染器仅取课程的相关部分，贝塞尔曲线和光线追踪不是这条方法的必学前置，环境要先于编译/显示练习；两种基础可并列。③注意力资料先教向量点积与矩阵运算，再教指数/归一化权重与加权和，概率未知则局部补随机变量、期望和方差，然后解释缩放，最后综合计算；注意力资料的可用顺序是：向量、点积、矩阵转置与乘法（这里教一次乘法）→ 指数、归一化权重和加权和 → 随机变量、期望/方差、独立性及平方根缩放 → 在同一小矩阵上组合验证注意力。只学数学则到此；全资料再完成同一算例的程序实现和应用边界。介绍向量的节点只识别与表示，不提前以矩阵乘法作为验收；不要把乘法拆成两个重复节点。资料明确包含的方差假设也属于全资料范围，不能无理由降成只记结论。从零且要连续与离散关系都理解的示例顺序可以是：图像直觉 → 三角、复数和复指数 → 求和、向量和矩阵运算 → 定积分及换元 → 二重积分及换序条件 → 一维傅里叶/卷积 → 二维连续关系推导 → 二维DFT、循环/线性卷积和补零验证。每一组都应有实际学习位置，不要删掉积分组或放到连续傅里叶之后。每个概念先命名唯一教学要点，再写描述和goalAlignment：depth与successCheck只覆盖本项，不能把载体的全部技能塞到第一个概念。理财读懂产品的学习例：在同一虚拟收支案例中理解预算与应急用途，再读两份明确给定的简化条款，识别费用、到账条件和可能损失；不要求选存放产品，不把产品名称直接排成固定风险等级，不另做一遍相同综合项目。快速理解Transformer的顺序可以先识别全貌，再在讲注意力分数之前局部解释向量、点积和矩阵批量运算的直觉，随后用同一句话讲清注意力、其余模块和输出；全貌节点不提前要求学完模块内部。一段已完成的作品或分析只在后续新增实际内容时继续扩展，标题叫“整合/综合/后续方向”不构成新必学内容。其他目标使用同一依赖原则，不套用这些领域的内容。每个概念最后检查learningSummary四项已写全且相互不同，明确本节教学边界、前后作用和资料对应。路线title必须命名这次具体目标，不能复制输出示例的占位标题。已经会的操作只在首次使用的新概念里简短调用；不要以“快速校准”名义另建已会知识节点。需要复习的操作与最近的新任务一起安排，避免先复习整组再重复做同一算例。每张概念卡必须教一个实际知识或操作，范围声明、学习边界确认、计划回顾不单独成卡，放入相应boundary或目标说明。末尾综合任务只有增加此前未练过的衔接或迁移才保留，不能把同样的两个算例再做一遍。只输出最终路线JSON。'
   :'请只询问这些原话尚未说明、且会改变路线的条件。已明确的范围和深度不重新投票：只学数学的目标不问编程经验或是否改做程序；完整理解不改问是否降低为科普。用户说从零/入门且未说明基础时，至少一题区分“仅没学过目标主题，但能使用它的前置”与“前置也不会，需要补起”；不能只问是否见过目标公式。以近期具体运算、写改或解释动作表达，不让新手选陌生专业术语。知识经验选项允许完全没接触，只校准本目标实际所需的动作，不据此自动换方法或加整门基础。每题沿一个可观察维度；routeEffect只描述能力和顺序影响，不开课程或技术栈清单。从零理论学习的基础题可按“带求和、矩阵或积分的简单表达式，我完全读不懂／以前能算但需复习／目前能独立算所需部分”这种可观察程度区分；不要让最低档仍默认已经会另一类数学。若问进入方式，只用“看图和具体变化／跟着小算例计算／两种都可以”这样的普通描述，禁止把矩阵分解、级数或滤波等陌生数学视角当成选项。成果已清楚时两道就够。只输出题组JSON。'
  const refs=Array.isArray(input.attachments)?input.attachments.map(f=>(f as {ref?:string}).ref).filter(Boolean):[]
  const materialRule=stage==='plan'?(refs.length?`本次附件引用仅允许：${refs.join('、')}。从对应attachments.content逐字引用。`:'本次attachments为空。所有概念的attachmentRefs和materialAnchors都必须为[]。搜索总结不是F附件，禁止给它编F编号。'):''
- return `上文是任务上下文与候选资料。以下仅重申用户实际表达，没有模型补充：\n${String(intent.rawGoal??'')}\n用户实际补充或已选条件原文：\n${intent.userStatements.join('\n')||'尚无'}\n${task}\n${materialRule}${stage==='plan'?'\n输出是一个完整根对象，必须同时包含 title、learningGoal、stages；不能只输出 learningGoal 的内部字段，也不能分多个 JSON 返回。motivation、startingPoint、constraints、nonGoals 只能复制上面某条用户原话的连续片段，不能为并列项分别添加原话中不存在的主语或否定词。\n完整输出结构：'+DIRECT_ROUTE_OUTPUT:''}`
+ return `上文是任务上下文与候选资料。以下仅重申用户实际表达，没有模型补充：\n${String(intent.rawGoal??'')}\n用户实际补充或已选条件原文：\n${intent.userStatements.join('\n')||'尚无'}\n${task}\n${materialRule}${stage==='plan'?'\n输出是一个完整根对象，必须同时包含 title、learningGoal、stages；不能只输出 learningGoal 的内部字段，也不能分多个 JSON 返回。motivation、startingPoint、constraints、nonGoals 只能复制上面某条用户原话的连续片段，不能为并列项分别添加原话中不存在的主语或否定词。\n完整输出结构：'+DIRECT_ROUTE_OUTPUT:''}${repetitionReminder}`
 }
 export const CatalogNamesSchema=z.object({carriers:z.array(z.string().trim().min(1).max(150)).max(4)}).strict()
 export const CATALOG_NAMES_PROMPT=`从goal/goalContext、附件、firstSearch.summary中提取需要补查目录的具体载体名称。只选仍可能服务原目标、且目录缺口会影响内容取舍或载体比较的课程、书籍、教程、项目。用户点名比较的载体优先考虑；多个相似资源优先保留有实质比较价值者，不因知名度或出现次数照抄完整书单。此时个人条件可能未知，不提前按未确认偏好排除可行方法。
@@ -61,7 +64,13 @@ export function validateDirectRoutePlan(raw:unknown,input:Parameters<typeof vali
 }
 const example=JSON.parse(STAGED_PLAN_OUTPUT)
 for(const stage of example.stages)for(const carrier of stage){carrier.concepts=carrier.concepts.map(({title,description,goalAlignment,...rest}:{title:unknown;description:unknown;goalAlignment:unknown;[key:string]:unknown})=>({title,description,learningSummary:{focus:"本节要解决的具体问题、核心关系与教学入口",boundary:"新学或局部复习哪些操作，学到哪里即可，哪些不在本节",routeConnection:"如何承接前项，为后项的什么操作做准备；首尾按实际说明",materialConnection:"对应实际资料的什么片段，为何直接相关或是必要前置；无资料明确说明"},goalAlignment,...rest}))}
-export const DIRECT_ROUTE_OUTPUT=JSON.stringify({...example,stages:example.stages.map((carriers:unknown[])=>({parallel:false,carriers}))})
+const exampleCarrier=(title:string,description:string)=>({...example.stages[0][0],title,description})
+export const DIRECT_ROUTE_OUTPUT=JSON.stringify({...example,stages:[
+ {parallel:false,carriers:[exampleCarrier('共同前置 A','为后面两项都需要的操作准备基础')]},
+ {parallel:true,carriers:[exampleCarrier('独立能力 B','必学；只依赖 A，学它不需要先完成 C'),exampleCarrier('独立能力 C','必学；只依赖 A，学它不需要先完成 B')]},
+ {parallel:false,carriers:[exampleCarrier('衔接应用 D','同时使用 B 和 C，完成当前成果中的新一步')]},
+]})
+export const ROUTE_DEPENDENCY_FOCUS='阶段编排最后单独检查实际依赖：目录排列和同一个项目中的先后介绍，不等于必须串行。把每个载体真正需要先会的能力在内部列清；两个都必学、所需共同前置已在之前完成且互不依赖的载体，应放在同一个 parallel=true 阶段，完成后汇合。例：已经能发起模型请求、处理输入输出后，工具参数校验/调用边界与文档切块/检索可各自用最小接口练习，随后在同一个 Agent 中衔接；不要仅因同一项目就强制先学完一整路再学另一整路。若前项输出或知识确实是后项的必要输入，则保持串行。二选一教程不能都列为并列必学；不为图形好看增加内容。示例展示 false→true→false 的字段形状，不要求每条路线固定阶段数；确实无独立能力的小目标可以全串行。'
 export const DIRECT_ROUTE_PROMPT=`你为当前用户生成一条达到其真实目标的最小充分学习路线。直接读取goal/goalContext、firstSearch.summary、catalogSearch.summary、全部questionSets及用户真实选择、自定义回答和F资料。本次一次完成内容选择与阶段规划，不生成中间候选表。仅收藏夹时，materialQuestions 用于核对资料是否回应 R1 的学习选择问题，不产生外部检索、不据此补造事实或新增用户要求。
 【信息的用途】
 用户原话决定需求：最新明确表达优先于旧表达，真实选择与自定义回答同等有效。问卷reason和routeEffect是模型之前的建议，不是用户原话、来源事实或不可修改的课程承诺；未选选项不是用户意愿。目录补齐后必须重新判断此前建议。

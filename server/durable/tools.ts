@@ -1,7 +1,7 @@
 import { ANSWER_COMPLETENESS,firstLessonFocus,COMPOSE_PROMPT,COMPOSE_OUTPUT,ATTACH_PROMPT,ATTACH_OUTPUT,validateComposition,citationCatalog,attachComposition } from '../knowledge/answer-composition.ts'
 import { GOAL_POLICY, AGENT_CONTRACT_VERSION } from '../agent-runtime/goal-policy.ts'
 import {type DiscoveryInput,type ExplorationInput} from '../path-generation/carrier-exploration.ts'
-import {DIRECT_ROUTE_VERSION,routeTaskFocus,CATALOG_NAMES_PROMPT,CATALOG_NAMES_OUTPUT,validateCatalogNames,catalogNameQuery,RouteInterviewSchema,ROUTE_INTERVIEW_PROMPT,ROUTE_INTERVIEW_OUTPUT,validateDirectRoutePlan,DIRECT_ROUTE_PROMPT,DIRECT_ROUTE_OUTPUT} from '../path-generation/direct-route.ts'
+import {DIRECT_ROUTE_VERSION,ROUTE_DEPENDENCY_FOCUS,routeTaskFocus,CATALOG_NAMES_PROMPT,CATALOG_NAMES_OUTPUT,validateCatalogNames,catalogNameQuery,RouteInterviewSchema,ROUTE_INTERVIEW_PROMPT,ROUTE_INTERVIEW_OUTPUT,validateDirectRoutePlan,DIRECT_ROUTE_PROMPT,DIRECT_ROUTE_OUTPUT} from '../path-generation/direct-route.ts'
 import type {SearchScope} from '@threadpeak/contracts/search-scope'
 import {validateAnswerMath} from './math-output.ts'
 import {CardScopeSchema,GOAL_ANSWER_FOCUS,readCardScope,type CardMaterial} from '../knowledge/card-tools.ts'
@@ -22,6 +22,7 @@ import { paragraphDraft } from './stream-draft.ts'
 import { modelCall } from './model-call.ts'
 import {recoverPlan,compileRecoveredPlan} from '../path-generation/recover-plan.ts'
 import { reasoningReserve } from '../agent-runtime/thinking-policy.ts'
+import {parseAnswerJson} from '../knowledge/answer-normalization.ts'
 import {defaultCapabilities,type ToolCapabilities} from './capabilities.ts'
 import {LEARNING_TOOL_SPECS,ROUTE_STEP_SPECS,type RouteStep,type LearningTool} from './agent-specs.ts'
 export {LEARNING_TOOL_SPECS} from './agent-specs.ts'
@@ -80,7 +81,7 @@ export class ProductTools {
         previous=result.text
         let validated:T
         try{
-          const extracted=extractStructuredJson(previous)??JSON.parse(previous.replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,''))
+          const extracted=name.startsWith('L-answer:')?parseAnswerJson(previous):extractStructuredJson(previous)??JSON.parse(previous.replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,''))
           validated=validate(extracted,JSON.parse(base[1]!.content))
         }catch(error){reason=error instanceof Error?error.message:'输出不完整';await ctx.store.checkpoint(ctx.job,`diagnostic:${name}:${attempt}`,digest(previous),{reason});continue}
         if(label)await ctx.activity(name,'read',label,'done')
@@ -178,7 +179,7 @@ export class ProductTools {
     const direct=input.workflow===DIRECT_ROUTE_VERSION
     const modelInput={...input,attachments:(input.attachments??[]).map((a,i)=>({...a,ref:`F${i+1}`}))}
     const system=`${SHARED_SYSTEM_PREFIX}\n${GOAL_POLICY}\n${direct?DIRECT_ROUTE_PROMPT:STAGED_PLAN_PROMPT} searchScope.kind=collections 时只根据所选资料安排学习，不虚构外部来源。\n输出 JSON：${direct?DIRECT_ROUTE_OUTPUT:STAGED_PLAN_OUTPUT}`
-    const focus=routeTaskFocus(modelInput,'plan'),runtime={system,focus,budget:this.capabilities.llm,recovery:'route-recovery-v1'}
+    const focus=routeTaskFocus(modelInput,'plan')+'\n'+ROUTE_DEPENDENCY_FOCUS,runtime={system,focus,budget:this.capabilities.llm,recovery:'route-recovery-v2'}
     return ctx.step(`R4-plan:recover-v1@${AGENT_CONTRACT_VERSION}:${digest(runtime).slice(0,16)}`,{input,...runtime},async()=>{
       const output=Math.min(this.capabilities.llm.output,Math.floor(effectiveWindow(this.window)*.35),24576+8192)
       let prepared=modelInput,streamed='',summarizedRefs=new Set<string>(),result:LlmCompleteResult,attempted=false
@@ -199,17 +200,25 @@ export class ProductTools {
       ctx.signal.throwIfAborted()
       if(result.kind==='failed'&&result.code==='CANCELLED')throw new ToolError('CANCELLED',false)
       const raw=result.kind==='completed'?result.text:streamed
+      // Owner-scoped diagnostics allow comparing the actual formal topology with
+      // recovery and the renderer. Never use reasoning as the plan or log this text.
+      await ctx.store.checkpoint(ctx.job,'diagnostic:R4-output',digest(raw),{text:raw,providerStatus:result.kind})
+      let rejection=''
       if(result.kind==='completed'){
         try{
           const value=extractStructuredJson(raw)??JSON.parse(raw)
           const plan=direct?validateDirectRoutePlan(value,prepared):validateGoalPlan(value,prepared)
           const route=compileStagedPlan(plan,scope,attachmentSourceIds,summarizedRefs)
-          if(projectRouteToDocument(route).ok)return route
-        }catch{/* Preserve the actual output; recover structure without another model call. */}
+          if(projectRouteToDocument(route).ok){
+            await ctx.store.checkpoint(ctx.job,'diagnostic:R4-topology',digest(plan.stages),{basis:'model',stageWidths:plan.stages.map(s=>s.length)})
+            return route
+          }
+          rejection='RENDERER_VALIDATION'
+        }catch(error){rejection=error instanceof Error?error.message.slice(0,1800):'STRUCTURE_INVALID'}
       }
       await ctx.progress('正在整理学习路线')
       const recovered=recoverPlan(raw,{...prepared,goalContext:input.goalContext})
-      await ctx.store.checkpoint(ctx.job,'diagnostic:R4-recovery',digest({raw,basis:recovered.basis}),{basis:recovered.basis,linear:recovered.linear,providerStatus:attempted?result.kind:'not_called',...result.kind==='failed'?{code:result.code}: {}})
+      await ctx.store.checkpoint(ctx.job,'diagnostic:R4-recovery',digest({raw,basis:recovered.basis}),{basis:recovered.basis,linear:recovered.linear,stageWidths:recovered.plan.stages.map(s=>s.length),rejection,providerStatus:attempted?result.kind:'not_called',...result.kind==='failed'?{code:result.code}: {}})
       return compileRecoveredPlan(recovered.plan,scope,attachmentSourceIds,summarizedRefs)
     })
   }

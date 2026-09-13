@@ -366,3 +366,14 @@ test('first entry repairs citation batching and mismatched evidence before publi
   for(const p of response.paragraphs){const node=snapshot.data.nodes.find(n=>n.id===p.id);assert.deepEqual(node.parents,[p.basisId]);assert.deepEqual(node.sources,[p.basisId])}
   validateTree(snapshot.data.nodes)
 })
+
+test('provider preserves malformed outer JSON instead of replacing it with a valid inner fragment',async()=>{
+ const content=String.raw`{"sections":[{"after":"C1","title":"例子","text":"公式 \(x\)"},{"after":"C2","title":"第二段","text":"不能丢掉第一段"}]}`
+ const config={deepseekBaseUrl:'https://example.com/v1',deepseekModelName:'configured',deepseekApiKey:'test'}
+ for(const streaming of [false,true]){
+  const payload=JSON.stringify({choices:[{finish_reason:'stop',message:{content}}]})
+  const provider=createAgentLlmProvider({config,http:async()=>({ok:true,status:200,text:async()=>payload,...streaming?{body:new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({choices:[{delta:{content},finish_reason:'stop'}]})+'\n\ndata: [DONE]\n\n'));c.close()}})}:{}})})
+  const result=await provider.complete({messages:[],json:true,thinkingDepth:'fast',...streaming?{onText:()=>{}}:{}})
+  assert.equal(result.kind,'completed');assert.equal(result.text,content)
+ }
+})

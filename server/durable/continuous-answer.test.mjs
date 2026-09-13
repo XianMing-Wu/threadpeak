@@ -14,6 +14,23 @@ const input={allowedCards:[{id:'a',title:'旋转',content:'矩阵作用于向量
 const answer={sections:[{after:'C1',title:'同一个点怎样旋转',text:'我们先取一个点，再用矩阵变换这个点。'}]}
 async function fixture(t){const db=await openDatabase();await migrate(db);t.after(()=>db.close());const store=new DurableStore(db);const resource=await store.create('owner','test','continuous',{});await store.enqueue('owner',resource.id,'test','continuous',{depth:'fast'});return {store,resource}}
 
+test('the production escape/text2 failure completes on the first composition and publishes one atomic answer',async t=>{
+ const {store,resource}=await fixture(t);let compose=0,attach=0
+ const tools=new ProductTools({complete:async call=>{
+  const data=JSON.parse(call.messages[1].content)
+  if(data.citationCatalog){attach++;return {kind:'completed',text:JSON.stringify(placeAnswer(data))}}
+  compose++
+  const raw=String.raw`{"sourceReview":[{"ref":"C1","contribution":"旋转的实际资料"},{"ref":"goalContext","contribution":"用户目标的额外阅读备注"}],"sections":[{"after":"C1","title":"输入输出","text":"先读输入 \(x\)。","text2":"再核对旋转后的点。"}]}`
+  call.onText?.(raw);return {kind:'completed',text:raw}
+ }},{})
+ const worker=new DurableWorker(store,async ctx=>{const result=await tools.answerCards(ctx,{...input,mode:'first_learning'});await ctx.flush();await store.commit(ctx.job,()=>result)},1,()=>{})
+ await worker.execute(await store.claim())
+ const result=await store.snapshot('owner',resource.id)
+ assert.equal(result.job.status,'completed');assert.equal(compose,1);assert.equal(attach,1)
+ assert.match(result.data.paragraphs[0].text,/再核对旋转后的点/)
+ assert.equal((await store.events('owner',resource.id,0)).filter(e=>e.kind==='job.completed').length,1)
+})
+
 test('a later source summary has its own running step instead of inheriting a previous completed status',async t=>{
  const {store,resource}=await fixture(t),job=await store.claim(),ctx=new TaskContext(store,job,new AbortController().signal)
  let calls=0;const llm={complete:async()=>{calls++;const activities=(await store.snapshot('owner',resource.id)).job.activities;assert.equal(activities.filter(a=>a.status==='running').length,1);assert.equal(activities.filter(a=>a.status==='done').length,calls-1);return {kind:'completed',text:'保留原始材料中的条件与结论。'}}}
@@ -89,7 +106,8 @@ test('issued excerpts preserve every character and cannot bind another source or
  const value={sections:[{after:'C1',title:'向量',text:'向量。'},{after:'C2',title:'矩阵',text:'矩阵。'}]}
  const good={placements:[{section:'P1',after:'C1',evidenceRefs:['C1.E2']},{section:'P2',after:'C2',evidenceRefs:['C2.E2']}]}
  assert.deepEqual(attachComposition(scope,value,catalog,good).map(p=>p.basisId),['a','b'])
- for(const bad of [{placements:[...good.placements].reverse()},{placements:[good.placements[0]]},{placements:[{section:'P1',after:'C1',evidenceRefs:['C2.E2']},good.placements[1]]},{placements:[{section:'P1',after:'C1',evidenceRefs:['C1.E999']},good.placements[1]]}])assert.throws(()=>attachComposition(scope,value,catalog,bad))
+ assert.deepEqual(attachComposition(scope,value,catalog,{placements:[...good.placements].reverse()}).map(p=>p.basisId),['a','b'])
+ for(const bad of [{placements:[good.placements[0]]},{placements:[{section:'P1',after:'C1',evidenceRefs:['C2.E2']},good.placements[1]]},{placements:[{section:'P1',after:'C1',evidenceRefs:['C1.E999']},good.placements[1]]}])assert.throws(()=>attachComposition(scope,value,catalog,bad))
 })
 
 test('rate limiting is persisted on the actual step; recovery keeps completed work and its timestamps',async t=>{
@@ -104,4 +122,24 @@ test('rate limiting is persisted on the actual step; recovery keeps completed wo
  const job=(await store.db.query('SELECT * FROM tp_jobs WHERE id=$1',[snapshot.job.id]))[0],finished=job.activities[0].finishedAt
  // A resumed checkpoint cannot pretend to finish again at the later clock time.
  assert.ok(finished>=start)
+})
+
+test('multi-selection normalizes shuffled notation but never guesses cross-card or unknown bindings',()=>{
+ const scope=readCardScope(Array.from({length:6},(_,i)=>({id:`selected-${i+1}`,title:`材料${i+1}`,content:`仅这张卡的内容${i+1}，不能与另一张混合。`}))),catalog=citationCatalog(scope.view)
+ const answer={sections:scope.view.cards.map((c,i)=>({after:c.ref,title:`第${i+1}步`,text:`依据材料${i+1}的解释。`}))}
+ const placements=scope.view.cards.map((c,i)=>({section:` p ${i+1} `,after:` c ${i+1} `,evidenceRefs:[`c${i+1}.e2`,`C${i+1}.E2`]})).reverse()
+ const result=attachComposition(scope,answer,catalog,{placements})
+ assert.deepEqual(result.map(p=>p.basisId),scope.ids)
+ assert.deepEqual(result.map(p=>p.text),answer.sections.map(s=>s.text))
+ const good=scope.view.cards.map((c,i)=>({section:`P${i+1}`,after:c.ref,evidenceRefs:[`${c.ref}.E2`]}))
+ const local=good.map(p=>({...p,evidenceRefs:['E2']}))
+ const localResult=attachComposition(scope,answer,catalog,{placements:local})
+ assert.deepEqual(localResult.map(p=>p.basisId),scope.ids)
+ const crossedCatalog=catalog.map((c,i)=>i?c:{...c,excerpts:[c.excerpts[0],{ref:'E2',text:scope.view.cards[1].content}]})
+ assert.throws(()=>attachComposition(scope,answer,crossedCatalog,{placements:local}),'a local E2 cannot borrow another card content')
+ const fullwidth=good.map(p=>({section:`[${p.section.replace('P','Ｐ')}]`,after:'`'+p.after.replace('C','Ｃ０')+'`',evidenceRefs:p.evidenceRefs.map(v=>'['+v.replace('C','Ｃ０').replace('.E','.Ｅ０')+']')}))
+ assert.deepEqual(attachComposition(scope,answer,catalog,{placements:fullwidth}).map(p=>p.basisId),scope.ids)
+ const variants=[good.slice(1),[good[0],good[0],...good.slice(2)],good.map((p,i)=>i? p:{...p,after:'C99'}),good.map((p,i)=>i? p:{...p,evidenceRefs:['C1.E999']}),good.map((p,i)=>i? p:{...p,evidenceRefs:['C1.E2','C2.E2']}),good.map((p,i)=>i? p:{...p,section:'P9'})]
+ for(const bad of variants)assert.throws(()=>attachComposition(scope,answer,catalog,{placements:bad}))
+ assert.throws(()=>readCardScope([{id:'same',title:'A',content:'一'},{id:'same',title:'B',content:'二'}]))
 })

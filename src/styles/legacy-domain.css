@@ -270,6 +270,38 @@
   margin: 0;
 }
 
+/* Match the route heading; use available card space before adding a scrollbar. */
+.path3d-stage [data-learning-path-root] .lp-context-card {
+  width: min(390px, var(--lp-card-available-width));
+}
+
+.path3d-stage [data-learning-path-root] .lp-context-card__panel {
+  max-height: min(calc(100cqh - 110px), 440px);
+  gap: 10px;
+  padding: 16px;
+}
+
+.path3d-stage [data-learning-path-root] .lp-context-card__title {
+  font-size: var(--fs-h3);
+  line-height: 1.4;
+}
+
+.path3d-stage [data-learning-path-root] .lp-context-card__description {
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.path3d-stage [data-learning-path-root] .lp-context-card__eyebrow,
+.path3d-stage [data-learning-path-root] .lp-context-card__status {
+  font-size: 10px;
+}
+
+.path3d-stage [data-learning-path-root] .lp-context-card__button {
+  min-height: 36px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
 .path3d-stage>header>span {
   font-size: var(--fs-meta);
   color: var(--ink-3);

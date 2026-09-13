@@ -80,3 +80,12 @@ test('generated empty math is rejected but a literal code example of the missing
  assert.throws(()=>validateAnswerMath('$$\n\n$$'),/没有内容/)
  assert.doesNotThrow(()=>validateAnswerMath('界面标签为 `[公式内容缺失]`；代码字符串 `$ $` 不应求值。'))
 })
+
+test('adjacent complete formulas never create a false empty formula across their closing/opening delimiters',async()=>{
+ const {hasEmptySourceMath}=await import('@threadpeak/contracts/source-image')
+ const {validateAnswerMath}=await import('./math-output.ts')
+ for(const content of ['$$x=1$$\n$$y=2$$','$x$ $y$','\\(x\\) \\(y\\)','\\[x\\]\n\\[y\\]','```txt\n$$ $$\n```']){
+  assert.equal(hasEmptySourceMath(content),false,content);assert.doesNotThrow(()=>validateAnswerMath(content))
+ }
+ for(const content of ['$$x=1$$\n$$  $$','$x$ $ $','\\( \\)','\\[\n\\]'])assert.equal(hasEmptySourceMath(content),true,content)
+})

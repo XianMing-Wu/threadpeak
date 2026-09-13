@@ -218,7 +218,12 @@ function sourceProse(source:string) {
 }
 
 export function hasEmptySourceMath(source:string) {
-  return /(?<![\\$])\$(?!\$)[ \t\n]*\$(?!\$)|(?<!\$)\$\$[ \t\n]*\$\$(?!\$)|\\\([ \t\n]*\\\)|\\\[[ \t\n]*\\\]/.test(sourceProse(source))
+  const prose=sourceProse(source)
+  // Consume complete math spans in order. Searching only for empty patterns can
+  // pair a previous closing $$ with the next opening $$ and reject valid math.
+  const spans=/(?<![\\$])\$\$([\s\S]*?)\$\$(?!\$)|(?<![\\$])\$(?!\$)((?:\\.|[^$\n])*)\$(?!\$)|\\\(([\s\S]*?)\\\)|\\\[([\s\S]*?)\\\]/g
+  for(const match of prose.matchAll(spans))if(!(match[1]??match[2]??match[3]??match[4]??'').trim())return true
+  return false
 }
 
 export function sourceExcerptIssues(source: string): SourceExcerptIssue[] {

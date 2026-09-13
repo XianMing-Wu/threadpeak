@@ -79,6 +79,25 @@ export type RecoveryInput={goal?:unknown;goalContext?:unknown;attachments?:{ref:
 type Carrier=StagedPlan['stages'][number][number]
 type Concept=Carrier['concepts'][number]
 
+/** Size repair stays inside each carrier; it must not erase confirmed branches. */
+function compactStageConcepts(stages:Carrier[][]):Carrier[][]{
+  const carriers=stages.flat(),limits=carriers.map(c=>Math.min(12,c.concepts.length))
+  while(limits.reduce((a,b)=>a+b,0)>64){
+    const index=limits.indexOf(Math.max(...limits));limits[index]!--
+  }
+  let index=0
+  return stages.map(stage=>stage.map(c=>{
+    const limit=limits[index++]!
+    if(c.concepts.length<=limit)return c
+    const concepts:Concept[]=[]
+    for(let n=0;n<limit;n++){
+      const group=c.concepts.slice(Math.floor(n*c.concepts.length/limit),Math.floor((n+1)*c.concepts.length/limit)),head=group[0]!
+      concepts.push(group.length===1?head:{...head,title:group.map(v=>v.title).join(' · ').slice(0,160),description:group.map(v=>`${v.title}\n${v.description}`).join('\n\n').slice(0,6000)})
+    }
+    return {...c,concepts}
+  }))
+}
+
 function packLinearCarriers(carriers:Carrier[]):Carrier[][]{
   const all=carriers.flatMap(c=>c.concepts),groupSize=Math.max(1,Math.ceil(all.length/64)),merged:Concept[]=[]
   for(let i=0;i<all.length;i+=groupSize){
@@ -144,7 +163,8 @@ export function recoverPlan(raw:unknown,input:RecoveryInput):{plan:StagedPlan;ba
     for(const stage of rawStages){
       const s=object(stage),items=Array.isArray(stage)?stage:array(s.carriers).length?array(s.carriers):[stage]
       const carriers=items.map(carrier).filter((c):c is Carrier=>!!c)
-      if((s.parallel===true||Array.isArray(stage))&&carriers.length===2){stages.push(carriers);linear=false}else stages.push(...carriers.map(c=>[c]))
+      const explicitParallel=s.parallel===true||s.parallel===1||typeof s.parallel==='string'&&/^(?:true|parallel|并列|并行)$/i.test(s.parallel.trim())||Array.isArray(stage)
+      if(explicitParallel&&carriers.length===2){stages.push(carriers);linear=false}else stages.push(...carriers.map(c=>[c]))
     }
   }else{
     const items=Array.isArray(root)?root:array(record.carriers).length?array(record.carriers):array(record.concepts)
@@ -158,10 +178,10 @@ export function recoverPlan(raw:unknown,input:RecoveryInput):{plan:StagedPlan;ba
   if(!stages.length)stages=[[carrier({title:text(rawGoal,160),description:rawGoal})!]]
   // A renderer has finite capacity. Merge adjacent overflow, preserving their
   // order and text, rather than dropping a random suffix or inventing dependencies.
-  if(stages.length>16||stages.flat().length>24||stages.flat().some(c=>c.concepts.length>12)||stages.flat().reduce((n,c)=>n+c.concepts.length,0)>64){
+  if(stages.length>16||stages.flat().length>24){
     stages=packLinearCarriers(stages.flat())
     linear=true
-  }
+  }else stages=compactStageConcepts(stages)
   if(missingAnchors&&!goal.openQuestions.includes('部分概念与所选资料的具体片段关系需在学习时核对。'))goal.openQuestions=[...goal.openQuestions.slice(0,11),'部分概念与所选资料的具体片段关系需在学习时核对。']
   const plan=StagedPlanSchema.parse({title:title(record)||text(rawGoal,160),learningGoal:goal,stages})
   return {plan,basis,linear}

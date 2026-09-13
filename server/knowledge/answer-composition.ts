@@ -2,6 +2,7 @@ import {fromMarkdown} from 'mdast-util-from-markdown'
 import { z } from 'zod'
 import { semanticChunks } from '../agent-runtime/semantic-chunks.ts'
 import { CardScopeSchema, readCardScope, resolveCardOperations } from './card-tools.ts'
+import {normalizeComposition,normalizePlacements} from './answer-normalization.ts'
 
 const CardRef = z.string().regex(/^C[1-9]\d*$/)
 export const CompositionSchema = z.object({
@@ -10,10 +11,10 @@ export const CompositionSchema = z.object({
 }).strict()
 export type Composition = z.infer<typeof CompositionSchema>
 export const PlacementSchema = z.object({placements:z.array(z.object({
-  section:z.string().regex(/^P[1-9]\d*$/),after:CardRef,evidenceRefs:z.array(z.string().regex(/^C[1-9]\d*\.E[1-9]\d*$/)).min(1).max(6),
+  section:z.string().regex(/^P[1-9]\d*$/),after:CardRef,evidenceRefs:z.array(z.string().regex(/^E[1-9]\d*$/)).min(1).max(6),
 }).strict()).min(1).max(12)}).strict()
 export function validateComposition(value:unknown, view:z.infer<typeof CardScopeSchema>, max:number, first:boolean) {
-  const answer=CompositionSchema.parse(value)
+  const answer=CompositionSchema.parse(normalizeComposition(value,new Set(view.cards.map(c=>c.ref))))
   if(answer.sections.length>max)throw new Error(`正文最多 ${max} 段，请合并重复内容，不逐篇复述`)
   const refs=new Set(view.cards.map(c=>c.ref)),review=answer.sourceReview?.map(r=>r.ref)
   if(first&&!review||review&&(review.length!==refs.size||new Set(review).size!==refs.size||review.some(ref=>!refs.has(ref))))throw new Error('sourceReview 必须逐卡覆盖实际阅读范围，不能重复或越界')
@@ -27,17 +28,17 @@ export function validateComposition(value:unknown, view:z.infer<typeof CardScope
 }
 /** Issued only AFTER compression. Every excerpt is a contiguous actual source string. */
 export function citationCatalog(view:z.infer<typeof CardScopeSchema>) {
-  return view.cards.map(card=>({ref:card.ref,title:card.title,excerpts:[card.title,...semanticChunks(card.content,1600,s=>s.length)].map((text,i)=>({ref:`${card.ref}.E${i+1}`,text}))}))
+  return view.cards.map(card=>({ref:card.ref,title:card.title,excerpts:[card.title,...semanticChunks(card.content,1600,s=>s.length)].map((text,i)=>({ref:`E${i+1}`,text}))}))
 }
 export function attachComposition(scope:ReturnType<typeof readCardScope>, answer:Composition, catalog:ReturnType<typeof citationCatalog>, raw:unknown) {
-  const {placements}=PlacementSchema.parse(raw)
+  const {placements}=PlacementSchema.parse(normalizePlacements(raw))
   if(placements.length!==answer.sections.length)throw new Error('必须按顺序关联全部 P 段，每段一次')
   const conflicts=placements.flatMap(placement=>{
     const card=catalog.find(c=>c.ref===placement.after)
     const invalid=placement.evidenceRefs.filter(ref=>!card?.excerpts.some(e=>e.ref===ref))
     return invalid.length?[`${placement.section}: ${invalid.join(',')} 不在 ${placement.after} 中；只可选 ${card?.excerpts.map(e=>e.ref).join(',')??'本次实际 C 卡'}`]:[]
   })
-  if(conflicts.length)throw new Error(`一次修正全部关联冲突，同一段所有 evidenceRefs 的 C 前缀必须等于 after：${conflicts.join('；')}`)
+  if(conflicts.length)throw new Error(`片段编号仅在该段 after 选择的卡内回查，不能使用该卡不存在的片段：${conflicts.join('；')}`)
   const operations=placements.map((placement,i)=>{
     const section=answer.sections[i]!
     if(placement.section!==`P${i+1}`)throw new Error('不得漏段、重复或改变 P 段顺序')
@@ -63,8 +64,8 @@ export const FIRST_LESSON_FOCUS=`现在请作为老师真正讲完当前一课�
 条件在每条结论出现时保持，不能前文无条件保证、末尾才免责声明。局部缩放不能保证softmax不饱和；AI需求清楚也不能保证实现正确。用比较或检验展示实际作用，不写宣传承诺。讲相对关系必须比较多个对象：softmax看的是同一行分数之间的差异，不能只凭一个分数很大就判断饱和，也不能把同时加一个常数当成改变权重。展示缩放作用时对同一组至少两个分数给出缩放前后权重的可复核对照，再解释这不证明分布方差为1。方差推导的独立条件要说明是参与乘积的分量及各项间的理想化假设。Q、K是由输入和投影权重计算的表示，不是直接把它们称为训练参数。不要附带“某研究用了2.5倍”等未服务本节的旁支，即使随后说超出范围也应删除。
 通常一课3–6块、足够的细节可能需要1200–2500汉字；这不是最低字数要求，简单单元可以短，但不能省略学会所需的解释。逐块衔接，最后只补一个新的局部自检，给检查依据，不重抄整课模板。每块after选择真正支持核心的来源；有可用的知乎解释时优先用相应文章作为依据，不默认把所有块都挂上传资料。上传资料决定范围，来源不足时仍据实标注，不能强配无关知乎引用。来源中的英文词汇表、工具版本和产品宣传不是本节的学习任务。零基础沟通课用页面上看得见的位置、文字、排列方式表达，不要求记hero/CTA/Container等词；用户没问模型选型就不列模型及多模态能力，截图是否可用只看当前工具有无图片输入。不要只说术语不是必须，随后仍列整张词汇表。正文不要出现C1/C2/P1内部编号；引用由程序显示。不要把作者流程照搬为必须步骤，例如一个改标题的动作通常不需要用户审批完整工程方案，也不要求不会代码者先读懂标签。位置可用页面文字或截图，未知字号不可猜为24px；具体数值若用于示例须声明假设且解释单位。说“这样给出了明确且可检查的目标”，不要说“AI越能精准/可以精确执行”。每一块推进新内容，不能先讲三要素，再讲五问题，再完整重抄同一模板。只输出sourceReview和sections JSON。`
 export const COMPOSE_OUTPUT='{"sourceReview":[{"ref":"C1","contribution":"本次问题的主要依据"}],"sections":[{"after":"C1","title":"从这个例子开始","text":"连贯讲解正文"}]}'
-export const ATTACH_PROMPT='正文已完成且冻结。现在为每个 P 段关联支撑主要论点的资料片段。先为该段主要论点选择一张有充分依据的 C 卡作为 after，再从该卡的 citationCatalog 中选择 1–6 个真实 evidenceRefs；同段不能混合其他卡。正文给出的 after 是建议，核对材料后可修正，不能机械沿用或轮换编号，也不能用不支持正文的标题凑数。逐段检查实际材料，不能猜造引用。按原顺序返回每段一次，不重写 title/text，不增加内容，不引用范围外的卡。输出前检查每一段所有 evidenceRefs 的 C 前缀都等于 after，例如 after=C2 时可以用 C2.E2、C2.E3，不能混入 C1.E2。只返回 placements。'
-export const ATTACH_OUTPUT='{"placements":[{"section":"P1","after":"C1","evidenceRefs":["C1.E2"]}]}'
+export const ATTACH_PROMPT='正文已完成且冻结。现在为每个 P 段关联支撑主要论点的资料片段。先为该段主要论点选择一张有充分依据的 C 卡作为 after，再从该卡的 citationCatalog 中选择 1–6 个真实 evidenceRefs；同段不能混合其他卡。正文给出的 after 是建议，核对材料后可修正，不能机械沿用或轮换编号，也不能用不支持正文的标题凑数。逐段检查实际材料，不能猜造引用。按原顺序返回每段一次，不重写 title/text，不增加内容，不引用范围外的卡。每张卡内部的片段从 E1 编号，E1 通常只是标题，正文片段从 E2 开始；evidenceRefs 只填写该卡内的 E 编号，不重复填写 C 前缀。例如 after=C2 且 evidenceRefs=[E2,E3] 时，程序只能引用 C2 卡内实际存在的第二、第三片段，绝不能解释成其他卡的 E2/E3。只返回 placements。'
+export const ATTACH_OUTPUT='{"placements":[{"section":"P1","after":"C1","evidenceRefs":["E2"]}]}'
 
 export const ANSWER_COMPLETENESS='当前 currentQuestion 是本次必须回答的请求，优先于旧 conceptAlignment.successCheck。用户明确问多个概念或操作时，例子须把它们连起来，不得只回答其中一个，再以“下次学习”推走其余部分。写作前在内部核对问题中的每项要求、用户已知与非目标；围绕一个对象或任务连续推进，避免换几个彼此无关的例子。一个贯穿的例子可以分成几张连续讲解卡，不等于把整篇放进一张卡。先给直接回应，接着在同一例子里逐步计算并解释，最后检查是否回答了原问题。未被问到的基础只有在理解这个例子必需时才补，不凑概念百科。'
 

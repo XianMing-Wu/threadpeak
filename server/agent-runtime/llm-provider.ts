@@ -2,7 +2,6 @@ import type { ProviderConfig } from '../config.ts'
 import type { HttpPort } from '../ports.ts'
 import type { LlmCompleteInput, LlmCompleteResult, LlmProvider,ProviderMetadata } from './types.ts'
 import { readUsage,providerDiagnostic,parseProviderError,classifyProviderError } from './provider-metadata.ts'
-import { extractStructuredJson } from './schemas.ts'
 import { thinkingParameters } from './thinking-policy.ts'
 
 const MAX_RESPONSE_CHARS = 1_000_000
@@ -77,15 +76,9 @@ export function createAgentLlmProvider(ports: { config: ProviderConfig; http: Ht
           return {...failure(error.code,error.retryable),diagnostic}
         }
         if (stream && response.body) {
+          // Preserve the complete formal body. Domain parsers own recovery; choosing
+          // a parseable inner object here silently drops sections and topology.
           const result = await readCompletionStream(response.body, input)
-          if (input.json) {
-            const extracted = extractStructuredJson(result.content)
-            // Transport completion is distinct from schema success; retain malformed formal
-            // text for the same Agent's bounded repair, never substitute reasoning.
-            const text = extracted === undefined ? result.content : JSON.stringify(extracted)
-            input.onText?.(text)
-            return { kind: 'completed', text, reasoning: result.reasoning,usage:result.usage,diagnostic:result.diagnostic }
-          }
           if (!result.content.trim()) return {...failure('OUTPUT_EMPTY', true),usage:result.usage,diagnostic:result.diagnostic}
           return { kind: 'completed', text: result.content, reasoning: result.reasoning,usage:result.usage,diagnostic:result.diagnostic }
         }
@@ -97,14 +90,6 @@ export function createAgentLlmProvider(ports: { config: ProviderConfig; http: Ht
         const content = typeof message.content === 'string' ? message.content : ''
         const reasoning = typeof message.reasoning_content === 'string' ? message.reasoning_content : typeof message.reasoning === 'string' ? message.reasoning : ''
         if (reasoning) input.onReasoning?.(reasoning)
-        if (input.json) {
-          const extracted = extractStructuredJson(content)
-          if (!content.trim()) return {...failure('OUTPUT_EMPTY', true),...metadata}
-          const text = extracted === undefined ? content : JSON.stringify(extracted)
-          input.signal?.throwIfAborted()
-          input.onText?.(text)
-          return { kind: 'completed', text, reasoning,...metadata }
-        }
         if (!content.trim()) return {...failure('OUTPUT_EMPTY', true),...metadata}
         input.signal?.throwIfAborted()
         input.onText?.(content)

@@ -5,6 +5,17 @@ import {projectRouteToDocument} from './project-document.ts'
 
 const carrier=name=>({title:name,description:`学习${name}`,concepts:[{title:`${name}的核心`,description:`在当前目标中理解${name}`} ]})
 const original={title:'目标路线',stages:[{parallel:false,carriers:[carrier('A')]},{parallel:true,carriers:[carrier('B'),carrier('C')]},{parallel:false,carriers:[carrier('D')]}]}
+
+test('explicit string booleans and oversized concept lists preserve the same two independent branches',()=>{
+ const value=structuredClone(original)
+ value.stages[1].parallel='true'
+ value.stages[1].carriers[0].concepts=Array.from({length:15},(_,i)=>({...value.stages[1].carriers[0].concepts[0],title:`B-${i}`}))
+ const {recovered,route}=checked(value)
+ assert.equal(recovered.linear,false)
+ assert.deepEqual(recovered.plan.stages.map(s=>s.length),[1,2,1])
+ assert.ok(recovered.plan.stages[1][0].concepts.length<=12)
+ assert.ok(projectRouteToDocument(route).value.document.structure.flowGroups.some(g=>g.type==='split'))
+})
 const input={goal:'理解矩阵变换',goalContext:{rawGoal:'理解矩阵变换，只学数学',userStatements:[{text:'我会四则运算'}]},attachments:[{ref:'F1',sourceId:'owned',fileName:'论文.pdf',content:'矩阵变换保留线性组合。'}]}
 function checked(raw,context=input){const r=recoverPlan(raw,context);const route=compileRecoveredPlan(r.plan,'stable-scope',context.attachments?.map(a=>a.sourceId)??[],new Set());assert.equal(projectRouteToDocument(route).ok,true);return {recovered:r,route}}
 test('malformed JSON preserves concepts and explicit parallel stages; unknown relations become linear',()=>{
@@ -59,4 +70,22 @@ test('explicit legacy stage arrays preserve parallel carriers; every bounded sta
  for(let count=1;count<=16;count++){
   checked({stages:Array.from({length:count},(_,i)=>({parallel:i%2===0,carriers:i%2===0?[carrier(`${i}-A`),carrier(`${i}-B`)]:[carrier(`${i}-C`)]}))})
  }
+})
+
+test('wide input matrix compiles every malformed variant and preserves known topology and real source bounds',()=>{
+ const raw=JSON.stringify(original)
+ const variants=[raw,'```json\n'+raw+'\n```','说明：'+raw+'以上。',raw.replaceAll('"parallel":true','parallel: True'),raw.replaceAll('"parallel":true','"parallel":"并列"'),raw.replaceAll('"title"','name'),raw.replaceAll('"concepts"','"topics"'),raw.replaceAll('"description"','"summary"'),raw.replaceAll('},{','},,{'),raw.replaceAll('}]','},]'),raw.replaceAll('"A"','"😀中文é"'),{result:original},{data:original},{plan:original},{route:original}]
+ for(const input of variants)assert.ok(checked(input).route.concepts.length>0)
+ for(let i=0;i<raw.length;i++)checked(raw.slice(0,i))
+ for(const parallel of [true,1,'true','TRUE','并行','并列']){const v=structuredClone(original);v.stages[1].parallel=parallel;assert.deepEqual(checked(v).recovered.plan.stages.map(s=>s.length),[1,2,1])}
+ for(const key of ['stages','carriers','concepts'])for(const bad of [null,false,12,'invalid',{},[null,false,{},[]]])checked({[key]:bad})
+ for(const goal of ['', '学习', '😀'.repeat(4000), '数学\n代码\tJSON', '我不学编程，只想理解公式。'])checked('',{goal,goalContext:{rawGoal:goal}})
+})
+
+test('the task reminder preserves full original intent and gives each exact repeated sentence one final mention',async()=>{
+ const {routeTaskFocus}=await import('./direct-route.ts')
+ const repeated='我想学习 Python 字符串。',last='当前只需要分清路径和正则的转义。',goal=repeated.repeat(100)+last
+ const focus=routeTaskFocus({goal},'plan')
+ assert.ok(focus.includes(goal));const reminder=focus.split('用户原话去除完全重复句后的核对')[1]
+ assert.ok(reminder);assert.equal(reminder.split(repeated).length-1,1);assert.ok(reminder.endsWith(last))
 })
