@@ -33,8 +33,13 @@ export class ZhihuDataClient {
     if(options.token)headers['X-OAuth-Token']=options.token
     if(options.key)headers['Idempotency-Key']=options.key
     if(!options.form)headers['Content-Type']='application/json'
+    // A 100 MiB PDF needs several minutes on a small VPS uplink. Keep normal
+    // API deadlines short, but budget file transfer at 256 KiB/s plus response
+    // time, capped at ten minutes. The caller's cancellation still wins.
+    const file=url.pathname==='/resources/v1/files'?options.form?.get('file'):undefined
+    const timeoutMs=file instanceof Blob?Math.min(600_000,120_000+Math.ceil(file.size/262_144)*1000):120_000
     return this.request(options.signal,async signal=>{
-      const response=await this.fetcher(url,{method:options.body||options.form?'POST':'GET',headers,body:options.form??(options.body?JSON.stringify(options.body):undefined),redirect:'error',signal:AbortSignal.any([AbortSignal.timeout(120_000),signal])})
+      const response=await this.fetcher(url,{method:options.body||options.form?'POST':'GET',headers,body:options.form??(options.body?JSON.stringify(options.body):undefined),redirect:'error',signal:AbortSignal.any([AbortSignal.timeout(timeoutMs),signal])})
       await this.gate?.observe(response)
       if(!response.ok){await response.body?.cancel();throw new ToolError(options.token&&[401,403].includes(response.status)?'ZHIHU_AUTH_FAILED':`ZHIHU_HTTP_${response.status}`,response.status===429||response.status>=500)}
       let payload:any;try{payload=JSON.parse(await response.text(),(_key,value,context?:{source?:string})=>

@@ -1,6 +1,6 @@
 # 生产部署与运行
 
-此目录提供部署材料，未代表已经部署到公网。实际域名、服务器及身份服务尚需用户配置。默认数据库不对宿主暴露端口，API 仅在容器网络，Caddy 提供同源静态站点与 HTTPS。
+此目录提供可复用的部署材料；某次部署的完成状态以带日期的真实验收记录为准。默认独立部署中，数据库不对宿主暴露端口，API 仅在容器网络，Caddy 提供同源静态站点与 HTTPS。已有 1Panel、PostgreSQL 和 OpenResty 的主机可使用下述复用方式。
 
 ## 配置与启动
 
@@ -17,6 +17,8 @@ docker compose --env-file .env.production ps
 
 Node 24 镜像提供 Poppler；PDF 主流程使用真实知乎解析 API，解析完成后从保留的原 PDF 用 pdftotext 有界提取完整文字层，再保留其中不存在的远端 OCR / 公式块，避免远端非空结果仍遗漏标题。提取限制 45 秒、8 MiB 输出与 200 万字符，受同一个大文件内存名额约束；没有文字层时不能伪造正文。上传暂存、任务 ID 与检查点在数据库，成功后删除原 PDF 暂存，保留解析正文和总结。API 使用非 root 用户和只读文件系统。镜像标签应在实际发布时锁定已验收 digest；同一批 API/worker 使用同一构建，不支持混用不同工作流合同版本滚动消费未完成任务。
 
+向知乎发送 PDF 时，上传时限按实际文件大小和 256 KiB/s 传输速度预算，再留 120 秒响应时间，总上限 10 分钟；普通知乎 API 仍为 120 秒。上传占用同一个大文件内存名额并遵守两路知乎并发，用户取消和进程停机仍可中断。上传时限与后续最长 20 分钟的解析轮询分别计时，不能把低带宽下未传完的请求误认为解析失败。
+
 ## 2 核、4 GB VPS 的资源约束
 
 Compose 默认分配 API 1.1 核 / 2 GiB、PostgreSQL 0.7 核 / 1 GiB、Caddy 0.2 核 / 256 MiB，合计 2 核 / 3.25 GiB，为操作系统保留约 768 MiB。容器不额外使用 swap；Node 老生代上限为 1280 MiB，给 Buffer、TLS 和运行时留空间。Docker 本地日志每服务轮转保留最多 3 × 10 MiB；带哈希的 /assets/ 静态文件长期缓存，HTML 重新验证。每个进程数据库连接池最多 10 个；worker 最多执行 4 个任务，超出任务保存在数据库队列。知乎调用仍共用两路和 2.1 秒发送间隔，排队不等于新增外部容量。
@@ -24,6 +26,20 @@ Compose 默认分配 API 1.1 核 / 2 GiB、PostgreSQL 0.7 核 / 1 GiB、Caddy 0.
 此配置针对累计几千用户、高峰 100–300 人在线；在线阅读、文件上传和同时生成必须分开验收。不要通过增加 worker 数突破内存预算或外部额度。持续监控请求 P95、队列最老任务年龄、数据库磁盘增长和容器 OOM。每账号来源额度不是整台机器的磁盘上限；磁盘容量、备份空间及告警须按实际资料量配置。
 
 在开发机或 CI 构建镜像后上传镜像仓库，再在 VPS 拉取已验收的 digest；不在服务满载时原地运行 TypeScript/Vite 构建。`.dockerignore` 排除私有环境、数据库、验收材料和 `刘看山` 原始资料目录；运行时需要的已集成角色资产随网页发布。发布前实际启动 API 镜像，因为类型检查不能发现最终镜像漏拷贝服务端依赖。
+
+## 复用 1Panel 的数据库与 HTTPS
+
+按 [1Panel 文件管理](https://1panel.cn/docs/v2/user_manual/hosts/file/)、[编排管理](https://1panel.cn/docs/v2/user_manual/containers/compose/)和[网站创建](https://1panel.cn/docs/v2/user_manual/websites/website_create/)操作。源码、前端构建结果和运行镜像可以通过面板上传，无需在 VPS 上拉取 Git 或运行构建。
+
+1. 在开发机为 VPS 的实际架构构建 API 镜像，例如 `docker build --platform linux/amd64 --target api -t threadpeak-api:版本 .`；通过 `docker save` 导出压缩包。源码包单独包含 `dist`，排除 `.git`、`node_modules`、`server/.data`、私有环境、QA、缓存和 `刘看山` 原始文件夹。
+2. 上传到 `/opt/1panel/apps`，先核对 SHA-256，再解压到 `/opt/1panel/apps/threadpeak` 并通过 `docker load` 导入镜像。该应用目录限制为 `0700`，`.env.production` 为 `0600`；私有配置和备份不进入网站公开目录。
+3. 在现有 PostgreSQL 实例中创建独立 `threadpeak` 库。`DATABASE_URL` 使用实际 PostgreSQL 容器名和容器内端口，正确 URL 编码用户名、密码；API 与 PostgreSQL 加入同一个已确认的 `1panel-network`。保留现有应用的库和端口绑定。
+4. 将 [1panel.compose.yaml](1panel.compose.yaml) 复制为应用根目录的 `docker-compose.yml`，将镜像占位替换为已导入并验收的标签或 digest，或在面板编排环境变量中填写 `THREADPEAK_IMAGE`。在 1Panel「容器 → 编排 → 创建 → 路径选择」导入此文件，不勾选强制拉取。
+5. `.env.production` 设置 `NODE_ENV=production`、`THREADPEAK_HOST=0.0.0.0`、`THREADPEAK_PORT=4312`、`NODE_OPTIONS=--max-old-space-size=768`，并填写真实 provider 与 OAuth 配置。公开源和 OAuth 回调使用正式 HTTPS 域名。OpenResty 使用 host 网络时，`THREADPEAK_TRUSTED_PROXIES` 填实际 Docker 网桥网关的 `/32`，先用 `docker network inspect` 核对，不照抄其他主机地址。
+6. 创建静态网站并选择已有证书；把 `dist` 内容复制到面板显示的网站运行目录。保留面板管理的证书路径、ACME 规则与 HTTPS 跳转。在该站点 server 块内代理 `/api/` 和精确 `/health` 到 `http://127.0.0.1:4312`；API 使用 HTTP/1.1，转发 Host、实际客户端 IP 和协议，关闭请求/响应缓冲，读写超时 120 秒，上传限制 `101m`。根路径使用 `try_files $uri $uri/ /index.html`，`/assets/` 文件不存在返回 404，缓存一年；HTML 重新验证。
+7. 安全头遵循 [Caddyfile](Caddyfile) 的两类页面合同：工作区禁止嵌入；仅 `/introduction.html` 允许同源嵌入和其 Rive 所需的 `wasm-unsafe-eval`。Nginx 的 location 内增加 `add_header` 会改变继承，介绍页应同时保留 HSTS、nosniff 和 Referrer-Policy。`nginx -t` 成功后平滑 reload OpenResty。
+
+此模板只新增 API：1.1 核、1280 MiB，Node 堆 768 MiB；复用主机原有数据库、HTTPS 和其他服务。它与独立 Compose 的整机资源分配不同，须按已有 MySQL、网盘等应用占用重新实测。用公网 HTTPS 完成真实登录、收藏导入、PDF、路线、学习与刷新验收，并在实际 PostgreSQL 上执行隔离的 `threadpeak_test` 门禁、目标负载和新库备份恢复演练。高峰在线阅读量不等于可同时执行同等数量的 AI 生成，模型与知乎队列仍服从既定并发和上游额度。
 
 ## 健康、任务与恢复
 

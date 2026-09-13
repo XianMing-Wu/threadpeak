@@ -1,0 +1,34 @@
+name: threadpeak
+services:
+  api:
+    image: ${THREADPEAK_IMAGE:?Set the tested image tag or digest}
+    pull_policy: never
+    container_name: threadpeak-api
+    restart: unless-stopped
+    env_file: /opt/1panel/apps/threadpeak/.env.production
+    cpus: 1.1
+    mem_limit: 1280m
+    memswap_limit: 1280m
+    pids_limit: 100
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    ports:
+      - 127.0.0.1:4312:4312
+    networks:
+      - panel
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: '3'
+    stop_grace_period: 45s
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:4312/api/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+networks:
+  panel:
+    external: true
+    name: 1panel-network
