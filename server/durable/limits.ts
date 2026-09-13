@@ -11,7 +11,7 @@ export function pause(ms:number,signal?:AbortSignal){return new Promise<void>((r
   signal?.addEventListener('abort',abort,{once:true})
 })}
 const heldPools = new AsyncLocalStorage<string[]>()
-type PermitOptions = {intervalMs?:number;onQueue?:(detail?:string)=>Promise<void>;ephemeral?:boolean;now?:()=>number;wait?:typeof pause;leaseMs?:number;heartbeatMs?:number}
+type PermitOptions = {intervalMs?:number;onQueue?:(detail?:string)=>Promise<void>;ephemeral?:boolean;now?:()=>number;wait?:typeof pause;leaseMs?:number;heartbeatMs?:number;queueTimeoutMs?:number}
 /** PostgreSQL shares permits across replicas; a PGlite database has one process owner. */
 export async function withPermit<T>(db:Sql,pool:string,limit:number,signal:AbortSignal|undefined,work:(signal:AbortSignal)=>Promise<T>,options:PermitOptions={}):Promise<T>{
   const held=heldPools.getStore()??[]
@@ -45,7 +45,7 @@ export async function withPermit<T>(db:Sql,pool:string,limit:number,signal:Abort
     })
     if(slot===undefined){
       if(!queued){queued=true;await options.onQueue?.('正在排队，等待知乎请求间隔或可用名额')}
-      if(now()-started>180_000)throw new ToolError('PROVIDER_QUEUE_TIMEOUT',false)
+      if(now()-started>(options.queueTimeoutMs??180_000))throw new ToolError('PROVIDER_QUEUE_TIMEOUT',false)
       await wait(waitUntil?Math.max(1,Math.min(5000,waitUntil-now())):delay,combined)
       delay=Math.min(2000,delay*1.5)
     }

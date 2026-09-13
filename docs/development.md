@@ -78,6 +78,8 @@ npm run test:coverage             # Node 与前端分别统计
 TEST_DATABASE_URL='postgres://USER:PASSWORD@localhost:5432/threadpeak_test' npm run test:postgres
 ```
 
+门禁每次在该独立测试库创建随机 schema，所有连接与子进程共享该 schema，结束后只删除本轮 schema。测试账号需要创建 schema 的权限；连续或并行运行不会领取其他轮次遗留的任务，也不清空已有库。原生 PDF 文字层回归需要 pdftotext；生产镜像已包含它，本机缺失时该项明确跳过，不能视为生产 PDF 验收通过。
+
 这会写入合成任务和资源，不用于正式库。gate 覆盖真实连接竞争、三进程额度共享、事务、取消、停机交回、无锁一致快照和共享 HTTP 计数。未运行此命令时，只能报告 PGlite 的结果。
 
 ## QA 与维护脚本

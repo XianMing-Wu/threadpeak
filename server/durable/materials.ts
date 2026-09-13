@@ -5,6 +5,8 @@ import { CommandError, digest, type Resource } from './store.ts'
 import { ToolError, type TaskContext } from './worker.ts'
 import type { ProductTools } from './tools.ts'
 import type { ZhihuDataClient } from './zhihu-data.ts'
+import { withPermit } from './limits.ts'
+import { pdfText } from './pdf-text.ts'
 
 export const MaterialEntrySchema=z.object({id:z.string(),title:z.string(),summary:z.string(),url:z.string().url(),authorId:z.string().nullable(),authorName:z.string().nullable(),authorUrl:z.string().url().optional(),likes:z.number().nullable()})
 export type MaterialEntry=z.infer<typeof MaterialEntrySchema>
@@ -52,11 +54,11 @@ export async function preparePdf(ctx:TaskContext,tools:ProductTools,api:ZhihuDat
   const latest=checkpoints[`PDF-upload:v2:${generation}`]?.value as {createdAt:number}|undefined
   if(latest&&!checkpoints[`PDF-task:v2:${generation}`]&&Date.now()-latest.createdAt>=23*3600_000)generation++
   const uploadKey=legacy?'PDF-upload':`PDF-upload:v2:${generation}`
-  const uploaded=await ctx.step<string|{fileId:string;createdAt:number}>(uploadKey,{hash:meta.hash},async()=>{
+  const uploaded=await ctx.step<string|{fileId:string;createdAt:number}>(uploadKey,{hash:meta.hash},()=>withPermit(ctx.store.db,'pdf-upload-memory',1,ctx.signal,async signal=>{
     const [row]=await ctx.store.db.query<{base64:string}>('SELECT base64 FROM tp_material_uploads WHERE resource_id=$1',[resource.id]);if(!row)throw new ToolError('PDF_UPLOAD_MISSING',false)
     const form=new FormData();form.append('file',new Blob([Buffer.from(row.base64,'base64')],{type:'application/pdf'}),meta.fileName)
-    const data=await api.json('/resources/v1/files',{form,signal:ctx.signal});if(typeof data.file_id!=='string'||!data.file_id.trim())throw new ToolError('PDF_UPLOAD_INVALID');return {fileId:data.file_id as string,createdAt:Date.now()}
-  })
+    const data=await api.json('/resources/v1/files',{form,signal});if(typeof data.file_id!=='string'||!data.file_id.trim())throw new ToolError('PDF_UPLOAD_INVALID');return {fileId:data.file_id as string,createdAt:Date.now()}
+  },{queueTimeoutMs:10*60_000}))
   const fileId=typeof uploaded==='string'?uploaded:uploaded.fileId
   await ctx.progress('正在解析 PDF')
   const taskId=await ctx.step(legacy?'PDF-task':`PDF-task:v2:${generation}`,{fileId},async()=>{const data=await api.json('/api/v1/pdf-parse/tasks',{body:{file_id:fileId},key:`threadpeak-pdf-${resource.id}${legacy?'':`-v2-${generation}`}`,signal:ctx.signal});if(typeof data.task_id!=='string'||!data.task_id.trim())throw new ToolError('PDF_TASK_INVALID');return data.task_id as string})
@@ -69,11 +71,26 @@ export async function preparePdf(ctx:TaskContext,tools:ProductTools,api:ZhihuDat
         if(typeof state.result?.url!=='string')throw new ToolError('PDF_RESULT_INVALID')
         const raw=await api.pdfResult(state.result.url,ctx.signal)
         if(!Array.isArray(raw.pages))throw new ToolError('PDF_RESULT_INVALID')
-        const content=raw.pages.map((p:any)=>Array.isArray(p.blocks)?p.blocks.map((b:any)=>typeof b.content==='string'?b.content:'').filter(Boolean).join('\n\n'):'').filter(Boolean).join('\n\n')
+        const blocks:string[]=raw.pages.flatMap((p:any)=>Array.isArray(p.blocks)?p.blocks.map((b:any)=>typeof b.content==='string'?b.content:'').filter(Boolean):[])
+        let content=blocks.join('\n\n'),textSource='zhihu'
+        if(content.length>2_000_000)throw new ToolError('ATTACHMENT_TEXT_SIZE',false)
+        // A non-empty remote result can still omit titles or entire text blocks.
+        // Keep the PDF text layer intact, then retain remote OCR/math blocks
+        // absent from it. Compare whitespace only; never erase math operators.
+        await ctx.progress('正在核对 PDF 正文')
+        const original=await ctx.step('PDF-local-text:v1',{hash:meta.hash},()=>withPermit(ctx.store.db,'pdf-upload-memory',1,ctx.signal,async signal=>{
+          const [row]=await ctx.store.db.query<{base64:string}>('SELECT base64 FROM tp_material_uploads WHERE resource_id=$1',[resource.id])
+          return row?pdfText(Buffer.from(row.base64,'base64'),signal):''
+        },{queueTimeoutMs:10*60_000}))
+        if(original.trim()){
+          const compact=original.replace(/\s+/g,''),extra=blocks.filter(block=>!compact.includes(block.replace(/\s+/g,'')))
+          content=original+(extra.length?'\n\n## 版面识别补充\n\n'+extra.join('\n\n'):'')
+          textSource=extra.length?'local-text+zhihu':'local-text'
+        }
         const summary=typeof state.result.summary==='string'?state.result.summary.trim():''
         if(!content.trim()&&!summary)throw new ToolError('PDF_UNREADABLE',false)
         if(content.length>2_000_000)throw new ToolError('ATTACHMENT_TEXT_SIZE',false)
-        return {content,summary}
+        return {content,summary,textSource}
       }
       if(!['pending','running'].includes(state.task_status))throw new ToolError('PDF_STATE_INVALID')
       await ctx.progress(`正在解析 PDF${Number.isFinite(state.progress)?` · ${Math.round(Math.max(0,Math.min(1,state.progress))*100)}%`:''}`);await pause(ctx.signal)

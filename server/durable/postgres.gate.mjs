@@ -1,11 +1,19 @@
-import test from 'node:test'
+import test,{before,after} from 'node:test'
 import assert from 'node:assert/strict'
 import {randomUUID} from 'node:crypto'
 import {openDatabase,migrate} from './database.ts'
 import {DurableStore} from './store.ts'
 import {withPermit} from './limits.ts'
-const url=process.env.TEST_DATABASE_URL
-if(!url||new URL(url).pathname!=='/threadpeak_test')throw new Error('An isolated threadpeak_test database is required')
+const configuredUrl=process.env.TEST_DATABASE_URL
+if(!configuredUrl||new URL(configuredUrl).pathname!=='/threadpeak_test')throw new Error('An isolated threadpeak_test database is required')
+// Each run owns its schema. Leftover jobs from earlier runs must never be
+// claimed by this run, and bounded maintenance must see only its own fixtures.
+const schema='gate_'+randomUUID().replaceAll('-',''),connectionUrl=new URL(configuredUrl)
+connectionUrl.searchParams.set('search_path',schema)
+const url=connectionUrl.toString()
+let admin
+before(async()=>{admin=await openDatabase({url:configuredUrl});await admin.query(`CREATE SCHEMA "${schema}"`)})
+after(async()=>{try{await admin?.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`)}finally{await admin?.close()}})
 test('PostgreSQL: two connections, concurrent migrations, idempotency, fencing, atomic commit and reconnect',async()=>{
   const a=await openDatabase({url}),b=await openDatabase({url});let c
   try{
@@ -52,7 +60,7 @@ test('PostgreSQL permits are shared by three independent Node processes', {timeo
   try{
     await migrate(db)
     for(let i=0;i<3;i++){
-      const child=spawn(process.execPath,['--input-type=module','--eval',code],{env:{...process.env,TEST_PERMIT_POOL:pool},stdio:['ignore','ignore','pipe','ipc']})
+      const child=spawn(process.execPath,['--input-type=module','--eval',code],{env:{...process.env,TEST_DATABASE_URL:url,TEST_PERMIT_POOL:pool},stdio:['ignore','ignore','pipe','ipc']})
       let first;const ready=new Promise(resolve=>{first=resolve}),held=Promise.withResolvers()
       child.on('message',message=>{first(message);if(message==='held')held.resolve()})
       const exit=new Promise((resolve,reject)=>{child.once('exit',status=>status===0?resolve():reject(Error('permit subprocess failed')));child.once('error',reject)})

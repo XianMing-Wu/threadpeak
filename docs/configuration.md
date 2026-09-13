@@ -18,7 +18,7 @@
 
 本地模型未配置时使用应用保守默认窗口64,000、输出16,384；这不是厂商能力声明。配置的窗口与业务上限500,000取较小值，再扣输出与安全余量；UTF-8字节上界是保守预检，真实usage单独记录。所有讲解由LLM生成，知乎仅用于搜索及资料接口；已移除直答和四项ZHIHU_FAST/DEEP窗口配置，生产只需明确LLM窗口与输出上限。校验入口见 [capabilities.ts](../server/durable/capabilities.ts)、[config.ts](../server/config.ts) 和 [bootstrap.ts](../server/durable/bootstrap.ts)。
 
-PDF 使用知乎异步解析 API，默认管线不依赖本机 pdftotext。全网检索沿用知乎开发者服务中的站外检索能力。模型、检索和 PDF 服务不可用时不会自动切换示例结果。
+PDF 使用真实知乎异步解析 API，并用 Poppler 的 pdftotext 核对、保留完整文字层，补充远端独有的 OCR / 公式块。生产镜像已安装 poppler-utils 和中文映射 poppler-data；本地开发可用 Homebrew 安装 poppler，Debian/Ubuntu 安装这两个包。没有本机提取器时仅能使用远端结果，不能保证远端保留全部标题。全网检索沿用知乎开发者服务中的站外检索能力。模型、检索和 PDF 服务不可用时不会自动切换示例结果。
 
 ## 本地运行与数据库
 

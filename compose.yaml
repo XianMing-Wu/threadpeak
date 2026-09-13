@@ -1,7 +1,18 @@
+x-logging: &bounded-logs
+  driver: local
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   db:
     image: postgres:17-alpine
     restart: unless-stopped
+    logging: *bounded-logs
+    cpus: 0.7
+    mem_limit: 1g
+    memswap_limit: 1g
+    pids_limit: 100
     environment:
       POSTGRES_DB: threadpeak
       POSTGRES_USER: threadpeak
@@ -18,11 +29,17 @@ services:
       context: .
       target: api
     restart: unless-stopped
+    logging: *bounded-logs
+    cpus: 1.1
+    mem_limit: 2g
+    memswap_limit: 2g
+    pids_limit: 100
     env_file: .env.production
     environment:
       NODE_ENV: production
       THREADPEAK_HOST: 0.0.0.0
       THREADPEAK_PORT: 4312
+      NODE_OPTIONS: --max-old-space-size=1280
       THREADPEAK_TRUSTED_PROXIES: 172.30.84.2/32
       DATABASE_URL: postgres://threadpeak:${POSTGRES_PASSWORD}@db:5432/threadpeak
     depends_on:
@@ -45,6 +62,11 @@ services:
       context: .
       target: web
     restart: unless-stopped
+    logging: *bounded-logs
+    cpus: 0.2
+    mem_limit: 256m
+    memswap_limit: 256m
+    pids_limit: 100
     networks:
       proxy:
         ipv4_address: 172.30.84.2

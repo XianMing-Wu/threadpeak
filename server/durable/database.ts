@@ -11,7 +11,7 @@ export type Sql = {
 
 export async function openDatabase(options: { url?: string; directory?: string } = {}): Promise<Sql> {
   if (options.url) {
-    const client = postgres(options.url, { max: 10, onnotice: () => {}, types: { serializedJson: { to: 3802, from: [114,3802], serialize: (value: unknown) => typeof value==='string'?value:JSON.stringify(value), parse: (value: string) => JSON.parse(value) }, safeInteger: { to: 20, from: [20], serialize: (value: number) => String(value), parse: (value: string) => { const result=Number(value); if(!Number.isSafeInteger(result))throw new Error('DATABASE_INTEGER_RANGE'); return result } } } })
+    const client = postgres(options.url, { max: 10, connect_timeout:5, onnotice: () => {}, types: { serializedJson: { to: 3802, from: [114,3802], serialize: (value: unknown) => typeof value==='string'?value:JSON.stringify(value), parse: (value: string) => JSON.parse(value) }, safeInteger: { to: 20, from: [20], serialize: (value: number) => String(value), parse: (value: string) => { const result=Number(value); if(!Number.isSafeInteger(result))throw new Error('DATABASE_INTEGER_RANGE'); return result } } } })
     function wrap(connection: any, nested = false): Sql {
       let pending: Promise<unknown> = Promise.resolve()
       return {

@@ -13,12 +13,18 @@ const Name=z.string().trim().min(1).max(200)
 export function registerMaterialRoutes(app:FastifyInstance,store:DurableStore,worker:DurableWorker,owner:(r:FastifyRequest)=>string,key:(r:FastifyRequest)=>string,api?:ZhihuDataClient,login?:ZhihuLogin){
   // Authentication runs in the parent onRequest hook, before accepting large bodies.
   void app.register(async uploads=>{
-    const active=new Map<string,number>(),held=new WeakMap<FastifyRequest,string>()
-    let total=0
-    const release=(request:FastifyRequest)=>{const own=held.get(request);if(!own)return;held.delete(request);total--;const count=(active.get(own)??1)-1;if(count)active.set(own,count);else active.delete(own)}
+    const active=new Map<string,number>(),held=new WeakMap<FastifyRequest,{own:string;bytes:number}>()
+    let total=0,reservedBytes=0
+    const release=(request:FastifyRequest)=>{const reservation=held.get(request);if(!reservation)return;const {own,bytes}=reservation;held.delete(request);total--;reservedBytes-=bytes;const count=(active.get(own)??1)-1;if(count)active.set(own,count);else active.delete(own)}
     uploads.addHook('onRequest',async request=>{
-      const own=owner(request);if(total>=4||(active.get(own)??0)>=2)throw new CommandError('UPLOAD_BUSY',429)
-      total++;active.set(own,(active.get(own)??0)+1);held.set(request,own)
+      // Reserve before Fastify buffers the body. Unknown/chunked sizes reserve
+      // the route maximum; never allow four 100 MiB uploads to multiply through
+      // Buffer, base64 and PostgreSQL serialization inside the 2 GiB API.
+      const maximum=request.url.split('?')[0]==='/api/v2/attachments'?20_000_000:101*1024*1024
+      const length=Number(request.headers['content-length']),bytes=Number.isSafeInteger(length)&&length>=0?length:maximum
+      if(bytes>maximum)throw new CommandError('REQUEST_TOO_LARGE',413)
+      const own=owner(request);if(total>=4||(active.get(own)??0)>=2||reservedBytes+bytes>128*1024*1024)throw new CommandError('UPLOAD_BUSY',429)
+      total++;reservedBytes+=bytes;active.set(own,(active.get(own)??0)+1);held.set(request,{own,bytes})
       request.raw.once('close',()=>{if(!request.raw.complete)release(request)})
     })
     uploads.addHook('onResponse',async request=>release(request))

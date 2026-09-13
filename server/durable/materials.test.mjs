@@ -1,6 +1,8 @@
 import {placeAnswer} from '../../tests/fixtures/card-answer.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import {Readable} from 'node:stream'
+import {execFileSync} from 'node:child_process'
 import { openDatabase,migrate } from './database.ts'
 import { DurableStore,digest,CommandError } from './store.ts'
 import { TaskContext,DurableWorker,ToolError } from './worker.ts'
@@ -179,4 +181,37 @@ test('concurrent different uploads with one idempotency key cannot accept the lo
  const results=await Promise.all(['first content','second content'].map(content=>app.inject({method:'POST',url:'/api/v2/materials/upload?name=race.txt',headers:{cookie,'content-type':'application/octet-stream','idempotency-key':'same-concurrent-upload'},payload:Buffer.from(content)})))
  assert.deepEqual(results.map(r=>r.statusCode).sort(),[200,409])
  assert.equal((await db.query("SELECT * FROM tp_resources WHERE kind='attachment'")).length,1)
+})
+
+test('large upload admission rejects overlapping bodies before buffering and releases on error',async t=>{
+ const {app,cookie}=await fixture(t)
+ let consumed;const reading=new Promise(resolve=>{consumed=resolve})
+ const payload=new Readable({read(){consumed()}})
+ const headers={cookie,'content-type':'application/octet-stream','idempotency-key':'large-body-admission','content-length':String(100*1024*1024)}
+ const first=app.inject({method:'POST',url:'/api/v2/materials/upload?name=held.pdf',headers,payload}).then(r=>r)
+ await reading
+ try{
+  const overlap=await app.inject({method:'POST',url:'/api/v2/materials/upload?name=second.pdf',headers:{...headers,'idempotency-key':'second-large-body'},payload:Buffer.from('%PDF-')})
+  assert.equal(overlap.statusCode,429);assert.equal(overlap.json().code,'UPLOAD_BUSY')
+  const small=await app.inject({method:'POST',url:'/api/v2/materials/upload?name=small.txt',headers:{cookie,'content-type':'application/octet-stream','idempotency-key':'small-alongside-large'},payload:Buffer.from('Small files still fit')})
+  assert.equal(small.statusCode,200,small.body)
+ }finally{payload.push(null);await first}
+ const next=await app.inject({method:'POST',url:'/api/v2/materials/upload?name=next.pdf',headers:{...headers,'idempotency-key':'after-error-large'},payload:Buffer.from('%PDF-')})
+ assert.notEqual(next.statusCode,429)
+})
+
+test('remote PDF success with omitted text retains the full text layer and unmatched OCR',async t=>{
+ try{execFileSync('pdftotext',['-v'],{stdio:'pipe'})}catch(error){if(error.code==='ENOENT'){t.skip('Poppler is required by the production image');return}throw error}
+ const text='BT /F1 16 Tf 50 700 Td (First page text. x+2) Tj 0 -30 Td (Last line is preserved.) Tj ET'
+ const objects=['<< /Type /Catalog /Pages 2 0 R >>','<< /Type /Pages /Kids [3 0 R] /Count 1 >>','<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>','<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',`<< /Length ${text.length} >>\nstream\n${text}\nendstream`]
+ let pdf='%PDF-1.7\n';const offsets=[0]
+ for(const [i,object]of objects.entries()){offsets.push(Buffer.byteLength(pdf));pdf+=`${i+1} 0 obj\n${object}\nendobj\n`}
+ const xref=Buffer.byteLength(pdf);pdf+=`xref\n0 6\n0000000000 65535 f \n${offsets.slice(1).map(n=>String(n).padStart(10,'0')+' 00000 n \n').join('')}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`
+ const api=new ZhihuDataClient('test',async raw=>{const url=new URL(raw);if(url.hostname.endsWith('bcebos.com'))return new Response(JSON.stringify({pages:[{blocks:[{content:'Last line is preserved.'},{content:'x-2'}]}]}));return envelope(url.pathname==='/resources/v1/files'?{file_id:'file'}:url.pathname.endsWith('/tasks')?{task_id:'task'}:{task_status:'succeeded',result:{url:'https://data.bcebos.com/result',summary:''}})})
+ const {app,cookie,finish,store,own}=await fixture(t,{api,llm:{complete:async()=>({kind:'completed',text:'Both lines are retained.'})}})
+ const uploaded=await app.inject({method:'POST',url:'/api/v2/materials/upload?name=text-layer.pdf',headers:{cookie,'content-type':'application/octet-stream','idempotency-key':'local-text-recovery'},payload:Buffer.from(pdf)})
+ const final=await finish(uploaded.json().sourceId);assert.equal(final.job.status,'completed')
+ const resource=await store.resource(own,final.id);assert.match(resource.body.rawContent,/First page text/);assert.match(resource.body.rawContent,/Last line is preserved/)
+ assert.equal(resource.body.rawContent.split('Last line is preserved.').length,2);assert.match(resource.body.rawContent,/x\+2/);assert.match(resource.body.rawContent,/x-2/)
+ const job=await store.existingCommand(own,`pdf:${final.id}`);assert.equal(job.checkpoints['PDF-content:v2:0'].value.textSource,'local-text+zhihu')
 })

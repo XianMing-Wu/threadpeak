@@ -9,3 +9,9 @@ server/.data
 coverage
 qa
 design
+.local-backend-review
+刘看山
+**/刘看山
+**/node_modules
+*.threadpeak-owner
+*.threadpeak-lock

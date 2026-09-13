@@ -21,6 +21,10 @@
     reverse_proxy api:4312
   }
   handle {
+    @assets path /assets/*
+    header @assets Cache-Control "public, max-age=31536000, immutable"
+    @documents not path /assets/*
+    header @documents Cache-Control "no-cache"
     root * /srv
     try_files {path} /index.html
     file_server

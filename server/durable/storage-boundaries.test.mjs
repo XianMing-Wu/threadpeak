@@ -5,6 +5,7 @@ import {DurableStore} from './store.ts'
 import {DurableWorker} from './worker.ts'
 import {createProductApp} from './http.ts'
 import {verifyEventCAS} from './storage-cases.mjs'
+import {sharedHttpRateLimitStore} from './http-rate-limit.ts'
 
 test('PGlite events reject stale revisions without a caller lock and roll back sequence conflicts',async()=>{
  const db=await openDatabase();try{await migrate(db);await verifyEventCAS(db)}finally{await db.close()}
@@ -35,4 +36,15 @@ test('shared limit storage errors reject API admission while process liveness st
   assert.equal(response.statusCode,503);assert.equal(response.json().code,'HTTP_LIMIT_UNAVAILABLE');assert.ok(!response.body.includes('private'))
   assert.equal((await app.inject({url:'/health'})).statusCode,200)
  }finally{await app.close()}
+})
+
+test('stalled shared limits reject promptly and never admit a late database result',async t=>{
+ t.mock.timers.enable({apis:['setTimeout']})
+ let complete;const pending=new Promise(resolve=>{complete=resolve}),seen=[]
+ const Store=sharedHttpRateLimitStore({query:()=>pending})
+ new Store().incr('account',(...args)=>seen.push(args),60000)
+ t.mock.timers.tick(2500)
+ assert.equal(seen.length,1);assert.equal(seen[0][0].code,'HTTP_LIMIT_UNAVAILABLE');assert.equal(seen[0][0].status,503)
+ complete([{current:1,ttl:60000}]);await Promise.resolve();await Promise.resolve()
+ assert.equal(seen.length,1)
 })
