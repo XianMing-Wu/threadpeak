@@ -8,6 +8,7 @@ import { clearProductLibrary } from './learning-v2/library'
 import { oauthNotice,requestAuthLogout,requestGuestSession } from './runtime/request-auth-session'
 import {PageBoundary} from './components/PageBoundary'
 import {ProductIntroduction} from './pages/ProductIntroduction'
+import {AuthLanding} from './pages/AuthLanding'
 
 
 const HomePage=lazy(()=>import('./pages/Home').then(m=>({default:m.HomePage})))
@@ -19,7 +20,6 @@ const Path3DPage=lazy(()=>import('./pages/Collections').then(m=>({default:m.Path
 const SessionPage=lazy(()=>import('./pages/Session').then(m=>({default:m.SessionPage})))
 const AuthorsPage=lazy(()=>import('./learning-v2/Authors').then(m=>({default:m.DurableAuthorsPage})))
 const SettingsPage=lazy(()=>import('./pages/Settings').then(m=>({default:m.SettingsPage})))
-const AuthLanding=lazy(()=>import('./pages/AuthLanding').then(m=>({default:m.AuthLanding})))
 const NotFoundPage=lazy(()=>import('./pages/NotFound').then(m=>({default:m.NotFoundPage})))
 
 const routes = new Set<RouteName>(['home','chat','paths','path-3d','knowledge','knowledge-detail','session-learning','authors','settings'])
@@ -48,7 +48,12 @@ export function App(){
   const[themePreference,setThemePreference]=useState<Theme|null>(readThemePreference)
   const[systemAppearance,setSystemAppearance]=useState<Theme>(systemTheme)
   const theme=themePreference??systemAppearance
-  useEffect(()=>{const onHash=()=>startTransition(()=>setHash(location.hash));addEventListener('hashchange',onHash);return()=>removeEventListener('hashchange',onHash)},[])
+  useEffect(()=>{const onHash=()=>{
+    const next=location.hash
+    // Entry actions must respond immediately; workspace navigation can retain its page.
+    if(next==='#login'||next==='#intro'||!next)setHash(next)
+    else startTransition(()=>setHash(next))
+  };addEventListener('hashchange',onHash);return()=>removeEventListener('hashchange',onHash)},[])
   useEffect(()=>{
     document.documentElement.dataset.theme=theme
     document.documentElement.style.colorScheme=theme

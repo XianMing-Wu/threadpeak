@@ -7,5 +7,9 @@ export type StoryState={warm:boolean;visible:boolean;routeVisible:boolean;beat:n
 export const initialStory:StoryState={warm:false,visible:false,routeVisible:false,beat:0,settled:false};
 export function interviewLayout(width:number,height:number){
  const mobile=width<740;
- return {x:width*(mobile?.14:.085),y:height*(mobile?.39:.57),size:mobile?Math.min(200,width*.52):Math.min(286,width*.218)};
+ const size=mobile?Math.min(200,width*.52):Math.min(286,width*.218);
+ const dialogueFontSize=mobile?11:height<=560?12:Math.max(12,Math.min(17,width*.0108));
+ // The 600px composition contains a 360px SVG with a 416-unit viewBox.
+ const svgFontSize=dialogueFontSize*600*416/(size*360);
+ return {x:width*(mobile?.14:.085),y:height*(mobile?.39:.57),size,dialogueFontSize,svgFontSize};
 }

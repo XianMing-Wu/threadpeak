@@ -16,8 +16,7 @@
 .kanshan-question{--kanshan-size:clamp(110px,25cqh,205px);position:absolute;left:25.1%;top:35%;width:17.5%;height:clamp(85px,15cqh,126px);display:flex;flex-direction:column;justify-content:center;padding:12px 17px 21px;isolation:isolate}
 .kanshan-question svg{position:absolute;inset:0;width:100%;height:100%;z-index:-1;overflow:visible}
 .kanshan-question path{fill:white;stroke:#20272b;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
-.speaker-label{font-size:clamp(9px,.75cqw,11px);line-height:1.3;color:#6f7c82;letter-spacing:.08em;margin:0 0 5px}
-.kanshan-question p{font-size:clamp(12px,1.08cqw,17px);font-weight:450;line-height:1.55;white-space:pre-line;margin:0}
+.kanshan-question p{font-size:var(--interview-font-size,12px);line-height:1.55;white-space:pre-line;margin:0}
 .kanshan-interviewer{position:absolute;left:53.7037%;top:calc(94.4444% + 8px - var(--kanshan-size)*.05);width:var(--kanshan-size);height:var(--kanshan-size);transform:translateX(-50%);object-fit:contain;mix-blend-mode:multiply;transform-origin:50% 90%}
 .interview-intent{position:absolute;left:4.5%;width:35%;top:80%}
 .interview-intent p{margin:0;font:500 clamp(19px,1.75cqw,28px)/1.65 "Songti SC","STSong",serif;letter-spacing:.035em;text-wrap:balance}
@@ -47,13 +46,13 @@
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 @container interview (max-height:560px){
  .interview-heading{top:3%}.interview-heading img{width:82%;max-width:310px}.interview-heading h2>span{font-size:20px;margin-bottom:8px}
- .interview-chapter{top:25%;font-size:12px;gap:12px}.kanshan-question{top:34%;height:86px;padding:11px 15px 19px}.kanshan-question p{font-size:12px}
+ .interview-chapter{top:25%;font-size:12px;gap:12px}.kanshan-question{top:34%;height:86px;padding:11px 15px 19px}
  .kanshan-question{--kanshan-size:25cqh}.interview-intent{top:79%}.interview-intent p{font-size:18px;line-height:1.55}.interview-intent>span{margin-top:9px;font-size:10px}
 }
 @container interview (max-width:739px){
  .interview-heading{left:6%;top:2%;width:65%}.interview-heading h2>span{font-size:17px;margin-bottom:3px}.interview-heading img{width:65%;max-width:210px}
  .interview-chapter{left:6%;top:17%;width:88%;font-size:11px;gap:12px}.chapter-count{font-size:15px}
- .kanshan-question{left:56%;top:24%;width:39%;height:81px;padding:10px 14px 18px}.kanshan-question p{font-size:11px}.speaker-label{font-size:9px;margin-bottom:3px}
+ .kanshan-question{left:56%;top:24%;width:39%;height:81px;padding:10px 14px 18px}
  .kanshan-question{--kanshan-size:14cqh}
  .interview-intent{display:none}.route-node-title{width:68px}.route-concept-type{width:15px}
  .route-concept-type::after{height:9px}.interview-example{right:5%;font-size:8px}.route-failure{left:8%;right:8%;top:65%}

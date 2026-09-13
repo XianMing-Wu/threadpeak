@@ -131,6 +131,9 @@ export function OrbitScene({transition,frame,activeGoal,onGoal,onStory,beat}:{tr
         main.style.setProperty('--column-bottom',`${mainRect.height-layout.goalBottom}px`);
         main.style.setProperty('--goal-left',`${layout.goalX}px`);
         main.style.setProperty('--answer-size',`${layout.answerSize}px`);
+        const dialogue=interviewLayout(mainRect.width,mainRect.height);
+        main.style.setProperty('--interview-font-size',`${dialogue.dialogueFontSize}px`);
+        main.style.setProperty('--interview-svg-font-size',`${dialogue.svgFontSize}px`);
         labelWidths=labels.current.map(label=>label?.offsetWidth??0);
       }
       const baseCenter={x:canvasRect.left+(scene.width/2-60)*scale,y:canvasRect.top+scene.originY*scale};

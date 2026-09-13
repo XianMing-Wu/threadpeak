@@ -40,3 +40,11 @@
 .goal-search-caret{animation:goal-caret-blink .8s steps(1,end) infinite}
 @keyframes goal-caret-blink{0%,60%{visibility:visible}61%,100%{visibility:hidden}}
 @media(prefers-reduced-motion:reduce){.goal-search-caret{display:none}}
+
+/* Reuse the homepage vector above the brand without covering the entry islands. */
+.finale-heading .home-landscape{inset:auto 0 calc(100% + 8px);height:154px;overflow:visible}
+.finale-heading .home-landscape svg{width:100%;height:100%}
+.finale-scene[data-narrow=true] .finale-heading{top:575px}
+.finale-scene[data-narrow=true] .finale-heading .home-landscape{inset:auto 80px calc(100% + 6px);height:120px}
+.finale-scene[data-narrow=true] .finale-paper,.finale-scene[data-narrow=true] .finale-favorites{top:835px}
+.finale-scene[data-narrow=true] .finale-action{top:1320px}

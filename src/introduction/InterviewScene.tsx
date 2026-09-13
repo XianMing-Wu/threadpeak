@@ -13,7 +13,7 @@ export function InterviewScene({story,beat,transition}:{story:StoryState;beat:nu
   <header className="interview-heading"><h2><span>把目标聊清楚，</span><img src={lettering} alt="走自己的路。"/></h2></header>
   <div className="interview-dialogue" aria-label="刘看山访谈示例">
    <div className="interview-chapter"><span className="chapter-count">0{beat+1}<i> / 03</i></span><span>{turn.label}</span><div className="interview-measure" aria-hidden="true">{interviewTurns.map((t,i)=><i key={t.id} data-active={beat>=i}/>)}</div></div>
-   <div className="kanshan-question"><span className="speaker-label">刘看山</span><p>{turn.question}</p><svg viewBox="0 0 270 126" preserveAspectRatio="none" aria-hidden="true"><path d="M21 8Q3 10 5 32L7 87Q8 102 26 103L123 103Q137 102 145 119Q139 100 163 102L244 100Q263 98 263 77L261 29Q260 7 241 7Q132 3 21 8Z"/></svg>
+   <div className="kanshan-question"><p>{turn.question}</p><svg viewBox="0 0 270 126" preserveAspectRatio="none" aria-hidden="true"><path d="M21 8Q3 10 5 32L7 87Q8 102 26 103L123 103Q137 102 145 119Q139 100 163 102L244 100Q263 98 263 77L261 29Q260 7 241 7Q132 3 21 8Z"/></svg>
    <img className="kanshan-interviewer" src={`${import.meta.env.BASE_URL}introduction/interview/kanshan-ink.png`} alt="刘看山面向学习者，抬手交流" width="1254" height="1254"/></div>
    <div className="interview-intent" data-beat={beat}>
     {beat===0?<p>为求职，做一个<br/><em>懂资料的文档助手。</em></p>:beat===1?<p>带着已有的基础，<br/><em>从第一次调用出发。</em></p>:<p>把应用做好，<br/><em>也把思路讲清楚。</em></p>}
