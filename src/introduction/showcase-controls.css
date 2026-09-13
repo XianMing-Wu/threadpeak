@@ -111,3 +111,8 @@
 }
 
 .scroll-copy>span{color:#2563eb;font-weight:600;letter-spacing:.02em}
+
+.showcase-links{display:flex;align-items:center;gap:10px;justify-self:start}
+.showcase-video{white-space:nowrap}
+.showcase-navigation:has(.showcase-video) .navigation-ridge-left{left:calc(4vw + 295px);width:calc((100% - 920px)/2)}
+@media(max-width:760px){.showcase-links{gap:6px}.showcase-links .showcase-github:not(.showcase-video)>span,.showcase-links .github-outbound{display:none}.showcase-scroll .scroll-copy,.showcase-scroll .scroll-chevrons{display:none}.showcase-scroll{padding-inline:6px}.showcase-links .showcase-github{padding-inline:9px;gap:6px}}

@@ -30,6 +30,9 @@ qa/thinking-review.tsx
 scripts/verify-thinking-flow.mjs
 刘看山/
 
+# Demo video and its poster are deployed separately; never publish media to Git.
+/public/media/
+
 coverage/
 *.threadpeak-owner
 *.threadpeak-lock

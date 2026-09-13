@@ -31,6 +31,7 @@ export default defineConfig({
       input: {
         main: mainEntry,
         introduction: fileURLToPath(new URL('./introduction.html', import.meta.url)),
+        video: fileURLToPath(new URL('./video.html', import.meta.url)),
       },
     },
   },

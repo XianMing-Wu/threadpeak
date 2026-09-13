@@ -82,3 +82,17 @@ Compose 使用独立 proxy 网段 172.30.84.0/24，Caddy 固定为 172.30.84.2�
 浏览器账号备份主要存入 IndexedDB，与 localStorage 的小容量限制分开。只有持久备份成功后才清理旧账号键；恢复不下的草稿可在“我的”页面导出。恢复提示独立读取持久元数据；重新打开页面或登录服务离线时，登录页仍提供本机备份导出。两种存储都不可写时保留原字节并提示导出/释放空间，不静默丢弃草稿。可复现页面与证据见 [QA](../qa/README.md)。
 
 本地 PGlite 使用 fs-native-extensions 的内核描述符锁；进程退出或被杀后锁自动释放，新所有者不靠 PID 判断。相邻 .threadpeak-lock 文件必须保留稳定 inode，运行期间不得删除/替换。v2 所有权标记用于兼容迁移；旧 PID 标记若仍有存活/不可判断的进程则拒绝接管，需要核对旧进程后再迁移。该保证用于支持文件锁的本地文件系统，不是网络文件系统分布式锁；多副本部署使用 PostgreSQL。
+
+## 演示视频
+
+介绍页左侧“演示视频”打开独立 `video.html`，不需要登录，也不请求工作区 API。播放器使用原生 controls、playsinline、preload=none；进入介绍页不预加载视频，进入播放页先显示封面，用户点击后才加载正文。
+
+视频和封面放在 `public/media/`（Git 已忽略），当前代码引用 `project-demo-35f7c6c565c7.mp4` 与同名 `.jpg`。`npm run build` 将它们复制到 `dist/media/`；仅将提供的 MP4 和封面复制到此目录，不复制私有来源文件夹。MP4 采用 H.264/AAC，准备时用 `ffmpeg -i input.mp4 -map 0:v:0 -map 0:a:0 -c copy -movflags +faststart output.mp4` 前置索引，不重编码；更新视频时更换文件名与代码引用，避免浏览器长期缓存旧版本。
+
+1Panel 的站点静态 server 块内使用 [静态媒体配置](demo-video.nginx.conf)，沿用现有 root、TLS 和安全头。视频不经 Node API、代理缓存或服务端转码，每位用户使用同一个文件；关闭该路径访问日志，不随播放增长日志。Nginx 支持 Range/206，允许单区间请求，版本化资源可由浏览器长期缓存；文件不存在返回 404。Caddy 示例也有独立媒体 file_server，不把不存在的视频回退成 HTML。底层操作系统可能使用可回收的共享文件页缓存，这不是逐用户生成的磁盘文件。
+
+发布时先校验媒体哈希和可播放性，再发布入口。验证响应的 Content-Type、Range/206、Content-Range、304 与缓存头，并核对重复/并发播放前后的媒体文件数和临时目录；不能把浏览器缓存表述为 VPS 内存或磁盘无限增长。部署包是一次性运维文件，不按观看次数生成，应按部署归档保留策略管理。
+
+原片约 2 Mbit/s，100 位同时观看约需 200 Mbit/s 出口；静态共享解决重复文件和后端计算，不改变出口带宽上限。应按 VPS 实际带宽评估同时观看量，必要时把同一版本文件放到已配置的 CDN/对象存储。
+
+参考：[Nginx sendfile 与 Range 控制](https://nginx.org/en/docs/http/ngx_http_core_module.html#sendfile)、[HTML video 的 controls 与 preload](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/video)。
