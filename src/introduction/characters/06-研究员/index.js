@@ -1,8 +1,7 @@
-import createRiveRuntime from '../../../vendor/introduction-rive/canvas_advanced.mjs';
+import { loadRiveRuntime, loadRiveBytes } from '../../rive-loader.js';
 import { character } from './config.js';
 export { character };
 
-const runtimeKey = Symbol.for('threadpeak.rive.canvas-advanced.2.42.0');
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 /** Mount into a DOM container. Call destroy() when the host is unmounted. */
@@ -70,6 +69,7 @@ export function mountCharacter(target, options = {}) {
     if (!destroyed && runtime && renderer && !frameId) frameId = runtime.requestAnimationFrame(draw);
   }
   function draw(time) {
+    try {
     frameId = 0;
     if (destroyed) return;
     if (lastDpr !== clamp(window.devicePixelRatio || 1, 2, 3)) resize();
@@ -88,6 +88,9 @@ export function mountCharacter(target, options = {}) {
       artboard.draw(renderer); renderer.restore(); renderer.flush();
     }
     if (canAnimate()) schedule();
+    } catch (error) {
+      if (!destroyed) { destroy(); options.onError?.(error); }
+    }
   }
   function visibilityChanged() { lastTime = 0; if (!document.hidden) resize(); }
   function motionChanged() { lastTime = 0; if (reduced()) center(); schedule(); }
@@ -152,20 +155,10 @@ export function mountCharacter(target, options = {}) {
   };
   api.ready = (async () => {
     try {
-      // One compiled WASM runtime is shared even when different character folders are imported.
-      const wasmUrl = options.wasmUrl ?? new URL('../../../vendor/introduction-rive/rive.wasm', import.meta.url).href;
-      const cache = globalThis[runtimeKey] ??= new Map();
-      const cacheKey = options.wasmUrl ?? 'bundled';
-      if (!cache.has(cacheKey)) {
-        const promise = createRiveRuntime({ locateFile: () => wasmUrl });
-        cache.set(cacheKey, promise); promise.catch(() => cache.delete(cacheKey));
-      }
-      const [rt, response] = await Promise.all([
-        cache.get(cacheKey),
-        fetch(options.src ?? new URL('./character.riv', import.meta.url), { signal: abort.signal }),
+      const [rt, bytes] = await Promise.all([
+        loadRiveRuntime(options.wasmUrl),
+        loadRiveBytes(options.src ?? new URL('./character.riv', import.meta.url), abort.signal),
       ]);
-      if (!response.ok) throw new Error(`Rive resource failed: HTTP ${response.status}`);
-      const bytes = new Uint8Array(await response.arrayBuffer());
       if (destroyed) throw new DOMException('Character unmounted', 'AbortError');
       runtime = rt;
       const loaded = await runtime.load(bytes, undefined, false);
@@ -179,7 +172,11 @@ export function mountCharacter(target, options = {}) {
       if (!definition) throw new Error(`Missing state machine: ${character.stateMachine}`);
       machine = new runtime.StateMachineInstance(definition, artboard);
       renderer = runtime.makeRenderer(canvas);
-      artboard.advance(0); resize(); schedule();
+      if (!renderer) throw new Error('Character renderer unavailable.');
+      artboard.advance(0); resize();
+      if (frameId) { runtime.cancelAnimationFrame(frameId); frameId = 0; }
+      draw(0);
+      if (destroyed) throw new Error('Character first frame failed.');
       options.onReady?.(api);
       return api;
     } catch (error) {

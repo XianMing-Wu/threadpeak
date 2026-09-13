@@ -1,0 +1,48 @@
+{
+  "method": "Neutral pose rendered from the existing Rive character; original framing, no generated replacement artwork. Canvas WebP quality 0.95.",
+  "runtime": "@rive-app/canvas-advanced 2.42.0",
+  "files": [
+    {
+      "poster": "designer.webp",
+      "source": "src/introduction/characters/04-设计学生/character.riv",
+      "sourceSha256": "3eff06908bf71f828db97b95978cf15d536bb8909126a792aaa6402c4fca0162",
+      "posterSha256": "b062018d5654ff143706fcfce7c23af63577d7979a9788c19f9e7a2f9402b2b4"
+    },
+    {
+      "poster": "developer.webp",
+      "source": "src/introduction/characters/02-软件工程师/character.riv",
+      "sourceSha256": "2bf797d3143de0a0ecb7f5a2c643fa249cf7101cd86582148cda2d6eff415260",
+      "posterSha256": "4b6caed742c83b2164afe177d941ea3102e46cd6cdedbc7bf3715431b28018ea"
+    },
+    {
+      "poster": "engineer.webp",
+      "source": "src/introduction/characters/01-工程师-安全帽/character.riv",
+      "sourceSha256": "6c6ad30c5fc20139be4c303134e810b65d142bec6e83dbb8089b5b6ec198b839",
+      "posterSha256": "10c881a852c08d4ebdfbe0a4a3910d73653d2d330ae71803a144426caa4cfcf0"
+    },
+    {
+      "poster": "graduate.webp",
+      "source": "src/introduction/characters/03-大学生/character.riv",
+      "sourceSha256": "671264360d834874eda9d7917b59c11d8c9c62d915e1f1a5fc694c3c863db64a",
+      "posterSha256": "046366cc9b14e1b8c62115bfae2ede124f8b5829df4312154d52249f12547fb9"
+    },
+    {
+      "poster": "reference.webp",
+      "source": "src/introduction/rive/reference.riv",
+      "sourceSha256": "f064f4cfa73bcabaff7a6970cf0032792018c4b7a237f1f320822bc09066e030",
+      "posterSha256": "06860ad04f0d3ee97f673f80c588fe81584a70d96d3289ce726a087b660497f6"
+    },
+    {
+      "poster": "researcher.webp",
+      "source": "src/introduction/characters/06-研究员/character.riv",
+      "sourceSha256": "23f264b8a9f0879126cc7a6235bf546171bbf1b8f81a5d5d0fd3934ae2020211",
+      "posterSha256": "0a58fef4fce232abbb2b4aacbc6d62b3b4177420c40a37d47fb8ff84d9ab94ab"
+    },
+    {
+      "poster": "teacher.webp",
+      "source": "src/introduction/characters/05-老师/character.riv",
+      "sourceSha256": "ab0a28407a0fad6194d57abb5ec463b062d93a46e29afdf98092be76ecf2e379",
+      "posterSha256": "a89987ce344483cd73720ad56ee80bd16d6c2f37a68ff48df4d4df2b42d02068"
+    }
+  ]
+}

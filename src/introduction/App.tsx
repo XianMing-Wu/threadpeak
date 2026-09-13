@@ -297,7 +297,7 @@ export function OrbitScene({transition,frame,activeGoal,onGoal,onStory,beat}:{tr
   },[reduced,frame,transition]);
 
   const replay=()=>{cycle.current=createSpeechCycle();setAutomatic(null);phase.current={angle:0,entrance:0};setComplete(false);completeRef.current=false;
-    setHover(null);setFocus(null);setPinned(null);setPaused(false);setRun(value=>value+1);};
+    setHover(null);setFocus(null);setPinned(null);setPaused(false);players.current.clear();setReady([]);setErrors({});setRun(value=>value+1);};
   const orbitVisible=complete;
   return <section className="page" aria-label="对话之间：角色环绕" onPointerDown={event=>{if(!(event.target as Element).closest('[data-character]'))setPinned(null);}}
     onKeyDown={event=>{if(event.key==='Escape'){setPinned(null);setFocus(null);setHover(null);(document.activeElement as HTMLElement)?.blur();}}}>
@@ -320,17 +320,16 @@ export function OrbitScene({transition,frame,activeGoal,onGoal,onStory,beat}:{tr
           aria-label={view==='column'?`${label}，查看${goals.find(goal=>goal.id===characterGoals[i])!.title}目标`:`${label}，查看对话`}
           aria-describedby={view==='column'?`answer-${id}`:active===i?`speech-${id}`:undefined}
           aria-expanded={view==='column'?undefined:active===i} tabIndex={orbitVisible?0:-1} disabled={!orbitVisible}
-          data-character={id} data-ready={ready.includes(i)}
+          data-character={id} data-ready={ready.includes(i)} data-load-state={errors[i]?'fallback':ready.includes(i)?'ready':'loading'}
           onPointerEnter={event=>{if(view==='column')onGoal(characterGoals[i]);else if(view==='orbit'&&event.pointerType!=='touch')setHover(i);}}
           onPointerLeave={()=>setHover(null)}
           onFocus={event=>{if(view==='column')onGoal(characterGoals[i]);else if(event.currentTarget.matches(':focus-visible'))setFocus(i);}}
           onBlur={()=>{setFocus(null);setPinned(null);}}
           onClick={event=>{if(view==='column')onGoal(characterGoals[i]);else if(event.detail===0||matchMedia('(pointer: coarse)').matches)setPinned(pinned===i?null:i);}}
           >
-          <span className="character-portrait"><Component size="100%" follow="none" onReady={player=>{
-            players.current.set(i,player);setReady(values=>values.includes(i)?values:[...values,i]);
-          }} onError={error=>setErrors(values=>({...values,[i]:error.message}))}/></span>
-          {errors[i]&&<span className="character-error" role="alert">角色暂未加载</span>}
+          <span className="character-portrait"><Component key={run} size="100%" follow="none" onReady={player=>{
+            setErrors(values=>{const next={...values};delete next[i];return next;});players.current.set(i,player);setReady(values=>values.includes(i)?values:[...values,i]);
+          }} onError={error=>{players.current.delete(i);setReady(values=>values.filter(index=>index!==i));setErrors(values=>({...values,[i]:error.message}));}}/></span>
           {active===i&&view==='orbit'&&<SpeechBubble id={id} message={message}/>}
         </button>)}
       </div>

@@ -1,9 +1,8 @@
 import {useEffect,useRef,useState} from 'react';
-import createRiveRuntime from '../vendor/introduction-rive/canvas_advanced.mjs';
-import wasmUrl from '../vendor/introduction-rive/rive.wasm?url';
+import {loadRiveRuntime,loadRiveBytes} from './rive-loader.js';
 import sourceUrl from './rive/reference.riv?url';
+import poster from './characters/posters/reference.webp?url';
 
-const runtimeKey=Symbol.for('threadpeak.rive.canvas-advanced.2.42.0');
 // Keep room for the full left/right head turn, not just the neutral portrait.
 const crop={minX:150,minY:100,maxX:850,maxY:850};
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
@@ -17,7 +16,7 @@ export default function ReferenceCharacter({onReady,reducedMotion=false}){
     const trackingArea=canvas.closest('.orbit-stage')??canvas;
     const composition=canvas.closest('.combined-page');
     const abort=new AbortController();
-    let destroyed=false,runtime,file,artboard,machine,renderer,frameId=0,last=0;
+    let destroyed=false,runtime,file,artboard,machine,renderer,frameId=0,last=0,recoveryTimer=0;
     let pointer=null;
     const release=()=>{
       if(frameId)runtime?.cancelAnimationFrame(frameId);
@@ -53,16 +52,10 @@ export default function ReferenceCharacter({onReady,reducedMotion=false}){
     window.addEventListener('blur',center);
     document.addEventListener('visibilitychange',resume);
     setStatus('loading');
-    (async()=>{
+    const load=async(attempt=0)=>{
+      if(destroyed)return;
       try{
-        const cache=globalThis[runtimeKey]??=new Map();
-        if(!cache.has('bundled')){
-          const promise=createRiveRuntime({locateFile:()=>wasmUrl});cache.set('bundled',promise);
-          promise.catch(()=>cache.delete('bundled'));
-        }
-        const[rt,response]=await Promise.all([cache.get('bundled'),fetch(sourceUrl,{signal:abort.signal})]);
-        if(!response.ok)throw new Error(`HTTP ${response.status}`);
-        const bytes=new Uint8Array(await response.arrayBuffer());
+        const[rt,bytes]=await Promise.all([loadRiveRuntime(),loadRiveBytes(sourceUrl,abort.signal)]);
         if(destroyed)return;
         runtime=rt;
         const loaded=await runtime.load(bytes,undefined,false);
@@ -75,17 +68,20 @@ export default function ReferenceCharacter({onReady,reducedMotion=false}){
         machine=new runtime.StateMachineInstance(definition,artboard);
         renderer=runtime.makeRenderer(canvas);resize();draw(0);
         setStatus('ready');callback.current?.();
-      }catch(error){if(!destroyed){release();setStatus('error');console.error('参考角色加载失败',error);}}
-    })();
+      }catch(error){if(!destroyed){release();setStatus('error');
+        if(attempt===0)recoveryTimer=window.setTimeout(()=>load(1),1000);
+        else console.warn('参考角色使用静态展示',error);
+      }}
+    };load();
     return()=>{
-      destroyed=true;abort.abort();release();observer.disconnect();
+      destroyed=true;clearTimeout(recoveryTimer);abort.abort();release();observer.disconnect();
       trackingArea.removeEventListener('pointerenter',look);trackingArea.removeEventListener('pointermove',look);
       trackingArea.removeEventListener('pointerleave',center);window.removeEventListener('blur',center);
       document.removeEventListener('visibilitychange',resume);
     };
   },[reducedMotion]);
   return <div className="reference-rive" data-status={status}>
+    <img className="reference-poster" src={poster} alt="中央角色（静态展示）" onLoad={()=>callback.current?.()} draggable={false}/>
     <canvas ref={canvasRef} role="img" aria-label="中央角色：参考 Rive 动画"/>
-    {status==='error'&&<span role="alert">中央角色加载失败，请重新播放。</span>}
   </div>;
 }

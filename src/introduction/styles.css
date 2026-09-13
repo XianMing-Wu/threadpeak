@@ -34,13 +34,14 @@ button:focus-visible{outline:2px solid #111;outline-offset:6px}
 .reference-rive,.reference-rive canvas{display:block;width:100%;height:100%}
 .reference-rive canvas{opacity:0;transition:opacity .2s}
 .reference-rive[data-status=ready] canvas{opacity:1}
-.reference-rive [role=alert]{position:absolute;inset:20% 0 auto;font-size:12px;text-align:center}
+.reference-rive{position:relative}
+.reference-poster{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain}
+.reference-rive[data-status=ready] .reference-poster{display:none}
 .characters{position:absolute;inset:0;pointer-events:none}
 .orbit-character{position:absolute;left:50%;top:var(--origin-y);width:150px;aspect-ratio:1;background:none;border:none;padding:0;color:#111;pointer-events:auto;cursor:pointer;opacity:0;z-index:3;border-radius:32%}
 .orbit-character:disabled{pointer-events:none}
 .character-portrait{display:block;width:100%;height:100%;border-radius:29%;overflow:hidden;background:#fff;transform:rotate(var(--tilt,0deg))}
 .orbit-character.is-active{z-index:20}
-.character-error{font-size:11px;position:absolute;left:0;right:0;top:50%;color:#a22}
 .speech-bubble{opacity:0;position:absolute;left:var(--speech-x,0px);top:var(--speech-y,0px);width:174px;aspect-ratio:176/124;color:#111;pointer-events:none;display:block;transform-origin:50% 90%}
 .speech-outline{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .speech-outline path{fill:#fff;stroke:#080808;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
