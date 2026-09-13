@@ -1,0 +1,57 @@
+--- a/src/ui/node-card/cardPlacementPolicy.ts
++++ b/src/ui/node-card/cardPlacementPolicy.ts
+@@ -1,6 +1,11 @@
+ const DEFAULT_BOTTOM_RESERVED_PIXELS = 132;
+ const DEFAULT_SHADOW_ALLOWANCE_PIXELS = 14;
+ const DEFAULT_SIDE_SAFE_MARGIN_PIXELS = 20;
++
++/** Preserve the character and its attached card before reserving footer space. */
++export function cardBottomReservedPixels(viewportHeight: number): number {
++  return Math.min(DEFAULT_BOTTOM_RESERVED_PIXELS, Math.max(0, viewportHeight - 520));
++}
+
+ export interface CardSafeAreaLiftInput {
+   readonly currentLiftPixels: number;
+--- a/src/ui/node-card/NodeCardPlacementController.ts
++++ b/src/ui/node-card/NodeCardPlacementController.ts
+@@ -9,6 +9,7 @@
+ import {
+   computeCardSafeAreaHorizontalOffset,
+   computeCardSafeAreaLift,
++  cardBottomReservedPixels,
+ } from "./cardPlacementPolicy";
+
+ export interface NodeCardPlacementViewPort {
+@@ -170,6 +171,7 @@
+         cardBottomClientY: metrics.bottom,
+         viewportBottomClientY: rect.bottom,
+         maximumLiftPixels: rect.height * 0.72,
++        reservedBottomPixels: cardBottomReservedPixels(rect.height),
+       });
+       overlay.setOverlayComposition({
+         horizontalOffsetPixels: horizontalOffset,
+--- /dev/null
++++ b/src/render/app/ShortViewport.smoke.ts
+@@ -0,0 +1,22 @@
++import { PerspectiveCamera, Vector3 } from 'three';
++import { LearningScene } from './LearningScene';
++import { computeCardSafeAreaLift, cardBottomReservedPixels } from '../../ui/node-card/cardPlacementPolicy';
++for (const height of [300, 382, 500, 620, 800]) {
++ for (const reduced of [true, false]) {
++  const camera = new PerspectiveCamera(42, 1200 / height, .1, 100);camera.updateMatrixWorld();
++  const scene: LearningScene = Object.assign(Object.create(LearningScene.prototype), {camera,viewportWidthPixels:1200,viewportHeightPixels:height,currentHorizontalCompositionOffsetPixels:0,currentVerticalCompositionOffsetPixels:0});
++  const world=new Vector3(0,-.5,0).unproject(camera),cardHeight=Math.max(128,Math.min(height*.5,330));
++  const samples:number[]=[];
++  for(let frame=0;frame<500;frame++) {
++   const anchor=(1-world.clone().project(camera).y)*height/2,current=scene.getVerticalCompositionOffsetPixels();
++   const desired=computeCardSafeAreaLift({currentLiftPixels:current,cardBottomClientY:anchor+18+cardHeight,viewportBottomClientY:height,maximumLiftPixels:height*.72,reservedBottomPixels:cardBottomReservedPixels(height)});
++   scene.setVerticalCompositionOffsetPixels(current+(desired-current)*(reduced?1:.15),true);samples.push(anchor);
++  }
++  const anchor=samples.at(-1)!;
++  if(anchor<90||anchor+18+cardHeight>height-13.9)throw Error(`short viewport clipped character/card at ${height}: ${anchor}`);
++  if(Math.max(...samples.slice(-100))-Math.min(...samples.slice(-100))>.1)throw Error('card did not settle');
++  scene.setVerticalCompositionOffsetPixels(0,true);
++  if(Math.abs((1-world.clone().project(camera).y)*height/2-height*.75)>1e-6)throw Error('close did not restore camera');
++ }
++}
++console.log('Short viewport keeps the character and card visible with real Three.js projection.');

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode, type SVGProps } from 'react'
+import {useStreamingText} from '../lib/useStreamingText'
 import { pillTitle, type ProcessStep } from '../process-trace'
 import './process-trace.css'
 
@@ -54,7 +55,7 @@ export function ConfirmedQuestion({ question, answer }: { question: string; answ
 
 function ThinkStep({ step }: { step: ProcessStep }) {
   const running = step.status === 'running'
-  const thought = step.thought?.trim() ?? ''
+  const thought = useStreamingText(step.thought?.trim() ?? '', running)
   const bodyRef = useRef<HTMLDivElement>(null)
   const follow = useRef(true)
   const [open, setOpen] = useState(running)
@@ -78,7 +79,7 @@ function ThinkStep({ step }: { step: ProcessStep }) {
           trailing={<>{running && <span className="tp-spinner" aria-hidden="true" />}<MiniIcon size={9}><path d="m6 9 6 6 6-6"/></MiniIcon></>}
         />
       </summary>
-      {thought ? <div className="tp-thought" ref={bodyRef} tabIndex={0} aria-live="off" aria-label="模型思考过程" onScroll={() => { const node=bodyRef.current; if(node)follow.current=node.scrollHeight-node.scrollTop-node.clientHeight<40 }}>{thought}</div> : null}
+      {step.thought?.trim() ? <div className="tp-thought" ref={bodyRef} tabIndex={0} aria-live="off" aria-label="模型思考过程" onScroll={() => { const node=bodyRef.current; if(node)follow.current=node.scrollHeight-node.scrollTop-node.clientHeight<40 }}>{thought}</div> : null}
     </details>
   )
 }
@@ -100,7 +101,14 @@ function ToolStep({ step }: { step: ProcessStep }) {
 export function PonderMark() {
   return (
     <span className="tp-ponder-mark" aria-hidden="true">
-      <img src="/ponder-mark.png" alt="" width={13} height={13} />
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth=".85">
+        <circle cx="12" cy="12" r="10"/>
+        <ellipse cx="12" cy="12" rx="6.8" ry="10"/>
+        <ellipse cx="12" cy="12" rx="2.6" ry="10"/>
+        <ellipse cx="12" cy="12" rx="10" ry="3.2"/>
+        <ellipse cx="12" cy="12" rx="10" ry="7"/>
+        <path d="M2 12h20M12 2v20"/>
+      </svg>
     </span>
   )
 }

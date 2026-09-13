@@ -1,3 +1,4 @@
+import {observeResource} from '../learning-v2/resource-stream'
 import {newChat} from '../chat/launch'
 import { productRequest } from '../learning-v2/client'
 import {pollResource,foregroundDelay,taskPollInterval} from '../learning-v2/poll'
@@ -245,6 +246,7 @@ export function ChatRoutePanel(props: {
   useEffect(() => {
     if (!preparingRun) return
     const abort = new AbortController()
+    const stream=observeResource(preparingRun,{signal:abort.signal,onChange:()=>window.dispatchEvent(new Event('threadpeak:resource-change'))})
     // Keep catalog progress/retry visible without blocking answers. A submission
     // cancels this reader so its older snapshot cannot overwrite the saved answer.
     void pollResource(async () => {
@@ -253,7 +255,7 @@ export function ChatRoutePanel(props: {
       apply(next)
       return next.preparing === true && next.status === 'awaiting_answers'
     }, {signal: abort.signal, wait: foregroundDelay, intervalMs: () => taskPollInterval('running')})
-    return () => abort.abort()
+    return () => {stream.close();abort.abort()}
   }, [preparingRun])
 
   useEffect(() => {

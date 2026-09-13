@@ -1,3 +1,4 @@
+import {applyConceptMaterials,conceptMaterialCandidates,CONCEPT_MATERIAL_VERSION} from './concept-materials.ts'
 import {searchInPairs} from '../knowledge/search-planning.ts'
 import {paragraphsMarkdown} from '@threadpeak/contracts/learning-markdown'
 import { pathGoalContext } from './learning-goal.ts'
@@ -71,7 +72,7 @@ function uniqueEvidence(groups:SearchEvidence[][]):SearchEvidence[]{
 }
 function articleOf(e:SearchEvidence):Article{return {...e,id:e.evidenceId,title:e.title,summary:e.summary,author:e.sourceKind==='web'?(e.site??new URL(e.url).hostname):e.authorName??'作者信息未提供',authorId:e.sourceKind==='web'?null:e.authorId,authorUrl:e.sourceKind==='web'?null:e.authorUrl,likes:e.likes??null,url:e.url,topic:e.sourceKind==='web'?'全网资料':'知乎文章',sourceKind:e.sourceKind??'zhihu'}}
 function selectedCards(state:LearningState,ids:string[]):GraphNode[]{
-  const basisIds=ids.length?[...new Set(ids)]:state.articles.map(a=>a.id)
+  const basisIds=ids.length?[...new Set(ids)]:state.articles.filter(a=>!a.retainedForHistory).map(a=>a.id)
   const cards=basisIds.map(id=>state.nodes.find(n=>n.id===id))
   if(cards.some(n=>!n)||!cards.length)throw new CommandError('MATERIAL_NOT_FOUND')
   return cards as GraphNode[]
@@ -178,7 +179,19 @@ export function createFlows(tools:ProductTools,api?:ZhihuDataClient,login?:Zhihu
   }
   async function learning(ctx:TaskContext,resource:Resource<LearningState>){
     let state=structuredClone(resource.body)
-    if(ctx.job.kind==='learning.enter'){
+    if(ctx.job.kind==='learning.enter'||ctx.job.kind==='learning.materials'){
+      if(state.materialSelection?.version!==CONCEPT_MATERIAL_VERSION){
+        const candidates=await conceptMaterialCandidates(ctx.store,ctx.job.owner_id,state)
+        if(candidates.length){
+          await ctx.progress('正在筛选与这个概念相关的收藏文章')
+          const selection=await tools.learning(ctx,'L-source-select',{goalContext:state.goalContext,concept:{id:state.conceptId,title:state.title,description:state.description,learningSummary:state.learningSummary},searchQueries:[],candidates:candidates.map(a=>({...a,evidenceId:a.id,authorName:a.author})),source:'route_imports'},v=>{
+            if(new Set(v.evidenceIds).size!==v.evidenceIds.length||v.evidenceIds.some((id:string)=>!candidates.some(a=>a.id===id)))throw new Error('只能选择本次收藏资料的真实 ID')
+          },'L-source-select:concept-materials-v1')
+          await ctx.progress('概念相关资料已就绪',undefined,r=>applyConceptMaterials(r.body,candidates,selection.evidenceIds))
+          state=(await ctx.store.resource<LearningState>(ctx.job.owner_id,resource.id)).body
+        }
+      }
+      if(ctx.job.kind==='learning.materials'){await ctx.flush();await ctx.store.commit(ctx.job,r=>r.body);return}
       if(state.initialized){await ctx.store.commit(ctx.job,r=>r.body);return}
       const searchScope=state.searchScope??{kind:'zhihu'}
       await ctx.progress(searchScope.kind==='collections'?'正在阅读本路线资料':'正在寻找概念相关内容')
@@ -188,7 +201,7 @@ export function createFlows(tools:ProductTools,api?:ZhihuDataClient,login?:Zhihu
       const selection=evidence.length?await tools.learning(ctx,'L-source-select',{goalContext:state.goalContext,concept:{id:state.conceptId,title:state.title,description:state.description,learningSummary:state.learningSummary},searchQueries:plan.queries,candidates:evidence},v=>{
         if(new Set(v.evidenceIds).size!==v.evidenceIds.length||v.evidenceIds.some((id:string)=>!evidence.some(e=>e.evidenceId===id)))throw new Error('只能选择本次真实证据 ID，不能重复')
       }):{evidenceIds:[]}
-      const articles=[...state.articles.filter(a=>a.materialId),...selection.evidenceIds.map(id=>articleOf(evidence.find(e=>e.evidenceId===id)!))]
+      const articles=[...state.articles.filter(a=>a.materialId&&!a.retainedForHistory),...selection.evidenceIds.map(id=>articleOf(evidence.find(e=>e.evidenceId===id)!))]
       if(!articles.length){await ctx.store.commit(ctx.job,r=>({...r.body,phase:'empty'}));return}
       await ctx.progress('正在组织连贯讲解',undefined,r=>{
         const s=r.body as LearningState;s.articles=articles

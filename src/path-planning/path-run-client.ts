@@ -1,7 +1,8 @@
+import {observeResource} from '../learning-v2/resource-stream'
 import { DEFAULT_SEARCH_SCOPE,SearchScopeSchema,type SearchScope } from '@threadpeak/contracts/search-scope'
 import { z } from 'zod'
 import { productRequest } from '../learning-v2/client'
-import { pollResource } from '../learning-v2/poll'
+import { pollResource,foregroundDelay } from '../learning-v2/poll'
 import type { ProcessStep } from '../process-trace'
 
 export function rememberPathSearchScope(commandKey: string, searchScope: SearchScope) {
@@ -79,12 +80,14 @@ export async function watchPathRun(view: PathRunView, watch?: PathRunWatch): Pro
   let current = view
   const signal=watch?.signal??new AbortController().signal
   let failed:unknown
+  const stream=observeResource(view.runId,{signal,onChange:()=>window.dispatchEvent(new Event('threadpeak:resource-change'))})
   await pollResource(async()=>{
     current=await getPathRun(current.runId,signal)
     if(signal.aborted)return false
     watch?.onUpdate?.(current)
     return current.status==='running'
-  },{signal,onError:(error,stopped)=>{if(stopped)failed=error;watch?.onUpdate?.({...current,stage:stopped?'连接暂停，请重新连接':'正在重新连接，资料和选择仍然保留'})}})
+  },{signal,wait:foregroundDelay,onError:(error,stopped)=>{if(stopped)failed=error;watch?.onUpdate?.({...current,stage:stopped?'连接暂停，请重新连接':'正在重新连接，资料和选择仍然保留'})}})
+  stream.close()
   signal.throwIfAborted()
   if(failed)throw failed
   return current

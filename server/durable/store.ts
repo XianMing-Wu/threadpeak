@@ -32,6 +32,9 @@ export const MAX_MANUAL_RESUMES = 4
 const stoppedMessageId=(jobId:string)=>`${jobId}-stopped`
 
 export class DurableStore {
+  private changes=new Set<(owner:string,id:string)=>void>()
+  onChange(listener:(owner:string,id:string)=>void){this.changes.add(listener);return()=>{this.changes.delete(listener)}}
+  private changed(owner:string,id:string){for(const listener of this.changes)listener(owner,id)}
   private cancellations = new Set<(id: string) => void>()
   onCancel(listener: (id: string) => void) { this.cancellations.add(listener); return () => { this.cancellations.delete(listener) } }
   db: Sql; now: () => number
@@ -199,6 +202,7 @@ export class DurableStore {
       // Token deltas live in the lightweight job snapshot. Emit only phase/body changes.
       if(update||phase!==live.phase)await this.event(tx, resource, 'job.progress', { jobId: job.id, phase }, update ? update(resource) : resource.body,!!update)
     })
+    this.changed(job.owner_id,job.resource_id)
   }
   async activity(job:Job, input:Pick<TaskActivity,'id'|'kind'|'title'|'status'|'detail'|'thought'|'step'>) {
     await this.db.transaction(async tx=>{
@@ -216,6 +220,7 @@ export class DurableStore {
       const {thought:_thought,...eventActivity}=activity
       await this.event(tx,resource,'job.activity',{jobId:job.id,activity:eventActivity},resource.body,false)
     })
+    this.changed(job.owner_id,job.resource_id)
   }
   async commit(job: Job, update: (resource: Resource, tx: Sql) => unknown|Promise<unknown>, continuation?:(body:any)=>{kind:string;key:string;input:unknown}|undefined) {
     const started=Date.now()
@@ -230,6 +235,7 @@ export class DurableStore {
       const next=continuation?.(body)
       if(next)await this.enqueueLocked(tx,resource,next.kind,next.key,next.input)
     })
+    this.changed(job.owner_id,job.resource_id)
     await recordMetric(this.db,job,'commit',{kind:'commit',durationMs:Date.now()-started})
   }
   async recover(job: Job, code: string, retryable: boolean) {
@@ -242,6 +248,7 @@ export class DurableStore {
       await tx.query('UPDATE tp_jobs SET status=$2,phase=$3,error_code=$4,next_at=$5,lease_until=0,updated_at=$6,attempts=$7 WHERE id=$1', [job.id, retry?'queued':'waiting', phase, code, this.now()+Math.min(30_000, 1000*2**failures), this.now(), failures])
       await this.event(tx, resource, retry?'job.recovering':'job.waiting', { jobId: job.id })
     })
+    this.changed(job.owner_id,job.resource_id)
   }
   async cancel(owner: string, id: string) {
     const cancelled: string[] = []
@@ -298,6 +305,7 @@ export class DurableStore {
       if (revision!==undefined && resource.revision !== revision) throw new CommandError('REVISION_CONFLICT')
       await this.event(tx, resource, 'resource.edited', {}, update(resource))
     })
+    this.changed(owner,id)
   }
   async maintain() {
     const cutoff = this.now()-7*86400_000

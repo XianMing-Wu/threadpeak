@@ -1,7 +1,14 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {pollResource} from '../src/learning-v2/poll.ts'
-import {mergeLearningSnapshot} from '../src/learning-v2/snapshot.ts'
+import {mergeLearningSnapshot,isStaleSnapshot} from '../src/learning-v2/snapshot.ts'
+
+test('late polls cannot roll back a streaming draft with the same resource revision',()=>{
+ const current={id:'chat',revision:3,job:{updated_at:200}}
+ assert.equal(isStaleSnapshot(current,{...current,job:{updated_at:100}}),true)
+ assert.equal(isStaleSnapshot(current,{...current,revision:4,job:{updated_at:100}}),false)
+ assert.equal(isStaleSnapshot(current,{...current,id:'different',revision:1}),false)
+})
 
 test('resource reconnects back off, stop after bounded failures, and preserve cancellation',async()=>{
  const waits=[],errors=[];let calls=0

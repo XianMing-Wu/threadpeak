@@ -17,7 +17,7 @@ export function SendControl({busy=false,disabled=false,submitting=false,onSend,o
     aria-label={label} title={label} disabled={submitting||(stopped?!onStop:disabled)}
     onPointerDown={()=>{pointerComposing.current=!!document.activeElement&&composing.has(document.activeElement)}} onClick={()=>{const blocked=pointerComposing.current||!!document.activeElement&&composing.has(document.activeElement);pointerComposing.current=false;if(stopped)onStop?.();else if(!blocked)onSend()}}>
     <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none">
-      {stopped?<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>:<path d="M12 19V5m-6 6 6-6 6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>}
+      {submitting?<circle className="send-spinner" cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="2" strokeDasharray="30 14"/>:stopped?<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>:<path d="M12 19V5m-6 6 6-6 6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>}
     </svg>
   </button>
 }

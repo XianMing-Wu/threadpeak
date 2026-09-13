@@ -1,9 +1,13 @@
 import type {LearningSnapshot} from './client'
+type VersionedSnapshot={id:string;revision:number;job?:{updated_at?:number}|null}
+/** A slow poll must not roll back a draft already delivered over SSE. */
+export function isStaleSnapshot(old:VersionedSnapshot|null,next:VersionedSnapshot){
+  return !!old&&old.id===next.id&&(old.revision>next.revision||old.revision===next.revision&&(old.job?.updated_at??0)>(next.job?.updated_at??0))
+}
 /** Apply only newer server revisions; share unchanged collections without mutation. */
 export function mergeLearningSnapshot(old:LearningSnapshot|null,next:LearningSnapshot):LearningSnapshot{
   if(!old||old.id!==next.id)return next
-  if(old.revision>next.revision)return old
-  if(old.revision===next.revision&&(old.job?.updated_at??0)>(next.job?.updated_at??0))return old
+  if(isStaleSnapshot(old,next))return old
   if(old.dataRevision!==undefined&&old.dataRevision===next.dataRevision)return {...next,data:old.data}
   return {...next,data:{...next.data,
     nodes:equalJson(old.data.nodes,next.data.nodes)?old.data.nodes:next.data.nodes,

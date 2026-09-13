@@ -16,7 +16,7 @@ test('old persisted deep preference cannot change the default; explicit choice l
 test('real think pill opens while streaming, keeps exact escaped text, collapses when done and can reopen',async()=>{
  const step={id:'reason',kind:'think' as const,status:'running' as const,extra:'安排顺序与并列阶段',thought:'先比较必要前置。\n<script>不执行</script>\n{"示例":1}'}
  const view=render(<ProcessTrace steps={[step]}/>);const details=view.container.querySelector('details')!
- expect(details.open).toBe(true);expect(screen.getByLabelText('模型思考过程').textContent).toBe(step.thought);expect(view.container.querySelector('script')).toBeNull()
+ expect(details.open).toBe(true);await waitFor(()=>expect(screen.getByLabelText('模型思考过程').textContent).toBe(step.thought),{timeout:2500});expect(view.container.querySelector('script')).toBeNull()
  details.open=false;fireEvent(details,new Event('toggle'));view.rerender(<ProcessTrace steps={[{...step,thought:step.thought+'\n再核对顺序。'}]}/>);expect(details.open).toBe(false)
  view.rerender(<ProcessTrace steps={[{...step,status:'done'}]}/>);await waitFor(()=>expect(details.open).toBe(false));expect(screen.getByText('思考完成')).toBeTruthy()
  details.open=true;fireEvent(details,new Event('toggle'));expect(details.open).toBe(true)

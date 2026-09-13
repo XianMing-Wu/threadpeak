@@ -246,3 +246,17 @@ test('source footprints expose real card kinds and distinguish automatic entry t
  const {sourceFootprints}=await import('../../src/learning-v2/source-footprints.ts')
  const grouped=sourceFootprints(e);assert.equal(grouped.length,1);assert.equal(grouped[0].cards.length,3);assert.equal(grouped[0].questions.length,1);assert.deepEqual(grouped[0].questions[0].nodeIds,['later'])
 })
+
+test('two snapshots of the same collection share one topic and preserve distinct evidence and revocable feedback',async t=>{
+ const store=await setup(t),owner='owner'
+ const entry={id:'23',title:'同篇文章',summary:'正文',url:'https://zhuanlan.zhihu.com/p/23',authorId:'author-23',authorName:'作者'}
+ const one=await store.create(owner,'attachment','snapshot1',{fileName:'人工智能相关',status:'ready',origin:'collection',folderId:'962478315',entries:[entry]})
+ await store.create(owner,'attachment','snapshot2',{fileName:'人工智能相关',status:'ready',origin:'collection',folderId:'962478315',entries:[entry]})
+ let network=await readAuthorNetwork(store.db,owner)
+ assert.equal(network.authors[0].topics.length,1);assert.equal(network.authors[0].topics[0].id,'collection:962478315')
+ assert.equal(network.authors[0].evidence.length,2)
+ await store.db.query("INSERT INTO tp_author_preferences(owner_id,author_id,topic_id,evidence_id,kind,value,updated_at) VALUES($1,$2,$3,'','pinned',true,1),($1,$2,$4,'','pinned',false,2)",[owner,'author-23',`material:${one.id}`,'collection:962478315'])
+ network=await readAuthorNetwork(store.db,owner);assert.equal(network.authors[0].topics[0].pinned,false)
+ await store.create(owner,'attachment','distinct-folder',{fileName:'人工智能相关',status:'ready',origin:'collection',folderId:'different',entries:[entry]})
+ assert.equal((await readAuthorNetwork(store.db,owner)).authors[0].topics.length,2)
+})

@@ -44,6 +44,7 @@ test('collection-only route and concept inherit owned scope with zero external s
   const db=await openDatabase();await migrate(db);const store=new DurableStore(db),inputs=[]
   const llm={complete:async args=>{
     const c=JSON.parse(args.messages[1].content);inputs.push(c)
+    if(c.source==='route_imports')return {kind:'completed',text:JSON.stringify({evidenceIds:c.candidates.map(e=>e.evidenceId)})}
     if(c.citationCatalog)return {kind:'completed',text:JSON.stringify(placeAnswer(c))}
     if(c.read_card_scope){return {kind:'completed',text:JSON.stringify({sourceReview:c.read_card_scope.cards.map(x=>({ref:x.ref,contribution:'解释坐标'})),sections:[{after:'C1',title:'理解坐标',text:'坐标表示基下的分量。'}]})}}
     if(c.angle)return {kind:'completed',text:'根据所选收藏，坐标表示基下的分量。'}

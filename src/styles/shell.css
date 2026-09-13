@@ -487,3 +487,8 @@
   flex: 0 0 45px;
   margin-top: auto;
 }
+
+.workspace-loading { padding: 32px; display: grid; gap: 20px; }
+.workspace-loading span { display: block; height: 22px; max-width: 520px; border-radius: 12px; background: var(--surface-3); }
+.workspace-loading span:first-child { width: 36%; height: 32px; }
+.workspace-loading span:last-child { width: 72%; }

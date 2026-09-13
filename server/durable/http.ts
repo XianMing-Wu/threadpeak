@@ -1,3 +1,5 @@
+import {registerResourceStream} from './resource-stream.ts'
+import {ensureConceptMaterials,isLibraryArticle} from './concept-materials.ts'
 import {DIRECT_ROUTE_VERSION} from '../path-generation/direct-route.ts'
 import {sharedHttpRateLimitStore} from './http-rate-limit.ts'
 import helmet from '@fastify/helmet'
@@ -120,6 +122,7 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     const authorization=account?{status:!ports.zhihuLogin?'unavailable':account.token_expires_at<=Date.now()?'expired':'active',expiresAt:Number(account.token_expires_at)}:undefined
     return {kind:own.startsWith('account:')?'authenticated':'guest',capabilities:{zhihuMaterials:!!account},provider:account?'zhihu':own.startsWith('account:')?'account':null,profile:account?.profile,authorization,demo:!!(account?.profile as any)?.demo,available:true,workspaceId:digest(own)}
   })
+  registerResourceStream(app,ports.store,owner)
   registerMaterialRoutes(app,ports.store,ports.worker,owner,requestKey,ports.zhihuData,ports.zhihuLogin)
   registerSourcePresentation(app,ports.store,ports.worker,owner)
   async function ownedAttachments(own:string,items:z.infer<typeof attachment>[]){
@@ -143,6 +146,7 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
       if(current.revision===revision)return {unchanged:true,revision}
     }
     await hydrateLearningGoal(ports.store,owner(request),resourceId(request))
+    if(ports.providersReady&&await ensureConceptMaterials(ports.store,owner(request),resourceId(request)))ports.worker.wake()
     return ports.store.snapshot(owner(request),resourceId(request))
   })
   app.post('/api/v2/resources/:id/cancel',async request=>{await ports.store.cancel(owner(request),resourceId(request));return ports.store.snapshot(owner(request),resourceId(request))})
@@ -232,7 +236,7 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     const concept=path.body.route.concepts.find((c:any)=>c.id===conceptId)
     if(!concept)throw new CommandError('NOT_FOUND',404)
     if(!ports.providersReady){const [old]=await ports.store.db.query<Resource>("SELECT * FROM tp_resources WHERE owner_id=$1 AND kind='learning' AND scope=$2",[own,`${path.id}:${conceptId}`]);if(!old||(await ports.store.snapshot(own,old.id)).job===null)throw new CommandError('PROVIDER_CONFIG_REQUIRED',503);return ports.store.snapshot(own,old.id)}
-    const conversationId=randomUUID(),materials=inheritedArticles(path.body.attachments??[])
+    const conversationId=randomUUID(),materials=inheritedArticles(path.body.attachments??[]).filter(a=>!isLibraryArticle(a))
     const materialNodes=materials.length?[{id:'root',type:'root' as const,title:concept.title,text:'',sources:materials.map(a=>a.id),parents:[]},...materials.map(a=>({id:a.id,type:'article' as const,title:a.title,text:a.summary,sources:[a.id],parents:['root']}))]:[]
     const state:LearningState={goalContext:pathGoalContext(path.body,conceptId),searchScope:path.body.searchScope??{kind:'zhihu'},version:2,routeId:path.body.document.id,conceptId,learningSummary:concept.learningSummary,title:concept.title,description:concept.detailedDescription,hasDispute:concept.hasDispute,
       articles:materials,nodes:materialNodes,initialized:false,phase:'searching',active:conversationId,conversations:[{id:conversationId,title:concept.title,date:new Date().toISOString(),messages:[{id:'concept-question',role:'user',text:concept.title}]}]}
@@ -249,6 +253,7 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
       const existing=(await ports.store.snapshot(own,resource.id)).job
       if(!existing){await ports.store.enqueue(own,resource.id,'learning.enter',`enter:${resource.id}`,{depth:input.depth,conversationId:resource.body.active});ports.worker.wake()}
     }
+    if(await ensureConceptMaterials(ports.store,own,resource.id))ports.worker.wake()
     return reply.code(200).send(await ports.store.snapshot(own,resource.id))
   })
   app.post('/api/v2/learning/:id/commands',async request=>{

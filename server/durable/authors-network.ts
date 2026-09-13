@@ -62,7 +62,7 @@ export function sourceLookup(state:LearningState,allowDemo=false){
 }
 export function sourceForNode(state:LearningState,id:string,allowDemo=false):AuthorSource|undefined{return sourceLookup(state,allowDemo)(id)}
 
-type Preference={author_id:string;topic_id:string;evidence_id:string;kind:'helpful'|'pinned'|'hidden';value:boolean}
+type Preference={updated_at?:number;author_id:string;topic_id:string;evidence_id:string;kind:'helpful'|'pinned'|'hidden';value:boolean}
 type Usage={author_id:string;topic_id:string;amount:number;created_at:number}
 
 /** Read model over persisted evidence and current cards. Deleted cards never remain as backlinks. */
@@ -78,7 +78,7 @@ export async function readAuthorNetwork(db:Sql,owner:string):Promise<AuthorNetwo
     db.query<Preference>('SELECT * FROM tp_author_preferences WHERE owner_id=$1',[owner]),
     db.query<Usage>('SELECT author_id,topic_id,amount,created_at FROM tp_author_usage WHERE owner_id=$1',[owner]),
     db.query<Resource<any>>("SELECT id,jsonb_build_object('document',jsonb_build_object('id',body->'document'->'id'),'route',body->'route') AS body FROM tp_resources WHERE owner_id=$1 AND kind='path'",[owner]),
-    db.query<Resource<any>>("SELECT id,created_at,jsonb_build_object('fileName',body->'fileName','origin',body->'origin','entries',body->'entries') AS body FROM tp_resources WHERE owner_id=$1 AND kind='attachment' AND body->>'status'='ready'",[owner]),
+    db.query<Resource<any>>("SELECT id,created_at,jsonb_build_object('fileName',body->'fileName','origin',body->'origin','folderId',body->'folderId','entries',body->'entries') AS body FROM tp_resources WHERE owner_id=$1 AND kind='attachment' AND body->>'status'='ready'",[owner]),
   ])
   const authorities=new Map<string,any[]>()
   for(const material of materials)for(const entry of material.body.entries??[])if(entry.authorId&&safeZhihuUrl(entry.url,allowDemo)){const url=canonicalContentUrl(entry.url),list=authorities.get(url)??[];if(!list.some(e=>e.authorId===entry.authorId))list.push(entry);authorities.set(url,list)}
@@ -122,9 +122,10 @@ export async function readAuthorNetwork(db:Sql,owner:string):Promise<AuthorNetwo
       }
     }
   }
+  const topicAliases=new Map(materials.map(m=>[`material:${m.id}`,m.body.origin==='collection'&&m.body.folderId?`collection:${m.body.folderId}`:m.body.origin==='creation'?'creation:mine':`material:${m.id}`]))
   for(const material of materials)for(const entry of material.body.entries??[]){
     add({evidenceId:`material-${digest({sourceId:material.id,url:entry.url}).slice(0,32)}`,authorId:entry.authorId,authorName:entry.authorName,title:entry.title,summary:entry.summary,url:entry.url,authorUrl:entry.authorUrl},
-      {topicId:`material:${material.id}`,topic:material.body.fileName,question:'',nodeIds:[],origin:material.body.origin==='creation'?'creation':'collection',discoveredAt:material.created_at})
+      {topicId:topicAliases.get(`material:${material.id}`)!,topic:material.body.fileName,question:'',nodeIds:[],origin:material.body.origin==='creation'?'creation':'collection',discoveredAt:material.created_at})
   }
   for(const {body} of legacy){
     const linked=body.resourceId?learning.find(r=>r.id===body.resourceId):learning.find(r=>body.conceptId&&r.body.conceptId===body.conceptId&&r.body.routeId===body.routeId)
@@ -138,7 +139,10 @@ export async function readAuthorNetwork(db:Sql,owner:string):Promise<AuthorNetwo
     }
     add(body.evidence,{topicId:body.topicId??`question:${digest(body.question??'')}`,topic:body.topic??body.conceptTitle??body.question??'已发现的资料',question:body.question??'',searchId:body.searchId,nodeIds:[],origin:'search',discoveredAt:body.discoveredAt??0})
   }
-  for(const row of [...prefs,...usage])row.author_id=aliases.get(row.author_id)??row.author_id
+  for(const row of [...prefs,...usage]){row.author_id=aliases.get(row.author_id)??row.author_id;row.topic_id=topicAliases.get(row.topic_id)??row.topic_id}
+  const latestPreferences=new Map<string,Preference>()
+  for(const pref of prefs){const key=JSON.stringify([pref.author_id,pref.topic_id,pref.evidence_id,pref.kind]),previous=latestPreferences.get(key);if(!previous||(pref.updated_at??0)>=(previous.updated_at??0))latestPreferences.set(key,pref)}
+  prefs.splice(0,prefs.length,...latestPreferences.values())
   for(const author of authors.values())for(const evidence of author.evidence)for(const use of evidence.uses)use.helpful=prefs.some(p=>p.author_id===author.id&&p.topic_id===use.topicId&&p.evidence_id===evidence.evidenceId&&p.kind==='helpful'&&p.value)
   for(const author of authors.values())for(const topic of author.topics){
     const events=usage.filter(u=>u.author_id===author.id&&u.topic_id===topic.id)

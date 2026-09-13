@@ -1,4 +1,4 @@
-import { lazy,Suspense,useEffect,useState } from 'react'
+import { lazy,Suspense,startTransition,useEffect,useState } from 'react'
 import { WideShell,type RouteName } from './components/Shell'
 import { IconSprite } from './icons'
 import { ensureSession } from './learning-v2/client'
@@ -22,8 +22,8 @@ const AuthLanding=lazy(()=>import('./pages/AuthLanding').then(m=>({default:m.Aut
 const NotFoundPage=lazy(()=>import('./pages/NotFound').then(m=>({default:m.NotFoundPage})))
 
 const routes = new Set<RouteName>(['home','chat','paths','path-3d','knowledge','knowledge-detail','session-learning','authors','settings'])
-function readRoute():RouteName {
-  const key=location.hash.slice(1).split('?')[0] as RouteName
+function readRoute(hash:string):RouteName {
+  const key=hash.slice(1).split('?')[0] as RouteName
   if (!key) return 'home'
   return routes.has(key)?key:'not-found'
 }
@@ -42,12 +42,12 @@ export function App(){
   const[hash,setHash]=useState(()=>location.hash)
   const introduction=(!hash||hash==='#intro')&&!new URLSearchParams(location.search).has('oauth')
   const login=hash==='#login'
-  const route=readRoute()
+  const route=readRoute(hash)
   const[authenticated,setAuthenticated]=useState(false)
   const[themePreference,setThemePreference]=useState<Theme|null>(readThemePreference)
   const[systemAppearance,setSystemAppearance]=useState<Theme>(systemTheme)
   const theme=themePreference??systemAppearance
-  useEffect(()=>{const onHash=()=>setHash(location.hash);addEventListener('hashchange',onHash);return()=>removeEventListener('hashchange',onHash)},[])
+  useEffect(()=>{const onHash=()=>startTransition(()=>setHash(location.hash));addEventListener('hashchange',onHash);return()=>removeEventListener('hashchange',onHash)},[])
   useEffect(()=>{
     document.documentElement.dataset.theme=theme
     document.documentElement.style.colorScheme=theme
@@ -82,5 +82,5 @@ export function App(){
   const params=new URLSearchParams(hash.split('?')[1]??'')
   const pageKey=route==='knowledge-detail'?`${route}:${params.get('resource')??params.get('id')??''}`:route==='session-learning'?route:hash
   const page=pages[route]
-  return <><IconSprite/>{notice&&<div role="alert">{notice}<button onClick={()=>setNotice('')}>关闭</button></div>}<Suspense fallback={<p role="status">正在打开页面…</p>}>{introduction?<ProductIntroduction/>:login?<AuthLanding theme={theme} onThemeChange={toggleTheme} onAuthorize={authorize}/>:!sessionReady?<main className="auth-landing"><p role="status">正在连接你的工作区…</p></main>:authenticated?<WideShell route={route} theme={theme} onThemeChange={toggleTheme} onLogout={logout}><PageBoundary key={pageKey}>{page}</PageBoundary></WideShell>:<AuthLanding theme={theme} onThemeChange={toggleTheme} onAuthorize={authorize}/>}</Suspense></>
+  return <><IconSprite/>{notice&&<div role="alert">{notice}<button onClick={()=>setNotice('')}>关闭</button></div>}<Suspense fallback={<main className="auth-landing" aria-busy="true"/>}>{introduction?<ProductIntroduction/>:login?<AuthLanding theme={theme} onThemeChange={toggleTheme} onAuthorize={authorize}/>:!sessionReady?<main className="auth-landing"><p role="status">正在连接你的工作区…</p></main>:authenticated?<WideShell route={route} theme={theme} onThemeChange={toggleTheme} onLogout={logout}><Suspense fallback={<div className="workspace-loading" role="status" aria-label="正在打开工作区"><span/><span/><span/></div>}><PageBoundary key={pageKey}>{page}</PageBoundary></Suspense></WideShell>:<AuthLanding theme={theme} onThemeChange={toggleTheme} onAuthorize={authorize}/>}</Suspense></>
 }

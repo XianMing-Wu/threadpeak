@@ -1,3 +1,7 @@
+import {observeResource} from './resource-stream'
+import {isStaleSnapshot} from './snapshot'
+import {useStreamingText} from '../lib/useStreamingText'
+import {flushSync} from 'react-dom'
 import {newChat} from '../chat/launch'
 import {ThinkingActivities} from '../components/ThinkingActivities'
 import {pollResource,taskPollInterval,foregroundDelay} from './poll'
@@ -18,23 +22,27 @@ export function OrdinaryChat({chatId,question,initialDepth,resourceId}:{chatId:s
   const live=useRef<Snapshot|null>(null)
   useEffect(()=>{mounted.current=true;return()=>{mounted.current=false}},[])
   const lock=useRef(false),scroll=useRef<HTMLDivElement>(null),follow=useRef(true)
-  const accept=(next:Snapshot)=>{if(mounted.current&&(!live.current||live.current.id!==next.id||live.current.revision<=next.revision)){const value={...next,data:next.data??live.current!.data};live.current=value;setSnapshot(value)}}
+  const accept=(next:Snapshot)=>{if(mounted.current&&!isStaleSnapshot(live.current,next)){const value={...next,data:next.data??live.current!.data};live.current=value;setSnapshot(value)}}
   useEffect(()=>{
     const abort=new AbortController()
-    const poll=(id:string)=>pollResource(async()=>{
+    const poll=(id:string)=>{
+      const stream=observeResource(id,{signal:abort.signal,afterData:live.current?.dataRevision,onSnapshot:value=>accept(value as Snapshot)})
+      return pollResource(async()=>{
       const next=await productRequest<Snapshot|{unchanged:true}>(`/api/v2/resources/${id}?afterData=${live.current?.id===id?live.current.dataRevision??0:0}`,{signal:abort.signal})
       if(abort.signal.aborted)return false
       accept(next as Snapshot);setNotice('')
-    },{signal:abort.signal,intervalMs:()=>taskPollInterval(live.current?.job?.status),wait:foregroundDelay,onError:(_error,stopped)=>setNotice(stopped?'连接暂停，点击重新连接继续。':'正在重新连接，内容仍然保留。')})
+    },{signal:abort.signal,intervalMs:()=>taskPollInterval(stream.connected()?undefined:live.current?.job?.status),wait:foregroundDelay,onError:(_error,stopped)=>setNotice(stopped?'连接暂停，点击重新连接继续。':'正在重新连接，内容仍然保留。')}).finally(stream.close)
+    }
     void (resourceId?productRequest<Snapshot>(`/api/v2/resources/${encodeURIComponent(resourceId)}`,{signal:abort.signal}):productRequest<Snapshot>('/api/v2/chats/enter',{method:'POST',body:{chatId,question,depth:initialDepth,attachments:readPathLaunchAttachments(chatId)},key:`chat:${chatId}`,signal:abort.signal})).then(next=>{if(!abort.signal.aborted){accept(next);void poll(next.id);void refreshProductLibrary().catch(()=>{})}}).catch(e=>{if(!abort.signal.aborted)setNotice(e.message)})
     return()=>{abort.abort()}
   },[chatId,reconnect])
   useEffect(()=>{if(snapshot?.job?.status==='completed')void refreshProductLibrary().catch(()=>{})},[snapshot?.job?.id,snapshot?.job?.status])
   const busy=sending||!!snapshot?.job&&['queued','running'].includes(snapshot.job.status)
-  useEffect(()=>{if(follow.current)scroll.current?.scrollTo({top:scroll.current.scrollHeight})},[snapshot?.data.messages.length,snapshot?.job?.draft])
+  const draft=useStreamingText(sending?'':snapshot?.job?.draft??'',busy)
+  useEffect(()=>{if(follow.current)scroll.current?.scrollTo({top:scroll.current.scrollHeight})},[snapshot?.data.messages.length,draft,sending])
   async function send(){
     if(!snapshot||busy||snapshot.job?.status==='waiting'||!value.trim()||lock.current)return
-    lock.current=true;setSending(true);const submitted=value
+    lock.current=true;flushSync(()=>setSending(true));const submitted=value
     try{accept(await productRequest(`/api/v2/chats/${snapshot.id}/reply`,{method:'POST',body:{question:submitted.trim(),depth}}));if(!mounted.current)return;setValue(v=>v===submitted?'':v);setNotice('')}catch(e){if(mounted.current)setNotice(e instanceof Error?e.message:'暂时未发送，你的输入仍然保留。')}finally{lock.current=false;if(mounted.current)setSending(false)}
   }
   async function action(name:string){if(!snapshot)return;try{accept(await productRequest(`/api/v2/resources/${snapshot.id}/${name}`,{method:'POST',body:{}}))}catch(e){if(mounted.current)setNotice(e instanceof Error?e.message:'暂时没有完成。')}}
@@ -44,7 +52,7 @@ export function OrdinaryChat({chatId,question,initialDepth,resourceId}:{chatId:s
     <section className="query-chat-body" ref={scroll} onScroll={()=>{const el=scroll.current;if(el)follow.current=el.scrollHeight-el.scrollTop-el.clientHeight<100}}><div className="query-chat-flow">
       {snapshot?.data.messages.map(m=>m.role==='user'?<div className="query-user-bubble" key={m.id}>{m.text}</div>:<article className="chat-answer" key={m.id}><MarkdownMath source={m.text}/>{m.incomplete&&<small>已停止 · 回答尚未完成</small>}</article>)}
       <ThinkingActivities activities={snapshot?.job?.activities} waiting={snapshot?.job?.status==='waiting'||snapshot?.job?.status==='queued'} stopped={snapshot?.job?.status==='cancelled'}/>
-      {busy&&<article className="chat-answer" aria-busy="true">{snapshot?.job?.draft?<MarkdownMath source={snapshot.job.draft}/>:<p role="status">{snapshot?.job?.phase??'正在读取对话'}</p>}</article>}
+      {busy&&<article className="chat-answer" aria-busy="true">{draft?<MarkdownMath source={draft} streaming/>:<p role="status">{sending?'正在发送问题…':snapshot?.job?.phase??'正在读取对话'}</p>}</article>}
     </div></section>
     <div className="query-chat-composer"><Composer compact value={value} onChange={setValue} onSend={()=>void send()} showAttachment={false} thinkingDepth={depth} onThinkingDepth={setDepth} busy={busy} sendDisabled={sending||snapshot?.job?.status==='waiting'} onStop={()=>void action('cancel')}/></div>
   </main></ProductWorkspace>
