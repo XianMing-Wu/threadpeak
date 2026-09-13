@@ -133,15 +133,17 @@ export function OrbitScene({transition,frame,activeGoal,onGoal,onStory,beat}:{tr
         main.style.setProperty('--answer-size',`${layout.answerSize}px`);
         const dialogue=interviewLayout(mainRect.width,mainRect.height);
         main.style.setProperty('--interview-font-size',`${dialogue.dialogueFontSize}px`);
-        main.style.setProperty('--interview-svg-font-size',`${dialogue.svgFontSize}px`);
         labelWidths=labels.current.map(label=>label?.offsetWidth??0);
       }
       const baseCenter={x:canvasRect.left+(scene.width/2-60)*scale,y:canvasRect.top+scene.originY*scale};
       const centerProgress=segment(p,.28,.75);
       const interview=interviewLayout(mainRect.width,mainRect.height);
       const centerLook={x:mix(mix(baseCenter.x,mainRect.left+layout.centerX,centerProgress),mainRect.left+interview.x,q),y:mix(mix(baseCenter.y,mainRect.top+layout.centerY,centerProgress),mainRect.top+interview.y,q)};
+      const centerScale=mix(1+.45*segment(p,.82,1),interview.size/(300*scale),q);
+      // Compensate the live portrait scale in every chapter, including the goal bubble.
+      center.current!.style.setProperty('--dialogue-svg-font-size',`${interview.dialogueFontSize*416/(180*scale*centerScale)}px`);
       center.current!.style.transformOrigin='50% 58.333%';
-      center.current!.style.transform=`translate(${(centerLook.x-baseCenter.x)/scale}px,${(centerLook.y-baseCenter.y)/scale}px) scale(${mix(1+.45*segment(p,.82,1),interview.size/(300*scale),q)})`;
+      center.current!.style.transform=`translate(${(centerLook.x-baseCenter.x)/scale}px,${(centerLook.y-baseCenter.y)/scale}px) scale(${centerScale})`;
       // Change the thought while the portrait is invisible, then return the same
       // character with a more specific question. Neither player is restarted.
       center.current!.style.opacity=String(mix(1-segment(p,.04,.2)+(mainRect.width<=940?0:segment(p,.86,1)),1,q)*choreography.leftOpacity);

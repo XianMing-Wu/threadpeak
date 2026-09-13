@@ -15,6 +15,7 @@ const progress=(frame:number,start:number,duration:number)=>interpolate(frame,[s
 function ThoughtDialogue({goalMode=false,conversationLines}:{goalMode?:boolean;conversationLines?:readonly string[]}){
   const frame=useCurrentFrame();
   const dialogueLines=conversationLines??(goalMode?['我想用它','做成','什么？']:lines);
+  const uniformDialogue=goalMode||Boolean(conversationLines);
   const cloud=progress(frame,20,27);
   return <AbsoluteFill>
     <svg className="thought-cloud" viewBox="0 0 416 416" aria-hidden="true" style={{position:'absolute',width:360,height:360,left:388,top:51,overflow:'visible'}}>
@@ -27,7 +28,7 @@ function ThoughtDialogue({goalMode=false,conversationLines}:{goalMode?:boolean;c
       <g fill="#080808" textAnchor="middle" className="dialogue-lettering" fontSize="54">
         {dialogueLines.map((line,row)=>{
           const start=row===0?0:dialogueLines.slice(0,row).join('').length;
-          return <text key={line} x="229" y={conversationLines?141+row*46:128+row*59} fontSize={54} style={conversationLines?{fontSize:'var(--interview-svg-font-size, 44px)'}:undefined}>
+          return <text key={line} x="229" y={uniformDialogue?184:128+row*59} fontSize={54} style={uniformDialogue?{fontSize:'var(--dialogue-svg-font-size, 44px)',transform:`translateY(${(row-1)*1.2}em)`}:undefined}>
             {[...line].map((letter,i)=>{
               const p=conversationLines?1:progress(frame,LETTER_START+(start+i)*LETTER_STAGGER,LETTER_DURATION);
               return <tspan key={i} opacity={p} dy={i===0?(1-p)*8:undefined}>{letter}</tspan>;
