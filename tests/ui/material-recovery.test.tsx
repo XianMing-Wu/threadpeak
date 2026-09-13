@@ -110,3 +110,18 @@ test('guest cannot import creations and a removed in-flight import cannot return
  await act(async()=>{finish({...material('removed-creation'),origin:'creation'});await request})
  expect(result.current.files).toEqual([]);expect(result.current.ready).toBe(true)
 })
+
+test('an old account folder list cannot return after switching accounts or block a new request',async()=>{
+ publishWorkspaceSession({kind:'authenticated',provider:'zhihu',workspaceId:'old',capabilities:{zhihuMaterials:true}})
+ const {result}=renderHook(()=>useMaterials());await waitFor(()=>expect(result.current.ready).toBe(true))
+ let finish!:(value:unknown)=>void
+ vi.mocked(productRequest).mockImplementationOnce(async()=>await new Promise<unknown>(resolve=>{finish=resolve}) as never)
+ let old!:Promise<void>
+ act(()=>{old=result.current.loadFolders()})
+ act(()=>window.dispatchEvent(new Event('threadpeak:account-change')))
+ await waitFor(()=>expect(result.current.ready).toBe(true))
+ vi.mocked(productRequest).mockResolvedValue({items:[{id:'new',title:'新账号收藏',description:''}]} as never)
+ await act(async()=>result.current.loadFolders())
+ await act(async()=>{finish({items:[{id:'old',title:'旧账号收藏',description:'',demo:true}]});await old})
+ expect(result.current.folders.map(f=>f.id)).toEqual(['new']);expect(result.current.foldersDemo).toBe(false)
+})

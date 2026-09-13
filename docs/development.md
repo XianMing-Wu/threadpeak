@@ -25,7 +25,7 @@
 
 根地址展示介绍页，`#login` 展示登录页，`#home` 为登录后的学习首页。`introduction.html` 与主入口由同一 Vite 构建产出，部署整个 `dist` 即可；不依赖历史预览端口。部署配置仅允许公开介绍文档被同源页面嵌入，并为该文档的 Rive WebAssembly 开放编译权限；其余页面保持禁止嵌入。介绍页的固定演示卡和编辑状态不写入账号资源。
 
-介绍页的项目情境与学习步骤集中在 `src/introduction/learning-story-content.ts`，与已保存的原始来源 JSON 分开；调整演示文案不得改写原始文章、作者身份或将编辑情境标成新执行的模型结果。分镜、手机页面与接入范围见[介绍页验收](../qa/introduction-integration-2026-09-13.md)。
+介绍页的项目情境与学习步骤集中在 `src/introduction/learning-story-content.ts`，与已保存的原始来源 JSON 分开；调整演示文案不得改写原始文章、作者身份或将编辑情境标成新执行的模型结果。分镜、手机页面与接入范围见介绍页验收（本地记录 `../qa/introduction-integration-2026-09-13.md`，不随仓库发布）。
 
 ### 界面样式约定
 

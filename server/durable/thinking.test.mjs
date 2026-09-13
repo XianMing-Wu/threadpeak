@@ -99,6 +99,16 @@ test('resuming a model step keeps old interrupted reasoning and starts a fresh a
  assert.equal(activities[0].status,'waiting');assert.equal(activities[0].thought,'中断前的思考');assert.equal(activities[1].status,'done')
 })
 
+test('first formal text settles reasoning while route output is still streaming, then failure stays honest',async t=>{
+ const {ctx,store,resource}=await fixture(t),writing=Promise.withResolvers(),finish=Promise.withResolvers()
+ const result=modelCall({complete:async r=>{r.onReasoning('先确定必要步骤。');r.onText('{"stages":[');writing.resolve();await finish.promise;return {kind:'failed',code:'STREAM_INCOMPLETE'}}},ctx,'R4-plan:recover-v1','安排学习路线',input)
+ await writing.promise;await ctx.flush()
+ const live=await store.snapshot('owner',resource.id)
+ assert.equal(live.job.activities[0].status,'done');assert.equal(live.job.phase,'正在整理学习路线');assert.equal(live.job.draft,'')
+ finish.resolve();await result
+ assert.equal((await store.snapshot('owner',resource.id)).job.activities[0].status,'waiting')
+})
+
 test('a new route follow-up freezes its selected depth, independently of the already accepted route',async t=>{
  const {createProductApp}=await import('./http.ts')
  const {db,store}=await fixture(t)
@@ -134,15 +144,32 @@ test('plain answers and long-material summaries recover truncated output without
  }
 })
 
-test('fast tasks enable low only for final route planning, including its same-agent repairs',async t=>{
+test('fast tasks enable low only for final route planning and recover malformed output without retries',async t=>{
  const {ctx}=await fixture(t),requests=[]
  const llm=createAgentLlmProvider({config,http:async(_url,init)=>{requests.push(JSON.parse(init.body));return {ok:true,status:200,text:async()=>JSON.stringify({choices:[{finish_reason:'stop',message:{content:'{}'}}]})}}})
  const tools=new ProductTools(llm,{},{llm:{window:500000,output:32768,namespace:'test'}})
- await assert.rejects(tools.routePlan(ctx,{workflow:'route-direct-v6',goal:'理解坐标'},'test',[]),e=>e.code==='STRUCTURE_NOT_SETTLED')
- assert.equal(ctx.job.input.depth,'fast');assert.equal(requests.length,3)
+ const route=await tools.routePlan(ctx,{workflow:'route-direct-v6',goal:'理解坐标'},'test',[]);assert.equal(route.concepts[0].title,'理解坐标')
+ assert.equal(ctx.job.input.depth,'fast');assert.equal(requests.length,1)
  assert.ok(requests.every(r=>r.thinking.type==='enabled'&&r.reasoning_effort==='low'&&r.model==='deepseek-flash'))
  assert.equal(new Set(requests.map(r=>r.messages[0].content)).size,1)
  const offset=requests.length
  await tools.structured(ctx,'L-search-plan','search',{},v=>v,4096)
  assert.ok(requests.slice(offset).every(r=>r.thinking.type==='disabled'&&!Object.hasOwn(r,'reasoning_effort')))
+})
+
+test('final route uses the saved goal when the model context cannot fit, without calling or retrying the model',async t=>{
+ const {ctx}=await fixture(t);let calls=0
+ const tools=new ProductTools({complete:async()=>{calls++;throw Error('must not send oversized context')}},{},{llm:{window:2048,output:1024,namespace:'tiny'}})
+ const route=await tools.routePlan(ctx,{goal:'解释二维矩阵缩放'},'tiny-route',[])
+ assert.equal(route.concepts[0].title,'解释二维矩阵缩放');assert.equal(calls,0)
+ assert.deepEqual(ctx.job.checkpoints['diagnostic:R4-recovery'].value,{basis:'goal',linear:true,providerStatus:'not_called',code:'MODEL_CAPABILITY_INVALID'})
+})
+
+test('final route recovers available formal stream after provider failure and never parses reasoning as route content',async t=>{
+ const {ctx}=await fixture(t);let calls=0
+ const tools=new ProductTools({complete:async r=>{calls++;r.onReasoning('这不是路线内容');r.onText('{"stages":[{"title":"从坐标开始","concepts":[{"title":"二维坐标"');return {kind:'failed',code:'STREAM_INCOMPLETE',message:'closed'}}},{},500000)
+ const route=await tools.routePlan(ctx,{goal:'解释二维矩阵缩放'},'interrupted-route',[])
+ assert.equal(calls,1);assert.equal(route.concepts[0].title,'二维坐标')
+ assert.ok(!JSON.stringify(route).includes('这不是路线内容'))
+ assert.equal(ctx.job.checkpoints['diagnostic:R4-recovery'].value.providerStatus,'failed')
 })

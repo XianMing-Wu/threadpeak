@@ -6,8 +6,9 @@ import type { DurableWorker,TaskContext } from './worker.ts'
 import { ToolError } from './worker.ts'
 import { materialView,textUpload,validateUpload,type Material,type MaterialEntry } from './materials.ts'
 import type { ZhihuDataClient } from './zhihu-data.ts'
+import {zhihuInteger} from './zhihu-data.ts'
 import type { ZhihuLogin } from './zhihu-oauth.ts'
-import { safeZhihuUrl } from './authors-network.ts'
+import { safeZhihuUrl,canonicalContentUrl } from './authors-network.ts'
 const Name=z.string().trim().min(1).max(200)
 export function registerMaterialRoutes(app:FastifyInstance,store:DurableStore,worker:DurableWorker,owner:(r:FastifyRequest)=>string,key:(r:FastifyRequest)=>string,api?:ZhihuDataClient,login?:ZhihuLogin){
   // Authentication runs in the parent onRequest hook, before accepting large bodies.
@@ -42,6 +43,9 @@ export function registerMaterialRoutes(app:FastifyInstance,store:DurableStore,wo
     if(ext==='pdf'&&!api)throw new CommandError('PDF_NOT_CONFIGURED',503)
     const body:Material=ext==='pdf'?{fileName:name,mimeType:'application/pdf',hash,bytes:bytes.length,status:'processing',origin:'upload',content:''}:textUpload(name,bytes)
     const resource=existing??await store.create(own,'attachment',commandKey,body)
+    // A concurrent request may win create() after the read above. Recheck the
+    // persisted payload before inserting bytes or scheduling work for that ID.
+    if(resource.body.hash!==hash||resource.body.fileName!==name)throw new CommandError('COMMAND_CONFLICT')
     if(ext==='pdf'){
       await store.db.query('INSERT INTO tp_material_uploads(resource_id,base64) VALUES($1,$2) ON CONFLICT DO NOTHING',[resource.id,bytes.toString('base64')])
       await store.enqueue(own,resource.id,'material.pdf',`pdf:${resource.id}`,{depth:'fast'});worker.wake()
@@ -67,19 +71,19 @@ export function registerMaterialRoutes(app:FastifyInstance,store:DurableStore,wo
   app.get('/api/v2/zhihu/folders',async request=>{
     if(!owner(request).startsWith('account:zhihu:'))throw new CommandError('ZHIHU_LOGIN_REQUIRED',401)
     if(!api||!login)throw new CommandError('ZHIHU_NOT_CONFIGURED',503)
-    const token=await login.userToken(owner(request)),data=await api.user('favlists',token,{Limit:100})
+    const token=await login.userToken(owner(request)),data=await api.user('favlists',token,{Limit:50})
     if(!Array.isArray(data.Items))throw new CommandError('ZHIHU_CONTENT_INVALID',502)
-    return {items:data.Items.filter((f:any)=>f.IsPublic===true&&Number.isSafeInteger(f.UrlToken)&&f.UrlToken>0).map((f:any)=>({id:String(f.UrlToken),title:String(f.Title??'收藏夹'),description:String(f.Description??''),url:safeZhihuUrl(f.Url,isMockZhihuOwner(owner(request))),demo:isMockZhihuOwner(owner(request))}))}
+    return {items:data.Items.filter((f:any)=>f.IsPublic===true&&zhihuInteger(f.UrlToken)).map((f:any)=>({id:zhihuInteger(f.UrlToken)!,title:String(f.Title??'收藏夹'),description:String(f.Description??''),url:safeZhihuUrl(f.Url,isMockZhihuOwner(owner(request))),demo:isMockZhihuOwner(owner(request))}))}
   })
   app.post('/api/v2/materials/zhihu',async request=>{
     if(!owner(request).startsWith('account:zhihu:'))throw new CommandError('ZHIHU_LOGIN_REQUIRED',401)
     if(!api||!login)throw new CommandError('ZHIHU_NOT_CONFIGURED',503)
-    const input=z.object({kind:z.enum(['collection','creation','recent']),folderId:z.string().regex(/^[1-9]\d{0,15}$/).optional()}).parse(request.body),own=owner(request)
+    const input=z.object({kind:z.enum(['collection','creation','recent']),folderId:z.string().refine(v=>!!zhihuInteger(v)).optional()}).parse(request.body),own=owner(request)
     const token=await login.userToken(own)
     let title=input.kind==='recent'?'最近收藏':'我的知乎创作'
     if(input.kind==='collection'){
-      if(!input.folderId||!Number.isSafeInteger(Number(input.folderId)))throw new CommandError('INVALID_INPUT',400)
-      const folders=await api.user('favlists',token,{Limit:100}),folder=folders.Items?.find((f:any)=>String(f.UrlToken)===input.folderId&&f.IsPublic===true)
+      if(!input.folderId)throw new CommandError('INVALID_INPUT',400)
+      const folders=await api.user('favlists',token,{Limit:50}),folder=folders.Items?.find((f:any)=>zhihuInteger(f.UrlToken)===input.folderId&&f.IsPublic===true)
       if(!folder)throw new CommandError('FOLDER_NOT_FOUND',404)
       title=String(folder.Title??'知乎收藏夹')
     }
@@ -104,15 +108,15 @@ export async function importZhihuMaterial(ctx:TaskContext,api:ZhihuDataClient,lo
       const demo=isMockZhihuOwner(ctx.job.owner_id)
       const url=safeZhihuUrl(item.Url,demo);if(!url)throw new ToolError('ZHIHU_CONTENT_INVALID',false)
       // Strip only tracking fields for identity. Preserve the original attributed URL in the source.
-      const canonical=new URL(url);canonical.search='';canonical.hash='';if(seen.has(canonical.href))continue;seen.add(canonical.href)
+      const canonical=canonicalContentUrl(url);if(seen.has(canonical))continue;seen.add(canonical)
       const authorUrl=safeZhihuUrl(item.Author?.Url,demo),token=typeof item.Author?.UrlToken==='string'?item.Author.UrlToken:''
       const authorId=demo?(isMockZhihuUrl(authorUrl)?authorUrl:null):token&&/^[\w-]+$/.test(token)?`https://www.zhihu.com/people/${token}`:authorUrl?.match(/\/people\/([^/?]+)/)?.[1]?`https://www.zhihu.com/people/${authorUrl.match(/\/people\/([^/?]+)/)![1]}`:null
-      entries.push({id:digest(canonical.href),title:String(item.Title??'知乎内容'),summary:String(item.Summary??''),url,authorId,authorName:typeof item.Author?.Name==='string'?item.Author.Name:null,authorUrl,likes:Number.isFinite(item.LikeCount)?Math.max(0,item.LikeCount):null})
+      entries.push({id:digest(canonical),title:String(item.Title??'知乎内容'),summary:String(item.Summary??''),url,authorId,authorName:typeof item.Author?.Name==='string'?item.Author.Name:null,authorUrl,likes:Number.isFinite(item.LikeCount)?Math.max(0,item.LikeCount):null})
     }
     await ctx.progress(`正在整理${body.origin==='collection'?'收藏夹':'创作'} · ${entries.length} 篇`)
     if(entries.length>2000)throw new ToolError('COLLECTION_TOO_LARGE',false)
     if(body.recent||page.Paging.IsEnd)break
-    if(!/^\d+$/.test(String(page.Paging.NextOffset))||BigInt(page.Paging.NextOffset)<=BigInt(offset))throw new ToolError('ZHIHU_PAGING_INVALID',false)
+    if(!zhihuInteger(page.Paging.NextOffset)||BigInt(page.Paging.NextOffset)<=BigInt(offset))throw new ToolError('ZHIHU_PAGING_INVALID',false)
     offset=String(page.Paging.NextOffset)
   }
   if(!entries.length)throw new ToolError('COLLECTION_EMPTY',false)

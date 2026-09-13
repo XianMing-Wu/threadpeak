@@ -1,6 +1,16 @@
 # 验收与来源证据
 
+- 2026-09-13 登录重设计（本地记录 `login-redesign-2026-09-13.md`，不随仓库发布）：12 个实际登录界面参考、产品介绍风格衔接、视口内布局与登录状态验收。
+
+- 2026-09-13 产品介绍接入（本地记录 `introduction-integration-2026-09-13.md`，不随仓库发布）：同源构建、根页与登录跳转、稳定态滚动、目标输入，以及学习到真人请教的连贯演示。
+
+- 2026-09-12 蓝色圆台漂移修复（本地记录 `path-card-drift-2026-09-12.md`，不随仓库发布）：相机偏移符号、真实投影回归及点击后静置验证。
+
+- 2026-09-12 作者头像修复（本地记录 `author-avatar-2026-09-12.md`，不随仓库发布）：回答短长链接识别、旧缓存更新、真实图片与上游未命中边界。
+
 这里保留能复现的 QA 页面、明确时间/范围的执行证据，以及编选来源账本。日常测试入口见[开发指南](../docs/development.md)，历史界面和旧版本报告见[历史索引](../docs/history.md)。
+
+- 2026-09-12 知乎 OAuth 接入（本地记录 `oauth-integration-2026-09-12.md`，不随仓库发布）：官方 uid 合同、回调安全、过期重连、真实授权页及待用户确认的联调边界。
 
 - [2026-09-09 路线光照与作者审查](path-author-audit-2026-09-09.md)：尺寸变化复现、证据流、真实 N2 与私聊草稿验收。
 
@@ -18,6 +28,10 @@
 
 | 页面 | 用途 |
 | --- | --- |
+| login-responsive.html（本地记录 `login-responsive.html`，不随仓库发布） | 真实登录应用的桌面与窄屏几何检查 |
+| login-states.html（本地记录 `login-states.html`，不随仓库发布） | 真实 AuthLanding 的等待与失败回调，不创建会话 |
+| introduction-motion.html（本地记录 `introduction-motion.html`，不随仓库发布） | 介绍页的学习、足迹、请教、结尾分镜与稳定状态检查 |
+| introduction-responsive.html（本地记录 `introduction-responsive.html`，不随仓库发布） | 390 × 844 真实介绍 iframe，核对长文案与按钮边界 |
 | [path-lighting-lab.html](path-lighting-lab.html) | 真实 renderer 的 390/800/1200px 阴影尺寸切换与重复挂载 |
 | [author-message-lab.html](author-message-lab.html) | 真实公开搜索与模型样本的私聊编辑/复制，页面不发送消息 |
 | [source-footprints.html](source-footprints.html) | 正式学习足迹组件、四种输入框的统一发送/停止，以及桌面/窄屏明暗状态 |

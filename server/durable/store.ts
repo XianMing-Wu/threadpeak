@@ -205,8 +205,8 @@ export class DurableStore {
       const resource=await this.lockResource(tx,job.owner_id,job.resource_id),live=await this.ownedJob(tx,job)
       const activities=live.activities??[],old=activities.find(a=>a.id===input.id)
       // Completed checkpoints keep their original completed status on recovery.
-      if(old?.status==='done'&&(input.status==='running'||old.title===input.title&&old.detail===input.detail))return
-      const now=this.now(),activity={...old,...input,startedAt:old?.startedAt??now,updatedAt:now,...(input.status==='done'?{finishedAt:now}:{})}
+      if(old?.status==='done'&&(input.status==='running'||input.kind!=='think'&&old.title===input.title&&old.detail===input.detail))return
+      const now=this.now(),activity={...old,...input,startedAt:old?.startedAt??now,updatedAt:now,finishedAt:input.status==='done'?now:undefined}
       if(old)activities[activities.indexOf(old)]=activity;else activities.push(activity)
       const phase=input.status==='running'&&input.kind!=='think'?input.title:live.phase
       await tx.query('UPDATE tp_jobs SET activities=$2::jsonb,phase=$3,updated_at=$4 WHERE id=$1',[job.id,JSON.stringify(activities),phase,now])

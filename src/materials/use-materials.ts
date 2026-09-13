@@ -40,7 +40,7 @@ export function useMaterials() {
 
   const restoreEpoch=useRef(0)
   useEffect(()=>{
-    const changed=()=>{restoreEpoch.current++;setLoaded(false);setRestoring(true);setFiles([]);setFolderMaterials({});setUnresolved([]);setUploads([]);setImports({});setFolders([]);setPreview(null);pendingImports.current.clear();importKeys.current.clear();setRestoreAttempt(n=>n+1)}
+    const changed=()=>{restoreEpoch.current++;setLoaded(false);setRestoring(true);setFiles([]);setFolderMaterials({});setUnresolved([]);setUploads([]);setImports({});setFolders([]);setFoldersStatus('idle');setFoldersError('');setFoldersDemo(false);folderLoad.current=undefined;setPreview(null);setLibraryOpen(false);setError('');pendingImports.current.clear();importKeys.current.clear();setRestoreAttempt(n=>n+1)}
     window.addEventListener('threadpeak:account-change',changed)
     return()=>window.removeEventListener('threadpeak:account-change',changed)
   },[])
@@ -81,28 +81,29 @@ export function useMaterials() {
   }, [files, folderMaterials, searchScope, loaded,unresolved])
 
   useEffect(() => {
-    const abort=new AbortController()
+    const abort=new AbortController(),epoch=restoreEpoch.current
     void pollResource(async()=>{
       const state=current.current
       const pending=selectedMaterials(state.files,state.folderMaterials,state.searchScope).filter(item=>item.status==='processing')
       const results=await Promise.allSettled(pending.map(async item=>{
         const next=await productRequest<MaterialView>(`/api/v2/materials/${encodeURIComponent(item.sourceId)}`,{signal:abort.signal})
-        if(abort.signal.aborted)return
+        if(abort.signal.aborted||epoch!==restoreEpoch.current)return
         if(item.origin!=='collection')setFiles(old=>old.map(a=>a.sourceId===next.sourceId?next:a))
         else setFolderMaterials(old=>Object.fromEntries(Object.entries(old).map(([id,a])=>[id,a.sourceId===next.sourceId?{...next,folderId:id}:a])))
       }))
       const failure=results.find(r=>r.status==='rejected');if(failure?.status==='rejected')throw failure.reason
-    },{signal:abort.signal,intervalMs:2000,onError:(_error,stopped)=>{if(stopped)setError('资料连接暂停，请刷新后继续。已上传内容仍然保留。')}})
+    },{signal:abort.signal,intervalMs:2000,onError:(_error,stopped)=>{if(stopped&&epoch===restoreEpoch.current)setError('资料连接暂停，请刷新后继续。已上传内容仍然保留。')}})
     return()=>abort.abort()
-  }, [])
+  }, [restoreAttempt])
 
   const loadFolders = useCallback(() => {
     if(getWorkspaceSession()?.kind==='guest')return Promise.resolve()
     if (folderLoad.current) return folderLoad.current
+    const epoch=restoreEpoch.current
     setFoldersStatus('loading'); setFoldersError('')
     return folderLoad.current = productRequest<{ items: FolderView[]; demo?: boolean }>('/api/v2/zhihu/folders').then(result => {
-      if (mounted.current) { setFolders(result.items); setFoldersDemo(result.demo === true || result.items.some(item => item.demo)); setFoldersStatus('ready') }
-    }).catch(e => { if (mounted.current) { setFoldersError(e instanceof ApiError && e.code === 'ZHIHU_LOGIN_REQUIRED' ? '连接账号后，即可选择你的公开收藏夹。' : message(e)); setFoldersStatus('error') } }).finally(() => { folderLoad.current = undefined })
+      if (mounted.current&&epoch===restoreEpoch.current) { setFolders(result.items); setFoldersDemo(result.demo === true || result.items.some(item => item.demo)); setFoldersStatus('ready') }
+    }).catch(e => { if (mounted.current&&epoch===restoreEpoch.current) { setFoldersError(e instanceof ApiError && e.code === 'ZHIHU_LOGIN_REQUIRED' ? '连接账号后，即可选择你的公开收藏夹。' : message(e)); setFoldersStatus('error') } }).finally(() => { if(epoch===restoreEpoch.current)folderLoad.current = undefined })
   }, [])
 
   const add = (item: MaterialView) => {
@@ -177,12 +178,12 @@ export function useMaterials() {
     try{const item=await productRequest<MaterialView>('/api/v2/materials/zhihu',{method:'POST',body:{kind:'creation'},key});if(mounted.current&&epoch===restoreEpoch.current&&attempt===creationAttempt.current&&pendingImports.current.has(id)){setFiles(old=>old.some(a=>a.sourceId===item.sourceId)?old:[...old,item]);setImports(old=>{const next={...old};delete next[id];return next});importKeys.current.delete(id)}}catch(e){if(mounted.current&&epoch===restoreEpoch.current&&attempt===creationAttempt.current&&pendingImports.current.has(id))setImports(old=>({...old,[id]:{title:'我的公开创作',error:message(e)}}))}finally{if(epoch===restoreEpoch.current&&attempt===creationAttempt.current)pendingImports.current.delete(id)}
   }
   const setKind = (kind: SearchScope['kind']) => {
-    if(!loaded)return
+    if(!loaded||kind==='collections'&&getWorkspaceSession()?.kind==='guest')return
     setSearchScope(old => kind === 'collections' ? { kind, folderIds: old.kind === 'collections' ? old.folderIds : [] } : { kind }); setError('')
     if(kind!=='collections')setUnresolved(old=>old.filter(a=>!a.folderId))
   }
   const toggleFolder = (folder: FolderView) => {
-    if(!loaded)return
+    if(!loaded||getWorkspaceSession()?.kind==='guest')return
     const state = current.current
     const selected = state.searchScope.kind === 'collections' ? state.searchScope.folderIds : []
     const exists = selected.includes(folder.id)
@@ -206,12 +207,14 @@ export function useMaterials() {
     setSearchScope(old => old.kind === 'collections' ? { ...old, folderIds: old.folderIds?.filter(folderId => folderMaterials[folderId]?.sourceId !== id&&folderId!==missing?.folderId) } : old)
   }
   const resume = async (item: MaterialView) => {
+    const epoch=restoreEpoch.current
     try {
       await productRequest(`/api/v2/resources/${encodeURIComponent(item.sourceId)}/resume`, { method: 'POST' })
       const next = await productRequest<MaterialView>(`/api/v2/materials/${encodeURIComponent(item.sourceId)}`)
+      if(!mounted.current||epoch!==restoreEpoch.current)return
       if (item.origin !== 'collection') setFiles(old => old.map(a => a.sourceId === item.sourceId ? next : a))
       else setFolderMaterials(old => Object.fromEntries(Object.entries(old).map(([id, a]) => [id, a.sourceId === item.sourceId ? { ...next, folderId: id } : a])))
-    } catch (e) { setError(message(e)) }
+    } catch (e) { if(mounted.current&&epoch===restoreEpoch.current)setError(message(e)) }
   }
   const items = selectedMaterials(files, folderMaterials, searchScope)
   return {

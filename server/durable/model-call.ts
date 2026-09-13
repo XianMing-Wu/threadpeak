@@ -9,7 +9,7 @@ export async function modelCall(llm:LlmProvider,ctx:TaskContext,step:string,titl
       await ctx.activity(previous.id,'think',previous.title,'waiting',previous.detail,{thought:previous.thought,step})
     }
   }
-  let thought='',lastWrite=0,accepting=true
+  let thought='',lastWrite=0,accepting=true,writing=false
   const save=(status:'running'|'done'|'waiting')=>ctx.activity(id,'think',title,status,undefined,{thought,step})
   try{
     const result=await llm.complete({...input,onReasoning:text=>{
@@ -19,7 +19,15 @@ export async function modelCall(llm:LlmProvider,ctx:TaskContext,step:string,titl
       if(Date.now()-lastWrite<500)return
       lastWrite=Date.now()
       // TaskContext serializes and awaits these writes, including on cancellation.
-      void save('running').catch(()=>{})
+      void save(writing?'done':'running').catch(()=>{})
+    },onText:text=>{
+      if(!accepting||ctx.signal.aborted)return
+      if(text.trim()&&!writing){
+        writing=true
+        if(thought)void save('done').catch(()=>{})
+        if(step.startsWith('R4'))void ctx.progress('正在整理学习路线').catch(()=>{})
+      }
+      input.onText?.(text)
     }})
     accepting=false
     if(result.kind==='completed'&&result.reasoning?.trim())thought=result.reasoning

@@ -3,13 +3,13 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { openDatabase,migrate } from './database.ts'
 import { DurableStore,digest,CommandError } from './store.ts'
-import { TaskContext,DurableWorker } from './worker.ts'
+import { TaskContext,DurableWorker,ToolError } from './worker.ts'
 import { ProductTools } from './tools.ts'
 import { createFlows } from './flows.ts'
 import { createProductApp } from './http.ts'
 import { ZhihuDataClient } from './zhihu-data.ts'
 import { ZhihuLogin,sealToken,unsealToken,loginConfig } from './zhihu-oauth.ts'
-import { textUpload,inheritedArticles } from './materials.ts'
+import { textUpload,inheritedArticles,preparePdf } from './materials.ts'
 import { readAuthorNetwork } from './authors-network.ts'
 const envelope=Data=>new Response(JSON.stringify({Code:0,Data}),{headers:{'content-type':'application/json'}})
 const secret='test-only-encryption-key-32-characters-long'
@@ -133,4 +133,50 @@ test('expired login cannot fall back to the platform owner when importing a fold
   const {app,cookie}=await fixture(t,{api,loginFactory:()=>({userToken:async()=>{throw new CommandError('ZHIHU_REAUTHORIZE',401)}})})
   const result=await app.inject({method:'POST',url:'/api/v2/materials/zhihu',headers:{cookie,'idempotency-key':'fixture-zhihu-import'},payload:{kind:'collection',folderId:'123'}})
   assert.equal(result.statusCode,401);assert.equal(calls,0)
+})
+
+test('collection Int64 IDs remain exact and list requests obey the official 50-item limit',async t=>{
+ const id='9223372036854775806'
+ const api=new ZhihuDataClient('platform',async(raw)=>{
+  const url=new URL(raw)
+  assert.equal(url.searchParams.get('Limit'),'50')
+  if(url.pathname.endsWith('/favlists'))return new Response(`{"Code":0,"Data":{"Items":[{"Title":"大编号收藏","IsPublic":true,"UrlToken":${id}}]}}`)
+  assert.equal(url.searchParams.get('FavlistUrlToken'),id)
+  return envelope({Items:[{Title:'线性代数',Summary:'矩阵是线性变换的表示。',Url:'https://zhuanlan.zhihu.com/p/1'}],Paging:{IsEnd:true}})
+ })
+ const {app,cookie,finish}=await fixture(t,{api,loginFactory:()=>({userToken:async()=> 'user-token'})})
+ const folders=await app.inject({url:'/api/v2/zhihu/folders',headers:{cookie}})
+ assert.equal(folders.json().items[0].id,id)
+ const imported=await app.inject({method:'POST',url:'/api/v2/materials/zhihu',headers:{cookie,'idempotency-key':'large-folder-id'},payload:{kind:'collection',folderId:id}})
+ assert.equal(imported.statusCode,200,imported.body)
+ assert.equal((await finish(imported.json().sourceId)).job.status,'completed')
+})
+
+test('PDF original bytes survive a task-creation outage, expired file IDs renew, and commit cleans bytes',async t=>{
+ const {store,db,own}=await fixture(t)
+ const bytes=Buffer.from('%PDF-1.7\nsynthetic-only'),hash=digest(bytes.toString('base64'))
+ const r=await store.create(own,'attachment','pdf-recovery',{fileName:'恢复.pdf',mimeType:'application/pdf',content:'',status:'processing',origin:'upload',hash,bytes:bytes.length})
+ await db.query('INSERT INTO tp_material_uploads(resource_id,base64) VALUES($1,$2)',[r.id,bytes.toString('base64')])
+ await store.enqueue(own,r.id,'material.pdf','pdf-recovery-task',{depth:'fast'})
+ const job=await store.claim(),ctx=new TaskContext(store,job,new AbortController().signal)
+ let uploads=0,fail=true
+ const api={json:async(path,options)=>{
+  if(path==='/resources/v1/files'){uploads++;return {file_id:`file-${uploads}`}}
+  if(path==='/api/v1/pdf-parse/tasks'){if(fail)throw new ToolError('ZHIHU_HTTP_503');assert.equal(options.body.file_id,'file-2');return {task_id:'task-2'}}
+  return {task_status:'succeeded',result:{url:'https://result.bcebos.com/file.json',summary:'全部页面的总结'}}
+ },pdfResult:async()=>({pages:[{blocks:[{content:'保留第一页'}]},{blocks:[{content:'保留最后一页'}]}]})}
+ await assert.rejects(preparePdf(ctx,{},api),e=>e.code==='ZHIHU_HTTP_503')
+ assert.equal((await db.query('SELECT base64 FROM tp_material_uploads WHERE resource_id=$1',[r.id]))[0].base64,bytes.toString('base64'))
+ const cp=job.checkpoints['PDF-upload:v2:0'];cp.value.createdAt=Date.now()-24*3600_000
+ await store.checkpoint(job,'PDF-upload:v2:0',cp.hash,cp.value)
+ fail=false;await preparePdf(ctx,{},api)
+ assert.equal(uploads,2);assert.equal((await store.resource(own,r.id)).body.rawContent,'保留第一页\n\n保留最后一页')
+ assert.equal((await db.query('SELECT * FROM tp_material_uploads WHERE resource_id=$1',[r.id])).length,0)
+})
+
+test('concurrent different uploads with one idempotency key cannot accept the losing bytes',async t=>{
+ const {app,cookie,db}=await fixture(t)
+ const results=await Promise.all(['first content','second content'].map(content=>app.inject({method:'POST',url:'/api/v2/materials/upload?name=race.txt',headers:{cookie,'content-type':'application/octet-stream','idempotency-key':'same-concurrent-upload'},payload:Buffer.from(content)})))
+ assert.deepEqual(results.map(r=>r.statusCode).sort(),[200,409])
+ assert.equal((await db.query("SELECT * FROM tp_resources WHERE kind='attachment'")).length,1)
 })

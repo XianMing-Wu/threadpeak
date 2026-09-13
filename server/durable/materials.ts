@@ -44,15 +44,23 @@ export async function preparePdf(ctx:TaskContext,tools:ProductTools,api:ZhihuDat
   const resource=await ctx.store.resource<Material>(ctx.job.owner_id,ctx.job.resource_id),meta=resource.body
   if(meta.status==='ready'){await ctx.store.commit(ctx.job,r=>r.body);return}
   await ctx.progress('正在上传 PDF')
-  const uploaded=await ctx.step('PDF-upload',{hash:meta.hash},async()=>{
+  // file_id expires after 24 hours. Keep original bytes until the final commit;
+  // a resumed upload without a created parse task can then renew its file_id.
+  const checkpoints=ctx.job.checkpoints
+  const legacy=!!checkpoints['PDF-upload']&&!Object.keys(checkpoints).some(k=>k.startsWith('PDF-upload:v2:'))
+  let generation=Math.max(0,...Object.keys(checkpoints).map(k=>/^PDF-upload:v2:(\d+)$/.exec(k)?.[1]).filter(Boolean).map(Number))
+  const latest=checkpoints[`PDF-upload:v2:${generation}`]?.value as {createdAt:number}|undefined
+  if(latest&&!checkpoints[`PDF-task:v2:${generation}`]&&Date.now()-latest.createdAt>=23*3600_000)generation++
+  const uploadKey=legacy?'PDF-upload':`PDF-upload:v2:${generation}`
+  const uploaded=await ctx.step<string|{fileId:string;createdAt:number}>(uploadKey,{hash:meta.hash},async()=>{
     const [row]=await ctx.store.db.query<{base64:string}>('SELECT base64 FROM tp_material_uploads WHERE resource_id=$1',[resource.id]);if(!row)throw new ToolError('PDF_UPLOAD_MISSING',false)
     const form=new FormData();form.append('file',new Blob([Buffer.from(row.base64,'base64')],{type:'application/pdf'}),meta.fileName)
-    const data=await api.json('/resources/v1/files',{form,signal:ctx.signal});if(typeof data.file_id!=='string')throw new ToolError('PDF_UPLOAD_INVALID');return data.file_id as string
+    const data=await api.json('/resources/v1/files',{form,signal:ctx.signal});if(typeof data.file_id!=='string'||!data.file_id.trim())throw new ToolError('PDF_UPLOAD_INVALID');return {fileId:data.file_id as string,createdAt:Date.now()}
   })
-  await ctx.store.db.query('DELETE FROM tp_material_uploads WHERE resource_id=$1',[resource.id])
+  const fileId=typeof uploaded==='string'?uploaded:uploaded.fileId
   await ctx.progress('正在解析 PDF')
-  const taskId=await ctx.step('PDF-task',{fileId:uploaded},async()=>{const data=await api.json('/api/v1/pdf-parse/tasks',{body:{file_id:uploaded},key:`threadpeak-pdf-${resource.id}`,signal:ctx.signal});if(typeof data.task_id!=='string')throw new ToolError('PDF_TASK_INVALID');return data.task_id as string})
-  const parsed=await ctx.step('PDF-content',{taskId},async()=>{
+  const taskId=await ctx.step(legacy?'PDF-task':`PDF-task:v2:${generation}`,{fileId},async()=>{const data=await api.json('/api/v1/pdf-parse/tasks',{body:{file_id:fileId},key:`threadpeak-pdf-${resource.id}${legacy?'':`-v2-${generation}`}`,signal:ctx.signal});if(typeof data.task_id!=='string'||!data.task_id.trim())throw new ToolError('PDF_TASK_INVALID');return data.task_id as string})
+  const parsed=await ctx.step(legacy?'PDF-content':`PDF-content:v2:${generation}`,{taskId},async()=>{
     const until=Date.now()+20*60_000
     while(Date.now()<until){
       ctx.signal.throwIfAborted();const state=await api.json(`/api/v1/pdf-parse/tasks/${encodeURIComponent(taskId)}`,{signal:ctx.signal})
@@ -73,6 +81,6 @@ export async function preparePdf(ctx:TaskContext,tools:ProductTools,api:ZhihuDat
     throw new ToolError('PDF_STILL_PROCESSING')
   })
   await ctx.progress('正在整理 PDF 总结')
-  const summary=parsed.summary||await boundedSummary(tools.llm,ctx,parsed.content,`${resource.id}:${meta.fileName}`,12000,ctx.job.input.depth??'fast',tools.window)
+  const summary=parsed.summary||await boundedSummary(tools.llm,ctx,parsed.content,`${resource.id}:${meta.fileName}`,12000,ctx.job.input.depth??'fast',tools.window,undefined,tools.capabilities.llm)
   await ctx.flush();await ctx.store.commit(ctx.job,async(r,tx)=>{await tx.query('DELETE FROM tp_material_uploads WHERE resource_id=$1',[r.id]);return {...r.body,content:summary,rawContent:parsed.content,status:'ready'}})
 }

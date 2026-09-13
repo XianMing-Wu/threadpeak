@@ -28,7 +28,7 @@ test('association retries never replay composition; failure and recovery retain 
  const tools=new ProductTools({complete:async call=>{
   const data=JSON.parse(call.messages[1].content)
   if(!data.citationCatalog){composeCalls++;assert.equal(data.currentQuestion,input.currentQuestion);const raw=JSON.stringify(answer);call.onText?.(raw);return {kind:'completed',text:raw}}
-  attachCalls++;prompts.push(call.messages[0].content);assert.equal(call.thinkingDepth,'fast');assert.equal(call.onText,undefined)
+  attachCalls++;prompts.push(call.messages[0].content);assert.equal(call.thinkingDepth,'fast');call.onText?.('{"placements":[')
   const snapshot=await store.snapshot('owner',resource.id);assert.match(snapshot.job.draft,/同一个点/);assert.deepEqual(snapshot.data,{})
   return {kind:'completed',text:JSON.stringify(fail?{placements:[{section:'P1',after:'C1',evidenceRefs:['C9.E1']}]}:placeAnswer(data))}
  }},{})

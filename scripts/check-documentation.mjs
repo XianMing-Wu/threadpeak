@@ -1,12 +1,22 @@
-import { readFile, readdir } from 'node:fs/promises'
+import { readFile, readdir, stat } from 'node:fs/promises'
+import {execFile} from 'node:child_process'
+import {promisify} from 'node:util'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { fromMarkdown } from 'mdast-util-from-markdown'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
-const ignored = new Set(['node_modules', '.git', '.tmp-chrome', '.data', 'dist', 'coverage', 'raw', '.vite', '.local-backend-review'])
+const ignored = new Set(['node_modules', '.git', '.tmp-chrome', '.data', 'dist', 'coverage', 'raw', '.vite', '.local-backend-review', '刘看山'])
 
 export async function repositoryFiles(directory = root, prefix = '') {
+  if(directory===root&&!prefix){
+    try{
+      const {stdout}=await promisify(execFile)('git',['ls-files','--cached','--others','--exclude-standard','-z'],{cwd:root,maxBuffer:16*1024*1024})
+      const names=[...new Set(stdout.split('\0').filter(Boolean))].filter(name=>!name.split('/').some(part=>ignored.has(part)))
+      const existing=await Promise.all(names.map(async name=>await stat(path.join(root,name)).then(s=>s.isFile()).catch(()=>false)))
+      return names.filter((_,i)=>existing[i])
+    }catch{/* Source archives without .git still use ordinary filesystem discovery. */}
+  }
   const files = []
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const name = path.posix.join(prefix, entry.name)

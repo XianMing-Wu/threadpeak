@@ -36,3 +36,16 @@ coverage/
 
 # Local backend review workspace (workflow maps, notes, and follow-up audits).
 /.local-backend-review/
+
+# Local presentation production and review records; no raw capture assets in Git.
+/design/launch-film-2026-09-11/
+/qa/author-avatar-2026-09-12.md
+/qa/introduction-integration-2026-09-13.md
+/qa/introduction-motion.html
+/qa/introduction-responsive.html
+/qa/launch-film-2026-09-11.md
+/qa/login-redesign-2026-09-13.md
+/qa/login-responsive.html
+/qa/login-states.html
+/qa/oauth-integration-2026-09-12.md
+/qa/path-card-drift-2026-09-12.md

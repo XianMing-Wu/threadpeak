@@ -3,6 +3,10 @@ import type { ZhihuGate } from './zhihu-gate.ts'
 import type { ZhihuOAuthMock } from './zhihu-oauth-mock.ts'
 
 export type Fetcher = typeof fetch
+export function zhihuInteger(value:unknown):string|undefined {
+  const v=typeof value==='string'?value:typeof value==='number'&&Number.isSafeInteger(value)?String(value):''
+  return /^[1-9]\d{0,18}$/.test(v)&&BigInt(v)<=9223372036854775807n?v:undefined
+}
 export class ZhihuDataClient {
   readonly secret:string; readonly fetcher:Fetcher; readonly base:string
   readonly userMock?:ZhihuOAuthMock
@@ -33,7 +37,8 @@ export class ZhihuDataClient {
       const response=await this.fetcher(url,{method:options.body||options.form?'POST':'GET',headers,body:options.form??(options.body?JSON.stringify(options.body):undefined),redirect:'error',signal:AbortSignal.any([AbortSignal.timeout(120_000),signal])})
       await this.gate?.observe(response)
       if(!response.ok){await response.body?.cancel();throw new ToolError(options.token&&[401,403].includes(response.status)?'ZHIHU_AUTH_FAILED':`ZHIHU_HTTP_${response.status}`,response.status===429||response.status>=500)}
-      let payload:any;try{payload=await response.json()}catch{throw new ToolError('ZHIHU_RESPONSE_INVALID')}
+      let payload:any;try{payload=JSON.parse(await response.text(),(_key,value,context?:{source?:string})=>
+        typeof value==='number'&&!Number.isSafeInteger(value)&&context?.source&&/^\d+$/.test(context.source)?context.source:value)}catch{throw new ToolError('ZHIHU_RESPONSE_INVALID')}
       if(Number(payload?.Code)===30001){await this.gate?.observe({status:429});throw new ToolError('ZHIHU_RATE_LIMITED')}
       // The platform does not distinguish Access Secret failures from an
       // expired/revoked user token here. Do not guess expiry or drop either header.

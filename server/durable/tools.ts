@@ -11,7 +11,7 @@ import { AGENT_PROMPTS } from '../agent-runtime/prompts.ts'
 import { SHARED_SYSTEM_PREFIX } from '../agent-runtime/constants.ts'
 import { extractStructuredJson, parseAgentOutput, type ParseAgentOutputInput, type R4Output } from '../agent-runtime/schemas.ts'
 import { projectRouteToDocument } from '../path-generation/project-document.ts'
-import type { LlmProvider, ZhihuProvider, ThinkingDepth, SearchEvidence } from '../agent-runtime/types.ts'
+import type { LlmProvider, LlmCompleteResult, ZhihuProvider, ThinkingDepth, SearchEvidence } from '../agent-runtime/types.ts'
 import { packContext, tokenBound, effectiveWindow } from './context.ts'
 import { ToolError, settledParallel, type TaskContext } from './worker.ts'
 import { packZhihuSearchQueries } from '../agent-runtime/pack-search.ts'
@@ -20,6 +20,7 @@ import {validateGoalPlan,compileStagedPlan,STAGED_PLAN_PROMPT,STAGED_PLAN_OUTPUT
 import {evidenceUrlKey} from '../agent-runtime/evidence-url.ts'
 import { paragraphDraft } from './stream-draft.ts'
 import { modelCall } from './model-call.ts'
+import {recoverPlan,compileRecoveredPlan} from '../path-generation/recover-plan.ts'
 import { reasoningReserve } from '../agent-runtime/thinking-policy.ts'
 import {defaultCapabilities,type ToolCapabilities} from './capabilities.ts'
 import {LEARNING_TOOL_SPECS,ROUTE_STEP_SPECS,type RouteStep,type LearningTool} from './agent-specs.ts'
@@ -174,16 +175,45 @@ export class ProductTools {
     return this.structured(ctx,'R3:v6',`${SHARED_SYSTEM_PREFIX}\n${GOAL_POLICY}\n${ROUTE_INTERVIEW_PROMPT}\n输出 JSON：${ROUTE_INTERVIEW_OUTPUT}`,input,value=>RouteInterviewSchema.parse(value),4096,{focus:routeTaskFocus(input,'interview')})
   }
   async routePlan(ctx:TaskContext,input:{attachments?:{sourceId:string;fileName:string;content:string;contentBasis?:string}[];[key:string]:unknown},scope:string,attachmentSourceIds:string[]):Promise<R4Output>{
-    // The model plans content; a deterministic compiler owns IDs and all edges.
+    const direct=input.workflow===DIRECT_ROUTE_VERSION
     const modelInput={...input,attachments:(input.attachments??[]).map((a,i)=>({...a,ref:`F${i+1}`}))}
-    const settle=(value:unknown,prepared:typeof modelInput)=>{
-      const plan=input.workflow===DIRECT_ROUTE_VERSION?validateDirectRoutePlan(value,prepared):validateGoalPlan(value,prepared),summarizedRefs=prepared.attachments.filter((a,i)=>a.contentBasis==='source_summary'||a.content!==modelInput.attachments[i]!.content).map(a=>a.ref),route=compileStagedPlan(plan,scope,attachmentSourceIds,new Set(summarizedRefs)),checked=projectRouteToDocument(route)
-      if(!checked.ok)throw new Error(checked.message)
-      return {plan,summarizedRefs}
-    }
-    const planned=await this.structured(ctx,input.workflow===DIRECT_ROUTE_VERSION?'R4-plan:direct-v6':'R4-plan:strict-v2',`${SHARED_SYSTEM_PREFIX}\n${GOAL_POLICY}\n${input.workflow===DIRECT_ROUTE_VERSION?DIRECT_ROUTE_PROMPT:STAGED_PLAN_PROMPT} searchScope.kind=collections 时只根据所选资料安排学习，缺口明确说明，不虚构外部来源。用户选择的 attachments 必须用于确定范围、重点和练习次序；F 引用表示概念与资料的相关关系，所有资料仍会出现在每个概念中，不要为了可见性给所有概念硬凑相同引用。\n输出 JSON：${input.workflow===DIRECT_ROUTE_VERSION?DIRECT_ROUTE_OUTPUT:STAGED_PLAN_OUTPUT}`,modelInput,(value,prepared)=>settle(value,prepared as typeof modelInput),24576,{thinkingDepth:'deep',...(input.workflow===DIRECT_ROUTE_VERSION?{focus:routeTaskFocus({goal:input.goal,goalContext:input.goalContext,attachments:modelInput.attachments},'plan')}:{})})
-    return compileStagedPlan(planned.plan,scope,attachmentSourceIds,new Set(planned.summarizedRefs))
+    const system=`${SHARED_SYSTEM_PREFIX}\n${GOAL_POLICY}\n${direct?DIRECT_ROUTE_PROMPT:STAGED_PLAN_PROMPT} searchScope.kind=collections 时只根据所选资料安排学习，不虚构外部来源。\n输出 JSON：${direct?DIRECT_ROUTE_OUTPUT:STAGED_PLAN_OUTPUT}`
+    const focus=routeTaskFocus(modelInput,'plan'),runtime={system,focus,budget:this.capabilities.llm,recovery:'route-recovery-v1'}
+    return ctx.step(`R4-plan:recover-v1@${AGENT_CONTRACT_VERSION}:${digest(runtime).slice(0,16)}`,{input,...runtime},async()=>{
+      const output=Math.min(this.capabilities.llm.output,Math.floor(effectiveWindow(this.window)*.35),24576+8192)
+      let prepared=modelInput,streamed='',summarizedRefs=new Set<string>(),result:LlmCompleteResult,attempted=false
+      try{
+        const messages=await packContext(this.llm,ctx,system,modelInput,'deep',{window:this.window,output,margin:2048+tokenBound(focus)+64,summary:this.capabilities.llm})
+        messages.push({role:'user',content:focus})
+        prepared=JSON.parse(messages[1]!.content) as typeof modelInput
+        summarizedRefs=new Set(prepared.attachments.filter((a,i)=>a.contentBasis==='source_summary'||a.content!==modelInput.attachments[i]?.content).map(a=>a.ref))
+        attempted=true
+        result=await modelCall(this.llm,ctx,'R4-plan:recover-v1','安排学习路线',{messages,json:true,thinkingDepth:'deep',maxTokens:output,signal:ctx.signal,onText:value=>{streamed=value}})
+      }catch(error){
+        ctx.signal.throwIfAborted()
+        // Context/provider failures may use the saved goal. Storage failures,
+        // lost leases and programming errors still propagate through the worker.
+        if(!(error instanceof ToolError)||['CANCELLED','LEASE_LOST','CHECKPOINT_VERSION_CONFLICT'].includes(error.code))throw error
+        result={kind:'failed',code:error.code,message:error.message}
+      }
+      ctx.signal.throwIfAborted()
+      if(result.kind==='failed'&&result.code==='CANCELLED')throw new ToolError('CANCELLED',false)
+      const raw=result.kind==='completed'?result.text:streamed
+      if(result.kind==='completed'){
+        try{
+          const value=extractStructuredJson(raw)??JSON.parse(raw)
+          const plan=direct?validateDirectRoutePlan(value,prepared):validateGoalPlan(value,prepared)
+          const route=compileStagedPlan(plan,scope,attachmentSourceIds,summarizedRefs)
+          if(projectRouteToDocument(route).ok)return route
+        }catch{/* Preserve the actual output; recover structure without another model call. */}
+      }
+      await ctx.progress('正在整理学习路线')
+      const recovered=recoverPlan(raw,{...prepared,goalContext:input.goalContext})
+      await ctx.store.checkpoint(ctx.job,'diagnostic:R4-recovery',digest({raw,basis:recovered.basis}),{basis:recovered.basis,linear:recovered.linear,providerStatus:attempted?result.kind:'not_called',...result.kind==='failed'?{code:result.code}: {}})
+      return compileRecoveredPlan(recovered.plan,scope,attachmentSourceIds,summarizedRefs)
+    })
   }
+
   async search(ctx:TaskContext,name:string,query:string,scope:SearchScope={kind:'zhihu'}):Promise<SearchEvidence[]>{
     if(scope.kind==='collections')throw new ToolError('EXTERNAL_SEARCH_OUTSIDE_SCOPE',false)
     if(scope.kind==='web')return ctx.step(`${name}:url-v2@${AGENT_CONTRACT_VERSION}`,{query,scope},async()=>{

@@ -71,7 +71,7 @@ test('new interview calls repair non-three choices with the same prompt and free
   assert.equal(result.questions[0].options.length,3);assert.equal(calls.length,2)
   assert.equal(calls[0].messages[0].content,calls[1].messages[0].content)
 })
-test('invalid R4 stays waiting after same-agent repairs and never fabricates a route or anchor',async t=>{
+test('invalid R4 publishes a goal-based linear route without another call or invented anchors',async t=>{
  for(const output of ['{}','this is not JSON',JSON.stringify({version:'1.0',title:'旧图',carriers:[],concepts:[]})]){
   const store=await fixture(t),calls=[]
   const state={goal:'学习矩阵变换',attachments:[{...material,content:'这是与矩阵无关的园艺资料。植物需要阳光与水分。'}],depth:'deep',status:'awaiting_answers',conversation:[],exploration:exploration(),questionSets:[]}
@@ -83,16 +83,16 @@ test('invalid R4 stays waiting after same-agent repairs and never fabricates a r
   const worker=new DurableWorker(store,createFlows(tools),1,()=>{})
   await worker.execute(await store.claim())
   const result=await store.snapshot('owner',r.id)
-  assert.equal(calls.length,3);assert.equal(result.job.status,'waiting');assert.equal(result.data.route,undefined);assert.equal(result.data.document,undefined)
+  assert.equal(calls.length,1);assert.equal(result.job.status,'completed');assert.equal(projectRouteToDocument(result.data.route).ok,true);assert.ok(result.data.document);assert.equal(result.data.route.concepts[0].title,state.goal);assert.deepEqual(result.data.route.concepts[0].goalAlignment.materialAnchors,[])
   assert.deepEqual(result.data.attachments,original.attachments);assert.deepEqual(result.data.questionSets,original.questionSets)
   assert.ok(calls.every(c=>c.messages[0].content===calls[0].messages[0].content&&c.thinkingDepth==='deep'))
  }
 })
-test('R4 repairs missing fields with the planner and publishes only its validated response',async t=>{
+test('R4 retains valid model content and verified anchors without a repair call',async t=>{
  const store=await fixture(t),ctx=await context(store),calls=[]
- const tools=new ProductTools({complete:async input=>{calls.push(input);return {kind:'completed',text:JSON.stringify(calls.length===1?{}:plan())}}},{})
+ const tools=new ProductTools({complete:async input=>{calls.push(input);return {kind:'completed',text:JSON.stringify(plan())}}},{})
  const route=await tools.routePlan(ctx,{goal:'读懂收藏',attachments:[material]},'scope',['owned-file'])
- assert.equal(calls.length,2);assert.equal(projectRouteToDocument(route).ok,true)
+ assert.equal(calls.length,1);assert.equal(projectRouteToDocument(route).ok,true)
  assert.equal(route.concepts[0].goalAlignment.materialAnchors[0].quote,plan().stages[0][0].concepts[0].goalAlignment.materialAnchors[0].quote)
 })
 test('first teaching reviews every source without turning every source into another paragraph',async t=>{
