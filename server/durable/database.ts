@@ -1,13 +1,11 @@
+import {fenceDatabase} from './workspace-fence.ts'
 import {ownPGliteDirectory} from './pglite-owner.ts'
 import { mkdir } from 'node:fs/promises'
 import { PGlite } from '@electric-sql/pglite'
 import postgres from 'postgres'
 
-export type Sql = {
-  query<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T[]>
-  transaction<T>(fn: (sql: Sql) => Promise<T>): Promise<T>
-  close(): Promise<void>
-}
+import type {Sql} from './sql.ts'
+export type {Sql} from './sql.ts'
 
 export async function openDatabase(options: { url?: string; directory?: string } = {}): Promise<Sql> {
   if (options.url) {
@@ -24,7 +22,7 @@ export async function openDatabase(options: { url?: string; directory?: string }
         close: () => client.end(),
       }
     }
-    return wrap(client)
+    return fenceDatabase(wrap(client))
   }
   if (options.directory) await mkdir(options.directory, { recursive: true, mode: 0o700 })
   const release=options.directory?await ownPGliteDirectory(options.directory):async()=>{}
@@ -58,13 +56,15 @@ export async function openDatabase(options: { url?: string; directory?: string }
       close: async () => {try{await db.close()}finally{await release()}},
     }
   }
-  return wrap(db)
+  return fenceDatabase(wrap(db))
 }
 
 export async function migrate(db: Sql) {
   await db.transaction(async (tx) => {
     // One transaction and a database lock make startup migrations safe across workers.
     await tx.query('SELECT pg_advisory_xact_lock(73486219)')
+    await tx.query('CREATE TABLE IF NOT EXISTS tp_workspace_resets (owner_id text PRIMARY KEY,generation integer NOT NULL)')
+    await tx.query('CREATE TABLE IF NOT EXISTS tp_workspace_reset_commands (owner_id text NOT NULL,command_key text NOT NULL,PRIMARY KEY(owner_id,command_key))')
     await tx.query(`CREATE TABLE IF NOT EXISTS tp_schema_migrations (version text PRIMARY KEY, applied_at bigint NOT NULL)` )
     await tx.query(`CREATE TABLE IF NOT EXISTS tp_resources (
       id text PRIMARY KEY, owner_id text NOT NULL, kind text NOT NULL, scope text NOT NULL,

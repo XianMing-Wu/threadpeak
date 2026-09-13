@@ -3,10 +3,10 @@ import { EmptyStatus } from '../components/EmptyStatus'
 import { LocalRecoveryNotice } from '../components/LocalRecoveryNotice'
 import { ProductWorkspace } from '../components/Shell'
 import { Icon } from '../icons'
-import { MineGraphCanvasPage } from '../knowledge-canvas/mine-graph-canvas'
-import { ExampleWorkspace } from '../learning-v2/ExampleWorkspace'
+const MineGraphCanvasPage=lazy(()=>import('../knowledge-canvas/mine-graph-canvas').then(m=>({default:m.MineGraphCanvasPage})))
+const ExampleWorkspace=lazy(()=>import('../learning-v2/ExampleWorkspace').then(m=>({default:m.ExampleWorkspace})))
 import { useProductLibrary } from '../learning-v2/library'
-import { LearningWorkspace } from '../learning-v2/Workspace'
+const LearningWorkspace=lazy(()=>import('../learning-v2/Workspace').then(m=>({default:m.LearningWorkspace})))
 const Path3DStage=lazy(()=>import('../path-3d/path-3d-stage').then(m=>({default:m.Path3DStage})))
 import { selectExampleKnowledge,selectRouteCards } from '../runtime/library-read-model'
 import { useLibrarySelector } from '../runtime/use-library-selector'

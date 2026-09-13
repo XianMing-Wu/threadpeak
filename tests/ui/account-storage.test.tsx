@@ -1,5 +1,5 @@
 import {afterEach,expect,test,vi} from 'vitest'
-import {switchWorkspace,readAccountBackup,accountRecoveryAvailable,accountStorageForExport} from '../../src/learning-v2/account-storage'
+import {switchWorkspace,readAccountBackup,accountRecoveryAvailable,accountStorageForExport,clearCurrentAccountData} from '../../src/learning-v2/account-storage'
 import {ensureSession,productRequest,resetSession} from '../../src/learning-v2/client'
 const workspace='tp-server-workspace'
 afterEach(()=>{localStorage.clear();sessionStorage.clear();resetSession();vi.restoreAllMocks()})
@@ -59,4 +59,24 @@ test('reload reconstructs pending recovery from IndexedDB without calling sessio
  expect((await fresh.accountStorageForExport()).local['tp-private']).toBe('x'.repeat(4000))
  localStorage.setItem(workspace,'bob');await fresh.refreshAccountRecovery();expect(fresh.accountRecoveryAvailable()).toBe(false)
  limited.mockRestore()
+})
+
+
+test('explicit clear removes current drafts and archives but leaves another account and the theme intact',async()=>{
+ localStorage.setItem(workspace,'alice');localStorage.setItem('tp-draft','alice private');localStorage.setItem('threadpeak-theme','dark')
+ await switchWorkspace('bob');localStorage.setItem('tp-draft','bob private');await switchWorkspace('alice')
+ sessionStorage.setItem('threadpeak-pending','unsent')
+ await clearCurrentAccountData('alice')
+ expect(localStorage.getItem('tp-draft')).toBeNull();expect(sessionStorage.getItem('threadpeak-pending')).toBeNull()
+ expect(await readAccountBackup('alice')).toBeUndefined();expect(localStorage.getItem('threadpeak-theme')).toBe('dark')
+ await switchWorkspace('bob');expect(localStorage.getItem('tp-draft')).toBe('bob private')
+ await switchWorkspace('alice');expect(localStorage.getItem('tp-draft')).toBeNull()
+})
+test('server generation change discards stale drafts before restoring the same account',async()=>{
+ localStorage.setItem(workspace,'alice');localStorage.setItem('tp-data-generation','0');localStorage.setItem('tp-draft','stale')
+ sessionStorage.setItem('threadpeak-selected','stale selected card')
+ vi.stubGlobal('fetch',async()=>new Response(JSON.stringify({workspaceId:'alice',dataGeneration:1})))
+ await ensureSession()
+ expect(localStorage.getItem('tp-draft')).toBeNull();expect(sessionStorage.getItem('threadpeak-selected')).toBeNull()
+ expect(localStorage.getItem('tp-data-generation')).toBe('1')
 })

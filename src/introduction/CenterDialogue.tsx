@@ -24,7 +24,7 @@ function ThoughtDialogue({goalMode=false,conversationLines}:{goalMode?:boolean;c
         <path d="M102 152C84 96 131 46 183 50C214 51 237 67 253 88C290 59 325 73 340 99C350 117 348 138 338 155C369 168 389 192 386 220C382 264 339 296 286 298C245 300 211 284 194 256C148 275 103 259 83 231C61 201 75 170 102 152Z"
           style={{opacity:cloud,transformOrigin:'220px 260px',transform:`scale(${.75+.25*cloud})`}}/>
       </g>
-      <g fill="#080808" textAnchor="middle" fontFamily='"PingFang SC","Microsoft YaHei",sans-serif' fontWeight="500" fontSize="54">
+      <g fill="#080808" textAnchor="middle" className="dialogue-lettering" fontSize="54">
         {dialogueLines.map((line,row)=>{
           const start=row===0?0:dialogueLines.slice(0,row).join('').length;
           return <text key={line} x="229" y={128+row*59} fontSize={conversationLines?(row===0&&/[A-Za-z]/.test(line)?39:44):54}>

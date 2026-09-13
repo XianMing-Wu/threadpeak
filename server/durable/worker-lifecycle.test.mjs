@@ -45,7 +45,7 @@ test('shutdown stops lease heartbeats even when a provider ignores abort',async 
  t.mock.timers.enable({apis:['setTimeout','setInterval']})
  const entered=deferred(),late=deferred();let renewals=0,claimed=false
  const job={id:'ignored-abort',kind:'test',checkpoints:{},activities:[]}
- const store={claim:async()=>{if(claimed)return;claimed=true;return job},renew:async()=>{renewals++;return true},onCancel:()=>()=>{},release:async()=>true}
+ const store={db:{query:async()=>[]},claim:async()=>{if(claimed)return;claimed=true;return job},renew:async()=>{renewals++;return true},onCancel:()=>()=>{},release:async()=>true}
  const worker=new DurableWorker(store,async()=>{entered.resolve();await late.promise},1,()=>{},{maintenanceDelayMs:60_000,maintenanceRetryMs:60_000,drainMs:5})
  worker.start();await entered.promise;const stopping=worker.stop();await turn();t.mock.timers.tick(5);await stopping
  const before=renewals;t.mock.timers.tick(100_000);await turn();assert.equal(renewals,before)

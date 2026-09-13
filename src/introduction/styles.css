@@ -178,3 +178,9 @@ button:focus-visible{outline:2px solid #111;outline-offset:6px}
 
 /* Child visibility cannot escape a chapter that is out of range. */
 .learning-scene[data-active="false"],.author-network-scene[data-active="false"]{display:none!important}
+
+/* One voice for all illustration dialogue, regardless of SVG or HTML rendering. */
+.combined-page{--dialogue-font:CardSans,"PingFang SC","Microsoft YaHei",sans-serif}
+.speech-copy,.answer-label,.kanshan-question p,.dialogue-lettering{font-family:var(--dialogue-font);font-weight:500;letter-spacing:0;font-style:normal}
+.answer-label b,.answer-label strong,.kanshan-question b,.kanshan-question strong{font-weight:inherit}
+.speech-copy{line-height:1.4}

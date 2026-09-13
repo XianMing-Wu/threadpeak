@@ -141,6 +141,13 @@ export function mountShelfScene(cabinet: HTMLElement, canvas: HTMLCanvasElement,
     if (!bookCount) { pages.dispose(); binding.dispose() }
     needsLayout = false
   }
+  function visiblePrintsReady() {
+    const view=root.getBoundingClientRect()
+    return [...cabinet.querySelectorAll<HTMLImageElement>('.knowledge-book img')].every(image=>{
+      const box=image.getBoundingClientRect()
+      return box.bottom<view.top||box.top>view.bottom||box.right<view.left||box.left>view.right||image.complete
+    })
+  }
   function render(time: number) {
     frame = 0
     if (disposed || contextLost || document.hidden || cabinet.hidden || !cabinet.offsetWidth) return
@@ -169,7 +176,7 @@ export function mountShelfScene(cabinet: HTMLElement, canvas: HTMLCanvasElement,
       }
     }
     renderer.render(scene, camera)
-    if (!ready) { ready = true; status('three') }
+    if (!ready && visiblePrintsReady()) { ready = true; status('three') }
     if (moving) invalidate()
   }
   function resize() { needsLayout = true; invalidate() }
@@ -192,7 +199,7 @@ export function mountShelfScene(cabinet: HTMLElement, canvas: HTMLCanvasElement,
   document.addEventListener('visibilitychange', invalidate)
   reduced.addEventListener('change', invalidate)
   canvas.addEventListener('webglcontextlost', lost); canvas.addEventListener('webglcontextrestored', restored)
-  void document.fonts.ready.then(() => { if (!disposed) {fontRevision++;resize()} })
+  if(document.fonts.status!=='loaded')void document.fonts.ready.then(() => { if (!disposed) {fontRevision++;resize()} })
   invalidate()
   return () => {
     disposed = true; cancelAnimationFrame(frame)

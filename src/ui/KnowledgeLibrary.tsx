@@ -43,7 +43,7 @@ function RouteShelf({ shelf, index, onOpen }: { shelf: KnowledgeShelf; index: nu
           move(event.key === 'ArrowRight' ? 1 : -1)
         }}>
         <div className="knowledge-shelf-track" role="list" aria-label={`${shelf.title}的概念`}>
-          {shelf.books.map((book, bookIndex) => <ConceptBook key={book.id} book={book} shelf={shelf} priority={index === 0 && bookIndex < 2} onOpen={onOpen}/>)}
+          {shelf.books.map((book, bookIndex) => <ConceptBook key={book.id} book={book} shelf={shelf} priority={index < 2 && bookIndex < 4} onOpen={onOpen}/>)}
         </div>
       </div>
       <div className="knowledge-shelf-plank" aria-hidden="true"/>

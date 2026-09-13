@@ -1,3 +1,5 @@
+import {clearWorkspace} from './clear-workspace.ts'
+import {workspaceGeneration,workspaceWrites} from './workspace-fence.ts'
 import {registerResourceStream} from './resource-stream.ts'
 import {ensureConceptMaterials,isLibraryArticle} from './concept-materials.ts'
 import {DIRECT_ROUTE_VERSION} from '../path-generation/direct-route.ts'
@@ -68,12 +70,26 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     if(!entry)await limit.call(app,request,reply)
     if(failure)throw failure
   })
+  app.addHook('onRoute', options => {
+    if(options.url==='/api/v2/workspace/clear')return
+    const handler=options.handler
+    options.handler=async function(request,reply){
+      const own=owner(request)
+      if(!own)return handler.call(this,request,reply)
+      const expectedWorkspace=request.headers['x-workspace-id']
+      if(expectedWorkspace!==undefined&&expectedWorkspace!==digest(own))throw new CommandError('ACCOUNT_CHANGED')
+      const generation=await workspaceGeneration(ports.store.db,own)
+      const expected=request.headers['x-workspace-generation']
+      if(expected!==undefined&&expected!==String(generation))throw new CommandError('WORKSPACE_CLEARED')
+      return workspaceWrites.run({owner:own,generation},()=>handler.call(this,request,reply))
+    }
+  })
   app.setErrorHandler((error,_request,reply)=>{
     const httpStatus=(error as {statusCode?:number})?.statusCode??500
     const zhihuAuthFailure=error instanceof ToolError&&error.code==='ZHIHU_AUTH_FAILED'
     const status=error instanceof CommandError?error.status:zhihuAuthFailure?401:error instanceof NodeEditConflict?409:error instanceof z.ZodError?400:[400,413,415,429].includes(httpStatus)?httpStatus:500
     const code=error instanceof CommandError?error.code:zhihuAuthFailure?'ZHIHU_AUTH_FAILED':error instanceof NodeEditConflict?'NODE_EDIT_CONFLICT':status===400?'INVALID_INPUT':status===429?'REQUEST_RATE_LIMITED':status===415?'UNSUPPORTED_MEDIA_TYPE':status===413?'REQUEST_TOO_LARGE':'SERVICE_UNAVAILABLE'
-    const notices:Record<string,string>={ZHIHU_AUTH_FAILED:'知乎资料授权校验未通过，请重新连接账号；若仍失败，请联系服务管理员。',UPLOAD_BUSY:'正在上传的文件较多，请等当前上传完成后重试。',MATERIAL_QUOTA_EXCEEDED:'资料存储已达到当前服务额度，请联系管理员调整额度后继续。',PROVIDER_CONFIG_REQUIRED:'生成服务尚未配置完成，请稍后重试。',RETRY_BUDGET_EXHAUSTED:'这次任务已达到继续次数上限，已有内容仍然保留。',RETRY_EXPIRED:'这次任务已归档，已有内容仍然保留。',RETRY_COOLDOWN:'请稍后再继续这次任务。',REQUEST_RATE_LIMITED:'请求较多，请稍后再试。',REQUEST_TOO_LARGE:'提交的内容较大，请减少后重试。',COLLECTION_SCOPE_INVALID:'请先选择收藏夹并等待内容读取完成。',ZHIHU_LOGIN_REQUIRED:'连接账号后即可选择你的收藏夹。',ZHIHU_NOT_CONFIGURED:'知乎账号连接暂未开放，仍可添加文件开始学习。',ZHIHU_REAUTHORIZE:'知乎授权已到期，请重新连接账号。',PDF_NOT_CONFIGURED:'PDF 解析服务尚未连接，请先添加 Markdown 或文本文件。',MATERIAL_PROCESSING:'资料还在整理，完成后即可生成路线。',COLLECTION_EMPTY:'这个收藏夹还没有可读取的公开内容。'}
+    const notices:Record<string,string>={ACCOUNT_CHANGED:'账号已改变，请重新打开内容。',WORKSPACE_CLEARED:'学习数据已清空，请返回首页开始新的学习。',ZHIHU_AUTH_FAILED:'知乎资料授权校验未通过，请重新连接账号；若仍失败，请联系服务管理员。',UPLOAD_BUSY:'正在上传的文件较多，请等当前上传完成后重试。',MATERIAL_QUOTA_EXCEEDED:'资料存储已达到当前服务额度，请联系管理员调整额度后继续。',PROVIDER_CONFIG_REQUIRED:'生成服务尚未配置完成，请稍后重试。',RETRY_BUDGET_EXHAUSTED:'这次任务已达到继续次数上限，已有内容仍然保留。',RETRY_EXPIRED:'这次任务已归档，已有内容仍然保留。',RETRY_COOLDOWN:'请稍后再继续这次任务。',REQUEST_RATE_LIMITED:'请求较多，请稍后再试。',REQUEST_TOO_LARGE:'提交的内容较大，请减少后重试。',COLLECTION_SCOPE_INVALID:'请先选择收藏夹并等待内容读取完成。',ZHIHU_LOGIN_REQUIRED:'连接账号后即可选择你的收藏夹。',ZHIHU_NOT_CONFIGURED:'知乎账号连接暂未开放，仍可添加文件开始学习。',ZHIHU_REAUTHORIZE:'知乎授权已到期，请重新连接账号。',PDF_NOT_CONFIGURED:'PDF 解析服务尚未连接，请先添加 Markdown 或文本文件。',MATERIAL_PROCESSING:'资料还在整理，完成后即可生成路线。',COLLECTION_EMPTY:'这个收藏夹还没有可读取的公开内容。'}
     const message=notices[code]??(code==='ACCOUNT_BUSY'?'正在处理的任务较多，请稍后继续。':code==='PDF_UNREADABLE'||code==='ATTACHMENT_EMPTY'?'这份 PDF 没有可读取的文字，请换成含文字的 PDF、Markdown 或文本文件。':code==='ATTACHMENT_SIZE'||code==='ATTACHMENT_TEXT_SIZE'?'附件较大，请拆成较小的文件再添加。':code==='TEXT_ENCODING'?'请将文本另存为 UTF-8 后添加。':code==='NODE_EDIT_CONFLICT'?'这张卡片的同一内容已在另一处编辑，你的版本仍保留，请选择要保存的版本。':code==='REVISION_CONFLICT'?'内容已在另一处更新，正在读取最新版本。':code==='BUSY'?'当前任务还在进行。':status===404?'找不到这项内容。':status===401?'请先登录。':status===400?'请检查这次输入。':'这次操作暂时还没完成，已有内容已保留。')
     reply.code(status).send({code,message})
   })
@@ -120,7 +136,14 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
   app.get('/api/v2/session',async request=>{
     const own=owner(request),[account]=await ports.store.db.query<{profile:unknown;token_expires_at:number}>('SELECT profile,token_expires_at FROM tp_zhihu_accounts WHERE owner_id=$1',[own])
     const authorization=account?{status:!ports.zhihuLogin?'unavailable':account.token_expires_at<=Date.now()?'expired':'active',expiresAt:Number(account.token_expires_at)}:undefined
-    return {kind:own.startsWith('account:')?'authenticated':'guest',capabilities:{zhihuMaterials:!!account},provider:account?'zhihu':own.startsWith('account:')?'account':null,profile:account?.profile,authorization,demo:!!(account?.profile as any)?.demo,available:true,workspaceId:digest(own)}
+    return {kind:own.startsWith('account:')?'authenticated':'guest',capabilities:{zhihuMaterials:!!account},provider:account?'zhihu':own.startsWith('account:')?'account':null,profile:account?.profile,authorization,demo:!!(account?.profile as any)?.demo,available:true,workspaceId:digest(own),dataGeneration:await workspaceGeneration(ports.store.db,own)}
+  })
+  app.post('/api/v2/workspace/clear',async request=>{
+    z.object({confirm:z.literal('clear-all-learning-data')}).strict().parse(bodyOf(request))
+    const generation=z.string().regex(/^\d{1,9}$/).transform(Number).parse(request.headers['x-workspace-generation'])
+    const workspace=z.string().min(1).parse(request.headers['x-workspace-id'])
+    if(workspace!==digest(owner(request)))throw new CommandError('ACCOUNT_CHANGED',409)
+    return clearWorkspace(ports.store,owner(request),requestKey(request),generation)
   })
   registerResourceStream(app,ports.store,owner)
   registerMaterialRoutes(app,ports.store,ports.worker,owner,requestKey,ports.zhihuData,ports.zhihuLogin)

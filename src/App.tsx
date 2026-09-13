@@ -1,3 +1,4 @@
+import {preloadWorkspacePages,preloadPage} from './runtime/page-preload'
 import { lazy,Suspense,startTransition,useEffect,useState } from 'react'
 import { WideShell,type RouteName } from './components/Shell'
 import { IconSprite } from './icons'
@@ -73,6 +74,22 @@ export function App(){
     setThemePreference(next)
     try {localStorage.setItem(THEME_KEY,next)} catch { /* Keep the explicit choice for this session. */ }
   }
+  useEffect(()=>{
+    const cleared=()=>{location.hash='home';location.reload()}
+    const sync=(event:StorageEvent)=>{if(event.key==='threadpeak-workspace-reset'&&event.newValue?.startsWith(localStorage.getItem('tp-server-workspace')+':')){
+      for(const key of Object.keys(sessionStorage))if(key.startsWith('tp-')||key.startsWith('threadpeak-'))sessionStorage.removeItem(key)
+      cleared()
+    }}
+    window.addEventListener('storage',sync)
+    window.addEventListener('threadpeak:workspace-cleared',cleared)
+    return()=>{window.removeEventListener('threadpeak:workspace-cleared',cleared);window.removeEventListener('storage',sync)}
+  },[])
+  useEffect(()=>{
+    if(!authenticated||introduction)return
+    const cancel=preloadWorkspacePages(),intent=(event:Event)=>preloadPage((event as CustomEvent<string>).detail)
+    window.addEventListener('threadpeak:preload-page',intent)
+    return()=>{cancel();window.removeEventListener('threadpeak:preload-page',intent)}
+  },[authenticated,introduction])
   const logout=()=>{
     void requestAuthLogout().then(async()=>{clearProductLibrary();setAuthenticated(false);location.hash='login';await switchWorkspace('anonymous')}).catch(e=>setNotice(e instanceof Error?e.message:'退出登录暂未完成。'))
   }

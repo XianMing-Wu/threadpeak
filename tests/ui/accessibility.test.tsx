@@ -20,7 +20,7 @@ vi.mock('../../src/learning-v2/library', () => ({
   clearProductLibrary: vi.fn(),
 }))
 vi.mock('../../src/learning-v2/client', () => ({
-  productRequest: vi.fn(async () => ({ kind: 'local', provider: null })),
+  productRequest: vi.fn(async () => ({ kind: 'local', provider: null,cleared:true })),
   ensureSession: vi.fn(async () => { throw Error('offline') }),
 }))
 vi.mock('../../src/runtime/request-auth-session', () => ({
@@ -87,6 +87,7 @@ test('clearing local history opens a native modal on Cancel and restores trigger
   const show = vi.spyOn(HTMLDialogElement.prototype, 'showModal').mockImplementation(function (this: HTMLDialogElement) { this.setAttribute('open', '') })
   vi.spyOn(HTMLDialogElement.prototype, 'close').mockImplementation(function (this: HTMLDialogElement) { this.removeAttribute('open') })
   localStorage.setItem('threadpeak-chat-history', '[{"id":"history"}]')
+  localStorage.setItem('tp-server-workspace','reset-test')
   localStorage.setItem('unrelated-retained-content', 'keep')
   render(<StrictMode><SettingsPage theme="light" onThemeChange={vi.fn()} onLogout={vi.fn()}/></StrictMode>)
   const trigger = screen.getByRole('button', {name: '清空'})
@@ -99,11 +100,11 @@ test('clearing local history opens a native modal on Cancel and restores trigger
   expect(localStorage.getItem('threadpeak-chat-history')).toContain('history')
   fireEvent.click(trigger)
   fireEvent.click(screen.getByRole('button', {name: '确认清空'}))
-  expect(screen.queryByRole('dialog')).toBeNull()
+  await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull())
   expect(document.activeElement).toBe(trigger)
-  expect(localStorage.getItem('threadpeak-chat-history')).toBe('[]')
+  expect(localStorage.getItem('threadpeak-chat-history')).toBeNull()
   expect(localStorage.getItem('unrelated-retained-content')).toBe('keep')
-  await screen.findByText('旧版本本机历史索引已清空，服务端对话仍然保留')
+  await screen.findByText('全部学习数据已清空')
 })
 
 test('history groups use calendar days and expose named lists', () => {

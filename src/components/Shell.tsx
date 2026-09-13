@@ -24,6 +24,7 @@ export type RouteName = 'home' | 'chat' | 'paths' | 'path-3d' | 'knowledge' | 'k
 const compactRoutes = new Set<RouteName>(['knowledge','knowledge-detail','paths','path-3d','session-learning','authors'])
 const prototypeAccount = resolveAccountIdentity()
 
+function preloadPage(page:string){window.dispatchEvent(new CustomEvent('threadpeak:preload-page',{detail:page}))}
 function go(route: RouteName) { location.hash = route }
 
 export function WideShell({ route, children, theme, onThemeChange, onLogout }: { route: RouteName; children: ReactNode; theme: 'light' | 'dark'; onThemeChange: () => void; onLogout: () => void }) {
@@ -155,7 +156,7 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
           </button>
         </div>
         <nav id="sidebar-navigation" className="nav" aria-label="主要功能">
-          {nav.map(([id, glyph, label]) => <button type="button" key={id} className={`nav-item tp-nav ${active === id ? 'is-active' : ''}`} aria-label={label} onClick={() => navigate(id)} aria-current={active === id ? 'page' : undefined}>
+          {nav.map(([id, glyph, label]) => <button type="button" key={id} className={`nav-item tp-nav ${active === id ? 'is-active' : ''}`} aria-label={label} onPointerEnter={()=>preloadPage(id)} onFocus={()=>preloadPage(id)} onClick={() => navigate(id)} aria-current={active === id ? 'page' : undefined}>
             <FlowithGlyph name={glyph} size={16}/><span>{label}</span>
           </button>)}
           <div className="nav-item nav-slot" aria-hidden="true" />

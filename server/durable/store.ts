@@ -7,10 +7,8 @@ export function digest(value:unknown):string{
   const canonical=(input:any):any=>Array.isArray(input)?input.map(canonical):input&&typeof input==='object'?Object.fromEntries(Object.keys(input).sort().filter(key=>input[key]!==undefined).map(key=>[key,canonical(input[key])])):input
   return createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex')
 }
-export class CommandError extends Error {
-  code: string; status: number
-  constructor(code: string, status = 409) { super(code); this.code=code; this.status=status }
-}
+import {CommandError} from './command-error.ts'
+export {CommandError} from './command-error.ts'
 export type Resource<T = any> = { id: string; owner_id: string; kind: string; scope: string; revision: number; data_revision?:number; body: T; created_at: number; updated_at: number }
 export type Job = {
   id: string; owner_id: string; resource_id: string; kind: string; input: any; status: 'queued'|'running'|'waiting'|'completed'|'cancelled';
@@ -37,6 +35,10 @@ export class DurableStore {
   private changed(owner:string,id:string){for(const listener of this.changes)listener(owner,id)}
   private cancellations = new Set<(id: string) => void>()
   onCancel(listener: (id: string) => void) { this.cancellations.add(listener); return () => { this.cancellations.delete(listener) } }
+  notifyCleared(owner:string, resources:string[], jobs:string[]) {
+    for(const id of jobs)for(const notify of this.cancellations)notify(id)
+    for(const id of resources)this.changed(owner,id)
+  }
   db: Sql; now: () => number
   private materialBudget:{count:number;bytes:number}
   constructor(db: Sql, now = Date.now,materialBudget={count:500,bytes:1024**3}) { this.db=db; this.now=now; this.materialBudget=materialBudget }

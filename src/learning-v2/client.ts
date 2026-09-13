@@ -1,4 +1,4 @@
-import {switchWorkspace} from './account-storage.ts'
+import {switchWorkspace,clearCurrentAccountData} from './account-storage.ts'
 import {publishWorkspaceSession} from '../runtime/workspace-session.ts'
 import {delay} from './poll.ts'
 import type {TaskActivity} from '@threadpeak/contracts/task-activity'
@@ -13,21 +13,28 @@ export function ensureSession(){
     const identity=await r.json()
     if(typeof identity.workspaceId!=='string'||!identity.workspaceId)throw new Error('工作区身份无法读取。')
     await switchWorkspace(identity.workspaceId)
+    const generation=String(identity.dataGeneration??0)
+    const previous=localStorage.getItem('tp-data-generation')
+    if(previous!==null&&previous!==generation)await clearCurrentAccountData(identity.workspaceId)
+    localStorage.setItem('tp-data-generation',generation)
     publishWorkspaceSession(identity)
   }).catch(e=>{session=undefined;throw e})
 }
 export class ApiError extends Error { code:string; status:number; constructor(code:string,status:number,message:string){super(message);this.code=code;this.status=status} }
-export async function productRequest<T>(url:string,options:{method?:string;body?:unknown;key?:string;signal?:AbortSignal}={}):Promise<T>{
+export async function productRequest<T>(url:string,options:{method?:string;body?:unknown;key?:string;signal?:AbortSignal;workspace?:string;generation?:string}={}):Promise<T>{
   await ensureSession()
-  const workspace=localStorage.getItem('tp-server-workspace')
+  const workspace=options.workspace??localStorage.getItem('tp-server-workspace')
+  const generation=options.generation??localStorage.getItem('tp-data-generation')??'0'
+  if(workspace!==localStorage.getItem('tp-server-workspace')||generation!==(localStorage.getItem('tp-data-generation')??'0'))throw new ApiError('ACCOUNT_CHANGED',409,'账号或学习数据已改变，请重新打开设置。')
   const key=options.key??crypto.randomUUID()
   const readOnly=!options.method||options.method==='GET'
   for(let attempt=0;attempt<(readOnly?1:3);attempt++){
     try{
-      const response=await fetch(url,{method:options.method??'GET',credentials:'same-origin',headers:{'Content-Type':'application/json','Idempotency-Key':key},body:options.body===undefined?undefined:JSON.stringify(options.body),signal:options.signal?AbortSignal.any([options.signal,AbortSignal.timeout(url==='/api/v2/attachments'?45000:15000)]):AbortSignal.timeout(url==='/api/v2/attachments'?45000:15000)})
+      const response=await fetch(url,{method:options.method??'GET',credentials:'same-origin',headers:{'Content-Type':'application/json','Idempotency-Key':key,'X-Workspace-Generation':generation,...(workspace?{'X-Workspace-Id':workspace}:{})},body:options.body===undefined?undefined:JSON.stringify(options.body),signal:options.signal?AbortSignal.any([options.signal,AbortSignal.timeout(url==='/api/v2/attachments'?45000:15000)]):AbortSignal.timeout(url==='/api/v2/attachments'?45000:15000)})
       const data=await response.json()
+      if(data.code==='WORKSPACE_CLEARED'||data.code==='ACCOUNT_CHANGED'){resetSession();window.dispatchEvent(new Event('threadpeak:workspace-cleared'))}
       if(!response.ok)throw new ApiError(data.code??'UNAVAILABLE',response.status,data.message??'暂时没有连接上，已有内容仍然保留。')
-      if(workspace!==localStorage.getItem('tp-server-workspace'))throw new ApiError('ACCOUNT_CHANGED',409,'账号已改变，请重新打开内容。')
+      if(workspace!==localStorage.getItem('tp-server-workspace')||generation!==(localStorage.getItem('tp-data-generation')??'0'))throw new ApiError('ACCOUNT_CHANGED',409,'账号已改变，请重新打开内容。')
       if(!readOnly)window.dispatchEvent(new Event('threadpeak:resource-change'))
       return data as T
     }catch(error){

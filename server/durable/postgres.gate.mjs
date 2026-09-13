@@ -129,3 +129,10 @@ import {platformCases} from './audit-platform-cases.mjs'
 for(const [name,verify] of Object.entries(platformCases))test(`PostgreSQL audit repair: ${name}`,async()=>{
  const db=await openDatabase({url});try{await migrate(db);await verify(db)}finally{await db.close()}
 })
+
+
+import {verifyWorkspaceClear} from './clear-workspace-cases.mjs'
+test('PostgreSQL: account clear fences a second connection and preserves other accounts and subsequent work',async()=>{
+ const a=await openDatabase({url}),b=await openDatabase({url})
+ try{await verifyWorkspaceClear(a,b)}finally{await Promise.all([a.close(),b.close()])}
+})

@@ -95,7 +95,7 @@ export function columnLayout(width:number,height:number){
  const size=Math.min(narrow?62:86,step*.79);
  const x=width*(narrow?.095:compact?.11:.32);
  return {x,top,step,size,labelX:x+size/2+(narrow?9:14),
-  answerSize:narrow?14:compact?16:Math.min(21,Math.max(16,width*.0145)),
+  answerSize:Math.min(narrow?14:compact?16:Math.min(21,Math.max(16,width*.0145)),Math.max(11,(step-6)/3)),
   centerX:width*.12,centerY:height*.55,
   goalX:width*(narrow?.55:compact?.55:.655),goalTop:top,goalBottom:bottom};
 }

@@ -1,3 +1,4 @@
+import {workspaceGeneration,workspaceWrites} from './workspace-fence.ts'
 import type {TaskActivity} from '@threadpeak/contracts/task-activity'
 import {recordMetric} from './metrics.ts'
 import { providerScope } from './provider-scope.ts'
@@ -109,7 +110,7 @@ export class DurableWorker {
     if(this.stopped)return
     this.maintenanceTimer=setTimeout(()=>{
       this.maintenanceTimer=undefined
-      this.maintenanceTask=this.maintain().finally(()=>{this.maintenanceTask=undefined})
+      this.maintenanceTask=workspaceWrites.exit(()=>this.maintain()).finally(()=>{this.maintenanceTask=undefined})
     },delay)
   }
   private async maintain() {
@@ -125,7 +126,8 @@ export class DurableWorker {
     this.scheduled=true
     if (this.stopped || this.pumping) return
     if (this.timer) clearTimeout(this.timer)
-    this.pumpTask=this.pump()
+    // Scheduling is global; never inherit the caller job/account write generation.
+    this.pumpTask=workspaceWrites.exit(()=>this.pump())
   }
   private async pump() {
     this.pumping = true
@@ -148,8 +150,11 @@ export class DurableWorker {
     const heartbeat = setInterval(() => { void this.store.renew(job).then(ok => { if (!ok) controller.abort() }).catch(() => controller.abort()) }, 5000)
     controller.signal.addEventListener('abort',()=>{clearInterval(heartbeat);unsubscribe()},{once:true})
     const ctx = new TaskContext(this.store, job, controller.signal)
+    const scope={owner:job.owner_id,generation:-1}
+    return workspaceWrites.run(scope,async()=>{
     let outcome='completed',failureCode:string|undefined
     try {
+      scope.generation=await workspaceGeneration(this.store.db,job.owner_id)
       // Cancellation or takeover may occur between claim and handler dispatch.
       if(!await this.store.renew(job))controller.abort()
       controller.signal.throwIfAborted()
@@ -169,6 +174,7 @@ export class DurableWorker {
       }
       this.log({ event: 'task.interrupted', jobId: job.id, kind: job.kind, code, durationMs: Date.now()-start, attempt: job.attempts })
     } finally { clearInterval(heartbeat); unsubscribe(); this.controllers.delete(job.id); this.jobs.delete(job.id);await recordMetric(this.store.db,job,job.kind,{kind:'task',durationMs:Date.now()-start,ageAtStartMs:Math.max(0,start-job.created_at),attempt:job.attempts,result:outcome,code:failureCode});if(this.scheduled)this.wake() }
+    })
   }
   async stop() {
     this.stopped = true; if (this.timer) clearTimeout(this.timer)

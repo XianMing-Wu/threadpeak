@@ -108,3 +108,18 @@ export async function accountStorageForExport(){
   const owner=localStorage.getItem(WORKSPACE),backup=owner?await readAccountBackup(owner):undefined
   return {local:{...backup?.local,...capture(localStorage)},session:{...backup?.session,...capture(sessionStorage)}}
 }
+
+/** An explicit reset removes this account's drafts and archive, never another account's. */
+async function performClear(owner:string) {
+  if(localStorage.getItem(WORKSPACE)!==owner)throw new Error('账号已改变，请重新打开设置。')
+  await archiveDatabase(store=>store.delete(owner),true)
+  if(localStorage.getItem(WORKSPACE)!==owner)throw new Error('账号已改变，请重新打开设置。')
+  localStorage.removeItem(ARCHIVE_PREFIX+owner)
+  for(const key of Object.keys(localStorage).filter(scoped))localStorage.removeItem(key)
+  for(const key of Object.keys(sessionStorage).filter(scoped))sessionStorage.removeItem(key)
+  setRecoveryOwner(undefined)
+}
+
+export function clearCurrentAccountData(owner:string){
+  const next=switching.then(()=>performClear(owner));switching=next.catch(()=>{});return next
+}
