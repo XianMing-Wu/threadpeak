@@ -1,0 +1,30 @@
+.account-avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--ink-2);
+}
+.account-avatar > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.account-avatar.is-guest > img {
+  transform: scale(2);
+  transform-origin: 50% 24%;
+}
+.setting-row.setting-profile {
+  justify-content: flex-start;
+  gap: 14px;
+}
+.setting-profile > .account-avatar {
+  width: 48px;
+  height: 48px;
+}

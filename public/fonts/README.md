@@ -15,7 +15,7 @@
 
 `login-sans.woff2` 使用相同的 Resource Han Rounded v1.910 来源、校验和及 OFL 许可，独立命名为 `ThreadPeak Login`，仅在登录页加载。
 
-- 字形：从 AuthLanding.tsx 提取文字，附加 ASCII 可见字符；未知服务端错误文字按系统字体回退。
+- 字形：从 AuthLanding.tsx 与 LoginJourney.tsx 提取文字，附加 ASCII 可见字符；未知服务端错误文字按系统字体回退。
 - 固定 ROND=18，保留 wght=350–650；保留 locl/ccmp，不携带页面不使用的竖排与字偶定位。
-- 文件大小：65744 字节。SHA256：`8b5ff15c6ec178792e775e5b47a87645ad817816392cde89ac0980ed36abf976`。
+- 文件大小：76304 字节。SHA256：`b3190ad4f924d296d4fcb8e8d66f1a5b46c5b11500707f9d88e1d8403cb19987`。
 - 构建脚本：[build-login-font.py](../../scripts/build-login-font.py)。依赖同上；以下载的原始包路径为第一个参数。修改登录文案时重建并更新校验和。

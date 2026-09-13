@@ -1,0 +1,435 @@
+{
+  "protocol": "learning-path",
+  "version": "1.0",
+  "id": "threadpeak-showcase-interview-v1",
+  "metadata": {
+    "title": "Agent 开发工程师求职路线",
+    "description": "沿同一个文档助手逐步成长：接入模型，分头建立检索与工具能力，再用评测把它们接成可靠的作品。",
+    "locale": "zh-CN"
+  },
+  "structure": {
+    "entrySubjectId": "route-start",
+    "goalSubjectIds": [
+      "goal-understanding"
+    ],
+    "subjects": [
+      {
+        "id": "route-start",
+        "cardRef": "card-start",
+        "orderHint": 0
+      },
+      {
+        "id": "carrier-job-contract",
+        "cardRef": "card-carrier-job-contract",
+        "orderHint": 1
+      },
+      {
+        "id": "carrier-job-tools",
+        "cardRef": "card-carrier-job-tools",
+        "orderHint": 2
+      },
+      {
+        "id": "carrier-job-evidence",
+        "cardRef": "card-carrier-job-evidence",
+        "orderHint": 3
+      },
+      {
+        "id": "carrier-job-deliver",
+        "cardRef": "card-carrier-job-deliver",
+        "orderHint": 4
+      },
+      {
+        "id": "goal-understanding",
+        "cardRef": "card-goal",
+        "orderHint": 5
+      }
+    ],
+    "concepts": [
+      {
+        "id": "llm-application-concept-1",
+        "subjectId": "carrier-job-contract",
+        "cardRef": "card-llm-application-concept-1",
+        "actionRef": "action-llm-application-concept-1",
+        "orderHint": 1
+      },
+      {
+        "id": "llm-application-concept-2",
+        "subjectId": "carrier-job-contract",
+        "cardRef": "card-llm-application-concept-2",
+        "actionRef": "action-llm-application-concept-2",
+        "orderHint": 2
+      },
+      {
+        "id": "llm-application-concept-3",
+        "subjectId": "carrier-job-tools",
+        "cardRef": "card-llm-application-concept-3",
+        "actionRef": "action-llm-application-concept-3",
+        "orderHint": 1
+      },
+      {
+        "id": "llm-application-concept-4",
+        "subjectId": "carrier-job-tools",
+        "cardRef": "card-llm-application-concept-4",
+        "actionRef": "action-llm-application-concept-4",
+        "orderHint": 2
+      },
+      {
+        "id": "llm-application-concept-5",
+        "subjectId": "carrier-job-evidence",
+        "cardRef": "card-llm-application-concept-5",
+        "actionRef": "action-llm-application-concept-5",
+        "orderHint": 1
+      },
+      {
+        "id": "llm-application-concept-6",
+        "subjectId": "carrier-job-evidence",
+        "cardRef": "card-llm-application-concept-6",
+        "actionRef": "action-llm-application-concept-6",
+        "orderHint": 2
+      },
+      {
+        "id": "llm-application-concept-7",
+        "subjectId": "carrier-job-evidence",
+        "cardRef": "card-llm-application-concept-7",
+        "actionRef": "action-llm-application-concept-7",
+        "orderHint": 3
+      },
+      {
+        "id": "llm-application-concept-8",
+        "subjectId": "carrier-job-deliver",
+        "cardRef": "card-llm-application-concept-8",
+        "actionRef": "action-llm-application-concept-8",
+        "orderHint": 1
+      },
+      {
+        "id": "llm-application-concept-9",
+        "subjectId": "carrier-job-deliver",
+        "cardRef": "card-llm-application-concept-9",
+        "actionRef": "action-llm-application-concept-9",
+        "orderHint": 2
+      }
+    ],
+    "flow": [
+      {
+        "id": "flow-route-start-carrier-job-contract",
+        "fromSubjectId": "route-start",
+        "toSubjectId": "carrier-job-contract"
+      },
+      {
+        "id": "flow-carrier-job-contract-carrier-job-tools",
+        "fromSubjectId": "carrier-job-contract",
+        "toSubjectId": "carrier-job-tools",
+        "semantics": {
+          "splitGroupId": "split-carrier-job-contract"
+        }
+      },
+      {
+        "id": "flow-carrier-job-contract-carrier-job-evidence",
+        "fromSubjectId": "carrier-job-contract",
+        "toSubjectId": "carrier-job-evidence",
+        "semantics": {
+          "splitGroupId": "split-carrier-job-contract"
+        }
+      },
+      {
+        "id": "flow-carrier-job-tools-carrier-job-deliver",
+        "fromSubjectId": "carrier-job-tools",
+        "toSubjectId": "carrier-job-deliver",
+        "semantics": {
+          "joinGroupId": "join-carrier-job-deliver"
+        }
+      },
+      {
+        "id": "flow-carrier-job-evidence-carrier-job-deliver",
+        "fromSubjectId": "carrier-job-evidence",
+        "toSubjectId": "carrier-job-deliver",
+        "semantics": {
+          "joinGroupId": "join-carrier-job-deliver"
+        }
+      },
+      {
+        "id": "flow-carrier-job-deliver-goal-understanding",
+        "fromSubjectId": "carrier-job-deliver",
+        "toSubjectId": "goal-understanding"
+      }
+    ],
+    "flowGroups": [
+      {
+        "id": "split-carrier-job-contract",
+        "type": "split",
+        "anchorSubjectId": "carrier-job-contract",
+        "policy": "parallel"
+      },
+      {
+        "id": "join-carrier-job-deliver",
+        "type": "join",
+        "anchorSubjectId": "carrier-job-deliver",
+        "policy": "all-required"
+      }
+    ]
+  },
+  "data": {
+    "cards": [
+      {
+        "id": "card-carrier-job-contract",
+        "eyebrow": "载体",
+        "title": "LLM 应用开发基础",
+        "summary": "接通模型，再把输出变成可以校验的数据。",
+        "tags": [
+          "知乎精选",
+          "学习载体"
+        ]
+      },
+      {
+        "id": "card-llm-application-concept-1",
+        "eyebrow": "最终概念",
+        "title": "消息角色：接通第一次模型对话",
+        "summary": "把熟悉的 HTTP 请求变成一次可观察的模型交互。\n\n学到这里：会组织 system/user/assistant 消息、读取响应和识别接口失败；沿用已有 Python 基础。\n\n完成检验：给文档助手发出一个问题，保存脱敏后的请求与回复，解释每条消息的职责。",
+        "body": "把熟悉的 HTTP 请求变成一次可观察的模型交互。\n\n学到这里：会组织 system/user/assistant 消息、读取响应和识别接口失败；沿用已有 Python 基础。\n\n完成检验：给文档助手发出一个问题，保存脱敏后的请求与回复，解释每条消息的职责。",
+        "tags": [
+          "目标所需"
+        ]
+      },
+      {
+        "id": "card-llm-application-concept-2",
+        "eyebrow": "最终概念",
+        "title": "结构化输出：让回答能被程序使用",
+        "summary": "为后续工具名、参数和引用编号建立可检查的数据约定。\n\n学到这里：会解析 JSON 并校验必填字段、类型与允许值；结构合法不等于事实正确。\n\n完成检验：分别输入合法对象、缺字段对象和非 JSON 文本；合法对象继续处理，其余返回明确失败，不能补默认值冒充成功。",
+        "body": "为后续工具名、参数和引用编号建立可检查的数据约定。\n\n学到这里：会解析 JSON 并校验必填字段、类型与允许值；结构合法不等于事实正确。\n\n完成检验：分别输入合法对象、缺字段对象和非 JSON 文本；合法对象继续处理，其余返回明确失败，不能补默认值冒充成功。",
+        "tags": [
+          "目标所需"
+        ]
+      },
+      {
+        "id": "card-carrier-job-tools",
+        "eyebrow": "载体",
+        "title": "Agent 循环与受控工具",
+        "summary": "模型提出调用，程序校验并执行；对失败设定清楚的停止边界。",
+        "tags": [
+          "知乎精选",
+          "学习载体"
+        ]
+      },
+      {
+        "id": "card-llm-application-concept-3",
+        "eyebrow": "最终概念",
+        "title": "Agent 循环：模型决策，程序执行",
+        "summary": "让同一个文档助手在需要时调用受控工具，再依据结果回答。\n\n学到这里：跑通一次工具请求、宿主执行与结果回填；第一次只用一个给定的只读工具，并设置轮数上限。\n\n完成检验：用一个只读查询工具追踪完整调用过程，指出哪一步由模型提出、哪一步由程序执行，以及何时结束。",
+        "body": "让同一个文档助手在需要时调用受控工具，再依据结果回答。\n\n学到这里：跑通一次工具请求、宿主执行与结果回填；第一次只用一个给定的只读工具，并设置轮数上限。\n\n完成检验：用一个只读查询工具追踪完整调用过程，指出哪一步由模型提出、哪一步由程序执行，以及何时结束。",
+        "tags": [
+          "目标所需"
+        ]
+      },
+      {
+        "id": "card-llm-application-concept-4",
+        "eyebrow": "最终概念",
+        "title": "工具边界：参数错误与调用失败",
+        "summary": "让工具异常成为可定位的问题，避免错误参数和无休止重试。\n\n学到这里：区分参数校验、权限拒绝和暂时失败；只对允许重试的请求做有上限的重试。\n\n完成检验：模拟一个非法参数和一个暂时失败：前者拒绝执行，后者有限重试；每次结果都能从记录中解释。",
+        "body": "让工具异常成为可定位的问题，避免错误参数和无休止重试。\n\n学到这里：区分参数校验、权限拒绝和暂时失败；只对允许重试的请求做有上限的重试。\n\n完成检验：模拟一个非法参数和一个暂时失败：前者拒绝执行，后者有限重试；每次结果都能从记录中解释。",
+        "tags": [
+          "目标所需"
+        ]
+      },
+      {
+        "id": "card-carrier-job-evidence",
+        "eyebrow": "载体",
+        "title": "检索增强生成 · RAG",
+        "summary": "从原文片段找到证据，再生成可回查引用的回答。",
+        "tags": [
+          "知乎精选",
+          "学习载体"
+        ]
+      },
+      {
+        "id": "card-llm-application-concept-5",
+        "eyebrow": "最终概念",
+        "title": "文档分块：保留一段话的出处",
+        "summary": "把文档变成既能检索、又能回到原文的证据单元。\n\n学到这里：用简短产品手册学习按语义分块、保留标题与来源位置；复杂 PDF 解析不是本节前置。\n\n完成检验：对同一份手册按段落分块，为每块保存稳定编号与来源，检查关键说明是否被拆散。",
+        "body": "把文档变成既能检索、又能回到原文的证据单元。\n\n学到这里：用简短产品手册学习按语义分块、保留标题与来源位置；复杂 PDF 解析不是本节前置。\n\n完成检验：对同一份手册按段落分块，为每块保存稳定编号与来源，检查关键说明是否被拆散。",
+        "tags": [
+          "目标所需"
+        ]
+      },
+      {
+        "id": "card-llm-application-concept-6",
+        "eyebrow": "最终概念",
+        "title": "语义检索：找到真正能回答的片段",
+        "summary": "让问题找到相关资料，并认识相似度与回答依据之间的区别。\n\n学到这里：生成嵌入、计算相似度并返回候选；用一组明确问题核对命中内容，不把最高分当正确答案。\n\n完成检验：对两个可回答问题和一个资料外问题检索，逐条说明返回片段是否含有所需事实。",
+        "body": "让问题找到相关资料，并认识相似度与回答依据之间的区别。\n\n学到这里：生成嵌入、计算相似度并返回候选；用一组明确问题核对命中内容，不把最高分当正确答案。\n\n完成检验：对两个可回答问题和一个资料外问题检索，逐条说明返回片段是否含有所需事实。",
+        "tags": [
+          "目标所需"
+        ]
+      },
+      {
+        "id": "card-llm-application-concept-7",
+        "eyebrow": "最终概念",
+        "title": "证据与引用：回答怎样才有依据",
+        "summary": "让文档助手的主要结论都能回到真正支持它的原文。\n\n学到这里：把检索片段与编号送入模型，回查引用编号和论点；缺证据时说明缺口，不补造答案。\n\n完成检验：对一个问题核对答案里的每条关键结论及其引用；再删除必要证据，观察系统能否明确说明无法确认。",
+        "body": "让文档助手的主要结论都能回到真正支持它的原文。\n\n学到这里：把检索片段与编号送入模型，回查引用编号和论点；缺证据时说明缺口，不补造答案。\n\n完成检验：对一个问题核对答案里的每条关键结论及其引用；再删除必要证据，观察系统能否明确说明无法确认。",
+        "tags": [
+          "目标所需"
+        ]
+      },
+      {
+        "id": "card-carrier-job-deliver",
+        "eyebrow": "载体",
+        "title": "Agent 评测与工程交付",
+        "summary": "两条能力汇入同一作品，留下能复现的评测、排错与运行说明。",
+        "tags": [
+          "知乎精选",
+          "学习载体"
+        ]
+      },
+      {
+        "id": "card-llm-application-concept-8",
+        "eyebrow": "最终概念",
+        "title": "能力汇合：把检索接进同一个助手",
+        "summary": "把已完成的检索模块作为只读工具接入现有循环，形成完整求职作品。\n\n学到这里：复用已有模块，用真实问题决定是否检索和调用工具；不另起同功能项目、不引入多 Agent。\n\n完成检验：用一组覆盖直接回答、检索和工具失败的问题检查调用轨迹；每种情况都能解释为什么使用或不使用工具。",
+        "body": "把已完成的检索模块作为只读工具接入现有循环，形成完整求职作品。\n\n学到这里：复用已有模块，用真实问题决定是否检索和调用工具；不另起同功能项目、不引入多 Agent。\n\n完成检验：用一组覆盖直接回答、检索和工具失败的问题检查调用轨迹；每种情况都能解释为什么使用或不使用工具。",
+        "tags": [
+          "目标所需"
+        ]
+      },
+      {
+        "id": "card-llm-application-concept-9",
+        "eyebrow": "最终概念",
+        "title": "评测与排错：用证据讲清你的作品",
+        "summary": "把能运行的程序变成别人可以复现、也能看懂取舍的项目。\n\n学到这里：区分检索、生成和执行故障，记录延迟、成功与失败案例，并写清环境、配置与运行方法。\n\n完成检验：提供启动说明和一组固定问题，重现一个成功与一个失败案例；根据记录定位失败环节并说明改进依据。",
+        "body": "把能运行的程序变成别人可以复现、也能看懂取舍的项目。\n\n学到这里：区分检索、生成和执行故障，记录延迟、成功与失败案例，并写清环境、配置与运行方法。\n\n完成检验：提供启动说明和一组固定问题，重现一个成功与一个失败案例；根据记录定位失败环节并说明改进依据。",
+        "tags": [
+          "目标所需"
+        ]
+      },
+      {
+        "id": "card-start",
+        "eyebrow": "路线起点",
+        "title": "从这里出发",
+        "summary": "能用 Python 写脚本、调用 HTTP 接口；第一次做 LLM 应用，准备应聘初级应用开发岗位。",
+        "tags": [
+          "开始"
+        ]
+      },
+      {
+        "id": "card-goal",
+        "eyebrow": "学习目标",
+        "title": "能解释、能排错的文档助手",
+        "summary": "完成一个能检索资料、调用受控工具的文档助手，用可复现的案例解释效果、故障与工程取舍。",
+        "tags": [
+          "路线终点"
+        ]
+      }
+    ],
+    "resources": [
+      {
+        "id": "resource-llm-application-concept-1",
+        "href": "#session-learning"
+      },
+      {
+        "id": "resource-llm-application-concept-2",
+        "href": "#session-learning"
+      },
+      {
+        "id": "resource-llm-application-concept-3",
+        "href": "#session-learning"
+      },
+      {
+        "id": "resource-llm-application-concept-4",
+        "href": "#session-learning"
+      },
+      {
+        "id": "resource-llm-application-concept-5",
+        "href": "#session-learning"
+      },
+      {
+        "id": "resource-llm-application-concept-6",
+        "href": "#session-learning"
+      },
+      {
+        "id": "resource-llm-application-concept-7",
+        "href": "#session-learning"
+      },
+      {
+        "id": "resource-llm-application-concept-8",
+        "href": "#session-learning"
+      },
+      {
+        "id": "resource-llm-application-concept-9",
+        "href": "#session-learning"
+      }
+    ],
+    "actions": [
+      {
+        "id": "action-llm-application-concept-1",
+        "kind": "open-resource",
+        "label": "进入学习",
+        "resourceId": "resource-llm-application-concept-1",
+        "target": "self"
+      },
+      {
+        "id": "action-llm-application-concept-2",
+        "kind": "open-resource",
+        "label": "进入学习",
+        "resourceId": "resource-llm-application-concept-2",
+        "target": "self"
+      },
+      {
+        "id": "action-llm-application-concept-3",
+        "kind": "open-resource",
+        "label": "进入学习",
+        "resourceId": "resource-llm-application-concept-3",
+        "target": "self"
+      },
+      {
+        "id": "action-llm-application-concept-4",
+        "kind": "open-resource",
+        "label": "进入学习",
+        "resourceId": "resource-llm-application-concept-4",
+        "target": "self"
+      },
+      {
+        "id": "action-llm-application-concept-5",
+        "kind": "open-resource",
+        "label": "进入学习",
+        "resourceId": "resource-llm-application-concept-5",
+        "target": "self"
+      },
+      {
+        "id": "action-llm-application-concept-6",
+        "kind": "open-resource",
+        "label": "进入学习",
+        "resourceId": "resource-llm-application-concept-6",
+        "target": "self"
+      },
+      {
+        "id": "action-llm-application-concept-7",
+        "kind": "open-resource",
+        "label": "进入学习",
+        "resourceId": "resource-llm-application-concept-7",
+        "target": "self"
+      },
+      {
+        "id": "action-llm-application-concept-8",
+        "kind": "open-resource",
+        "label": "进入学习",
+        "resourceId": "resource-llm-application-concept-8",
+        "target": "self"
+      },
+      {
+        "id": "action-llm-application-concept-9",
+        "kind": "open-resource",
+        "label": "进入学习",
+        "resourceId": "resource-llm-application-concept-9",
+        "target": "self"
+      }
+    ]
+  },
+  "presentation": {
+    "layout": {
+      "direction": "top-to-bottom",
+      "subjectGap": 3.75,
+      "layerGap": 3.5,
+      "conceptGap": 3.75,
+      "conceptColumnGap": 4.4
+    }
+  }
+}

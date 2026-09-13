@@ -13,7 +13,17 @@ export function safeZhihuUrl(raw:unknown,allowDemo=false):string|undefined{
   if(allowDemo&&isMockZhihuUrl(raw))return raw
   try{const u=new URL(raw);if(u.protocol==='https:'&&!u.username&&!u.password&&(u.hostname==='zhihu.com'||u.hostname.endsWith('.zhihu.com')))return u.href}catch{}
 }
-export function canonicalContentUrl(url:string){return evidenceUrlKey(url)}
+export function canonicalContentUrl(value:string){
+  const url=new URL(evidenceUrlKey(value))
+  // Collection APIs use /answer/:id while search and the actual page use
+  // /question/:questionId/answer/:id. The answer ID is an exact content identity,
+  // even above Number.MAX_SAFE_INTEGER; never match only the question or author.
+  if(url.protocol==='https:'&&['zhihu.com','www.zhihu.com'].includes(url.hostname)&&!url.port&&!url.username&&!url.password){
+    const answer=url.pathname.match(/^\/(?:question\/[1-9]\d*\/)?answer\/([1-9]\d*)\/?$/)
+    if(answer){url.hostname='www.zhihu.com';url.pathname=`/answer/${answer[1]}`}
+  }
+  return url.href
+}
 /** Only an exact published-content match can resolve a search result's missing author ID. */
 export function knownSourceIdentity<T extends {url:string;authorId:string|null;authorName?:string|null;authorUrl?:string|null}>(source:T,network:AuthorNetwork):T{
   if(!source.authorId?.startsWith('author-ev-'))return source

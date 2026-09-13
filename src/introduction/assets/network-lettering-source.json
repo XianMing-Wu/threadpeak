@@ -1,0 +1,14 @@
+{
+  "family": "Ma Shan Zheng",
+  "sha256": "6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb",
+  "license": "SIL Open Font License 1.1",
+  "source": "Same pinned font as lettering-source.json",
+  "labels": {
+    "footprint-heading": "循着问题，找到来处。",
+    "network-heading": "让来源，彼此连接。",
+    "network-topic-0": "LLM 应用开发基础",
+    "network-topic-1": "Agent 循环与受控工具",
+    "network-topic-2": "检索增强生成 · RAG",
+    "network-topic-3": "Agent 评测与工程交付"
+  }
+}

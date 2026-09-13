@@ -1,0 +1,17 @@
+import {CardAvatar} from './LearningCardModel';
+import {consultationAuthors,consultationQuestion} from './consultation-content';
+import {projectScenario} from './learning-story-content';
+export type AuthorDetailTab='sources'|'footprints'|'reading';
+export function ConsultationAuthorDetails({index,tab,onTab,onClose,onPrepare}:{index:number;tab:AuthorDetailTab;onTab:(tab:AuthorDetailTab)=>void;onClose:()=>void;onPrepare:()=>void}){
+ const a=consultationAuthors[index];
+ return <section className="consult-author-details" aria-label={`${a.name}的作者资料`} aria-hidden="true" inert>
+  <header><span className="consult-detail-avatar"><CardAvatar name={a.name} src={a.avatar}/></span><div><strong>{a.name}</strong><small>{a.badge}</small></div><button onClick={onClose} aria-label="返回推荐依据">返回依据 <span>↗</span></button></header>
+  <div className="consult-inline-tabs" role="tablist" aria-label="作者资料分类"><button role="tab" aria-selected={tab!=='footprints'} onClick={()=>onTab('sources')}>资料 <span>1</span></button><button role="tab" aria-selected={tab==='footprints'} onClick={()=>onTab('footprints')}>学习足迹</button></div>
+  <div className="consult-inline-scroll" key={`${a.id}:${tab}`}>
+   {tab==='sources'&&<div role="tabpanel" aria-label="资料"><button className="consult-inline-source" onClick={()=>onTab('reading')}><svg viewBox="0 0 52 62" aria-hidden="true"><path d="M7 2H34L46 14V59H7Z" fill="#fff" stroke="#aac7e8"/><path d="M34 2V14H46M16 24H37M16 31H37M16 38H33M16 45H28" fill="none" stroke="#aac7e8"/><path d="M7 2H34L46 14" fill="none" stroke="#427fe4"/></svg><span><small>知乎 · 公开文章</small><strong>{a.title}</strong><p>{a.summary}</p><em>查看资料摘要 <b>→</b></em></span></button><div className="consult-source-connection"><span>这个问题</span><svg viewBox="0 0 40 12" aria-hidden="true"><path d="M0 6H37M32 2L37 6L32 10"/></svg><span>{a.topic}</span><svg viewBox="0 0 40 12" aria-hidden="true"><path d="M0 6H37M32 2L37 6L32 10"/></svg><span>这篇资料</span></div><p className="consult-inline-note">{a.limitation}</p></div>}
+   {tab==='footprints'&&<div role="tabpanel" aria-label="学习足迹">{a.provenance==='learning-evidence'?<ol className="consult-footprint-path"><li><small>我的目标</small><strong>{projectScenario.goal}</strong><p>从单人测试，走到双人试用</p></li><li><small>带着失败记录继续请教</small><p>{consultationQuestion}</p></li><li><small>关联的公开材料</small><button onClick={()=>onTab('reading')}>{a.title} <span>→</span></button><blockquote>{a.quote}</blockquote></li></ol>:<div className="consult-footprint-empty"><svg viewBox="0 0 200 85" aria-hidden="true"><path d="M25 43H175" stroke="#d2e1f1" fill="none" strokeDasharray="3 5"/><rect x="10" y="22" width="44" height="44" rx="9" fill="#f6faff" stroke="#b5cde8"/><path d="M22 36H42M22 43H42M22 50H34" stroke="#8fb5de"/><circle cx="167" cy="44" r="22" fill="#fff" stroke="#b5cde8"/><path d="M167 34V54M157 44H177" stroke="#789ece"/></svg><h4>还没有学习足迹</h4><p>这位作者来自本次公开资料检索。关联到学习之后，问题、概念和文章会在这里留下记录。</p><button onClick={()=>onTab('sources')}>先看看公开资料 →</button></div>}</div>}
+   {tab==='reading'&&<article className="consult-inline-reading"><button className="consult-inline-return" onClick={()=>onTab('sources')}>← 返回资料</button><small>公开资料 · 检索摘要</small><h3>{a.title}</h3><p className="consult-inline-byline">{a.name}</p>{a.text.split('\n').filter(Boolean).map((p,i)=><p key={i}>{p}</p>)}<p className="consult-inline-note">以上是已保存的检索材料，不代表完整原文。</p></article>}
+  </div>
+  <footer><span>带上实践记录，约定请教范围。</span><button className="consult-prepare" onClick={onPrepare}>准备请教 ↗</button></footer>
+ </section>;
+}

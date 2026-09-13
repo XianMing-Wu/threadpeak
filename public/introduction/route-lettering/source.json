@@ -1,0 +1,23 @@
+{
+  "family": "Ma Shan Zheng",
+  "sha256": "6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb",
+  "license": "SIL Open Font License 1.1",
+  "carriers": [
+    "LLM 应用\n开发基础",
+    "Agent 循环\n与受控工具",
+    "检索增强\n生成 · RAG",
+    "Agent 评测\n与工程交付"
+  ],
+  "concepts": [
+    "模型对话",
+    "结构化输出",
+    "智能体循环",
+    "工具边界",
+    "文档分块",
+    "语义检索",
+    "证据与引用",
+    "能力汇合",
+    "评测与排错"
+  ],
+  "source": "Same pinned font as src/assets/lettering-source.json"
+}

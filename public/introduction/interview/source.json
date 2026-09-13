@@ -1,0 +1,24 @@
+{
+  "kind": "curated-example",
+  "source": "src/showcase/routes.json",
+  "sourceRouteId": "llm-application",
+  "originalPrompt": "我想要找到一份agent开发工程师的工作，但是我现在不知道该如何学，请帮我规划",
+  "startingPoint": "能用 Python 写脚本、调用 HTTP 接口；第一次做 LLM 应用，准备应聘初级应用开发岗位。",
+  "outcome": "完成一个能检索资料、调用受控工具的文档助手，用可复现的案例解释效果、故障与工程取舍。",
+  "rawAnswer": "我希望应聘应用方向的初级Agent开发岗位，能自己做一个有工具调用和资料检索的项目并解释和排查问题。我近期能用Python写脚本、调用HTTP接口；还没做过LLM应用。不做底层模型训练，没有给自己限定时间。",
+  "boundary": "访谈对白为上述编选示例原话的展示性缩写，不是本次访问者的真实回答，不调用或模拟生成服务。",
+  "compiler": "src/pathDocument.ts:buildPathDocument",
+  "renderer": "src/vendor/learning-path-3d",
+  "mascot": {
+    "tool": "image_gen built-in",
+    "references": [
+      "看山三视图/正面-白底无阴影.png",
+      "看山三视图/右视图-白底无阴影.png"
+    ],
+    "file": "kanshan-ink.png",
+    "prompt": "Preserve exact Liu Kanshan identity: pointed ears, long snout, big black nose, white body, black arms and legs. Full-body three-quarter facing left, one open conversational hand. Pure black ink, white fill and background, no shadow, texture, letters or speech bubble."
+  },
+  "validation": {
+    "ok": true
+  }
+}

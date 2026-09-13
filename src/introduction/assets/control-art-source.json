@@ -1,0 +1,14 @@
+{
+  "lettering": {
+    "family": "Ma Shan Zheng",
+    "license": "SIL OFL 1.1",
+    "sha256": "6d2546bb189c732a8ca29af9e22457b152387d158aa459e4ac2ce1e51788b7fb"
+  },
+  "formula": {
+    "expression": "\\operatorname{softmax}\\left(\\frac{QK^T}{\\sqrt{d_k}}\\right)V",
+    "fonts": "KaTeX Main, Math, Size2",
+    "license": "SIL OFL 1.1",
+    "source": "Local project dependency katex/dist/fonts",
+    "glyphs": "All glyphs are native SVG paths, including U+221A; no browser font dependency"
+  }
+}

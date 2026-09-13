@@ -35,6 +35,7 @@
     "@electric-sql/pglite": "^0.3.16",
     "@fastify/helmet": "^13.1.1",
     "@fastify/rate-limit": "^11.2.0",
+    "@remotion/player": "4.0.523",
     "@threadpeak/api-client": "0.1.0",
     "@threadpeak/contracts": "0.1.0",
     "@threadpeak/runtime-store": "0.1.0",
@@ -51,6 +52,7 @@
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
+    "remotion": "4.0.523",
     "thinking-orbs": "^0.3.1",
     "three": "^0.185.1",
     "zod": "^3.25.76"

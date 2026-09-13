@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { requestAuthSession, requestAuthStart, isZhihuAuthorizeUrl } from './runtime/request-auth-session.ts'
+import { requestAuthSession, requestAuthStart, isZhihuAuthorizeUrl, oauthNotice } from './runtime/request-auth-session.ts'
 
 test('auth start does not invent a Zhihu authorize URL when the server is unavailable', async () => {
   const result = await requestAuthStart(async () => {
@@ -52,4 +52,14 @@ test('demo authorization redirects only to the current loopback callback, real U
   assert.equal(isZhihuAuthorizeUrl('https://evil.test/api/auth/zhihu/callback?authorization_code=tp-demo.test','mock',origin),false)
   assert.equal(isZhihuAuthorizeUrl('https://openapi.zhihu.com/authorize?app_id=app','real',origin),true)
   assert.equal(isZhihuAuthorizeUrl('https://user@openapi.zhihu.com/authorize','real',origin),false)
+  assert.equal(isZhihuAuthorizeUrl('https://openapi.zhihu.com:444/authorize','real',origin),false)
+  assert.equal(isZhihuAuthorizeUrl('https://openapi.zhihu.com/authorize#secret','real',origin),false)
+})
+
+test('callback notices never repeat untrusted error text or pretend success',()=>{
+  assert.equal(oauthNotice('?oauth=success'),'')
+  assert.equal(oauthNotice('?oauth=arbitrary-text'),'')
+  assert.match(oauthNotice('?oauth=cancelled'),/取消/)
+  assert.match(oauthNotice('?oauth=busy'),/稍后/)
+  assert.doesNotMatch(oauthNotice('?oauth=failed&error_description=secret-value'),/secret-value/)
 })

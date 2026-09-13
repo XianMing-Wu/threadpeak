@@ -9,6 +9,8 @@ import { type HistoryReopenResolution } from '../resolve-history-reopen'
 import { FlowithGlyph } from '../ui/FlowithGlyph'
 import { setActiveConversation } from '../workspace/nav'
 import { getConversation } from '../workspace/store'
+import { useWorkspaceSession } from '../runtime/workspace-session'
+import { AccountAvatar } from './AccountAvatar'
 
 function profileMenuBox(button: HTMLElement, collapsed: boolean) {
   const rect = button.getBoundingClientRect()
@@ -33,7 +35,12 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
   const [activeHistoryId,setActiveHistoryId]=useState(()=>sessionStorage.getItem(ACTIVE_HISTORY_KEY)??'')
   const [reopen,setReopen]=useState<HistoryReopenResolution|null>(null)
   const [profileOpen,setProfileOpen]=useState(false)
-  const [accountIdentity,setAccountIdentity]=useState(prototypeAccount)
+  const session=useWorkspaceSession()
+  const demo=session?.demo===true||session?.profile?.demo===true
+  const accountIdentity=!session?prototypeAccount:session.kind==='guest'?{...prototypeAccount,title:'游客'}:{
+    title:demo?'演示账号':session.provider==='zhihu'?'已登录知乎':'已登录账号',
+    message:demo?'演示账号 · 示例收藏与创作':'打开账号菜单',
+  }
   const [menuBox,setMenuBox]=useState<{left:number;bottom:number}|null>(null)
   const mainRef=useRef<HTMLElement>(null)
   const sidebarRef=useRef<HTMLElement>(null)
@@ -98,21 +105,6 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
   useEffect(()=>{
     if(profileOpen&&menuBox)menuRef.current?.querySelector<HTMLButtonElement>('button')?.focus()
   },[profileOpen,menuBox])
-  useEffect(()=>{
-    let current=true
-    void productRequest<{kind:string;provider:string|null;demo?:boolean;profile?:{demo?:boolean}}>('/api/v2/session').then((session) => {
-      if(!current)return
-      if (session.kind !== 'authenticated') {setAccountIdentity({...prototypeAccount,title:'游客'});return}
-      const demo=session.demo===true||session.profile?.demo===true
-      setAccountIdentity({
-        kind: 'unavailable',
-        reason: 'missing-identity-provider',
-        title: demo?'演示账号':session.provider==='zhihu'?'已登录知乎':'已登录账号',
-        message: demo?'演示账号 · 示例收藏与创作':'打开账号菜单',
-      })
-    }).catch(()=>{if(current)setAccountIdentity(prototypeAccount)})
-    return()=>{current=false}
-  },[])
   useEffect(()=>{const refresh=()=>{setHistory(readChatHistory());setActiveHistoryId(sessionStorage.getItem(ACTIVE_HISTORY_KEY)??'')};addEventListener(HISTORY_CHANGE_EVENT,refresh);addEventListener('storage',refresh);return()=>{removeEventListener(HISTORY_CHANGE_EVENT,refresh);removeEventListener('storage',refresh)}},[])
   const closeNavigation=()=>{setCollapsed(true);collapseRef.current?.focus()}
   const focusContent=()=>{
@@ -203,7 +195,7 @@ export function WideShell({ route, children, theme, onThemeChange, onLogout }: {
           <button type="button" role="menuitem" className="is-danger" onClick={onLogout}><Icon name="logout" size={20}/><span>退出登录</span></button>
         </div>,document.body)}
         <button type="button" className="tp-profile user" aria-label="打开账号菜单" aria-expanded={profileOpen} aria-haspopup="menu" aria-controls={profileOpen?'account-menu':undefined} title={accountIdentity.message} onClick={()=>setProfileOpen((value)=>!value)}>
-          <div className="user-ava"><span><Icon name="user" size={18} /></span></div>
+          <div className="user-ava"><AccountAvatar key={session?.workspaceId} session={session}/></div>
           <div className="name"><b>{accountIdentity.title}</b></div>
           {['演示账号','已登录知乎','已登录账号'].includes(accountIdentity.title)&&<div className="free-chip">{accountIdentity.title==='演示账号'?'演示':accountIdentity.title === '已登录知乎' ? '知乎' : accountIdentity.title==='已登录账号'?'账号':''}</div>}
         </button>

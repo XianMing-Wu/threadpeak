@@ -18,6 +18,7 @@ expected = '4ad7b141535a1f11831287b0a6f71ddcec8daa92dc1d82c59892068f8ae5df09'
 if hashlib.sha256(archive.read_bytes()).hexdigest() != expected:
     raise ValueError('Unexpected font archive version')
 copy = (ROOT / 'src/pages/AuthLanding.tsx').read_text()
+copy += (ROOT / 'src/pages/LoginJourney.tsx').read_text()
 copy += ''.join(chr(code) for code in range(32, 127))
 with tempfile.TemporaryDirectory() as directory:
     with py7zr.SevenZipFile(archive) as source:

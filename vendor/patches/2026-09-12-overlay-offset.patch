@@ -1,0 +1,63 @@
+--- a/src/render/app/LearningScene.ts
++++ b/src/render/app/LearningScene.ts
+@@ -732,7 +732,9 @@
+       this.camera.setViewOffset(
+         this.viewportWidthPixels,
+         this.viewportHeightPixels,
+-        this.currentHorizontalCompositionOffsetPixels,
++        // Composition uses positive = move the scene right. Three's view
++        // offset instead moves the frustum right, projecting the scene left.
++        -this.currentHorizontalCompositionOffsetPixels,
+         this.currentVerticalCompositionOffsetPixels,
+         this.viewportWidthPixels,
+         this.viewportHeightPixels,
+--- /dev/null
++++ b/src/render/app/OverlayComposition.smoke.ts
+@@ -0,0 +1,47 @@
++import { PerspectiveCamera, Vector3 } from 'three';
++import { LearningScene } from './LearningScene';
++import { computeCardSafeAreaHorizontalOffset } from '../../ui/node-card/cardPlacementPolicy';
++
++const assert = { ok(condition: unknown, message: string): void {
++  if (!condition) throw new Error(`Overlay composition regression: ${message}`);
++} };
++
++// Use the real scene adapter and Three.js projection without allocating a GPU.
++// A fake screen-space offset would reproduce the original sign mistake.
++for (const width of [320, 700, 1280]) {
++  for (const side of [-1, 1]) {
++    for (const reducedMotion of [false, true]) {
++      const height = 620;
++      const camera = new PerspectiveCamera(42, width / height, 0.1, 100);
++      camera.updateMatrixWorld();
++      const scene: LearningScene = Object.assign(Object.create(LearningScene.prototype), {
++        camera, viewportWidthPixels: width, viewportHeightPixels: height,
++        currentHorizontalCompositionOffsetPixels: 0,
++        currentVerticalCompositionOffsetPixels: 0,
++      });
++      const world = new Vector3(side * 0.92, 0, 0).unproject(camera);
++      const cardWidth = Math.min(366, width - 24);
++      const samples: number[] = [];
++      for (let frame = 0; frame < 600; frame++) {
++        const center = (world.clone().project(camera).x + 1) * width / 2;
++        const left = Math.min(width - 12 - cardWidth, Math.max(12, center - cardWidth / 2));
++        const current = scene.getHorizontalCompositionOffsetPixels();
++        const desired = computeCardSafeAreaHorizontalOffset({
++          currentOffsetPixels: current, cardLeftClientX: left, cardRightClientX: left + cardWidth,
++          viewportLeftClientX: 0, viewportRightClientX: width, maximumOffsetPixels: width * 0.8,
++        });
++        scene.setHorizontalCompositionOffsetPixels(current + (desired - current) * (reducedMotion ? 1 : 0.15), true);
++        samples.push(center);
++        assert.ok(center >= 0 && center <= width, `node escaped the viewport: width=${width}, side=${side}, frame=${frame}`);
++      }
++      assert.ok(Math.max(...samples.slice(-120)) - Math.min(...samples.slice(-120)) < 0.1, 'idle card must settle without drift');
++      const center = samples.at(-1)!;
++      if (width >= 700) {
++        assert.ok(center - cardWidth / 2 >= 19.9 && center + cardWidth / 2 <= width - 19.9, 'scene moves inward until the card fits');
++      }
++      scene.setHorizontalCompositionOffsetPixels(0, true);
++      assert.ok(Math.abs(world.clone().project(camera).x - side * 0.92) < 1e-8, 'closing restores the original camera projection');
++    }
++  }
++}
++console.log('Overlay composition converges at both viewport edges with real Three.js projection.');

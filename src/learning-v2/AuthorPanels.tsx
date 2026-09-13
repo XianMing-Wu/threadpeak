@@ -13,8 +13,17 @@ import { MarkdownMath } from '../lib/MarkdownMath'
 import { SourceImport } from './AuthorSourceImport'
 import { isDemoSourceUrl, sourceLink } from './source-link'
 import {restoreAuthorDraft} from './author-draft'
+import { Icon } from '../icons'
 
-export function AuthorAvatar({name,src,sourceUrl}:{name:string;src?:string;sourceUrl?:string}){const {value}=useSourcePresentation(sourceUrl,!src);src=src||value?.data.metadata.avatar;const [failedSrc,setFailedSrc]=useState<string>();if(safeSourceImageUrl(src)&&src!==failedSrc)return <img className="au-avatar" src={src} alt={`${name}的头像`} width={42} height={42} loading="lazy" decoding="async" draggable={false} referrerPolicy="no-referrer" onError={()=>setFailedSrc(src)}/>;return <span className="au-avatar" aria-hidden="true">{Array.from(name).slice(0,1).join('')}</span>}
+export function AuthorAvatar({name,src,sourceUrl}:{name:string;src?:string;sourceUrl?:string}){
+  const [failedSources,setFailedSources]=useState<string[]>([])
+  const supplied=safeSourceImageUrl(src),lookup=!supplied||failedSources.includes(supplied)
+  const {value,failed}=useSourcePresentation(sourceUrl,lookup)
+  const avatar=lookup?safeSourceImageUrl(value?.data.metadata.avatar):supplied
+  if(avatar&&!failedSources.includes(avatar))return <img className="au-avatar" src={avatar} alt={`${name}的头像`} width={42} height={42} loading="lazy" decoding="async" draggable={false} referrerPolicy="no-referrer" onError={()=>setFailedSources(previous=>previous.includes(avatar)?previous:[...previous,avatar])}/>
+  const label=value||failed||failedSources.length||!sourceUrl?`${name}的头像暂不可用`:`正在读取${name}的头像`
+  return <span className="au-avatar" role="img" aria-label={label} title={label}><Icon name="user" size={24}/></span>
+}
 export function AuthorBadge({icon,text,sourceUrl,fallback="知乎内容作者"}:{icon?:string;text?:string;sourceUrl?:string;fallback?:string}){
   const {value}=useSourcePresentation(sourceUrl,!icon&&!text)
   icon=icon||value?.data.metadata.badgeIcon; text=text||value?.data.metadata.badge

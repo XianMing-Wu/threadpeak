@@ -127,6 +127,7 @@ test.each(['knowledge','app'])('offline %s entry discovers a persisted recovery 
   open.onsuccess=()=>{const db=open.result,tx=db.transaction('accounts','readwrite');tx.objectStore('accounts').put({local:{'tp-private':'retained draft'},session:{},pendingLocal:['tp-private'],pendingSession:[]},'offline-owner');tx.oncomplete=()=>{db.close();resolve()};tx.onabort=()=>{db.close();reject(tx.error)}}
  })
  vi.stubGlobal('fetch',()=>Promise.reject(Error('offline')))
+ if(entry==='app')location.hash='#login'
  const Page=entry==='knowledge'?(await import('../../src/pages/Collections')).KnowledgePage:(await import('../../src/App')).App
  render(createElement(Page))
  await screen.findByRole('alert')

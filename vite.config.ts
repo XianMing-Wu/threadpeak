@@ -8,6 +8,7 @@ const mainEntry = fileURLToPath(new URL('./index.html', import.meta.url))
 export default defineConfig({
   plugins: [react()],
   publicDir: 'public',
+  assetsInclude: ['**/*.riv', '**/*.wasm'],
   resolve: {
     alias: {
       'liu-kanshan-learning-path-3d': localRuntime,
@@ -29,6 +30,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: mainEntry,
+        introduction: fileURLToPath(new URL('./introduction.html', import.meta.url)),
       },
     },
   },

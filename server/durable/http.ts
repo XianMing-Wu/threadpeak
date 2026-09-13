@@ -23,6 +23,8 @@ import { registerMaterialRoutes } from './materials-http.ts'
 import { inheritedArticles, planningMaterial } from './materials.ts'
 import type { ZhihuDataClient } from './zhihu-data.ts'
 import type { ZhihuLogin } from './zhihu-oauth.ts'
+import { oauthCookie } from './zhihu-oauth.ts'
+import { ToolError } from './worker.ts'
 
 const Text=z.string().trim().min(1).max(20000),Id=z.string().min(1).max(240)
 const depth=z.enum(['fast','deep']).default('fast')
@@ -66,9 +68,10 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
   })
   app.setErrorHandler((error,_request,reply)=>{
     const httpStatus=(error as {statusCode?:number})?.statusCode??500
-    const status=error instanceof CommandError?error.status:error instanceof NodeEditConflict?409:error instanceof z.ZodError?400:[400,413,415,429].includes(httpStatus)?httpStatus:500
-    const code=error instanceof CommandError?error.code:error instanceof NodeEditConflict?'NODE_EDIT_CONFLICT':status===400?'INVALID_INPUT':status===429?'REQUEST_RATE_LIMITED':status===415?'UNSUPPORTED_MEDIA_TYPE':status===413?'REQUEST_TOO_LARGE':'SERVICE_UNAVAILABLE'
-    const notices:Record<string,string>={UPLOAD_BUSY:'正在上传的文件较多，请等当前上传完成后重试。',MATERIAL_QUOTA_EXCEEDED:'资料存储已达到当前服务额度，请联系管理员调整额度后继续。',PROVIDER_CONFIG_REQUIRED:'生成服务尚未配置完成，请稍后重试。',RETRY_BUDGET_EXHAUSTED:'这次任务已达到继续次数上限，已有内容仍然保留。',RETRY_EXPIRED:'这次任务已归档，已有内容仍然保留。',RETRY_COOLDOWN:'请稍后再继续这次任务。',REQUEST_RATE_LIMITED:'请求较多，请稍后再试。',REQUEST_TOO_LARGE:'提交的内容较大，请减少后重试。',COLLECTION_SCOPE_INVALID:'请先选择收藏夹并等待内容读取完成。',ZHIHU_LOGIN_REQUIRED:'连接账号后即可选择你的收藏夹。',ZHIHU_NOT_CONFIGURED:'知乎账号连接暂未开放，仍可添加文件开始学习。',ZHIHU_REAUTHORIZE:'知乎授权已到期，请重新连接账号。',PDF_NOT_CONFIGURED:'PDF 解析服务尚未连接，请先添加 Markdown 或文本文件。',MATERIAL_PROCESSING:'资料还在整理，完成后即可生成路线。',COLLECTION_EMPTY:'这个收藏夹还没有可读取的公开内容。'}
+    const zhihuAuthFailure=error instanceof ToolError&&error.code==='ZHIHU_AUTH_FAILED'
+    const status=error instanceof CommandError?error.status:zhihuAuthFailure?401:error instanceof NodeEditConflict?409:error instanceof z.ZodError?400:[400,413,415,429].includes(httpStatus)?httpStatus:500
+    const code=error instanceof CommandError?error.code:zhihuAuthFailure?'ZHIHU_AUTH_FAILED':error instanceof NodeEditConflict?'NODE_EDIT_CONFLICT':status===400?'INVALID_INPUT':status===429?'REQUEST_RATE_LIMITED':status===415?'UNSUPPORTED_MEDIA_TYPE':status===413?'REQUEST_TOO_LARGE':'SERVICE_UNAVAILABLE'
+    const notices:Record<string,string>={ZHIHU_AUTH_FAILED:'知乎资料授权校验未通过，请重新连接账号；若仍失败，请联系服务管理员。',UPLOAD_BUSY:'正在上传的文件较多，请等当前上传完成后重试。',MATERIAL_QUOTA_EXCEEDED:'资料存储已达到当前服务额度，请联系管理员调整额度后继续。',PROVIDER_CONFIG_REQUIRED:'生成服务尚未配置完成，请稍后重试。',RETRY_BUDGET_EXHAUSTED:'这次任务已达到继续次数上限，已有内容仍然保留。',RETRY_EXPIRED:'这次任务已归档，已有内容仍然保留。',RETRY_COOLDOWN:'请稍后再继续这次任务。',REQUEST_RATE_LIMITED:'请求较多，请稍后再试。',REQUEST_TOO_LARGE:'提交的内容较大，请减少后重试。',COLLECTION_SCOPE_INVALID:'请先选择收藏夹并等待内容读取完成。',ZHIHU_LOGIN_REQUIRED:'连接账号后即可选择你的收藏夹。',ZHIHU_NOT_CONFIGURED:'知乎账号连接暂未开放，仍可添加文件开始学习。',ZHIHU_REAUTHORIZE:'知乎授权已到期，请重新连接账号。',PDF_NOT_CONFIGURED:'PDF 解析服务尚未连接，请先添加 Markdown 或文本文件。',MATERIAL_PROCESSING:'资料还在整理，完成后即可生成路线。',COLLECTION_EMPTY:'这个收藏夹还没有可读取的公开内容。'}
     const message=notices[code]??(code==='ACCOUNT_BUSY'?'正在处理的任务较多，请稍后继续。':code==='PDF_UNREADABLE'||code==='ATTACHMENT_EMPTY'?'这份 PDF 没有可读取的文字，请换成含文字的 PDF、Markdown 或文本文件。':code==='ATTACHMENT_SIZE'||code==='ATTACHMENT_TEXT_SIZE'?'附件较大，请拆成较小的文件再添加。':code==='TEXT_ENCODING'?'请将文本另存为 UTF-8 后添加。':code==='NODE_EDIT_CONFLICT'?'这张卡片的同一内容已在另一处编辑，你的版本仍保留，请选择要保存的版本。':code==='REVISION_CONFLICT'?'内容已在另一处更新，正在读取最新版本。':code==='BUSY'?'当前任务还在进行。':status===404?'找不到这项内容。':status===401?'请先登录。':status===400?'请检查这次输入。':'这次操作暂时还没完成，已有内容已保留。')
     reply.code(status).send({code,message})
   })
@@ -93,18 +96,29 @@ export async function createProductApp(ports:{store:DurableStore;worker:DurableW
     const result=await ports.zhihuLogin.start(current);reply.header('Set-Cookie',result.cookie);return {kind:'redirect',authorizeUrl:result.authorizeUrl,mode:ports.zhihuLogin.config.mode??'real'}
   })
   app.get('/api/auth/zhihu/callback',async(request,reply)=>{
+    const binding=request.headers.cookie?.split(';').map(s=>s.trim()).find(s=>s.startsWith('tp_zhihu_oauth='))?.slice(15)??''
+    const clearCookie=oauthCookie('',0,ports.zhihuLogin?.config.redirectUri.startsWith('https:')??ports.identity.production)
+    reply.header('Set-Cookie',clearCookie).header('Referrer-Policy','no-referrer')
     try{
       if(!ports.zhihuLogin)throw new CommandError('ZHIHU_NOT_CONFIGURED',503)
-      const query=z.object({authorization_code:z.string(),state:z.string()}).parse(request.query)
-      const binding=request.headers.cookie?.split(';').map(s=>s.trim()).find(s=>s.startsWith('tp_zhihu_oauth='))?.slice(15)??''
-      const cookie=await ports.zhihuLogin.callback(query.authorization_code,query.state,binding)
-      reply.header('Set-Cookie',[cookie,'tp_zhihu_oauth=; Path=/api/auth/zhihu; HttpOnly; SameSite=Lax; Max-Age=0'])
+      const query=z.object({authorization_code:z.string().min(1).max(4096).optional(),code:z.string().min(1).max(4096).optional(),state:z.string().regex(/^[a-f0-9]{64}$/),error:z.string().max(200).optional()}).parse(request.query)
+      if(query.error)throw new CommandError(query.error==='access_denied'?'OAUTH_DENIED':'OAUTH_STATE_INVALID',400)
+      const cookie=await ports.zhihuLogin.callback(query.authorization_code??query.code??'',query.state,binding)
+      reply.header('Set-Cookie',[cookie,clearCookie])
       return reply.redirect('/?oauth=success#home')
-    }catch{return reply.redirect('/?oauth=failed#home')}
+    }catch(error){
+      await ports.zhihuLogin?.discardAttempt(binding)
+      // Fixed local destinations and public reasons; never echo upstream text,
+      // authorization codes, tokens, or the untrusted error_description.
+      if(error instanceof CommandError&&error.code==='OAUTH_DENIED')return reply.redirect('/?oauth=cancelled#home')
+      if(error instanceof CommandError&&error.status===429)return reply.redirect('/?oauth=busy#home')
+      return reply.redirect('/?oauth=failed#home')
+    }
   })
   app.get('/api/v2/session',async request=>{
-    const own=owner(request),[account]=await ports.store.db.query<{profile:unknown}>('SELECT profile FROM tp_zhihu_accounts WHERE owner_id=$1',[own])
-    return {kind:own.startsWith('account:')?'authenticated':'guest',capabilities:{zhihuMaterials:!!account},provider:account?'zhihu':own.startsWith('account:')?'account':null,profile:account?.profile,demo:!!(account?.profile as any)?.demo,available:true,workspaceId:digest(own)}
+    const own=owner(request),[account]=await ports.store.db.query<{profile:unknown;token_expires_at:number}>('SELECT profile,token_expires_at FROM tp_zhihu_accounts WHERE owner_id=$1',[own])
+    const authorization=account?{status:!ports.zhihuLogin?'unavailable':account.token_expires_at<=Date.now()?'expired':'active',expiresAt:Number(account.token_expires_at)}:undefined
+    return {kind:own.startsWith('account:')?'authenticated':'guest',capabilities:{zhihuMaterials:!!account},provider:account?'zhihu':own.startsWith('account:')?'account':null,profile:account?.profile,authorization,demo:!!(account?.profile as any)?.demo,available:true,workspaceId:digest(own)}
   })
   registerMaterialRoutes(app,ports.store,ports.worker,owner,requestKey,ports.zhihuData,ports.zhihuLogin)
   registerSourcePresentation(app,ports.store,ports.worker,owner)

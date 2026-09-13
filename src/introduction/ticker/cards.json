@@ -1,0 +1,292 @@
+[
+  {
+    "id": "calculus-understand",
+    "topic": "高等数学",
+    "title": "高数：先理解定理，再独立做题",
+    "sourceTitle": "你有哪些高数学习方法?",
+    "author": "甚远",
+    "avatar": "avatars/calculus-understand.jpg",
+    "votes": 5,
+    "comments": 0,
+    "url": "https://www.zhihu.com/question/2072618471385462666/answer/2076431604419916877",
+    "toc": [
+      "理解定理的条件",
+      "从错误定位卡点",
+      "按目标安排训练"
+    ],
+    "sections": [
+      {
+        "heading": "前言",
+        "text": "学高数时，先弄清定理为什么成立。作者建议把准确表述、适用条件、典型例子和反例放在一起理解。证明不必一开始就逐字背诵，更重要的是看出辅助函数、误差拆分或不等式估计如何推动结论。"
+      },
+      {
+        "heading": "做题方法",
+        "text": "先完成一次不看答案的尝试，写清卡在定义、条件还是计算。看懂解法后合上答案重做，记录最早出错的一步。若以考试为目标，再把教材例题、历年题和基本计算链条练稳。"
+      }
+    ],
+    "sourceFile": "01-calculus.json",
+    "sourceIndex": 0,
+    "badge": "avatars/calculus-understand-badge.png",
+    "badgeText": "数学博士"
+  },
+  {
+    "id": "calculus-exam",
+    "topic": "高等数学",
+    "title": "高数复习：先抓住典型考点",
+    "sourceTitle": "大一新生如何自学高等数学?",
+    "author": "晨风学长",
+    "avatar": "avatars/calculus-exam.jpg",
+    "votes": 12076,
+    "comments": 131,
+    "url": "https://www.zhihu.com/question/52436103/answer/1578049243",
+    "toc": [
+      "先确定复习重点",
+      "按题型训练方法",
+      "建立考点清单"
+    ],
+    "sections": [
+      {
+        "heading": "前言",
+        "text": "这份建议优先解决期末复习的效率问题。作者认为，投入很多时间却抓不住考点，容易造成无效努力；与其从头到尾平均用力，不如围绕常见题型建立清晰的复习清单。"
+      },
+      {
+        "heading": "复习顺序",
+        "text": "先整理极限的常用方法，再练隐函数与参数方程求导，随后处理中值定理和不定积分。原文把等价无穷小、洛必达法则、夹逼法、换元和分部积分分别列入训练范围。这是应试导向的路线。"
+      }
+    ],
+    "sourceFile": "01-calculus.json",
+    "sourceIndex": 4
+  },
+  {
+    "id": "graphics-cpu",
+    "topic": "计算机图形学",
+    "title": "图形学入门：先写软渲染器",
+    "sourceTitle": "计算机图形学应该从什么开始学习?",
+    "author": "BigOrange",
+    "avatar": "avatars/graphics-cpu.jpg",
+    "votes": 47,
+    "comments": 0,
+    "url": "https://www.zhihu.com/question/349302834/answer/2029337851788112079",
+    "toc": [
+      "从像素开始理解",
+      "再做光线追踪",
+      "最后接触图形 API"
+    ],
+    "sections": [
+      {
+        "heading": "前言",
+        "text": "作者把软件渲染器放在工程学习的起点：先不调用图形 API，用 CPU 算出像素颜色。通过向量、矩阵、三角形着色和深度缓冲，把渲染过程真正连接起来，再理解 GPU 帮你完成了什么。"
+      },
+      {
+        "heading": "参考项目",
+        "text": "先参考 tinyrenderer，再尝试 Ray Tracing in One Weekend，之后进入 LearnOpenGL 与硬件加速。同时用 GAMES101 补充理论，逐步把软件实现与图形硬件联系起来。"
+      }
+    ],
+    "sourceFile": "02-graphics.json",
+    "sourceIndex": 3
+  },
+  {
+    "id": "graphics-api",
+    "topic": "计算机图形学",
+    "title": "图形学：先把 OpenGL 跑起来",
+    "sourceTitle": "30 岁转行计算机图形学,如何系统学习才能顺利入门?",
+    "author": "京山游侠",
+    "avatar": "avatars/graphics-api.jpg",
+    "votes": 23,
+    "comments": 5,
+    "url": "https://www.zhihu.com/question/1972259476573783148/answer/1995464940794958234",
+    "toc": [
+      "数学与实践并行",
+      "先从 OpenGL 起步",
+      "进阶再换现代 API"
+    ],
+    "sections": [
+      {
+        "heading": "前言",
+        "text": "这位作者更倾向于从现成图形 API 起步。图形学一边是数学理论，一边是工程实践；微积分与线性代数要学，但工程入门可以先选择相对容易上手的 OpenGL，在实际画面里理解渲染。"
+      },
+      {
+        "heading": "学习资源",
+        "text": "原文推荐 LearnOpenGL 的中文教程。先跑通示例、学会编写 shader，再逐步考虑 Vulkan 或 DirectX 12。这是一条以现成图形 API 为起点，在实践中补充知识的路线。"
+      }
+    ],
+    "sourceFile": "02-graphics.json",
+    "sourceIndex": 4,
+    "badge": "avatars/graphics-api-badge.png",
+    "badgeText": "华中科技大学 外科学硕士"
+  },
+  {
+    "id": "llm-theory",
+    "topic": "大模型学习",
+    "title": "大模型：先理清前置依赖",
+    "sourceTitle": "作为对 NLP 感兴趣的初学者,如何系统学习大语言模型?",
+    "author": "llmbases",
+    "avatar": "avatars/llm-theory.jpg",
+    "votes": 3,
+    "comments": 0,
+    "url": "https://www.zhihu.com/question/2074451843762147761/answer/2077539446732371367",
+    "toc": [
+      "先建立生命周期地图",
+      "检查四项基础能力",
+      "把公式连到张量"
+    ],
+    "sections": [
+      {
+        "heading": "前言",
+        "text": "作者不赞成跟着模型名称和热点工具走，而是主张先理清前置依赖：数学与数据、Transformer、预训练、后训练、推理部署，再到 RAG 与 Agent。每一步都要能解释问题、设计原因和工程代价。"
+      },
+      {
+        "heading": "从哪里开始",
+        "text": "先检查 Python、矩阵运算、概率和命令行基础。如果多项陌生，就先补足；PyTorch 与反向传播则可以边学边补。理解注意力与训练目标，再把公式对应到代码中的张量形状。"
+      }
+    ],
+    "sourceFile": "06-llm-debate.json",
+    "sourceIndex": 1,
+    "badge": "avatars/llm-theory-badge.png",
+    "badgeText": "天津大学 电子信息硕士"
+  },
+  {
+    "id": "llm-application",
+    "topic": "大模型学习",
+    "title": "大模型：先做应用，再补原理",
+    "sourceTitle": "学习AI大模型需要从哪里学起?",
+    "author": "阿黎在学习",
+    "avatar": "avatars/llm-application.jpg",
+    "votes": 2,
+    "comments": 0,
+    "url": "https://www.zhihu.com/question/11466644365/answer/2078803569885693320",
+    "toc": [
+      "先亲手调用一次 API",
+      "逐步做 RAG 与 Agent",
+      "最后回到模型内部"
+    ],
+    "sections": [
+      {
+        "heading": "前言",
+        "text": "这份路线从使用体验出发：先调用 API，理解对话与 token；再学习提示词、结构化输出、多轮记忆和工具调用。先让系统真正工作起来，通过具体问题积累对大模型的直觉。"
+      },
+      {
+        "heading": "原理放在后面",
+        "text": "在跑通检索增强和 Agent 之后，再回头学习 Transformer、预训练与 RLHF，用原理解释已经见过的现象。这条路线把原理放在工程实践之后，以已经见过的现象带动理解。"
+      }
+    ],
+    "sourceFile": "03-llm.json",
+    "sourceIndex": 6
+  },
+  {
+    "id": "research-foundation",
+    "topic": "科研入门",
+    "title": "科研入门：先补专业基础",
+    "sourceTitle": "大一本科生怎么入门科研?",
+    "author": "柯南的滑板",
+    "avatar": "avatars/research-foundation.jpg",
+    "votes": 2,
+    "comments": 0,
+    "url": "https://www.zhihu.com/question/2004338124432614991/answer/2081028174704534995",
+    "toc": [
+      "专业课提供起点",
+      "读摘要时查清术语",
+      "跟着课题做实验"
+    ],
+    "sections": [
+      {
+        "heading": "前言",
+        "text": "针对工科本科生，作者更强调专业基础。接触论文前，数学、物理或化学等课程应有一定积累；如果连表征仪器的原理、测试方法和结果含义都不清楚，阅读很容易停留在记住名词。"
+      },
+      {
+        "heading": "循序渐进",
+        "text": "先从摘要发现陌生概念，再查清它们。找到感兴趣的研究方向，跟随老师和研究生参与实验，把阅读与操作结合起来。作者反对闭门死记知识，也不认为只靠读论文就能一步跨入科研。"
+      }
+    ],
+    "sourceFile": "04-research.json",
+    "sourceIndex": 6,
+    "badge": "avatars/research-foundation-badge.png",
+    "badgeText": "合肥工业大学 材料工程硕士在读"
+  },
+  {
+    "id": "research-action",
+    "topic": "科研入门",
+    "title": "科研：别等知识学完才动手",
+    "sourceTitle": "研0科研小白快速入门checklist",
+    "author": "AJE 美国期刊专家",
+    "avatar": "avatars/research-action.jpg",
+    "votes": 0,
+    "comments": 1,
+    "url": "https://zhuanlan.zhihu.com/p/2078857670623340404",
+    "toc": [
+      "边研究边学习",
+      "围绕现有课题补知识",
+      "综述先求结构"
+    ],
+    "sections": [
+      {
+        "heading": "前言",
+        "text": "面向即将入学的研究生，这份建议反对等待“全部学完”再开始科研。作者主张跟着课题推进，缺什么补什么，同时考虑导师方向、实验条件与经费，让学习围绕实际研究任务展开。"
+      },
+      {
+        "heading": "文献怎么读",
+        "text": "先选一篇覆盖大领域的综述和一篇聚焦子方向的综述。第一遍看结构，第二遍找开放问题，确定方向后再细读相关部分，并沿引用继续检索。它强调行动驱动，不能理解成专业基础完全不需要。"
+      }
+    ],
+    "sourceFile": "04-research.json",
+    "sourceIndex": 3,
+    "badge": "avatars/research-action-badge.png",
+    "badgeText": "已认证机构号"
+  },
+  {
+    "id": "linear-strang",
+    "topic": "线性代数",
+    "title": "线代入门：先看 Strang",
+    "sourceTitle": "听说线性代数能够降维打击高中数学,是否有必要学?如何学?",
+    "author": "momo",
+    "avatar": "avatars/linear-strang.jpg",
+    "votes": 91,
+    "comments": 7,
+    "url": "https://www.zhihu.com/question/548143447/answer/2070436302219121077",
+    "toc": [
+      "先建立几何直觉",
+      "Strang 与 MIT 18.06",
+      "Axler 留作进阶"
+    ],
+    "sections": [
+      {
+        "heading": "前言",
+        "text": "在给中学生的自学建议里，作者把几何直觉放在起点。先理解线性组合、空间、矩阵和线性变换之间的联系，再进入严密的代数结构；不建议一开始就陷入繁琐的行列式计算。"
+      },
+      {
+        "heading": "教材选择",
+        "text": "原文优先推荐 Strang《线性代数导论》，并配合 MIT 18.06。Axler《线性代数应该这样学》则被放在进阶阶段：先有直觉，再加强抽象推导。这是一种明确的教材先后顺序。"
+      }
+    ],
+    "sourceFile": "05-linear-algebra.json",
+    "sourceIndex": 3
+  },
+  {
+    "id": "linear-axler",
+    "topic": "线性代数",
+    "title": "线代入门：Axler 也能当第一本",
+    "sourceTitle": "线性代数从矩阵和行列式入门真的是最恰当的学习方法吗?",
+    "author": "Bright Summer",
+    "avatar": "avatars/linear-axler.jpg",
+    "votes": 11,
+    "comments": 0,
+    "url": "https://www.zhihu.com/question/30668401/answer/1656698413",
+    "toc": [
+      "从向量空间出发",
+      "行列式不是主角",
+      "直接读 Done Right"
+    ],
+    "sections": [
+      {
+        "heading": "前言",
+        "text": "作者明确认为，《线性代数应该这样学》可以直接用于入门。线性代数应从向量空间和线性映射讲起；矩阵是表示方式，行列式是工具，过早强调工具容易遮住核心结构。"
+      },
+      {
+        "heading": "不同的判断",
+        "text": "作者认为 Done Right 本身易于接受，不必因为它弱化行列式就排除它。入门的重点不是先学更多计算技巧，而是直接理解向量空间，以及线性映射之间的运算与关系。"
+      }
+    ],
+    "sourceFile": "08-linear-abstraction.json",
+    "sourceIndex": 3
+  }
+]

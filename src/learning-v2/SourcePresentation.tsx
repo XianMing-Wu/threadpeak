@@ -3,14 +3,14 @@ import {useEffect,useState} from 'react'
 import {MarkdownMath} from '../lib/MarkdownMath'
 import {productRequest, type TaskView} from './client'
 import {READING_POLICY_VERSION} from '@threadpeak/contracts/reading-policy'
-import {hasMissingSourceExcerptMath} from '@threadpeak/contracts/source-image'
+import {hasMissingSourceExcerptMath,SOURCE_METADATA_VERSION} from '@threadpeak/contracts/source-image'
 type Presentation={id:string;data:{status:string;metadata:{avatar?:string;badge?:string;badgeIcon?:string;comments?:string[];commentCount?:number};reading?:{kind:'ai-formula';content:string}};job:TaskView|null}
 type PendingPresentation={controller:AbortController;users:number;task:Promise<Presentation>;settled:boolean}
 const pending=new Map<string,PendingPresentation>()
 let metadataQueue=Promise.resolve()
 function permitted(url?:string){try{const u=new URL(url!);return u.protocol==='https:'&&(u.hostname==='zhihu.com'||u.hostname.endsWith('.zhihu.com'))}catch{return false}}
 function subscribe(url:string,includeReading:boolean,retry=false,source?:string){
-  const key=`v${READING_POLICY_VERSION}:${localStorage.getItem('tp-server-workspace')??''}:${includeReading}:${url}:${source??''}`
+  const key=`v${READING_POLICY_VERSION}:${includeReading?0:SOURCE_METADATA_VERSION}:${localStorage.getItem('tp-server-workspace')??''}:${includeReading}:${url}:${source??''}`
   if(retry&&pending.get(key)?.settled)pending.delete(key)
   let entry=pending.get(key)
   if(!entry){

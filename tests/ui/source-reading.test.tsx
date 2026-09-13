@@ -2,12 +2,34 @@ import {afterEach,expect,test,vi} from 'vitest'
 import {cleanup,render,screen,waitFor,fireEvent} from '@testing-library/react'
 import {READING_POLICY_VERSION} from '@threadpeak/contracts/reading-policy'
 import {SourceReading} from '../../src/learning-v2/SourcePresentation'
+import {AuthorAvatar} from '../../src/learning-v2/AuthorPanels'
 import {productRequest} from '../../src/learning-v2/client'
 vi.mock('../../src/learning-v2/client',()=>({productRequest:vi.fn()}))
 const request=vi.mocked(productRequest)
 const missing='一个简单的求导例子是： ，计算  ，假设给定  \n先画出计算图。'
 const complete=(content:string)=>({id:'presentation',data:{status:'ready',metadata:{},reading:{kind:'ai-formula',content}},job:{status:'completed'}})
 afterEach(()=>{cleanup();request.mockReset()})
+test('author avatars use verified source metadata when the original record has no image',async()=>{
+ request.mockResolvedValue({id:'avatar',data:{status:'ready',metadata:{avatar:'https://pic1.zhimg.com/verified.jpg'}},job:{status:'completed'}})
+ render(<AuthorAvatar name="Tableau" sourceUrl="https://www.zhihu.com/answer/9007199254740993"/>)
+ await waitFor(()=>expect(screen.getByRole('img',{name:'Tableau的头像'}).getAttribute('src')).toBe('https://pic1.zhimg.com/verified.jpg'))
+ expect(request).toHaveBeenCalledWith('/api/v2/sources/presentation',expect.objectContaining({body:expect.objectContaining({includeReading:false})}))
+})
+test('unavailable author photos have an explicit neutral placeholder, never invented initials',async()=>{
+ request.mockResolvedValue({id:'no-avatar',data:{status:'ready',metadata:{}},job:{status:'completed'}})
+ render(<AuthorAvatar name="Gladius" sourceUrl="https://www.zhihu.com/answer/9007199254740994"/>)
+ await waitFor(()=>expect(screen.getByRole('img',{name:'Gladius的头像暂不可用'})).toBeTruthy())
+ expect(screen.queryByText('G')).toBeNull()
+})
+test('a broken supplied avatar can recover from verified source metadata',async()=>{
+ request.mockResolvedValue({id:'recovered-avatar',data:{status:'ready',metadata:{avatar:'https://pic1.zhimg.com/recovered.jpg'}},job:{status:'completed'}})
+ render(<AuthorAvatar name="作者" src="https://pic1.zhimg.com/broken.jpg" sourceUrl="https://www.zhihu.com/answer/9007199254740995"/>)
+ expect(request).not.toHaveBeenCalled()
+ fireEvent.error(screen.getByRole('img',{name:'作者的头像'}))
+ await waitFor(()=>expect(screen.getByRole('img',{name:'作者的头像'}).getAttribute('src')).toBe('https://pic1.zhimg.com/recovered.jpg'))
+ fireEvent.error(screen.getByRole('img',{name:'作者的头像'}))
+ expect(screen.getByRole('img',{name:'作者的头像暂不可用'})).toBeTruthy()
+})
 test('the reported autograd gap opens an independent reading and retains the original summary',async()=>{
  request.mockResolvedValue(complete('## 独立例子\n\n公式 $y=x^2$。'))
  const view=render(<SourceReading source={missing} url="https://zhuanlan.zhihu.com/p/qa-reading-1"/>)

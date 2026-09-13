@@ -2,6 +2,10 @@ import { fromMarkdown } from 'mdast-util-from-markdown'
 import type { RootContent, Definition } from 'mdast'
 import { renderMath, normalizeTex, decodeMathEncoding } from './math-normalize.ts'
 
+// Invalidate metadata-only lookups when exact source matching changes. Keep
+// completed AI reading resources on their separate reading-policy version.
+export const SOURCE_METADATA_VERSION = 3
+
 /** Images are untrusted source data, never HTML to inject into the document. */
 export function safeSourceImageUrl(value: string | undefined): string | undefined {
   if (!value || value.length > 8192 || /[\s\\\u0000-\u001f\u007f]/.test(value) || /%(?![\da-f]{2})/i.test(value)) return

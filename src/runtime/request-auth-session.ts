@@ -6,6 +6,10 @@ import { resolveAuthSession, type AuthSessionResolution } from '../resolve-auth-
 export const AUTH_START_URL = '/api/auth/zhihu/start'
 export const AUTH_SESSION_URL = '/api/auth/session'
 export const AUTH_LOGOUT_URL = '/api/auth/logout'
+export function oauthNotice(search:string):string {
+  const status=new URLSearchParams(search).get('oauth')
+  return status==='cancelled'?'已取消知乎授权，你可以重新登录或使用游客入口。':status==='busy'?'知乎暂时繁忙，请稍后重新连接。':status==='failed'?'知乎登录未完成，请重新尝试。':''
+}
 
 export type AuthStartResult =
   | { kind: 'redirect'; authorizeUrl: string }
@@ -25,10 +29,10 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
 export function isZhihuAuthorizeUrl(value: string, mode?: unknown, origin?: string): boolean {
   try {
     const url = new URL(value)
-    if(url.username||url.password)return false
+    if(url.username||url.password||url.hash)return false
     if(mode==='mock'&&origin){const local=new URL(origin);return ['localhost','127.0.0.1','[::1]'].includes(local.hostname)&&url.origin===local.origin&&url.pathname==='/api/auth/zhihu/callback'&&url.searchParams.get('authorization_code')?.startsWith('tp-demo.')===true}
     return url.protocol === 'https:'
-      && url.hostname === 'openapi.zhihu.com'
+      && url.origin === 'https://openapi.zhihu.com'
       && url.pathname === '/authorize'
   } catch {
     return false

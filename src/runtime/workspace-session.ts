@@ -5,7 +5,8 @@ export type WorkspaceSession = {
   provider: 'zhihu' | 'account' | null
   workspaceId: string
   capabilities: { zhihuMaterials: boolean }
-  profile?: { name?: string; demo?: boolean }
+  profile?: { name?: string; avatar?: string | null; demo?: boolean }
+  authorization?: { status: 'active' | 'expired' | 'unavailable'; expiresAt: number }
   demo?: boolean
 }
 let current: WorkspaceSession | null = null

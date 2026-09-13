@@ -24,6 +24,7 @@ vi.mock('../../src/learning-v2/client', () => ({
   ensureSession: vi.fn(async () => { throw Error('offline') }),
 }))
 vi.mock('../../src/runtime/request-auth-session', () => ({
+  oauthNotice: () => '',
   requestAuthSession: vi.fn(async () => ({ kind: 'unavailable', provider: null })),
   requestAuthStart: vi.fn(async () => ({ kind: 'unavailable', message: '未连接' })),
   requestAuthLogout: vi.fn(async () => {}),
@@ -172,6 +173,7 @@ test('account menu supports first-item focus, arrow navigation and Escape focus 
 })
 
 test('theme follows system until the user chooses and keeps the explicit choice on system changes', async () => {
+  location.hash = '#login'
   const setSystem = appearance({dark: true})
   render(<App/>)
   await screen.findByRole('button', {name: '切换夜间模式'})
@@ -187,6 +189,7 @@ test('theme follows system until the user chooses and keeps the explicit choice 
 })
 
 test('a saved light choice overrides a dark system preference', async () => {
+  location.hash = '#login'
   appearance({dark: true})
   localStorage.setItem('threadpeak-theme', 'light')
   render(<App/>)

@@ -4,7 +4,7 @@ import {readAuthorNetwork, canonicalContentUrl, safeZhihuUrl} from './authors-ne
 import {CommandError,digest,type DurableStore} from './store.ts'
 import type {DurableWorker,TaskContext} from './worker.ts'
 import type {ProductTools} from './tools.ts'
-import {hasMissingSourceExcerptMath} from '@threadpeak/contracts/source-image'
+import {hasMissingSourceExcerptMath,SOURCE_METADATA_VERSION} from '@threadpeak/contracts/source-image'
 import {READING_POLICY_VERSION} from '@threadpeak/contracts/reading-policy'
 import {prepareMarkdown} from '@threadpeak/contracts/markdown-source'
 import {validateAnswerMath} from './math-output.ts'
@@ -14,7 +14,14 @@ export function matchingSource<T extends {url:string}>(url:string,items:T[]){con
 export async function presentSource(ctx:TaskContext,tools:ProductTools){
   const {source}=ctx.job.input
   await ctx.progress('正在读取来源头像与公式')
-  const found=source.avatar?source:matchingSource(source.url,await tools.search(ctx,'source-metadata',source.title.replace(/\s*[-–]\s*知乎\s*$/,'')))
+  const query=source.title.replace(/\s*[-–]\s*知乎\s*$/,'')
+  let found=source.avatar?source:matchingSource(source.url,await tools.search(ctx,'source-metadata',query))
+  // A question title can rank other answers above the saved one. The author is
+  // only a search hint; the returned content URL still has to match exactly.
+  if(!found&&source.authorName){
+    const targeted=`${query} ${source.authorName}`
+    if(targeted.length<=200)found=matchingSource(source.url,await tools.search(ctx,'source-metadata-targeted',targeted))
+  }
   const metadata=found?Object.fromEntries(['avatar','badge','badgeIcon','likes','commentCount','editedAt','contentType','contentId','authorityLevel','rankingScore','comments'].filter(k=>found[k]!==undefined).map(k=>[k,found[k]])):{}
   // A presentation is additive. Never write into source.summary, a graph card, or an author's claims.
   let reading:undefined|{kind:'ai-formula';content:string}
@@ -36,7 +43,7 @@ export function registerSourcePresentation(app:FastifyInstance,store:DurableStor
     const network=await readAuthorNetwork(store.db,own)
     const source=matchingSource(url,network.authors.flatMap(a=>a.evidence))
     if(!source)throw new CommandError('NOT_FOUND',404)
-    const scope=digest({url:canonicalContentUrl(url),summary:source.summary,version:READING_POLICY_VERSION,includeReading})
+    const scope=digest({url:canonicalContentUrl(url),summary:source.summary,version:READING_POLICY_VERSION,includeReading,...(includeReading?{}:{metadataVersion:SOURCE_METADATA_VERSION})})
     const resource=await store.create(own,'source-presentation',scope,{status:'processing',url:source.url,sourceHash:digest(source.summary),metadata:{},source})
     const command=`source-presentation:${scope}`
     await store.enqueue(own,resource.id,'source.present',command,{source:resource.body.source,depth:'fast',includeReading})

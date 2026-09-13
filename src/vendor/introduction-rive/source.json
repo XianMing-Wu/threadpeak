@@ -1,0 +1,12 @@
+{
+  "runtime": "@rive-app/canvas-advanced",
+  "version": "2.42.0",
+  "source": "https://www.npmjs.com/package/@rive-app/canvas-advanced/v/2.42.0",
+  "license": "MIT",
+  "importedFrom": "User-provided local character modules",
+  "files": {
+    "LICENSE": "8a1efa755d19446b51a18e1c15f6308728da0b36283c4d38050698ad6954b69a",
+    "canvas_advanced.mjs": "aa2926fce8a1e968823f9ea2f3101e4b8cb3f55d2718c0970c9f52c0b5013076",
+    "rive.wasm": "8b48d33a20b89809228c8a4e27d8ed9a72c05c95de01c2eda816409349df2095"
+  }
+}

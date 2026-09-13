@@ -1,0 +1,288 @@
+{
+  "provenance": {
+    "source": "src/showcase/learnings.json",
+    "sha256": "4b500b9ed289885128f8cffe14542a2d3b356b77130bca7f81dbb6d3edfb0376",
+    "conceptId": "llm-application-concept-1",
+    "note": "Public showcase lesson; source summaries and original teaching text preserved. Markdown previews are selected/reformatted excerpts. Follow-up and author cards come from actual isolated product workflows."
+  },
+  "title": "消息角色：接通第一次模型对话",
+  "articles": [
+    {
+      "id": "4b4af40127f923e8fd6b5fe03a07bcbb",
+      "title": "大语言模型 API 入门——让 Python 和 GPT 对话 - 知乎",
+      "author": "luoxiansheng",
+      "avatar": "https://pic1.zhimg.com/50/v2-96b7eed2a052067225ea5cdaf3d09463_l.jpg?source=bbf6831d",
+      "url": "https://zhuanlan.zhihu.com/p/2078771037387466682?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+      "text": "第8篇：大语言模型 API 入门——让 Python 和 GPT 对话\n阶段二：AI/ML认知篇 | 预计阅读时间：30分钟 | 难度：⭐⭐\n📌 学习目标\n・理解什么是 API、API Key、Endpoint\n・学会申请密钥并安全保存\n・安装 openai 库，完成第一次真实的大模型调用\n・理解 messages 的三种角色：system / user / assistant\n・掌握常用参数和基础错误处理\n一、API 是什么？——大模型的\"点餐窗口\"\n你平时用 ChatGPT 是在网页里聊天。但 Agent 不能打开网页自己打字，它需要一种程序之间通信的方式，这就是 API（Application Programming Interface，应用程序接口）。\n类比： API 就像餐厅的点餐窗口——\n・你把菜单（请求）递进去\n・后厨做好菜（模型生成结果）\n・窗口把菜递出来（返回响应）\n一次 API 调用的完整流程\nAPI 地址叫 Endpoint（端点）。你可以把它理解成\"点餐窗口的具体位置\"。\n请求和响应都是 JSON——还记得第4篇说的吗？JSON 是 Agent 世界的普通话。\n二、准备工作：密钥、安装、环境变量\n1. 获取 API Key\n调用付费大模型 API 需要一把\"钥匙\"，用来标识你是谁、用了多少量：\n1.打开 platform.openai.com 并注册/登录\n2.进入 API Keys 页面\n3.点击 Create new secret key，复制生成的密钥\n密钥一般长这样：\n⚠️ 安全第一：\n・密钥等于你的\"钱袋钥匙\"，绝不能提交到 GitHub\n・不要把密钥直接写在代码文件里\n・推荐存到环境变量或本地 .env 文件\n・如果怀疑泄露，立刻在后台删除并重新生成\n2. 安装 openai 库\n先激活你的虚拟环境（第5篇学过），然后：\n3. 配置环境变量\nWindows PowerShell：\nmacOS / Linux：\n也可以用 .env 文件 + python-dotenv 管理：\n项目根目录创建 .env：\n在代码开头加载：\n小提示： 不只 OpenAI，很多大模型服务商（包括一些国产模型）都提供\"OpenAI 兼容接口\"。学会了这套写法，换模型通常只需要改 API Key、模型名和 Base URL。\n三、你的第一条真实消息\n新建 first_llm.py：\n运行：\n你将看到模型返回的自我介绍。",
+      "markdown": "### 从准备到第一次调用\n\n1. **找到接口** · 确认 Endpoint 与模型\n2. **配置密钥** · 从环境变量读取\n3. **组织消息** · 写明职责和问题\n4. **读取回复** · 接通第一轮对话"
+    },
+    {
+      "id": "b91f89c7433b7ce4e9e08e0902973b01",
+      "title": "如何用 Python 调用 OpenAI API? - 知乎",
+      "author": "大绵羊",
+      "avatar": "https://pica.zhimg.com/50/v2-fb96114007b96cdefc168bac672ed89a_l.jpg?source=bbf6831d",
+      "url": "https://www.zhihu.com/question/575983484/answer/2066669584233522398?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+      "text": "其核心交互规范包含以下几个要素：\n1. 基础请求信息与 Header\n・请求方式：POST\n・请求路径：/v1/chat/completions\n・Header 参数：\n ・Content-Type: application/json\n ・Authorization: Bearer <API_KEY>（即使是本地部署，通常也保留此字段或填任意字符串）\n2. 请求体格式（Request Body）\n发送给 API 的 JSON 数据，核心参数包含 model 和 messages 数组。\n{\n  \"model\": \"gpt-4o\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"你是一个严谨的助手。\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"请简述什么是 API。\"\n    }\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 500,\n  \"stream\": false\n}\n常见参数说明：\n・model (string): 调用的模型名称。\n・messages (array): 对话历史消息列表。每条消息包含：\n ・role: 角色类型，常见有 system（系统提示词）、user（用户）、assistant（模型回答）或 tool/function（函数调用结果）。\n ・content: 消息内容。\n・temperature (number): 采样温度，控制输出随机性（0~2 之间）。\n・max_tokens (integer): 单次回答允许生成的最大 token 数。\n・stream (boolean): 是否开启流式传输（打字机效果）。\n以上是OpenAI API数据接口的请求格式，响应结果分为 非流式 和 流式 两种。\n3. 非流式响应格式（Non-streaming Response）\n当 stream: false（默认）时，接口一次性返回完整的 JSON 结果。\n{\n  \"id\": \"chatcmpl-1234567890\",\n  \"object\": \"chat.completion\",\n  \"created\": 1710000000,\n  \"model\": \"gpt-4o\",\n  \"choices\": [",
+      "markdown": "### 一条消息，由角色与内容组成\n\n```json\n{\n  \"role\": \"user\",\n  \"content\": \"请简述什么是 API。\"\n}\n```\n\n把消息放进请求中的 `messages` 数组。"
+    },
+    {
+      "id": "fcaa79510d00451c65dfea18cd6ba683",
+      "title": "调用大模型API遇到报错怎么办?401/403/404/429/500 全面排查指南 - 知乎",
+      "author": "Token掘金室",
+      "avatar": "https://picx.zhimg.com/50/v2-9267da7e350c9c19dae6d8a787a48ec9_l.jpg?source=bbf6831d",
+      "url": "https://zhuanlan.zhihu.com/p/2078077977661813850?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+      "text": "调用大模型API遇到报错怎么办？401/403/404/429/500 全面排查指南\n大模型 API 调用报错了？本文覆盖 OpenAI、Anthropic Claude、DeepSeek 三大平台最常见的 HTTP 错误码：401、403、404、429、500、502、503、504，以及各平台的特殊错误（Anthropic 529）。每个错误码给出原因分析、排查步骤和可直接运行的代码示例。\n401 Unauthorized — 身份认证失败\n原因\n请求没有被服务器识别，最常见的原因就三个：Key 填错了、Key 传错位置了、Key 已经失效了。\n排查步骤\n1.确认 Key 值：把控制台里的 Key 复制出来，去掉前后空格/换行，直接比对前几个字符。代码里打日志时不要打印完整 Key，只打印前缀。\n2.确认请求头格式：\n・OpenAI / DeepSeek：Authorization: Bearer sk-xxx\n・Anthropic（Claude 原生）：x-api-key: sk-ant-xxx，同时必须带 anthropic-version: 2023-06-01\n・两者混用是 401 的高频踩坑点\n1.确认 Key 没被撤销：去控制台检查 Key 是否还在有效状态，是否有充值/订阅过期导致的隐性失效\n2.确认没有拿错平台的 Key：OpenAI 的 Key 不能调 Claude，Claude 的 Key 也不能调 OpenAI\n代码示例\n最小连通性测试（curl）：\n返回 200 说明 Key 本身没问题，问题在调用代码里。\nPython 最小请求：\n403 Forbidden — 认证通过，但没权限\n原因\nKey 是对的，认证通过了，但这个操作不被允许。可能原因：IP 不在白名单内、地区不在服务范围内、模型对当前账号不可用、组织/项目权限受限。\n排查步骤\n1.IP 白名单：某些企业账号配置了 IP 允许列表，如果请求 IP 变了（比如换网络/走代理/用云函数）就会 403\n2.地区限制：OpenAI 和 Anthropic 对部分国家/地区有访问限制，请求 IP 所在地区不在支持范围内会返回 403\n3.模型权限：部分模型（如 o1、o3、高端 Opus）需要更高的账号档位才能访问\n4.组织/项目限制：Key 绑定的 org/project 可能没有申请某个模型的访问权限\n5.反向代理问题：多层网关可能剥离或改写了认证头，导致请求到达 API 时权限信息丢失",
+      "markdown": "调用大模型API遇到报错怎么办？401/403/404/429/500 全面排查指南\n大模型 API 调用报错了？本文覆盖 OpenAI、Anthropic Claude、DeepSeek 三大平台最常见的 HTTP 错误码：401、403、404、429、500、502、503、504，以及各平台的特殊错误（Anthropic 529）。每个错误码给出原因分析、排查步骤和可直接运行的代码示例。\n401 Unauthorized — 身份认证失败\n原因\n请求没有被服务器识别，最常见的原因就三个：Key 填错了、Key 传错位置了、Key 已经失效了。\n排查步骤\n1.确认 Key 值：把控制台里的 Key 复制出来，去掉前后空格/换行，直接比对前几个字符。代码里打日志时不要打印完整 Key，只打印前缀。\n2.确认请求头格式：\n・OpenAI / DeepSeek：Authorization: Bearer sk-xxx\n・Anthropic（Claude 原生）：x-api-key: sk-ant-xxx，同时必须带 anthropic-version: 2023-06-01\n・两者混用是 401 的高频踩坑点\n1.确认 Key 没被撤销：去控制台检查 Key 是否还在有效状态，是否有充值/订阅过期导致的隐性失效\n2.确认没有拿错平台的 Key：OpenAI 的 Key 不能调 Claude，Claude 的 Key 也不能调 OpenAI\n代码示例\n最小连通性测试（curl）：\n返回 200 说明 Key 本身没问题，问题在调用代码里。\nPython 最小请求：\n403 Forbidden — 认证通过，但没权限\n原因\nKey 是对的，认证通过了，但这个操作不被允许。可能原因：IP 不在白名单内、地区不在服务范围内、模型对当前账号不可用、组织/项目权限受限。\n排查步骤\n1.IP 白名单：某些企业账号配置了 IP 允许列表，如果请求 IP 变了（比如换网络/走代理/用云函数）就会 403\n2.地区限制：OpenAI 和 Anthropic 对部分国家/地区有访问限制，请求 IP 所在地区不在支持范围内会返回 403\n3.模型权限：部分模型（如 o1、o3、高端 Opus）需要更高的账号档位才能访问\n4.组织/项目限制：Key 绑定的 org/project 可能没有申请某个模型的访问权限\n5.反向代理问题：多层网关可能剥离或改写了认证头，导致请求到达 API 时权限信息丢失"
+    },
+    {
+      "id": "b3365850817dd1343f5efe3799e451dd",
+      "title": "PHP 程序员的 Python 5 天速成指南 | Day 3:10 行代码接入 AI 大模型 - 知乎",
+      "author": "FireMan",
+      "avatar": "https://picx.zhimg.com/50/v2-dbb28b75c3435e421c6c2121ce475175_l.jpg?source=bbf6831d",
+      "url": "https://zhuanlan.zhihu.com/p/2060731609859544003?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+      "text": "⚠️ 注意 time.sleep(1)：API 通常有速率限制（比如每秒 3 次请求），批量调用时加个延迟避免被限流。\n练习 3：简易聊天机器人\n做一个终端里的聊天机器人，持续对话。\nCODE_BLOCK_15\n 🏆 三个练习做完，你已经掌握了大模型 API 的核心用法。 从单轮对话到多轮记忆，从文本生成到结构化输出，这些都是实际项目中的高频场景。\n八、错误处理与费用控制\n8.1 常见异常处理\nCODE_BLOCK_16\n常用异常速查：\n异常\t原因\t处理方式\nAuthenticationError\tAPI Key 无效\t检查密钥\nAPIConnectionError\t网络问题\t检查网络/重试\nRateLimitError\t请求太频繁\t加延迟/等待\nBadRequestError\t请求参数错误\t检查参数\nAPITimeoutError\t请求超时\t增加 timeout\n8.2 查看 token 用量\n调用大模型按 token 收费（1 个汉字大约 1-2 个 token）：\n省钱小技巧：\n・system prompt 不要写太长\n・控制回复长度：”回答不超过100字”\n・批量处理时加 time.sleep()\n・先在小模型上测试，效果好了再换大模型\n九、Day 3 知识速查\n操作\t代码\n安装 SDK\tpip install openai\n创建客户端\tOpenAI(api_key=\"...\", base_url=\"...\")\n发送消息\tclient.chat.completions.create(model, messages)\n获取回复\tresponse.choices[0].message.content\n设置人设\tmessages 里加 role: \"system\"\n多轮对话\t历史记录存在 list 里，每次传入\nJSON 输出\tresponse_format={\"type\": \"json_object\"}\n流式输出\t加 stream=True，for 遍历 chunk\n查看用量\tresponse.usage.total_tokens\n十、Day 3 自检清单\n・[ ] 能成功调用大模型 API 并获得回复\n・[ ] 理解 system / user / assistant 三种角色\n・[ ] 能实现多轮对话（历史记忆）\n・[ ] 能让 AI 返回 JSON 并解析\n・[ ] 了解流式输出的用法\n・[ ] 能处理常见异常（Key错误、网络错误、限流）",
+      "markdown": "### 常见异常，逐项定位\n\n| 异常 | 原因 | 排查方向 |\n| :--- | :--- | :--- |\n| 认证失败 | 密钥无效 | 检查密钥 |\n| 连接失败 | 网络异常 | 检查网络 |\n| 请求限流 | 频率过高 | 等待重试 |"
+    },
+    {
+      "id": "168f3758f439a66b6aff2a3972f5a23e",
+      "title": "一文看懂大模型核心参数调优用法与实战 - 知乎",
+      "author": "fanstuck",
+      "avatar": "https://pic1.zhimg.com/50/v2-646cb8cc89cdaff500c2fe8c74a606b1_l.jpg?source=bbf6831d",
+      "url": "https://zhuanlan.zhihu.com/p/1914001090879427638?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+      "text": "・model（模型）: 使用的模型名称。例如常用的对话模型有 \"gpt-3.5-turbo\" 或 \"gpt-4\" 等。GPT-4 通常在处理复杂任务上效果更好，但成本更高，而 GPT-3.5-Turbo 速度快、价格低。\n・messages（消息列表）: 多轮对话消息组成的数组。每个消息是一个字典，包含 role（角色）和 content（内容）。典型角色有：\n・\"system\"：系统角色消息，可用于设定对话的背景或规则，比如指示 AI 扮演某种身份。\n・\"user\"：用户消息，即用户提出的问题或输入。\n・\"assistant\"：助手（AI）消息，即此前模型产生的回答。 开始对话时通常提供一个 system 指令和用户提问，模型会根据这些生成 assistant 回复。随着对话进行，messages 列表会不断加入新的 user 和 assistant 消息，以维持上下文。\n・max_tokens（最大生成长度）: 控制模型输出的最长 Token 数。默认情况下，如果不设置，模型会尽可能长地生成直到达到模型上下文上限或遇到停止信号。设置此参数可以防止输出过长（从而控制成本），但若设得过小可能导致回答不完整。一般根据需求设置几十到上千不等。例如希望简短回答可设定如 max_tokens=100。\n・temperature（温度）: 控制生成文本的随机性，取值范围 0～2，默认值为 1。温度越高，回复越随机、富有创造力；温度越低，回复越稳健严谨、更加确定。比如 temperature=0 时，每次回答几乎相同，适合问答、代码等需要确定性的场景；temperature=0.7 时，回复会更丰富多样，适合创意写作等需要一定随机性的场景。\n・top_p（概率截断）: 又称 核采样，取值 0～1，默认值为 1。它控制模型考虑预测下一个词时累积概率的范围。当 top_p<1 时，模型仅从概率前 top_p 部分的词中采样，例如 top_p=0.1 意味着只考虑前10%概率质量的词。通常和 temperature 二选一调整，不需要同时修改这两个参数。在需要输出更符合常理语句时，可降低 top_p 来减少罕见词输出的可能性。\n・n（返回结果数量）: 一次请求生成多少个回复，默认 1。如果设置 n>1，接口会返回多个备选回复。适用于希望从多种应答中进行选择的场景，比如生成多种文案创意。但要注意 n 值越大，消耗的 Token 和费用近似线性增加（相当于做了多次生成）。\n・stream（流式输出）: 是否启用流式输出，默认 False。若设为 True，API 将逐步返回部分消息（类似打字机效果），适合实时应用。例如在聊天界面一点点显示回答。流模式下需在代码中迭代读取流响应。需要注意的是，开启流式并不改变最终内容或费用，但可以降低延迟、提升用户体验。\n・stop（停止标志）: 可以是字符串或字符串列表，表示生成过程中遇到该标志时就停止输出，不再继续生成。例如设置 stop=[\"\\n\\nHuman:\"] 可以在对话模型开始生成下一个 Human/user 提示时强制停止。合理使用 stop 有助于避免模型跑题或输出多余内容。默认情况下没有强制停止标志，模型会根据自身学习到的停止符（如系统消息或 max_tokens 耗尽）来结束。\n・presence_penalty（话题新颖度惩罚）: 数值范围 -2.0～2.0，默认 0。。正值会惩罚模型重复提及对话中已出现过的主题，提高引入新话题的倾向。换句话说，值越高，模型越倾向于不重复自己，鼓励拓展到新内容；负值则反之，会提高模型重复提及已有内容的概率。\n・frequency_penalty（频率惩罚）: 数值范围 -2.0～2.0，默认 0。正值会惩罚模型重复输出相同字词的频率。值越高，输出越不容易重复用词，以避免内容重复啰嗦；负值则可能使模型更倾向重复字词。比如在总结场景下可设置略高的频率惩罚以避免模型重复句子。在押韵诗歌等场景或需重复关键词时则可使用负值降低惩罚。\n・functions（列表，可选）：函数调用功能的描述列表。每个函数由 name、description、parameters 等定义，用于引导模型以函数格式输出。这是 ChatCompletion 新增的高级特性，可让模型按照指定函数的参数格式返回结构化数据。当提供此参数时，模型可能选择返回一个函数调用结果而非自然语言。\n・function_call（字符串或字典，可选）：指定函数调用方式。默认为 \"auto\" 让模型自行决定是否调用函数；可设为 \"none\" 强制禁止函数调用；或指定为某个函数名强制模型调用该函数。配合 functions 参数使用，用于更精细地控制模型输出格式（比如强制模型给出JSON调用某函数的参数）。\n・user（字符串，可选）：用于标识终端用户的唯一标识符。这个信息不会影响生成内容，但会在日志中记录，OpenAI 用它来监控滥用。对于多用户的应用，传递 user 参数有助于将请求与用户对应，以满足审计或安全需求。",
+      "markdown": "・model（模型）: 使用的模型名称。例如常用的对话模型有 \"gpt-3.5-turbo\" 或 \"gpt-4\" 等。GPT-4 通常在处理复杂任务上效果更好，但成本更高，而 GPT-3.5-Turbo 速度快、价格低。\n・messages（消息列表）: 多轮对话消息组成的数组。每个消息是一个字典，包含 role（角色）和 content（内容）。典型角色有：\n・\"system\"：系统角色消息，可用于设定对话的背景或规则，比如指示 AI 扮演某种身份。\n・\"user\"：用户消息，即用户提出的问题或输入。\n・\"assistant\"：助手（AI）消息，即此前模型产生的回答。 开始对话时通常提供一个 system 指令和用户提问，模型会根据这些生成 assistant 回复。随着对话进行，messages 列表会不断加入新的 user 和 assistant 消息，以维持上下文。\n・max_tokens（最大生成长度）: 控制模型输出的最长 Token 数。默认情况下，如果不设置，模型会尽可能长地生成直到达到模型上下文上限或遇到停止信号。设置此参数可以防止输出过长（从而控制成本），但若设得过小可能导致回答不完整。一般根据需求设置几十到上千不等。例如希望简短回答可设定如 max_tokens=100。\n・temperature（温度）: 控制生成文本的随机性，取值范围 0～2，默认值为 1。温度越高，回复越随机、富有创造力；温度越低，回复越稳健严谨、更加确定。比如 temperature=0 时，每次回答几乎相同，适合问答、代码等需要确定性的场景；temperature=0.7 时，回复会更丰富多样，适合创意写作等需要一定随机性的场景。\n・top_p（概率截断）: 又称 核采样，取值 0～1，默认值为 1。它控制模型考虑预测下一个词时累积概率的范围。当 top_p<1 时，模型仅从概率前 top_p 部分的词中采样，例如 top_p=0.1 意味着只考虑前10%概率质量的词。通常和 temperature 二选一调整，不需要同时修改这两个参数。在需要输出更符合常理语句时，可降低 top_p 来减少罕见词输出的可能性。\n・n（返回结果数量）: 一次请求生成多少个回复，默认 1。如果设置 n>1，接口会返回多个备选回复。适用于希望从多种应答中进行选择的场景，比如生成多种文案创意。但要注意 n 值越大，消耗的 Token 和费用近似线性增加（相当于做了多次生成）。\n・stream（流式输出）: 是否启用流式输出，默认 False。若设为 True，API 将逐步返回部分消息（类似打字机效果），适合实时应用。例如在聊天界面一点点显示回答。流模式下需在代码中迭代读取流响应。需要注意的是，开启流式并不改变最终内容或费用，但可以降低延迟、提升用户体验。\n・stop（停止标志）: 可以是字符串或字符串列表，表示生成过程中遇到该标志时就停止输出，不再继续生成。例如设置 stop=[\"\\n\\nHuman:\"] 可以在对话模型开始生成下一个 Human/user 提示时强制停止。合理使用 stop 有助于避免模型跑题或输出多余内容。默认情况下没有强制停止标志，模型会根据自身学习到的停止符（如系统消息或 max_tokens 耗尽）来结束。\n・presence_penalty（话题新颖度惩罚）: 数值范围 -2.0～2.0，默认 0。。正值会惩罚模型重复提及对话中已出现过的主题，提高引入新话题的倾向。换句话说，值越高，模型越倾向于不重复自己，鼓励拓展到新内容；负值则反之，会提高模型重复提及已有内容的概率。\n・frequency_penalty（频率惩罚）: 数值范围 -2.0～2.0，默认 0。正值会惩罚模型重复输出相同字词的频率。值越高，输出越不容易重复用词，以避免内容重复啰嗦；负值则可能使模型更倾向重复字词。比如在总结场景下可设置略高的频率惩罚以避免模型重复句子。在押韵诗歌等场景或需重复关键词时则可使用负值降低惩罚。\n・functions（列表，可选）：函数调用功能的描述列表。每个函数由 name、description、parameters 等定义，用于引导模型以函数格式输出。这是 ChatCompletion 新增的高级特性，可让模型按照指定函数的参数格式返回结构化数据。当提供此参数时，模型可能选择返回一个函数调用结果而非自然语言。\n・function_call（字符串或字典，可选）：指定函数调用方式。默认为 \"auto\" 让模型自行决定是否调用函数；可设为 \"none\" 强制禁止函数调用；或指定为某个函数名强制模型调用该函数。配合 functions 参数使用，用于更精细地控制模型输出格式（比如强制模型给出JSON调用某函数的参数）。\n・user（字符串，可选）：用于标识终端用户的唯一标识符。这个信息不会影响生成内容，但会在日志中记录，OpenAI 用它来监控滥用。对于多用户的应用，传递 user 参数有助于将请求与用户对应，以满足审计或安全需求。"
+    }
+  ],
+  "answers": [
+    {
+      "id": "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-0",
+      "title": "先接通同一个文档助手",
+      "text": "你已经会用 Python 调 HTTP 接口，这里不用重新学习网络编程。我们把新东西集中在一件事：给文档助手发出一组消息，得到一次模型回复。\n\n先用“请用一句话解释产品手册的用途”做连通性检查。此时还没有接入手册，模型的回复只证明调用成功，不能证明它知道你的产品。下面示例采用支持 Chat Completions 消息格式的接口；先在环境变量中配置完整接口地址、密钥和当前账号可用的模型名，再运行。\n\n```python\nimport json\nimport os\nimport urllib.request\n\nmessages = [\n    {\"role\": \"system\", \"content\": \"你是文档助手，回答简洁；不知道的信息要说明。\"},\n    {\"role\": \"user\", \"content\": \"请用一句话解释产品手册的用途。\"},\n]\npayload = {\"model\": os.environ[\"LLM_MODEL\"], \"messages\": messages}\nrequest = urllib.request.Request(\n    os.environ[\"LLM_API_URL\"],\n    data=json.dumps(payload).encode(\"utf-8\"),\n    headers={\n        \"Authorization\": \"Bearer \" + os.environ[\"LLM_API_KEY\"],\n        \"Content-Type\": \"application/json\",\n    },\n    method=\"POST\",\n)\nwith urllib.request.urlopen(request, timeout=30) as response:\n    result = json.load(response)\nreply = result[\"choices\"][0][\"message\"][\"content\"]\nif not isinstance(reply, str) or not reply.strip():\n    raise ValueError(\"这次响应没有可用的文本回复\")\nprint(reply)\n```\n\n这是本课自拟的最小请求示例。密钥从环境读取；分享代码或截图时不要带上请求头。不同接口支持的角色和返回结构需要按它的文档核对。",
+      "parents": [
+        "4b4af40127f923e8fd6b5fe03a07bcbb"
+      ],
+      "sources": [
+        "4b4af40127f923e8fd6b5fe03a07bcbb"
+      ],
+      "markdown": "你已经会用 Python 调 HTTP 接口，这里不用重新学习网络编程。我们把新东西集中在一件事：给文档助手发出一组消息，得到一次模型回复。\n\n先用“请用一句话解释产品手册的用途”做连通性检查。此时还没有接入手册，模型的回复只证明调用成功，不能证明它知道你的产品。下面示例采用支持 Chat Completions 消息格式的接口；先在环境变量中配置完整接口地址、密钥和当前账号可用的模型名，再运行。\n\n```python\nimport json\nimport os\nimport urllib.request\n\nmessages = [\n    {\"role\": \"system\", \"content\": \"你是文档助手，回答简洁；不知道的信息要说明。\"},\n    {\"role\": \"user\", \"content\": \"请用一句话解释产品手册的用途。\"},\n]\npayload = {\"model\": os.environ[\"LLM_MODEL\"], \"messages\": messages}\nrequest = urllib.request.Request(\n    os.environ[\"LLM_API_URL\"],\n    data=json.dumps(payload).encode(\"utf-8\"),\n    headers={\n        \"Authorization\": \"Bearer \" + os.environ[\"LLM_API_KEY\"],\n        \"Content-Type\": \"application/json\",\n    },\n    method=\"POST\",\n)\nwith urllib.request.urlopen(request, timeout=30) as response:\n    result = json.load(response)\nreply = result[\"choices\"][0][\"message\"][\"content\"]\nif not isinstance(reply, str) or not reply.strip():\n    raise ValueError(\"这次响应没有可用的文本回复\")\nprint(reply)\n```\n\n这是本课自拟的最小请求示例。密钥从环境读取；分享代码或截图时不要带上请求头。不同接口支持的角色和返回结构需要按它的文档核对。"
+    },
+    {
+      "id": "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-1",
+      "title": "消息角色告诉模型：谁在说什么",
+      "text": "继续看上面的同一个请求。system 放助手的长期职责和边界；user 放这一次要问的问题；assistant 放此前模型已经给出的回复。它们不是给文字换三个标签，而是在组织对话的来源与顺序。\n\n例如，把“请用一句话解释”改成“请分两步解释”，改变的是当前 user 消息；把助手的职责由“产品文档”换成别的领域，才是在改系统要求。清楚的系统要求可以引导回答，但不能保证事实准确，也不会自动给模型补上尚未提供的手册。",
+      "parents": [
+        "b91f89c7433b7ce4e9e08e0902973b01"
+      ],
+      "sources": [
+        "b91f89c7433b7ce4e9e08e0902973b01"
+      ],
+      "markdown": "继续看上面的同一个请求。system 放助手的长期职责和边界；user 放这一次要问的问题；assistant 放此前模型已经给出的回复。它们不是给文字换三个标签，而是在组织对话的来源与顺序。\n\n例如，把“请用一句话解释”改成“请分两步解释”，改变的是当前 user 消息；把助手的职责由“产品文档”换成别的领域，才是在改系统要求。清楚的系统要求可以引导回答，但不能保证事实准确，也不会自动给模型补上尚未提供的手册。"
+    },
+    {
+      "id": "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-2",
+      "title": "输出预算控制长度，参数不保证正确",
+      "text": "一次请求通常还有输出上限等参数。token 是模型分词后的单位，不能用“一个汉字等于一个 token”精确换算。先用接口实际返回的用量字段记录输入和输出，再讨论成本。\n\n采样参数是否支持、取值范围和输出上限字段都随接口及模型而异。即使支持较低的 temperature，它也不保证回答完全确定，更不保证事实正确。本节先保持已核实的默认参数，检查是否正常结束、正文是否完整；不要为了追求“稳定”随意堆参数。",
+      "parents": [
+        "168f3758f439a66b6aff2a3972f5a23e"
+      ],
+      "sources": [
+        "168f3758f439a66b6aff2a3972f5a23e"
+      ],
+      "markdown": "一次请求通常还有输出上限等参数。token 是模型分词后的单位，不能用“一个汉字等于一个 token”精确换算。先用接口实际返回的用量字段记录输入和输出，再讨论成本。\n\n采样参数是否支持、取值范围和输出上限字段都随接口及模型而异。即使支持较低的 temperature，它也不保证回答完全确定，更不保证事实正确。本节先保持已核实的默认参数，检查是否正常结束、正文是否完整；不要为了追求“稳定”随意堆参数。"
+    },
+    {
+      "id": "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-3",
+      "title": "失败先定位到哪一层",
+      "text": "如果没拿到回复，先区分“请求没成功”和“回答质量不好”。401 通常需要核对凭据；429 可能是速率或额度问题，要结合该接口返回的错误类型判断；网络超时则属于另一种失败。\n\n记录状态、错误类别、请求编号和耗时即可，避免把密钥或整份私人资料写进日志。限流时按服务返回的等待信息处理，不能假定 sleep 一秒就一定解决。这里先能识别失败并停止；具体的有界重试在工具错误处理单元展开。",
+      "parents": [
+        "fcaa79510d00451c65dfea18cd6ba683"
+      ],
+      "sources": [
+        "fcaa79510d00451c65dfea18cd6ba683"
+      ],
+      "markdown": "如果没拿到回复，先区分“请求没成功”和“回答质量不好”。401 通常需要核对凭据；429 可能是速率或额度问题，要结合该接口返回的错误类型判断；网络超时则属于另一种失败。\n\n记录状态、错误类别、请求编号和耗时即可，避免把密钥或整份私人资料写进日志。限流时按服务返回的等待信息处理，不能假定 sleep 一秒就一定解决。这里先能识别失败并停止；具体的有界重试在工具错误处理单元展开。"
+    },
+    {
+      "id": "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-4",
+      "title": "第二轮请求，要带上需要的历史",
+      "text": "假设模型已经回复了产品手册的用途，你接着问“那它能帮助售后人员做什么？”这里的“它”要靠历史消除歧义。对于本节这种无状态消息接口，把刚才的问答和新问题一起送入下一次请求：\n\n```python\nmessages.append({\"role\": \"assistant\", \"content\": reply})\nmessages.append({\"role\": \"user\", \"content\": \"那它能帮助售后人员做什么？\"})\n```\n\n再使用更新后的 messages 发出请求。模型看到的是你实际传入的上下文，不是自动读取程序里的所有变量。历史越来越长时，需要按实际窗口管理内容；这不等于每次都必须永久重发全部旧对话。",
+      "parents": [
+        "b3365850817dd1343f5efe3799e451dd"
+      ],
+      "sources": [
+        "b3365850817dd1343f5efe3799e451dd"
+      ],
+      "markdown": "### 先存回复，再加入追问\n\n```python\nmessages += [\n  {\"role\": \"assistant\", \"content\": reply},\n  {\"role\": \"user\", \"content\": question}\n]\n```\n\n让“那它呢？”能接住上一轮的问题。"
+    },
+    {
+      "id": "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-5",
+      "title": "用一次小检查，确认接口真的接通",
+      "text": "用同一个脚本完成首问与追问。你应该能指出每条消息是谁说的、响应正文从哪里读取，以及失败时程序停在哪一步。\n\n再把第二次请求中的历史暂时去掉，比较“它”是否还指向同一个对象。这个对照是观察上下文的作用，不要求两次模型措辞完全一致。接下来我们会把自然语言回复变成可校验的结构化字段，为工具调用准备输入。",
+      "parents": [
+        "b3365850817dd1343f5efe3799e451dd"
+      ],
+      "sources": [
+        "b3365850817dd1343f5efe3799e451dd"
+      ],
+      "markdown": "### 把“运行成功”变成看得懂\n\n1. **看消息** · 能指出每句话的角色\n2. **看结果** · 能找到返回的正文\n3. **看异常** · 能定位失败的步骤\n\n首问与追问，都用同一个脚本验证。"
+    }
+  ],
+  "followup": {
+    "capturedAt": "2026-09-12T14:52:42.131Z",
+    "kind": "learning.reply",
+    "provider": "configured-real-provider",
+    "depth": "fast",
+    "question": "为什么第二次请求，还要带上前面的问答？",
+    "selectedNode": "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-4",
+    "jobId": "153c9644-8e21-41b2-a33e-2e9f16d5a4fd",
+    "calls": 2,
+    "paragraphs": [
+      {
+        "id": "answer-153c9644-8e21-41b2-a33e-2e9f16d5a4fd-0",
+        "text": "模型接口每次请求是独立的：它不会记得你上一次发过什么，只根据这一次请求里实际传入的 `messages` 来生成回复。\n\n接着上一轮的例子。第一次你发的是：\n\n```python\nmessages = [\n    {\"role\": \"system\", \"content\": \"你是文档助手，回答简洁；不知道的信息要说明。\"},\n    {\"role\": \"user\", \"content\": \"请用一句话解释产品手册的用途。\"},\n]\n```\n\n模型回复了产品手册的用途，你在程序里把它存进了变量 `reply`。但下一次请求如果只发新问题：\n\n```python\nmessages = [\n    {\"role\": \"user\", \"content\": \"那它能帮助售后人员做什么？\"},\n]\n```\n\n模型收到的只有这一句话。这里的“它”没有前文可指，模型只能猜，或者直接问你在说什么。原因很简单：模型看到的是你这次真正传进请求里的内容，不是程序里的变量，也不是“它自动记得上次聊过”。\n\n所以第二次要显式把上一轮问答加进去，再发新问题：\n\n```python\nmessages.append({\"role\": \"assistant\", \"content\": reply})\nmessages.append({\"role\": \"user\", \"content\": \"那它能帮助售后人员做什么？\"})\n```\n\n现在这次请求里的 `messages` 按顺序包含：system 的职责、第一次 user 的问题、第一次 assistant 的回复、第二次 user 的新问题。模型看到的上下文完整了，“它”就能指向产品手册。使用更新后的 `messages` 发出请求，就得到第二轮回复。\n\n这样做只是为理解问题提供了条件，并不保证回答一定正确。助手仍可能理解偏、说错或需要你补充限定。这个动作的作用是让指代有依据，下一步仍要检查回答是否符合你的实际手册。",
+        "title": "为什么第二次请求要带上历史",
+        "origin": "articles",
+        "basisId": "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-4",
+        "parents": [
+          "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-4"
+        ],
+        "sources": [
+          "b3365850817dd1343f5efe3799e451dd"
+        ],
+        "markdown": "### 第二轮请求里，带了哪些内容？\n\n| 角色 | 这一次传入的内容 |\n| :--- | :--- |\n| system | 文档助手的职责 |\n| user | 前一轮的问题 |\n| assistant | 前一轮的回复 |\n| user | 当前的新问题 |"
+      },
+      {
+        "id": "answer-153c9644-8e21-41b2-a33e-2e9f16d5a4fd-1",
+        "text": "把历史放进 `messages`，本质上是“每次请求都带上这次需要的那部分上下文”。这和登录后的会话、服务器替你记住聊天是两回事。\n\n沿用同一个例子做对照：先把第二次请求里的 assistant 历史去掉，只留 system 和新问题，再发一次。你会看到“它”大概率变得含糊，或者模型反问；把历史加回来再发，通常才落到产品手册上。这个对照只用来观察上下文的作用，不要求两次措辞完全一致。\n\n历史越来越长时，要按接口的实际窗口管理内容，比如保留最近相关的几轮、把久远的旧对话压缩成摘要。这不等于每次都必须永久重发全部旧对话。具体能留多长取决于模型和接口支持的限制，需要按实际返回值核对，不能凭猜测。",
+        "title": "历史是本次请求的一部分，不是永久自动记忆",
+        "origin": "articles",
+        "basisId": "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-4",
+        "parents": [
+          "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-4"
+        ],
+        "sources": [
+          "b3365850817dd1343f5efe3799e451dd"
+        ],
+        "markdown": "### 需要的上下文，由这次请求带入\n\n> 传入历史，是为当前问题提供依据。\n> 不等于模型拥有永久记忆。\n\n保留相关的几轮，较远的内容整理为摘要。具体长度按接口的实际窗口管理。"
+      }
+    ]
+  },
+  "authorFollowup": {
+    "capturedAt": "2026-09-12T14:56:38.438Z",
+    "kind": "learning.author",
+    "question": "多轮对话的历史，是每次传入，还是交给服务端保存？想看看不同博主的具体做法和适用条件。",
+    "selectedNode": "answer-153c9644-8e21-41b2-a33e-2e9f16d5a4fd-0",
+    "jobId": "615fbaa9-7356-4cd4-8a58-af2cb2dee6c2",
+    "llmCalls": 2,
+    "zhihuCalls": 4,
+    "queries": [
+      "多轮对话历史 客户端维护 还是 服务端保存",
+      "Chat Completions 多轮对话 每次传入完整历史 messages",
+      "OpenAI API 对话记忆 无状态 实现方法",
+      "模型接口 会话持久化 response_id 上下文管理 区别"
+    ],
+    "paragraphs": [
+      {
+        "id": "author-615fbaa9-7356-4cd4-8a58-af2cb2dee6c2-0",
+        "text": "你第一轮告诉模型一个暗号「7-3-9」，第二轮问它「暗号是什么」，它一脸茫然，甚至煞有介事地编一个数字。这几乎是每个用过聊天机器人的都撞见过的瞬间。原因不复杂：忘不忘，取决于历史有没有被真正送进第二轮请求。而最危险的情况是你「以为送进去了」——客户端（发请求的那一方，比如你自己的程序）只发了新输入，请求照样成功、不报错，但上下文根本没进去，模型静默失忆。\n一、先认识调用模型的这件事\n调用一次大模型（LLM，Large Language Model，大语言模型；通过 API，Application Programming Interface，应用程序接口调用），本质上是把一段文本发给模型服务，模型返回一段补全文本。每一次请求都是独立的：服务端不记得你是谁，也不记得你上一句说了什么。一次多轮对话，就是许多次这样的独立请求拼起来的。所以唯一的问题变成：谁来负责把前面的历史带进后面的请求？三种主流接口给出了三种答案。\nChat Completions：历史就是你每次重发的数组\nChat Completions（聊天补全）是传统接口，OpenAI 风格。请求里一个 messages 数组就是全部对话历史——你说过什么、模型答过什么，都放在这个数组里，每次请求把它整体重发一遍。服务端不保存会话，这就是「无状态」：每次都是新客人。它简单直接，官方仍在维护，适合既有场景和简单场景。官方资料： Responses vs Chat Completions。\nResponses：多了两个「服务端记忆」开关\nResponses（响应式接口）是 OpenAI 2025-03 推出的新接口，消息是类型化条目——用户消息、助手消息各有明确类型。它新增了两个开关：store 开启后服务端理论上保存会话；previous_response_id 告诉服务端「接着上次那次回答继续」，这样第二轮只发新内容即可。默认仍然是无状态。2026-01 该规格开源为「Open Responses」（ 更新日志），2026-03 又扩展为 Agent 运行时——让模型能操作电脑环境（ 官方公告）。官方自报在 SWE-bench（一个让模型修复真实代码 bug 的公开测试集）上相对提升 3%、提示词缓存（相同前缀文本重复利用、少算钱少等待）利用率提升 40–80%——这是厂商自报数字，未经第三方验证。\nMessages：历史同样由客户端重放",
+        "title": "多轮对话为什么会失忆:LLM API 的记忆机制与一个静默的坑 - 知乎",
+        "author": {
+          "id": "author-ev-acd97c14ea01f980fe429e0ff47809cd",
+          "url": "https://zhuanlan.zhihu.com/p/2075967922607075434?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+          "name": "letsgetai",
+          "site": "zhuanlan.zhihu.com",
+          "likes": 2,
+          "avatar": "https://pica.zhimg.com/50/v2-a282b68a95c8296d48c936aa44f6fd5b_l.jpg?source=bbf6831d",
+          "editedAt": 1787729333,
+          "authorUrl": null,
+          "contentId": "5809577819016697421",
+          "expertise": "公开文章观点",
+          "evidenceId": "acd97c14ea01f980fe429e0ff47809cd",
+          "sourceKind": "zhihu",
+          "contentType": "Article",
+          "matchReason": "直接回答“谁负责把历史带进后面的请求”这个问题：区分了无状态的 Chat Completions（历史就是每次重发的 messages 数组）、用 store 与 previous_response_id 做服务端记忆的 Responses，以及 Messages 由客户端重放三种做法，并点出“以为送进去了其实没送”这种静默失忆的排查方向，帮助理解客户端的重发历史与服务端保存是两条不同的责任划分。",
+          "commentCount": 0,
+          "rankingScore": 1.7346692,
+          "coverageLimit": "以 OpenAI 系接口为主线，只给出三类接口的机制概览；对非 OpenAI 兼容平台是否支持服务端历史、状态保留多久没有展开。",
+          "authorityLevel": "4",
+          "authorSignature": "history-56-12"
+        },
+        "origin": "author",
+        "basisId": "answer-153c9644-8e21-41b2-a33e-2e9f16d5a4fd-0",
+        "parents": [
+          "answer-153c9644-8e21-41b2-a33e-2e9f16d5a4fd-0"
+        ],
+        "sources": [],
+        "markdown": "> 请求成功、不报错，\n> 不代表前面的历史也送进去了。\n\n检查第二轮实际发出的消息，确认“它”有前文可指。"
+      },
+      {
+        "id": "author-615fbaa9-7356-4cd4-8a58-af2cb2dee6c2-1",
+        "text": "// 第三轮对话的请求 payload：只有新消息\n{\n\"model\":\"gpt-4o\",\n\"input\":\"这本书适合初学者吗？\",\n\"previous_response_id\":\"resp_r2_xyz\"// 指向上一次响应\n}\n\n响应中会包含新的id，下一轮用它继续：\n\n{\n\"id\":\"resp_r3_abc\",// ← 下一轮用这个\n\"output\":[...]\n}\n\n特征：请求 payload 固定极小；天然支持分叉（同一个response_id可以派生出多条对话分支）；但数据存在 OpenAI/Azure 服务器，受隐私合规约束。\nMessages API（Anthropic Claude）\n谁管历史：你（客户端）\n与 Chat Completions API 类似，每次必须携带完整历史。但格式不同：system是独立的顶级字段，content是内容块数组（支持文本、图片、工具结果混合）。\n\n{\n\"model\":\"claude-opus-4-5\",\n\"system\":\"你是技术助手\",\n\"max_tokens\":1024,\n\"messages\":[\n{\"role\":\"user\",\"content\":\"我叫圣杰\"},\n{\"role\":\"assistant\",\"content\":\"你好，圣杰！\"},\n{\"role\":\"user\",\"content\":\"这本书适合初学者吗？\"}\n]\n}\n\n特征：与 Chat Completions 同属客户端管理；但max_tokens是必填项；工具结果回传格式使用role: \"user\"+ 内容块（而非role: \"tool\"）。\n国内主流模型的协议兼容情况\n在选择 API 协议之前，有必要先搞清楚你用的模型支持哪些协议。下表基于各厂商截至 2026 年 4 月的公开文档整理，后续能力可能变化，请以官方最新文档为准：\n结论一目了然：Chat Completions API 是覆盖面最广的事实标准；Responses API 目前只有 OpenAI/Azure 和 Qwen 支持（Qwen 是国内首家跟进的）；Messages API 是 Anthropic 私有协议，DeepSeek 提供了兼容端点。\n⚠️ 如果你的应用需要在国内模型和 OpenAI 之间切换，不要把 Responses API 的服务端历史管理作为核心依赖——Kimi、GLM 等均不支持。",
+        "title": ".NET+AI | Agent | MAF 会话历史存储全解析,从三大主流 AI API 讲起,不仅 Know What,而且讲清 Why and How - 知乎",
+        "author": {
+          "id": "author-ev-cbffcc49059093c82647861f85760af1",
+          "url": "https://zhuanlan.zhihu.com/p/2033103606249935720?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+          "name": "张善友",
+          "site": "zhuanlan.zhihu.com",
+          "likes": 1,
+          "avatar": "https://picx.zhimg.com/50/v2-54a5405f20bf65a415592346e1abc22d_l.jpg?source=bbf6831d",
+          "editedAt": 1777509674,
+          "authorUrl": null,
+          "contentId": "1609744207332535374",
+          "expertise": "公开文章观点",
+          "evidenceId": "cbffcc49059093c82647861f85760af1",
+          "sourceKind": "zhihu",
+          "contentType": "Article",
+          "matchReason": "补充了“适用条件”这一层：对比 Chat Completions、Responses、Anthropic Messages 三种接口下历史由谁管理，并给出国内主流模型的协议兼容情况，说明把服务端历史管理当作核心依赖在切换模型时的风险，便于判断不同做法各自适用的场景。",
+          "commentCount": 0,
+          "rankingScore": 1.1556413,
+          "coverageLimit": "兼容性表格是作者按截至某一时点的公开文档整理的，具体支持情况可能变化，需要以各厂商最新文档为准；对历史裁剪、摘要等长对话处理只提到要设上限。",
+          "authorityLevel": "2",
+          "authorSignature": "zhang-shan-you-54"
+        },
+        "origin": "author",
+        "basisId": "answer-153c9644-8e21-41b2-a33e-2e9f16d5a4fd-0",
+        "parents": [
+          "answer-153c9644-8e21-41b2-a33e-2e9f16d5a4fd-0"
+        ],
+        "sources": [],
+        "markdown": "| 管理方式 | 下一轮如何衔接 |\n| :--- | :--- |\n| 客户端维护 | 重新传入消息历史 |\n| 服务端维护 | 引用上一轮响应 |"
+      },
+      {
+        "id": "author-615fbaa9-7356-4cd4-8a58-af2cb2dee6c2-2",
+        "text": "Redis 适合短 TTL、高读写、可容忍独立分析落库的交互状态。需要注意 Key 设计、内存上限、热 Key、持久化策略、集群故障和大 Value。把整个会话序列化成一个巨大 JSON，更新方便但并发冲突和网络开销会随历史增长。\n关系数据库适合需要强审计、复杂查询和长期反馈分析的场景。可以拆成 session、turn、attempt、feedback 表，利用唯一约束和版本列保证一致性。代价是高频流式增量不适合逐 Token 写库，通常只在 completed 时保存完整结果。\n独立会话服务适合多个渠道共享会话、需要统一合规策略的大型平台。它会增加一次网络调用，以及部署、监控和故障处理成本，只有当多个业务确实共享同一状态时才值得拆分。\nInMemoryConsultationSessionStore 用于检查聚合规则、TTL、版本冲突和存储端口。多实例生产应在同一端口下增加 Redis 或数据库适配器，并在共享测试环境验证并发和过期行为。\n摘要和日志同样需要隐私控制\n摘要不是天然脱敏。用户问题可能包含手机号、订单号、身份证、地址或医疗信息。摘要若把这些内容重新组合并长期保存，风险不比原消息低。\n生产设计至少要明确：\n・哪些字段可以进入会话，哪些应在入口脱敏或拒绝；\n・原始 Turn、摘要、反馈和 Trace 各自保留多久；\n・模型 Provider 是否允许接收这些数据；\n・日志只记录稳定 ID 和低基数原因码，还是允许记录正文；\n・客服、研发和标注人员分别能访问哪些内容；\n・用户删除账号或提出数据删除请求时，哪些副本需要处理。\n不要把 conversationId、问题全文或摘要直接放进 Metric 标签。高基数会拖垮监控系统，正文还可能包含敏感数据。Metric 适合记录结果类型、失败码、是否重试和用例名称；具体内容通过受控 Trace 或审计存储查询。\n会话窗口与并发规则怎样暴露\n测试覆盖会话归属、Attempt 状态、重试血缘、反馈前置条件、TTL、裁剪摘要、Token 预算，以及历史会话和通过授权检查的知识片段是否进入各自的 Prompt 区段。\n多实例会话存储与网关行为仍需在目标环境验证。\n接入现有会话体系前的核对项\n1.会话归属于客户、员工、设备，还是多方协作空间？\n2.conversationId 是否可能暴露，服务是否每次重新验证归属？\n3.TTL 是固定、滑动，还是固定上限加滑动窗口？\n4.消息数、Token 和摘要分别允许多大？\n5.摘要能保存哪些信息，怎样避免把旧答案当事实？\n6.当前问题怎样结合历史，是否需要经过评测的 Query Rewrite？\n7.多实例更新使用 Redis Lua、数据库版本列，还是独立会话服务？\n8.流式取消、下游错误和服务重启后，PENDING Attempt 最终变成什么状态？\n9.原文、摘要、反馈、Trace 的隐私和保留策略是什么？",
+        "title": "23 多轮会话原理:短期状态、裁剪、总结和过期 - 知乎",
+        "author": {
+          "id": "author-ev-bf7ab7d8b67de2f723c8835496ef6ebb",
+          "url": "https://zhuanlan.zhihu.com/p/2072323309233082423?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+          "name": "好好用AI",
+          "site": "zhuanlan.zhihu.com",
+          "badge": "互联网行业 从业人员",
+          "likes": 0,
+          "avatar": "https://pic1.zhimg.com/50/v2-cbfdfafdec5e7ca8b294972ddf77d7fe_l.jpg?source=bbf6831d",
+          "editedAt": 1787458026,
+          "authorUrl": null,
+          "badgeIcon": "https://picx.zhimg.com/v2-2ddc5cc683982648f6f123616fb4ec09_l.png?source=32738c0c",
+          "contentId": "671000947367983884",
+          "expertise": "公开文章观点",
+          "evidenceId": "bf7ab7d8b67de2f723c8835496ef6ebb",
+          "sourceKind": "zhihu",
+          "contentType": "Article",
+          "matchReason": "从工程落地角度说明服务端保存并不等于问题消失：会话窗口、TTL、裁剪与摘要、多实例并发更新、隐私与保留策略都要自己设计，并列出接入已有会话体系前的核对项，可以帮助判断“交给服务端保存”在真实项目里还要补哪些条件。",
+          "commentCount": 0,
+          "rankingScore": 1.0480894,
+          "coverageLimit": "偏架构与合规层面的清单式讨论，没有给出某个具体接口的调用代码；也不针对初级项目的单机场景做取舍建议。",
+          "authorityLevel": "4",
+          "authorSignature": "ading.fun"
+        },
+        "origin": "author",
+        "basisId": "answer-153c9644-8e21-41b2-a33e-2e9f16d5a4fd-0",
+        "parents": [
+          "answer-153c9644-8e21-41b2-a33e-2e9f16d5a4fd-0"
+        ],
+        "sources": [],
+        "markdown": "- **归属** · 这是谁的会话\n- **保留** · 消息多久过期\n- **预算** · 历史如何裁剪\n- **并发** · 多次更新如何协调"
+      }
+    ]
+  }
+}

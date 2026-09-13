@@ -3,6 +3,15 @@
   header {
     X-Content-Type-Options nosniff
     Referrer-Policy strict-origin-when-cross-origin
+  }
+  @introduction path /introduction.html
+  header @introduction {
+    X-Frame-Options SAMEORIGIN
+    # Only this public presentation is embedded, by our own front door.
+    Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' blob:; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+  }
+  @workspace not path /introduction.html
+  header @workspace {
     X-Frame-Options DENY
     # GLTFLoader decodes embedded textures through local blob URLs (fetch/Image).
     Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
