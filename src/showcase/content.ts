@@ -2,7 +2,7 @@ import routeData from './routes.json' with {type:'json'}
 import type {LearningState} from '@threadpeak/contracts/learning-v2'
 type ConceptLearningSummary=NonNullable<LearningState['learningSummary']>
 
-export const SHOWCASE_VERSION = '2026-09-09.1'
+export const SHOWCASE_VERSION = '2026-09-13.2'
 export type ShowcaseConcept = {
   id:string; title:string; purpose:string; depth:string; check:string;
   learningSummary:ConceptLearningSummary; hasDispute:boolean;

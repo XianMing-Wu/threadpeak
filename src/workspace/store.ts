@@ -239,7 +239,7 @@ export function listReadOnlyConceptCards(knowledgeId: string): ConceptCard[] {
   if (!knowledge) return []
   const blueprint = blueprintOf(knowledge.routeId)
   const learned = knowledge.owner === 'example'
-    ? blueprintConcepts(blueprint)
+    ? blueprintConcepts(blueprint).filter(item => settledMineConceptIdsOf(knowledge).includes(item.id))
     : settledMineConceptIdsOf(knowledge).map((id) => (
       blueprintConcepts(blueprint).find((item) => item.id === id)
       ?? { id, title: conceptTitle(blueprint, id), summary: '', carrierId: '', carrierTitle: '' }

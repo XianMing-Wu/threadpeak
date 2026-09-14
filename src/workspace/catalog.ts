@@ -46,7 +46,8 @@ export function conceptAccent(blueprint: RouteBlueprint, conceptId: string) {
 export function exampleConceptGraphs(blueprint: RouteBlueprint): Record<string, KnowledgeGraph> {
   const graphs: Record<string, KnowledgeGraph> = {}
   for (const concept of blueprintConcepts(blueprint)) {
-    const lesson = showcaseLesson(blueprint.id, concept.id) ?? draftFirstLesson(blueprint, concept.id)
+    const lesson = showcaseLesson(blueprint.id, concept.id)
+    if (!lesson) continue
     graphs[concept.id] = graphFromLesson(concept.title, lesson, conceptAccent(blueprint, concept.id))
   }
   return graphs

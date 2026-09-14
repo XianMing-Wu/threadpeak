@@ -19,7 +19,7 @@ export const showcaseBlueprints:RouteBlueprint[]=showcaseRoutes.map(route=>({
 
 export function showcaseLesson(routeId:string,conceptId:string):FirstLesson|undefined {
   const c=showcaseRoute(routeId)?.concepts.find(c=>c.id===conceptId)
-  return c?{heading:c.purpose,paragraphs:c.sections.map(p=>p.text),placeholder:c.question}:undefined
+  return c?.sections.length?{heading:c.purpose,paragraphs:c.sections.map(p=>p.text),placeholder:c.question}:undefined
 }
 export function showcaseSourceCount(routeId:string){
   const route=showcaseRoute(routeId)
@@ -30,7 +30,7 @@ export function showcaseSourceCount(routeId:string){
 export function showcaseLearning(routeId:string,conceptId:string):LearningState|undefined {
   if(!showcaseRoute(routeId)?.concepts.some(c=>c.id===conceptId))return undefined
   const raw=(learningData as Record<string,unknown>)[conceptId]
-  if(!raw)throw new Error('SHOWCASE_LEARNING_MISSING')
+  if(!raw)return undefined
   const state=LearningSchema.parse(raw)
   if(state.routeId!==routeId||state.conceptId!==conceptId||!state.initialized)throw new Error('SHOWCASE_LEARNING_MISMATCH')
   validateTree(state.nodes)

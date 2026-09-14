@@ -15,11 +15,11 @@ test('the public video entry leaves the introduction iframe and does not create 
 
 test('video playback stays native and opt-in, with a shared static URL and recoverable media error',()=>{
   render(<DemoVideo/> )
-  const video=screen.getByLabelText('项目介绍 · 完整故事版') as HTMLVideoElement
+  const video=screen.getByLabelText('项目介绍 · 完整画面') as HTMLVideoElement
   expect(video.controls).toBe(true)
   expect(video.autoplay).toBe(false)
   expect(video.preload).toBe('none')
-  expect(video.getAttribute('src')).toBe('/media/project-demo-7c6edef79cfd.mp4')
+  expect(video.getAttribute('src')).toBe('/media/project-demo-e2c6800cdc4d.mp4')
   expect(video.hasAttribute('playsinline')).toBe(true)
   fireEvent.error(video)
   expect(screen.getByRole('alert').textContent).toContain('视频暂时未能加载')

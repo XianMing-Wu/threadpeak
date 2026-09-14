@@ -7,6 +7,10 @@ const sha=text=>createHash('sha256').update(text).digest('hex')
 const routes=await read('src/showcase/routes.json'),learnings=await read('src/showcase/learnings.json')
 const review=await read('qa/evidence/showcase/source-review.json'),sources={}
 for(const route of routes)for(const concept of route.concepts){
+ if(!learnings[concept.id]){
+  if(concept.sections.length)throw Error(`LEARNING_MISSING:${concept.id}`)
+  continue
+ }
  const state=LearningSchema.parse(learnings[concept.id]),audit=review.entries.find(e=>e.conceptId===concept.id)
  if(!state.initialized||state.routeId!==route.id||!audit)throw Error(`UNREVIEWED_LEARNING:${concept.id}`)
  validateTree(state.nodes)

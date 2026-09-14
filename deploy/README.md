@@ -87,7 +87,7 @@ Compose 使用独立 proxy 网段 172.30.84.0/24，Caddy 固定为 172.30.84.2�
 
 介绍页左侧“演示视频”打开独立 `video.html`，不需要登录，也不请求工作区 API。播放器使用原生 controls、playsinline、preload=none；进入介绍页不预加载视频，进入播放页先显示封面，用户点击后才加载正文。
 
-视频和封面放在 `public/media/`（Git 已忽略），当前代码引用 `project-demo-7c6edef79cfd.mp4` 与同名 `.jpg`。`npm run build` 将它们复制到 `dist/media/`；仅将提供的 MP4 和封面复制到此目录，不复制私有来源文件夹。MP4 采用 H.264/AAC，准备时用 `ffmpeg -i input.mp4 -map 0:v:0 -map 0:a:0 -c copy -movflags +faststart output.mp4` 前置索引，不重编码；更新视频时更换文件名与代码引用，避免浏览器长期缓存旧版本。
+视频和封面放在 `public/media/`（Git 已忽略），当前代码引用 `project-demo-e2c6800cdc4d.mp4` 与同名 `.jpg`。`npm run build` 将它们复制到 `dist/media/`；仅将提供的 MP4 和封面复制到此目录，不复制私有来源文件夹。当前 MP4 从用户提供的 MKV 无损母版转为 H.264（yuv420p、CRF 17）/AAC，保留 2160×1620、60 fps 和约 175 秒时长，使用 `-movflags +faststart` 前置索引。网页文件是兼容性转码，原始母版单独保留；更新视频时更换文件名与代码引用，避免浏览器长期缓存旧版本。
 
 1Panel 的站点静态 server 块内使用 [静态媒体配置](demo-video.nginx.conf)，沿用现有 root、TLS 和安全头。视频不经 Node API、代理缓存或服务端转码，每位用户使用同一个文件；关闭该路径访问日志，不随播放增长日志。Nginx 支持 Range/206，允许单区间请求，版本化资源可由浏览器长期缓存；文件不存在返回 404。Caddy 示例也有独立媒体 file_server，不把不存在的视频回退成 HTML。底层操作系统可能使用可回收的共享文件页缓存，这不是逐用户生成的磁盘文件。
 

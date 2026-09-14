@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {createHash} from 'node:crypto'
 import {showcaseRoutes,SHOWCASE_VERSION,homeSuggestions} from '../showcase/content.ts'
-import {showcaseBlueprints,showcaseLearning,showcaseSources} from '../showcase/catalog.ts'
+import {showcaseBlueprints,showcaseLearning,showcaseLesson,showcaseSources} from '../showcase/catalog.ts'
 import {buildPathDocument} from '../pathDocument.ts'
 import {validateTree,LearningSchema} from '@threadpeak/contracts/learning-v2'
 import {paragraphsMarkdown} from '@threadpeak/contracts/learning-markdown'
@@ -27,9 +27,9 @@ const goals=[
 test('six exact homepage goals and three fully run example scenarios share one catalog',()=>{
  assert.deepEqual(homeSuggestions.map(s=>s.prompt),goals)
  assert.deepEqual(homeSuggestions.map(s=>s.label),goals)
- assert.deepEqual(showcaseRoutes.map(r=>r.prompt),[goals[0],goals[5],goals[4]])
- assert.equal(showcaseRoutes.flatMap(r=>r.concepts).length,23)
- assert.equal(workflows.routes.length,3);assert.equal(workflows.learnings.length,23)
+ assert.deepEqual(showcaseRoutes.map(r=>r.id),['financial-decisions','photography','llm-application'])
+ assert.equal(showcaseRoutes.flatMap(r=>r.concepts).length,44)
+ assert.equal(workflows.routes.length,3);assert.equal(workflows.learnings.length,9)
  for(const w of workflows.learnings){assert.equal(w.initialized,true);assert.equal(w.job,'completed');assert.ok(w.llmCalls>=3);assert.ok(w.zhihuCalls>=2);assert.ok(w.maximumConcurrentZhihu<=2)}
  for(const r of showcaseRoutes){
   assert.ok(r.interviews.length>=2&&r.interviews.length<=4)
@@ -41,11 +41,11 @@ test('six exact homepage goals and three fully run example scenarios share one c
 })
 
 test('every selected source retains its real search summary and original identity',()=>{
- assert.equal(review.conceptCount,23)
- for(const c of showcaseRoutes.flatMap(r=>r.concepts)){
+ assert.equal(review.conceptCount,9)
+ for(const c of showcaseRoutes.flatMap(r=>r.concepts.slice(0,3))){
   const audit=review.entries.find(e=>e.conceptId===c.id)
   assert.ok(audit?.queries.length>=2&&audit.rejectionReason,c.id)
-  assert.ok(audit.realSteps.some(s=>s.startsWith('step-L-answer_compose')))
+  assert.ok(audit.realSteps.some(s=>s.startsWith('L-answer:compose')))
   const articles=showcaseSources[c.id];assert.equal(articles.length,audit.selected.length)
   for(const a of articles){
    const proof=audit.selected.find(s=>s.id===a.id)
@@ -57,8 +57,10 @@ test('every selected source retains its real search summary and original identit
  }
 })
 
-for(const route of showcaseRoutes)test(`${route.id}: every concept opens a complete, goal-aligned learning tree`,()=>{
- for(const c of route.concepts){
+for(const route of showcaseRoutes)test(`${route.id}: only its first three concepts open complete, goal-aligned learning trees`,()=>{
+ assert.equal(route.featuredConceptId,route.concepts[0].id)
+ for(const c of route.concepts.slice(3)){assert.equal(showcaseLearning(route.id,c.id),undefined);assert.equal(showcaseLesson(route.id,c.id),undefined);assert.deepEqual(c.sections,[]);assert.equal(showcaseSources[c.id],undefined)}
+ for(const c of route.concepts.slice(0,3)){
   const s=showcaseLearning(route.id,c.id)
   assert.doesNotThrow(()=>LearningSchema.parse(s));assert.doesNotThrow(()=>validateTree(s.nodes))
   assert.equal(s.goalContext.rawGoal,route.prompt)
@@ -101,26 +103,21 @@ test('every route has a real parallel split and all-required join accepted by th
  assert.equal(resolvePath3DView({routeId:'missing'}).kind,'unavailable')
 })
 
-test('three representative concepts include a real follow-up and distinct author cards',()=>{
- for(const r of showcaseRoutes){
-  const s=showcaseLearning(r.id,r.featuredConceptId),messages=s.conversations.flatMap(c=>c.messages)
-  assert.ok(messages.filter(m=>m.role==='user').length>=3)
-  const authors=s.nodes.filter(n=>n.author),audit=review.entries.find(e=>e.conceptId===s.conceptId)
-  assert.ok(authors.length>=1&&authors.length<=3,r.id)
-  assert.equal(new Set(authors.map(n=>n.id)).size,authors.length)
-  assert.equal(new Set(authors.map(n=>n.author.id)).size,authors.length)
-  for(const n of authors){
-   const proof=audit.authorCards.find(a=>a.id===n.id)
-   assert.equal(sha(n.text),proof.summarySha256)
-   assert.equal(n.author.evidenceId,proof.evidenceId)
-   assert.ok(n.author.matchReason&&n.author.coverageLimit)
-  }
+test('examples contain exactly one initial exchange and no manufactured follow-ups or author relationships',()=>{
+ for(const r of showcaseRoutes)for(const c of r.concepts.slice(0,3)){
+  const state=showcaseLearning(r.id,c.id)
+  assert.equal(state.conversations.length,1)
+  assert.deepEqual(state.conversations[0].messages.map(m=>m.role),['user','assistant'])
+  assert.deepEqual(state.conversations[0].messages[1].paragraphs,state.initialAnswer)
+  assert.ok(state.nodes.every(n=>!n.author))
+  const paragraphs=new Set(state.initialAnswer.map(p=>p.id))
+  assert.ok(state.nodes.filter(n=>!['root','article'].includes(n.type)).every(n=>paragraphs.has(n.id)))
  }
 })
 
 test('teaching formulas render and complete program samples stay in code fences',()=>{
  let formulas=0,code=0
- for(const r of showcaseRoutes)for(const c of r.concepts){
+ for(const r of showcaseRoutes)for(const c of r.concepts.slice(0,3)){
   const s=showcaseLearning(r.id,c.id)
   for(const p of s.conversations.flatMap(c=>c.messages).flatMap(m=>m.paragraphs??[]).filter(p=>!p.author)){
    const source=p.text,prepared=prepareMarkdown(source)
@@ -133,5 +130,5 @@ test('teaching formulas render and complete program samples stay in code fences'
    }
   }
  }
- assert.ok(formulas>0);assert.ok(code>=4)
+ assert.ok(formulas>0);assert.ok(code>=1)
 })

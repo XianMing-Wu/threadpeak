@@ -34,7 +34,7 @@ try{
  // The actual homepage carousel handles keyboard entry into the featured concept.
  await evaluate('document.querySelector(".home-libraries .cf-root").focus()');await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});await until('document.querySelector(".lp-example-note")');report.checks.push('homepage carousel keyboard Enter opens a real prepared learning workspace')
  for(const route of showcaseRoutes){
-  for(const concept of route.concepts){
+  for(const concept of route.concepts.slice(0,3)){
    await evaluate(`import(${navModule}).then(n=>n.openConceptKnowledge(${JSON.stringify('knowledge-'+route.id)},${JSON.stringify(concept.id)}))`)
    await until(`document.querySelector('.lp-title-stack h1')?.textContent===${JSON.stringify(concept.title)}`)
    const expected=showcaseLearning(route.id,concept.id);await pause(120)
@@ -50,7 +50,7 @@ try{
    }
   }
  }
- report.checks.push('all 23 concepts open; tree node counts and source links match complete states; independent author cards; representative documents render')
+ report.checks.push('all 9 prepared concepts open; tree node counts and source links match complete states; no extra author cards; representative documents render')
  for(const route of showcaseRoutes){
   await evaluate(`import(${navModule}).then(n=>n.openRoute(${JSON.stringify(route.id)}))`)
   await until(`document.querySelector('.path3d-title')?.textContent===${JSON.stringify(route.title)}`)
