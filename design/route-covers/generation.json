@@ -1,16 +1,16 @@
 {
   "generator": "built-in image_gen.imagegen",
   "referenceImages": [
-    "/Users/wxm/project/FullStack/学习理念/知乎项目/看山三视图/正面-白底无阴影.png",
-    "/Users/wxm/project/FullStack/学习理念/知乎项目/看山三视图/侧面-白底无阴影.png",
-    "/Users/wxm/project/FullStack/学习理念/知乎项目/看山三视图/右视图-白底无阴影.png",
-    "/Users/wxm/project/FullStack/学习理念/知乎项目/看山三视图/背面-白底无阴影.png"
+    "正面-白底无阴影.png",
+    "侧面-白底无阴影.png",
+    "右视图-白底无阴影.png",
+    "背面-白底无阴影.png"
   ],
   "assets": [
     {
       "id": "01-trail",
       "title": "循径入山",
-      "sourcePath": "/Users/wxm/.codex/generated_images/01a0749e-ecda-7652-9644-99db3f31700f/exec-a37703a5-3433-4b57-8dd7-e8b7dac7fb5c.png",
+      "sourcePath": "exec-a37703a5-3433-4b57-8dd7-e8b7dac7fb5c.png",
       "originalPrompt": "Create ONE polished landscape 3:2 image for a premium Chinese learning app route cover, no text or letters or logos anywhere. Faithfully use the exact Liu Kanshan mascot in the attached reference: white rounded smooth pear-shaped body, two pointed ears, huge black spherical nose, tiny oval black eyes to the sides, thin black arms and black legs and round feet. Do not redesign its face or species. Tiny full-body mascot participating in a sophisticated miniature sculptural landscape, occupy only 15-22% of image. Editorial 3D still life, matte porcelain and paper, elegant tactile materials, soft daylight from upper left, physically grounded diagonal shadows, beautiful deliberate composition and atmospheric depth. Predominantly ivory white, muted pale blue, slate teal, restrained warm sand accents. No pink, no purple, no oil paint, no photoreal human, no shiny plastic. Keep most foreground simple, broad landscape forms with detail focused in right half, entire scene safely within frame for cover crop. Consistent high-end art direction. SCENE: A winding teal ribbon footpath over stepped white limestone hills, mascot standing on a lookout with a tiny rolled map, pale blue distant mountain contours, learning begins with curiosity.",
       "correctionPrompt": "Create ONE polished landscape 3:2 image for a premium Chinese learning app route cover, no text or letters or logos anywhere. Faithfully use the exact Liu Kanshan mascot in the attached reference: white rounded smooth pear-shaped body, two pointed ears, huge black spherical nose, tiny oval black eyes to the sides, thin black arms and black legs and round feet. Do not redesign its face or species. Tiny full-body mascot participating in a sophisticated miniature sculptural landscape, occupy only 15-22% of image. Editorial 3D still life, matte porcelain and paper, elegant tactile materials, soft daylight from upper left, physically grounded diagonal shadows, beautiful deliberate composition and atmospheric depth. Predominantly ivory white, muted pale blue, slate teal, restrained warm sand accents. No pink, no purple, no oil paint, no photoreal human, no shiny plastic. Keep most foreground simple, broad landscape forms with detail focused in right half, entire scene safely within frame for cover crop. Consistent high-end art direction. SCENE: A winding teal ribbon footpath over stepped white limestone hills, pale blue distant mountain contours, one teal sculptural tree. A SINGLE mascot stands at the lookout facing the camera, exactly like the FRONT reference: both arms relaxed straight down on the two sides, both hands EMPTY, two separate black feet flat on the ground. No map, no book, no props touching its body. Make mascot larger, about 22% of frame height, for clear anatomy.  STRICT CHARACTER ANATOMY: The four reference pictures are four views of the SAME one mascot, not four characters. Render exactly ONE mascot. Exactly TWO black arms total, each with ONE hand, exactly TWO black legs with ONE foot each. One single small WHITE round tail at back. NO black tail, NO hanging extra black limb behind the body. If either hand holds a prop, that hand's arm bends from its shoulder to the prop and there must NOT also be a relaxed hanging arm on that same side. Prefer a simple relaxed upright pose with both arms at sides, holding no object, objects sitting on the ground or table. Keep side profile long white muzzle with black nose cap as the side reference; front view huge round black nose, two ears, two tiny eyes. Leg and arm joints must attach logically once on each side. Preserve original face proportions, do not turn into a generic dog.",
       "reviewStatus": "reviewed",
@@ -20,12 +20,13 @@
       "width": 1536,
       "height": 1024,
       "sha256": "e67474a2a8045011235acab1f33aa5be83dfe1dd946541a82c99005db3b30800",
-      "webBytes": 202078
+      "webBytes": 202078,
+      "originalSha256": "e67474a2a8045011235acab1f33aa5be83dfe1dd946541a82c99005db3b30800"
     },
     {
       "id": "02-library",
       "title": "云间书房",
-      "sourcePath": "/Users/wxm/.codex/generated_images/01a0749e-ecda-7652-9644-99db3f31700f/exec-5714c9cc-a7ff-4879-bca5-fa70181ba1c6.png",
+      "sourcePath": "exec-5714c9cc-a7ff-4879-bca5-fa70181ba1c6.png",
       "originalPrompt": "Create ONE polished landscape 3:2 image for a premium Chinese learning app route cover, no text or letters or logos anywhere. Faithfully use the exact Liu Kanshan mascot in the attached reference: white rounded smooth pear-shaped body, two pointed ears, huge black spherical nose, tiny oval black eyes to the sides, thin black arms and black legs and round feet. Do not redesign its face or species. Tiny full-body mascot participating in a sophisticated miniature sculptural landscape, occupy only 15-22% of image. Editorial 3D still life, matte porcelain and paper, elegant tactile materials, soft daylight from upper left, physically grounded diagonal shadows, beautiful deliberate composition and atmospheric depth. Predominantly ivory white, muted pale blue, slate teal, restrained warm sand accents. No pink, no purple, no oil paint, no photoreal human, no shiny plastic. Keep most foreground simple, broad landscape forms with detail focused in right half, entire scene safely within frame for cover crop. Consistent high-end art direction. SCENE: An open-air sculptural library: oversized ivory books form terraces and a curving staircase, mascot sitting reading a small teal book, a single leafy sprig and sunlit arches, quiet intellectual sanctuary.",
       "correctionPrompt": null,
       "reviewStatus": "reviewed",
@@ -35,12 +36,13 @@
       "width": 1536,
       "height": 1024,
       "sha256": "4c928ed3b7417b906249bf6380af04cffc2c7fb997295e6dbd10d0144697b032",
-      "webBytes": 148486
+      "webBytes": 148486,
+      "originalSha256": "4c928ed3b7417b906249bf6380af04cffc2c7fb997295e6dbd10d0144697b032"
     },
     {
       "id": "03-vectors",
       "title": "向量花园",
-      "sourcePath": "/Users/wxm/.codex/generated_images/01a0749e-ecda-7652-9644-99db3f31700f/exec-63d5f166-5440-40d1-b3b8-20b878617368.png",
+      "sourcePath": "exec-63d5f166-5440-40d1-b3b8-20b878617368.png",
       "originalPrompt": "Create ONE polished landscape 3:2 image for a premium Chinese learning app route cover, no text or letters or logos anywhere. Faithfully use the exact Liu Kanshan mascot in the attached reference: white rounded smooth pear-shaped body, two pointed ears, huge black spherical nose, tiny oval black eyes to the sides, thin black arms and black legs and round feet. Do not redesign its face or species. Tiny full-body mascot participating in a sophisticated miniature sculptural landscape, occupy only 15-22% of image. Editorial 3D still life, matte porcelain and paper, elegant tactile materials, soft daylight from upper left, physically grounded diagonal shadows, beautiful deliberate composition and atmospheric depth. Predominantly ivory white, muted pale blue, slate teal, restrained warm sand accents. No pink, no purple, no oil paint, no photoreal human, no shiny plastic. Keep most foreground simple, broad landscape forms with detail focused in right half, entire scene safely within frame for cover crop. Consistent high-end art direction. SCENE: A beautiful abstract vector garden: three slender blue and teal arrows rise from a grid of ivory plinths, mascot arranging geometric wooden blocks, subtle fine coordinate lines on floor, playful mathematical clarity.",
       "correctionPrompt": "Edit the FIRST image only. The next FOUR images are exact front, left, right and rear anatomy references of the SAME mascot. Preserve the entire beautiful landscape, lighting, palette, camera framing, crop and scene composition exactly. Correct only the mascot: remove ALL duplicated extra black limbs and the held map/block. Give it a simple relaxed standing pose with exactly two arms hanging naturally down at its two sides and exactly two feet planted on the ground. Both hands empty. Keep a small round WHITE tail at back only if visible; any dangling black appendage behind the body must be removed. Preserve the actual character's elongated white muzzle with large black nose cap and correct body proportions from references. Do not add extra characters.  STRICT CHARACTER ANATOMY: The four reference pictures are four views of the SAME one mascot, not four characters. Render exactly ONE mascot. Exactly TWO black arms total, each with ONE hand, exactly TWO black legs with ONE foot each. One single small WHITE round tail at back. NO black tail, NO hanging extra black limb behind the body. If either hand holds a prop, that hand's arm bends from its shoulder to the prop and there must NOT also be a relaxed hanging arm on that same side. Prefer a simple relaxed upright pose with both arms at sides, holding no object, objects sitting on the ground or table. Keep side profile long white muzzle with black nose cap as the side reference; front view huge round black nose, two ears, two tiny eyes. Leg and arm joints must attach logically once on each side. Preserve original face proportions, do not turn into a generic dog.",
       "reviewStatus": "reviewed",
@@ -50,12 +52,13 @@
       "width": 1536,
       "height": 1024,
       "sha256": "a12946ad116516326b78caa98cc0c3efb747e78477ff661e6a32a832ff4f601c",
-      "webBytes": 85612
+      "webBytes": 85612,
+      "originalSha256": "a12946ad116516326b78caa98cc0c3efb747e78477ff661e6a32a832ff4f601c"
     },
     {
       "id": "04-observatory",
       "title": "星空观测",
-      "sourcePath": "/Users/wxm/.codex/generated_images/01a0749e-ecda-7652-9644-99db3f31700f/exec-5cdba71f-3662-4fb1-ad92-88436cbfc701.png",
+      "sourcePath": "exec-5cdba71f-3662-4fb1-ad92-88436cbfc701.png",
       "originalPrompt": "Create ONE polished landscape 3:2 image for a premium Chinese learning app route cover, no text or letters or logos anywhere. Faithfully use the exact Liu Kanshan mascot in the attached reference: white rounded smooth pear-shaped body, two pointed ears, huge black spherical nose, tiny oval black eyes to the sides, thin black arms and black legs and round feet. Do not redesign its face or species. Tiny full-body mascot participating in a sophisticated miniature sculptural landscape, occupy only 15-22% of image. Editorial 3D still life, matte porcelain and paper, elegant tactile materials, soft daylight from upper left, physically grounded diagonal shadows, beautiful deliberate composition and atmospheric depth. Predominantly ivory white, muted pale blue, slate teal, restrained warm sand accents. No pink, no purple, no oil paint, no photoreal human, no shiny plastic. Keep most foreground simple, broad landscape forms with detail focused in right half, entire scene safely within frame for cover crop. Consistent high-end art direction. SCENE: An ivory circular observatory on a floating disk with a small brass telescope, mascot looking through it, pale blue celestial spheres on elegant thin orbital rings, softly lit distant moon, exploration.",
       "correctionPrompt": "Create ONE polished landscape 3:2 image for a premium Chinese learning app route cover, no text or letters or logos anywhere. Faithfully use the exact Liu Kanshan mascot in the attached reference: white rounded smooth pear-shaped body, two pointed ears, huge black spherical nose, tiny oval black eyes to the sides, thin black arms and black legs and round feet. Do not redesign its face or species. Tiny full-body mascot participating in a sophisticated miniature sculptural landscape, occupy only 15-22% of image. Editorial 3D still life, matte porcelain and paper, elegant tactile materials, soft daylight from upper left, physically grounded diagonal shadows, beautiful deliberate composition and atmospheric depth. Predominantly ivory white, muted pale blue, slate teal, restrained warm sand accents. No pink, no purple, no oil paint, no photoreal human, no shiny plastic. Keep most foreground simple, broad landscape forms with detail focused in right half, entire scene safely within frame for cover crop. Consistent high-end art direction. SCENE: An ivory circular observatory on an elevated white disk, pale blue celestial spheres and elegant brass orbital rings, softly lit distant moon. A small brass telescope stands BY ITSELF on the LEFT side of the disk. On the RIGHT side, a SINGLE Liu Kanshan mascot stands FACING THE CAMERA in EXACTLY the front reference neutral pose, separated from the telescope by clear empty space. TWO ARMS HANG DOWN and TWO HANDS are EMPTY at his left and right sides. NO reaching arm, NO telescope touch, NO raised arm, NO holding pose. Show the entire mascot body and both feet clearly, about 22% of image height.  STRICT CHARACTER ANATOMY: The four reference pictures are four views of the SAME one mascot, not four characters. Render exactly ONE mascot. Exactly TWO black arms total, each with ONE hand, exactly TWO black legs with ONE foot each. One single small WHITE round tail at back. NO black tail, NO hanging extra black limb behind the body. If either hand holds a prop, that hand's arm bends from its shoulder to the prop and there must NOT also be a relaxed hanging arm on that same side. Prefer a simple relaxed upright pose with both arms at sides, holding no object, objects sitting on the ground or table. Keep side profile long white muzzle with black nose cap as the side reference; front view huge round black nose, two ears, two tiny eyes. Leg and arm joints must attach logically once on each side. Preserve original face proportions, do not turn into a generic dog.",
       "reviewStatus": "reviewed",
@@ -65,12 +68,13 @@
       "width": 1536,
       "height": 1024,
       "sha256": "c167ecb466dbe2c32fd5b98cf2f4d1f94ac01064c4ae5b110d4175668b4ea135",
-      "webBytes": 114054
+      "webBytes": 114054,
+      "originalSha256": "c167ecb466dbe2c32fd5b98cf2f4d1f94ac01064c4ae5b110d4175668b4ea135"
     },
     {
       "id": "05-bridge",
       "title": "连结之桥",
-      "sourcePath": "/Users/wxm/.codex/generated_images/01a0749e-ecda-7652-9644-99db3f31700f/exec-201b9985-9537-4fc9-9be6-72637ef154fa.png",
+      "sourcePath": "exec-201b9985-9537-4fc9-9be6-72637ef154fa.png",
       "originalPrompt": "Create ONE polished landscape 3:2 image for a premium Chinese learning app route cover, no text or letters or logos anywhere. Faithfully use the exact Liu Kanshan mascot in the attached reference: white rounded smooth pear-shaped body, two pointed ears, huge black spherical nose, tiny oval black eyes to the sides, thin black arms and black legs and round feet. Do not redesign its face or species. Tiny full-body mascot participating in a sophisticated miniature sculptural landscape, occupy only 15-22% of image. Editorial 3D still life, matte porcelain and paper, elegant tactile materials, soft daylight from upper left, physically grounded diagonal shadows, beautiful deliberate composition and atmospheric depth. Predominantly ivory white, muted pale blue, slate teal, restrained warm sand accents. No pink, no purple, no oil paint, no photoreal human, no shiny plastic. Keep most foreground simple, broad landscape forms with detail focused in right half, entire scene safely within frame for cover crop. Consistent high-end art direction. SCENE: Two rounded white cliffs joined by a long elegant pale teal arched bridge, mascot crossing with a little book, below a calm pale blue river and layered ivory contours, connection between ideas.",
       "correctionPrompt": "Edit FIRST scene image only, using the following four pictures as anatomy references of the SAME mascot from different angles. Preserve the landscape, architecture, telescope/bridge, composition, lighting and palette. Correct the mascot ONLY. It must have exactly TWO arms total, no duplicate arm or black pointed limb below its waist. Give it a relaxed upright simple standing pose with its TWO black arms hanging at the left and right sides of its body, hands empty, remove any book it holds. White tail must be one small ROUND pompom on its rear, never curled or pointed. Make its head side profile faithfully match the reference's long white muzzle ending in a large black nose, keep its original white body.  STRICT CHARACTER ANATOMY: The four reference pictures are four views of the SAME one mascot, not four characters. Render exactly ONE mascot. Exactly TWO black arms total, each with ONE hand, exactly TWO black legs with ONE foot each. One single small WHITE round tail at back. NO black tail, NO hanging extra black limb behind the body. If either hand holds a prop, that hand's arm bends from its shoulder to the prop and there must NOT also be a relaxed hanging arm on that same side. Prefer a simple relaxed upright pose with both arms at sides, holding no object, objects sitting on the ground or table. Keep side profile long white muzzle with black nose cap as the side reference; front view huge round black nose, two ears, two tiny eyes. Leg and arm joints must attach logically once on each side. Preserve original face proportions, do not turn into a generic dog.",
       "reviewStatus": "reviewed",
@@ -80,12 +84,13 @@
       "width": 1536,
       "height": 1024,
       "sha256": "da13938627fe1fa918941c41fe2e3cef654ebde812f43d59ec188cb0c78c76a9",
-      "webBytes": 66772
+      "webBytes": 66772,
+      "originalSha256": "da13938627fe1fa918941c41fe2e3cef654ebde812f43d59ec188cb0c78c76a9"
     },
     {
       "id": "06-garden",
       "title": "知识萌芽",
-      "sourcePath": "/Users/wxm/.codex/generated_images/01a0749e-ecda-7652-9644-99db3f31700f/exec-ff14321e-cb85-4855-87d6-190b9fcfe642.png",
+      "sourcePath": "exec-ff14321e-cb85-4855-87d6-190b9fcfe642.png",
       "originalPrompt": "Create ONE polished landscape 3:2 image for a premium Chinese learning app route cover, no text or letters or logos anywhere. Faithfully use the exact Liu Kanshan mascot in the attached reference: white rounded smooth pear-shaped body, two pointed ears, huge black spherical nose, tiny oval black eyes to the sides, thin black arms and black legs and round feet. Do not redesign its face or species. Tiny full-body mascot participating in a sophisticated miniature sculptural landscape, occupy only 15-22% of image. Editorial 3D still life, matte porcelain and paper, elegant tactile materials, soft daylight from upper left, physically grounded diagonal shadows, beautiful deliberate composition and atmospheric depth. Predominantly ivory white, muted pale blue, slate teal, restrained warm sand accents. No pink, no purple, no oil paint, no photoreal human, no shiny plastic. Keep most foreground simple, broad landscape forms with detail focused in right half, entire scene safely within frame for cover crop. Consistent high-end art direction. SCENE: A quiet miniature knowledge garden of sculptural teal leaves sprouting from open white books, terraced ivory planters, mascot gently inspecting one new sprout, one warm yellow blossom, fresh growth.",
       "correctionPrompt": null,
       "reviewStatus": "reviewed",
@@ -95,12 +100,13 @@
       "width": 1536,
       "height": 1024,
       "sha256": "2bee1893695533ddd0a3d6a8c24bc3b08fb11f146d6e81e8c7ed11cb61d96141",
-      "webBytes": 106234
+      "webBytes": 106234,
+      "originalSha256": "2bee1893695533ddd0a3d6a8c24bc3b08fb11f146d6e81e8c7ed11cb61d96141"
     },
     {
       "id": "07-laboratory",
       "title": "探索实验室",
-      "sourcePath": "/Users/wxm/.codex/generated_images/01a0749e-ecda-7652-9644-99db3f31700f/exec-4869c9b9-dbc0-417c-8e8a-594e8fcabc56.png",
+      "sourcePath": "exec-4869c9b9-dbc0-417c-8e8a-594e8fcabc56.png",
       "originalPrompt": "Create ONE polished landscape 3:2 image for a premium Chinese learning app route cover, no text or letters or logos anywhere. Faithfully use the exact Liu Kanshan mascot in the attached reference: white rounded smooth pear-shaped body, two pointed ears, huge black spherical nose, tiny oval black eyes to the sides, thin black arms and black legs and round feet. Do not redesign its face or species. Tiny full-body mascot participating in a sophisticated miniature sculptural landscape, occupy only 15-22% of image. Editorial 3D still life, matte porcelain and paper, elegant tactile materials, soft daylight from upper left, physically grounded diagonal shadows, beautiful deliberate composition and atmospheric depth. Predominantly ivory white, muted pale blue, slate teal, restrained warm sand accents. No pink, no purple, no oil paint, no photoreal human, no shiny plastic. Keep most foreground simple, broad landscape forms with detail focused in right half, entire scene safely within frame for cover crop. Consistent high-end art direction. SCENE: A minimal porcelain research workshop with transparent pale-blue prisms and geometric instruments on a curved white table, mascot holding a tiny magnifying glass examining a floating faceted form, thoughtful discovery.",
       "correctionPrompt": null,
       "reviewStatus": "reviewed",
@@ -110,12 +116,13 @@
       "width": 1536,
       "height": 1024,
       "sha256": "10f22dcc3e5700fdb7fb09afedf2a6625d0207fe96a0fcc8953403c66494ed08",
-      "webBytes": 93164
+      "webBytes": 93164,
+      "originalSha256": "10f22dcc3e5700fdb7fb09afedf2a6625d0207fe96a0fcc8953403c66494ed08"
     },
     {
       "id": "08-ocean",
       "title": "纸海航行",
-      "sourcePath": "/Users/wxm/.codex/generated_images/01a0749e-ecda-7652-9644-99db3f31700f/exec-cbcdf248-c5f2-4940-8427-a6767f23ca25.png",
+      "sourcePath": "exec-cbcdf248-c5f2-4940-8427-a6767f23ca25.png",
       "originalPrompt": "Create ONE polished landscape 3:2 image for a premium Chinese learning app route cover, no text or letters or logos anywhere. Faithfully use the exact Liu Kanshan mascot in the attached reference: white rounded smooth pear-shaped body, two pointed ears, huge black spherical nose, tiny oval black eyes to the sides, thin black arms and black legs and round feet. Do not redesign its face or species. Tiny full-body mascot participating in a sophisticated miniature sculptural landscape, occupy only 15-22% of image. Editorial 3D still life, matte porcelain and paper, elegant tactile materials, soft daylight from upper left, physically grounded diagonal shadows, beautiful deliberate composition and atmospheric depth. Predominantly ivory white, muted pale blue, slate teal, restrained warm sand accents. No pink, no purple, no oil paint, no photoreal human, no shiny plastic. Keep most foreground simple, broad landscape forms with detail focused in right half, entire scene safely within frame for cover crop. Consistent high-end art direction. SCENE: Calm pale blue ocean as layered paper sculpture, small ivory sailboat with a single teal sail, mascot seated safely in the boat holding a book, distant white island arch and a subtle sunrise, peaceful voyage.",
       "correctionPrompt": null,
       "reviewStatus": "reviewed",
@@ -125,12 +132,13 @@
       "width": 1536,
       "height": 1024,
       "sha256": "030b5393823b0fdac733df75ee409e346515082a965dde374e9f994cccf4bde1",
-      "webBytes": 85384
+      "webBytes": 85384,
+      "originalSha256": "030b5393823b0fdac733df75ee409e346515082a965dde374e9f994cccf4bde1"
     },
     {
       "id": "09-orbit",
       "title": "思想轨道",
-      "sourcePath": "/Users/wxm/.codex/generated_images/01a0749e-ecda-7652-9644-99db3f31700f/exec-4fcd46e5-ea8e-4b6b-96b5-655dcdd764a7.png",
+      "sourcePath": "exec-4fcd46e5-ea8e-4b6b-96b5-655dcdd764a7.png",
       "originalPrompt": "Create ONE polished landscape 3:2 image for a premium Chinese learning app route cover, no text or letters or logos anywhere. Faithfully use the exact Liu Kanshan mascot in the attached reference: white rounded smooth pear-shaped body, two pointed ears, huge black spherical nose, tiny oval black eyes to the sides, thin black arms and black legs and round feet. Do not redesign its face or species. Tiny full-body mascot participating in a sophisticated miniature sculptural landscape, occupy only 15-22% of image. Editorial 3D still life, matte porcelain and paper, elegant tactile materials, soft daylight from upper left, physically grounded diagonal shadows, beautiful deliberate composition and atmospheric depth. Predominantly ivory white, muted pale blue, slate teal, restrained warm sand accents. No pink, no purple, no oil paint, no photoreal human, no shiny plastic. Keep most foreground simple, broad landscape forms with detail focused in right half, entire scene safely within frame for cover crop. Consistent high-end art direction. SCENE: Elegant floating ivory geometric islands connected by fine teal orbital paths, mascot on the right island reaching towards a small warm brass sphere, restrained scientific sculpture, spacious atmosphere.",
       "correctionPrompt": null,
       "reviewStatus": "reviewed",
@@ -140,12 +148,13 @@
       "width": 1536,
       "height": 1024,
       "sha256": "b5e757f1be7e7937ee996d8a39efdf26b5ccbd3abf6bd208676704031b3aaef9",
-      "webBytes": 76214
+      "webBytes": 76214,
+      "originalSha256": "b5e757f1be7e7937ee996d8a39efdf26b5ccbd3abf6bd208676704031b3aaef9"
     },
     {
       "id": "10-stairs",
       "title": "拾级而上",
-      "sourcePath": "/Users/wxm/.codex/generated_images/01a0749e-ecda-7652-9644-99db3f31700f/exec-43c6814d-f656-4b0f-a7ed-db41650965e7.png",
+      "sourcePath": "exec-43c6814d-f656-4b0f-a7ed-db41650965e7.png",
       "originalPrompt": "Create ONE polished landscape 3:2 image for a premium Chinese learning app route cover, no text or letters or logos anywhere. Faithfully use the exact Liu Kanshan mascot in the attached reference: white rounded smooth pear-shaped body, two pointed ears, huge black spherical nose, tiny oval black eyes to the sides, thin black arms and black legs and round feet. Do not redesign its face or species. Tiny full-body mascot participating in a sophisticated miniature sculptural landscape, occupy only 15-22% of image. Editorial 3D still life, matte porcelain and paper, elegant tactile materials, soft daylight from upper left, physically grounded diagonal shadows, beautiful deliberate composition and atmospheric depth. Predominantly ivory white, muted pale blue, slate teal, restrained warm sand accents. No pink, no purple, no oil paint, no photoreal human, no shiny plastic. Keep most foreground simple, broad landscape forms with detail focused in right half, entire scene safely within frame for cover crop. Consistent high-end art direction. SCENE: A sculptural spiral white staircase around a teal cylindrical core rising towards a softly sunlit open ring, mascot halfway up looking forward, learning in small steps, beautifully modeled architecture. STRICT CHARACTER ANATOMY: The four reference pictures are four views of the SAME one mascot, not four characters. Render exactly ONE mascot. Exactly TWO black arms total, each with ONE hand, exactly TWO black legs with ONE foot each. One single small WHITE round tail at back. NO black tail, NO hanging extra black limb behind the body. If either hand holds a prop, that hand's arm bends from its shoulder to the prop and there must NOT also be a relaxed hanging arm on that same side. Prefer a simple relaxed upright pose with both arms at sides, holding no object, objects sitting on the ground or table. Keep side profile long white muzzle with black nose cap as the side reference; front view huge round black nose, two ears, two tiny eyes. Leg and arm joints must attach logically once on each side. Preserve original face proportions, do not turn into a generic dog.",
       "correctionPrompt": "Create ONE polished landscape 3:2 image for a premium Chinese learning app route cover, no text or letters or logos anywhere. Faithfully use the exact Liu Kanshan mascot in the attached reference: white rounded smooth pear-shaped body, two pointed ears, huge black spherical nose, tiny oval black eyes to the sides, thin black arms and black legs and round feet. Do not redesign its face or species. Tiny full-body mascot participating in a sophisticated miniature sculptural landscape, occupy only 15-22% of image. Editorial 3D still life, matte porcelain and paper, elegant tactile materials, soft daylight from upper left, physically grounded diagonal shadows, beautiful deliberate composition and atmospheric depth. Predominantly ivory white, muted pale blue, slate teal, restrained warm sand accents. No pink, no purple, no oil paint, no photoreal human, no shiny plastic. Keep most foreground simple, broad landscape forms with detail focused in right half, entire scene safely within frame for cover crop. Consistent high-end art direction. SCENE: A new composition of a sculptural spiral white staircase curving around a muted teal cylindrical core, light from a skylight above, distant pale-blue mountains visible through an open arch. EXACTLY ONE mascot standing on a broad step in the right half of image, facing the camera EXACTLY as the attached frontal reference photograph. Preserve its pristine SMOOTH WHITE FRONT BELLY, without any bumps, circles, buttons, patches, patterns, belly button or accessories. The belly is absolutely blank and smooth just like reference. BOTH arms hang by its sides with empty black hands. Exactly two black legs and two black feet. No tail can be visible in this front pose. Mascot full body 25% of image height, clear anatomy and handsome balanced landscape, 1536x1024 3:2.",
       "reviewStatus": "reviewed",
@@ -155,12 +164,13 @@
       "width": 1536,
       "height": 1024,
       "sha256": "dfae12d9626cd5f7e26e3249fe2f6bde9f83472af54feda1853e356e22d3f30c",
-      "webBytes": 145158
+      "webBytes": 145158,
+      "originalSha256": "dfae12d9626cd5f7e26e3249fe2f6bde9f83472af54feda1853e356e22d3f30c"
     },
     {
       "id": "11-puzzle",
       "title": "拼出理解",
-      "sourcePath": "/Users/wxm/.codex/generated_images/01a0749e-ecda-7652-9644-99db3f31700f/exec-66ee9ab0-0c7a-4163-86d0-c59d38955741.png",
+      "sourcePath": "exec-66ee9ab0-0c7a-4163-86d0-c59d38955741.png",
       "originalPrompt": "Create ONE polished landscape 3:2 image for a premium Chinese learning app route cover, no text or letters or logos anywhere. Faithfully use the exact Liu Kanshan mascot in the attached reference: white rounded smooth pear-shaped body, two pointed ears, huge black spherical nose, tiny oval black eyes to the sides, thin black arms and black legs and round feet. Do not redesign its face or species. Tiny full-body mascot participating in a sophisticated miniature sculptural landscape, occupy only 15-22% of image. Editorial 3D still life, matte porcelain and paper, elegant tactile materials, soft daylight from upper left, physically grounded diagonal shadows, beautiful deliberate composition and atmospheric depth. Predominantly ivory white, muted pale blue, slate teal, restrained warm sand accents. No pink, no purple, no oil paint, no photoreal human, no shiny plastic. Keep most foreground simple, broad landscape forms with detail focused in right half, entire scene safely within frame for cover crop. Consistent high-end art direction. SCENE: Interlocking oversized rounded ivory and slate-teal puzzle blocks forming a low architectural landscape, mascot gently placing one small matching piece, a warm sand cube and clean shadows, ideas falling into place. STRICT CHARACTER ANATOMY: The four reference pictures are four views of the SAME one mascot, not four characters. Render exactly ONE mascot. Exactly TWO black arms total, each with ONE hand, exactly TWO black legs with ONE foot each. One single small WHITE round tail at back. NO black tail, NO hanging extra black limb behind the body. If either hand holds a prop, that hand's arm bends from its shoulder to the prop and there must NOT also be a relaxed hanging arm on that same side. Prefer a simple relaxed upright pose with both arms at sides, holding no object, objects sitting on the ground or table. Keep side profile long white muzzle with black nose cap as the side reference; front view huge round black nose, two ears, two tiny eyes. Leg and arm joints must attach logically once on each side. Preserve original face proportions, do not turn into a generic dog.",
       "correctionPrompt": null,
       "reviewStatus": "reviewed",
@@ -170,12 +180,13 @@
       "width": 1536,
       "height": 1024,
       "sha256": "157dc59316036bf7b79e9cd1d5191b50a5ef8ae40d2e4ee8e260447a9d455bf2",
-      "webBytes": 90712
+      "webBytes": 90712,
+      "originalSha256": "157dc59316036bf7b79e9cd1d5191b50a5ef8ae40d2e4ee8e260447a9d455bf2"
     },
     {
       "id": "12-summit",
       "title": "山顶新知",
-      "sourcePath": "/Users/wxm/.codex/generated_images/01a0749e-ecda-7652-9644-99db3f31700f/exec-94374988-cb2d-4676-a36f-7e2b7d43f36e.png",
+      "sourcePath": "exec-94374988-cb2d-4676-a36f-7e2b7d43f36e.png",
       "originalPrompt": "Create ONE polished landscape 3:2 image for a premium Chinese learning app route cover, no text or letters or logos anywhere. Faithfully use the exact Liu Kanshan mascot in the attached reference: white rounded smooth pear-shaped body, two pointed ears, huge black spherical nose, tiny oval black eyes to the sides, thin black arms and black legs and round feet. Do not redesign its face or species. Tiny full-body mascot participating in a sophisticated miniature sculptural landscape, occupy only 15-22% of image. Editorial 3D still life, matte porcelain and paper, elegant tactile materials, soft daylight from upper left, physically grounded diagonal shadows, beautiful deliberate composition and atmospheric depth. Predominantly ivory white, muted pale blue, slate teal, restrained warm sand accents. No pink, no purple, no oil paint, no photoreal human, no shiny plastic. Keep most foreground simple, broad landscape forms with detail focused in right half, entire scene safely within frame for cover crop. Consistent high-end art direction. SCENE: An airy mountain summit built from layered folded ivory paper, winding pale blue path leading to a small teal flag, mascot resting beside it with an open book, distant soft peaks and clear expansive sky, accomplishment without triumphal clutter. STRICT CHARACTER ANATOMY: The four reference pictures are four views of the SAME one mascot, not four characters. Render exactly ONE mascot. Exactly TWO black arms total, each with ONE hand, exactly TWO black legs with ONE foot each. One single small WHITE round tail at back. NO black tail, NO hanging extra black limb behind the body. If either hand holds a prop, that hand's arm bends from its shoulder to the prop and there must NOT also be a relaxed hanging arm on that same side. Prefer a simple relaxed upright pose with both arms at sides, holding no object, objects sitting on the ground or table. Keep side profile long white muzzle with black nose cap as the side reference; front view huge round black nose, two ears, two tiny eyes. Leg and arm joints must attach logically once on each side. Preserve original face proportions, do not turn into a generic dog.",
       "correctionPrompt": null,
       "reviewStatus": "reviewed",
@@ -185,7 +196,13 @@
       "width": 1536,
       "height": 1024,
       "sha256": "3fe912ffa2f69a8d7b703caa0e19317c139c7700b4987a5c79b75672cf5e764c",
-      "webBytes": 75688
+      "webBytes": 75688,
+      "originalSha256": "3fe912ffa2f69a8d7b703caa0e19317c139c7700b4987a5c79b75672cf5e764c"
     }
-  ]
+  ],
+  "originalArchive": {
+    "commit": "6675d0511ff545770d48910bcdc3518eba2165ba",
+    "directory": "design/route-covers",
+    "note": "PNG masters remain locally and in this Git revision; shipped WebP assets are in public/art/covers."
+  }
 }

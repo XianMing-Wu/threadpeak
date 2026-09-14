@@ -4,9 +4,9 @@
 
 ## 配置与启动
 
-1. 将 `.env.example` 复制为 `.env.production`，填写 provider、身份和公开源；不要提交该文件。`NODE_ENV=production` 下缺数据库、公开源、身份密钥/签发方/受众或两个LLM窗口与输出字段时拒绝启动。
+1. 将 `.env.example` 复制为 `.env.production`，填写 provider、身份和公开源；不要提交该文件。`NODE_ENV=production` 下缺数据库、公开源、真实 OAuth 或可信身份网关配置、两个 LLM 窗口/输出字段时拒绝启动。
 2. 设置 `SITE_ADDRESS` 为实际域名，DNS 指向服务器；`THREADPEAK_PUBLIC_ORIGIN` 为同一 `https://域名`。开放 80/443 以签发证书。`POSTGRES_PASSWORD` 使用随机十六进制密码，避免数据库 URL 转义问题。
-3. `THREADPEAK_IDENTITY_SECRET` 至少 32 字符，签发方通过 HS256 JWT 提供 `iss/aud/sub/exp`，可包含 `nbf`。身份网关在受信登录回调向 `/api/v2/session` 带 Bearer JWT，得到 Secure/HttpOnly cookie；浏览器不保存令牌。会话有效期不超过 JWT 过期时间和 1 小时。另有知乎 OAuth start/callback 实现；生产需要真实 OAuth 配置和独立联调验收，本地 mock 不能用于生产。`THREADPEAK_LOGIN_URL` 必须是已部署身份服务的 HTTPS 地址。网关须验证自身用户身份，不能信任浏览器自报 subject/owner。
+3. 身份可选择真实知乎 OAuth 或可信网关。选择网关时，`THREADPEAK_IDENTITY_SECRET` 至少 32 字符，签发方通过 HS256 JWT 提供 `iss/aud/sub/exp`，可包含 `nbf`。身份网关在受信登录回调向 `/api/v2/session` 带 Bearer JWT，得到 Secure/HttpOnly cookie；浏览器不保存令牌。会话有效期不超过 JWT 过期时间和 1 小时。另有知乎 OAuth start/callback 实现；生产需要真实 OAuth 配置和独立联调验收，本地 mock 不能用于生产。使用网关时，`THREADPEAK_LOGIN_URL` 必须是已部署身份服务的 HTTPS 地址。网关须验证自身用户身份，不能信任浏览器自报 subject/owner。
 4. 登录提供知乎账号与游客两种入口。游客必须由服务端显式签发隔离会话，使用同一持久工作流，不能访问收藏夹或授权个人资料；所有 Cookie 与 Bearer 都按服务端身份隔离，跨源请求拒绝。游客的活动与恢复 cookie 均使用 Secure/HttpOnly，退出后只有显式选择游客登录才能恢复。知乎登录仍需配置并验收真实授权回调映射，本地演示不能代替正式验收。
 
 ```sh
@@ -15,7 +15,7 @@ docker compose --env-file .env.production up -d
 docker compose --env-file .env.production ps
 ```
 
-Node 24 镜像提供 Poppler；PDF 主流程使用真实知乎解析 API，解析完成后从保留的原 PDF 用 pdftotext 有界提取完整文字层，再保留其中不存在的远端 OCR / 公式块，避免远端非空结果仍遗漏标题。提取限制 45 秒、8 MiB 输出与 200 万字符，受同一个大文件内存名额约束；没有文字层时不能伪造正文。上传暂存、任务 ID 与检查点在数据库，成功后删除原 PDF 暂存，保留解析正文和总结。API 使用非 root 用户和只读文件系统。镜像标签应在实际发布时锁定已验收 digest；同一批 API/worker 使用同一构建，不支持混用不同工作流合同版本滚动消费未完成任务。
+Node 24 镜像提供 Poppler；PDF 主流程使用真实知乎解析 API，解析完成后从保留的原 PDF 用 pdftotext 有界提取完整文字层，再保留其中不存在的远端 OCR / 公式块，避免远端非空结果仍遗漏标题。提取限制 45 秒、8 MiB 输出与 200 万字符，受同一个大文件内存名额约束；远端失败或 90 秒仍未就绪且本地文字层至少 80 字时，可先发布真实文字层并明确缺失边界，详见 [PDF 合同](../docs/agents.md#51-提示词补充与用户资料来源)。没有文字层时不能伪造正文。上传暂存、任务 ID 与检查点在数据库，成功后删除原 PDF 暂存，保留解析正文和总结。API 使用非 root 用户和只读文件系统。镜像标签应在实际发布时锁定已验收 digest；同一批 API/worker 使用同一构建，不支持混用不同工作流合同版本滚动消费未完成任务。
 
 向知乎发送 PDF 时，上传时限按实际文件大小和 256 KiB/s 传输速度预算，再留 120 秒响应时间，总上限 10 分钟；普通知乎 API 仍为 120 秒。上传占用同一个大文件内存名额并遵守两路知乎并发，用户取消和进程停机仍可中断。上传时限与后续最长 20 分钟的解析轮询分别计时，不能把低带宽下未传完的请求误认为解析失败。
 
@@ -64,11 +64,11 @@ docker compose --env-file .env.production exec -T db pg_restore -U threadpeak -d
 
 ## 上线门槛
 
-真实身份和退出/过期/多设备流程；实际域名与 TLS；按目标并发量压测；真实长材料和多轮对话的摘要保真评测；内容及备份保留/删除政策；provider 配额/计费告警；原有数据迁移或只读归档说明。完成这些门槛前，只能称已完成相应本地集成切片。
+真实身份和退出/过期/多设备流程；实际域名与 TLS；按目标并发量压测；真实长材料和多轮对话的摘要保真评测；内容及备份保留/删除政策；provider 配额/计费告警；原有数据迁移或只读归档说明。各项只能按实际验收范围报告；已部署不等于所有身份、负载和内容质量门槛已经关闭。
 
 ops:queue 按最近 24 小时输出 provider/阶段的 P50/P95、失败数、检查点/响应缓存命中及上游实际 usage；未知 usage 保持 null。摘要、步骤和任务是嵌套时间段，不能相加当总时长。队列指标为实际名额等待，任务 ageAtStartMs 含此前恢复等待。维护日志单独报告各类清理数量、是否满批与耗时。
 
-内部诊断事件保留 7 天；公共 events 路由已移除，前端使用 revision 快照轮询。完成任务 30 天后压缩重复输入和检查点，保留已发布资源与幂等回执。等待/取消任务仍保存恢复所需内容。机制见[工程设计](../docs/engineering.md)，执行证据见 [QA](../qa/README.md)。
+内部诊断事件保留 7 天；旧内部诊断 events 路由不对浏览器开放；前端使用 SSE 接收工作区快照更新，断线通过 revision 快照与轮询恢复。完成任务 30 天后压缩重复输入和检查点，保留已发布资源与幂等回执。等待/取消任务仍保存恢复所需内容。机制见[工程设计](../docs/engineering.md)，执行证据见 [QA](../qa/README.md)。
 
 
 ## 代理、维护与浏览器备份

@@ -29,7 +29,7 @@
 
 当前完整生成物摘要见 [清单](learning-path-3d-manifest.json)。上表的 `vendor/evidence` 是迁移前证据摘录，不代表当前组合根版本；原四个角色资产未变。
 
-连续并列阶段修复：上游 `src/content/compiler.ts` 对共享的 parallel-peer 物理圆台对去重，并导出无 DOM 的 `preflightLearningPath`。经 `build:module` 整份同步 19 个文件并逐文件验证内容一致；当前 index.js SHA-256 为 `545fe3ea68c1d972cff4edba5207824d52119993bde137c4f282dedb06f893f8`。后端发布前使用同一份编译器，未手改生成物。
+连续并列阶段修复：上游 `src/content/compiler.ts` 对共享的 parallel-peer 物理圆台对去重，并导出无 DOM 的 `preflightLearningPath`。经 `build:module` 整份同步 19 个文件并逐文件验证内容一致；当时 index.js SHA-256 为 `545fe3ea68c1d972cff4edba5207824d52119993bde137c4f282dedb06f893f8`。后端发布前使用同一份编译器，未手改生成物。
 
 本次位置一致性修复：再次由上游源码构建整包同步。导航从恢复后的物理位置初始化；最近学习概念为紫色并独立持久化。宿主等待 onReady 揭示画面，学习跳转前调用 rememberLearningNode，不拆解位置字符串。
 
@@ -39,7 +39,7 @@
 
 ## 2026-09-08 终点浮层定位同步
 
-从 `zhihu_3D_path` 现有工作树修复并执行 `npm run build:module`，整包同步并逐文件校验 19 个生成物。`LearningScene` 统一卡片避让的上移上限，拖动画布的边界只使用基础镜头计算，避免临时浮层偏移被反向抵消；`cardPlacementPolicy` 按窄屏实际可用空间计算左右留白，避免平台持续横移后引发浮层闪烁。没有修改路线、移动或学习语义。源码增量、浏览器轨迹和窗口覆盖见 [定点记录](../qa/evidence/ux-ui-2026-09-08/user-steering/path-card/README.md)，当前文件摘要以清单为准。
+从 `zhihu_3D_path` 现有工作树修复并执行 `npm run build:module`，整包同步并逐文件校验 19 个生成物。`LearningScene` 统一卡片避让的上移上限，拖动画布的边界只使用基础镜头计算，避免临时浮层偏移被反向抵消；`cardPlacementPolicy` 按窄屏实际可用空间计算左右留白，避免平台持续横移后引发浮层闪烁。没有修改路线、移动或学习语义。源码增量保留为[补丁](patches/2026-09-08-path-card.patch)，浏览器轨迹和窗口覆盖见 [定点记录](https://github.com/XianMing-Wu/threadpeak/blob/6675d0511ff545770d48910bcdc3518eba2165ba/qa/evidence/ux-ui-2026-09-08/user-steering/path-card/README.md)，当前文件摘要以清单为准。
 
 ## Coverflow 的项目适配
 
@@ -49,7 +49,7 @@
 
 ## 2026-09-09 阴影尺寸一致性修复
 
-基于上面 2026-09-08 同步的上游工作树，在临时构建目录应用[源码补丁](patches/2026-09-09-shadow-targets.patch)，运行上游 `build:module` 后整包同步 19 个文件，并逐文件校验。保留上游现有未提交工作；没有修改生成 bundle。补丁释放 VSM 的主贴图、深度纹理与模糊中间贴图，避免 2048/4096 尺寸混用；显卡尺寸上限参与质量选择。公开入口、角色资产和许可证范围未变，摘要仍以清单为准。复现及验证见[审查记录](../qa/path-author-audit-2026-09-09.md)。
+基于上面 2026-09-08 同步的上游工作树，在临时构建目录应用[源码补丁](patches/2026-09-09-shadow-targets.patch)，运行上游 `build:module` 后整包同步 19 个文件，并逐文件校验。保留上游现有未提交工作；没有修改生成 bundle。补丁释放 VSM 的主贴图、深度纹理与模糊中间贴图，避免 2048/4096 尺寸混用；显卡尺寸上限参与质量选择。公开入口、角色资产和许可证范围未变，摘要仍以清单为准。复现及验证见[审查记录](https://github.com/XianMing-Wu/threadpeak/blob/6675d0511ff545770d48910bcdc3518eba2165ba/qa/path-author-audit-2026-09-09.md)。
 
 ## 2026-09-12 蓝色圆台卡片的相机漂移修复
 

@@ -1,9 +1,0 @@
-
- RUN  v4.1.11 /Users/wxm/project/FullStack/学习理念/知乎项目/threadpeak/threadpeak
-
-
- Test Files  1 passed (1)
-      Tests  1 passed (1)
-   Start at  06:03:16
-   Duration  513ms (transform 39ms, setup 23ms, import 74ms, tests 61ms, environment 259ms)
-

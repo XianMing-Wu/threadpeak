@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="780" viewBox="0 0 1800 780" role="img" aria-labelledby="continuation-title continuation-desc">
+  <title id="continuation-title">问 AI、问博主与真人咨询的关系</title>
+  <desc id="continuation-desc">问 AI 和问博主都可以从当前卡片随时发起并返回知识画布；只有遇到项目评估、审美校准或真实经历等卡点时，用户才可以选择从作者网络进一步寻找咨询博主。</desc>
+  <defs>
+    <linearGradient id="continuation-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbfcff"/><stop offset="1" stop-color="#f5f7fb"/></linearGradient>
+    <filter id="continuation-shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#243d52" flood-opacity="0.09"/></filter>
+    <marker id="continuation-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#8297aa"/></marker>
+    <marker id="continuation-arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#2379ed"/></marker>
+    <marker id="continuation-arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#765fd7"/></marker>
+    <style>
+      text { font-family: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #1b2a38; }
+      .eyebrow { font-size: 18px; font-weight: 650; letter-spacing: 3px; fill: #2379ed; }.title { font-size: 42px; font-weight: 700; }.subtitle { font-size: 20px; font-weight: 450; fill: #657789; }
+      .lane-label { font-size: 17px; font-weight: 700; letter-spacing: 1.5px; }.node-title { font-size: 27px; font-weight: 680; }.node-copy { font-size: 19px; font-weight: 450; fill: #67798a; }.chip { font-size: 17px; font-weight: 620; fill: #42596d; }
+      .on-dark { fill: #ffffff; }.on-dark-muted { fill: #c3cfda; }
+      .flow { fill: none; stroke: #8297aa; stroke-width: 3; marker-end: url(#continuation-arrow); }.blue-flow { fill: none; stroke: #2379ed; stroke-width: 3; marker-end: url(#continuation-arrow-blue); }.optional-flow { fill: none; stroke: #765fd7; stroke-width: 3; stroke-dasharray: 9 9; marker-end: url(#continuation-arrow-purple); }
+    </style>
+  </defs>
+  <rect width="1800" height="780" rx="34" fill="url(#continuation-bg)"/>
+  <text class="eyebrow" x="72" y="68">ONE CARD · THREE WAYS FORWARD</text><text class="title" x="72" y="118">两种随时可用的学习入口，一项按需出现的真人延伸</text><text class="subtitle" x="72" y="154">“问博主”读取公开观点；只有“寻找咨询博主”才指向可能发生的真人交流</text>
+  <g id="source-card" transform="translate(72 270)"><rect width="246" height="218" rx="30" fill="#172a3b" filter="url(#continuation-shadow)"/><text class="lane-label" x="26" y="40" fill="#82b8ff">当前上下文</text><text class="node-title on-dark" x="26" y="86">一张选中卡片</text><text class="node-copy on-dark-muted" x="26" y="124">目标 · 当前概念</text><text class="node-copy on-dark-muted" x="26" y="154">所选材料 · 对话</text><rect x="26" y="178" width="126" height="4" rx="2" fill="#42627d"/><rect x="26" y="190" width="174" height="4" rx="2" fill="#304b62"/></g>
+  <g id="daily-learning">
+    <path class="blue-flow" d="M318 325H392"/><path class="blue-flow" d="M318 432H392"/><text class="lane-label" x="392" y="230" fill="#2379ed">随时发起</text>
+    <g id="ask-ai" transform="translate(392 258)"><rect width="288" height="134" rx="26" fill="#ffffff" stroke="#d9e6f2" filter="url(#continuation-shadow)"/><circle cx="42" cy="42" r="18" fill="#e8f1ff"/><path d="M36 42H48M42 36V48" stroke="#2379ed" stroke-width="2.2" stroke-linecap="round"/><text class="node-title" x="72" y="49">问 AI</text><text class="node-copy" x="24" y="88">解释 · 推导 · 比较</text><text class="node-copy" x="24" y="114">排错 · 练习 · 总结</text></g>
+    <g id="ask-authors" transform="translate(392 414)"><rect width="288" height="134" rx="26" fill="#ffffff" stroke="#dfd9f3" filter="url(#continuation-shadow)"/><circle cx="42" cy="42" r="18" fill="#f0ecff"/><circle cx="38" cy="39" r="5" fill="none" stroke="#765fd7" stroke-width="2"/><circle cx="49" cy="43" r="4" fill="none" stroke="#765fd7" stroke-width="2"/><path d="M30 52C33 46 43 46 46 52M44 52C47 48 54 49 56 54" fill="none" stroke="#765fd7" stroke-width="2" stroke-linecap="round"/><text class="node-title" x="72" y="49">问博主</text><text class="node-copy" x="24" y="88">检索公开文章与观点</text><text class="node-copy" x="24" y="114">不发送消息，不冒充回复</text></g>
+  </g>
+  <g id="knowledge-growth"><path class="flow" d="M680 325H782"/><path class="flow" d="M680 481H734V361H782"/><g transform="translate(782 286)"><rect width="320" height="202" rx="30" fill="#ffffff" stroke="#d8e4ec" filter="url(#continuation-shadow)"/><text class="lane-label" x="26" y="39" fill="#2a9994">共同结果</text><text class="node-title" x="26" y="82">知识画布继续生长</text><text class="node-copy" x="26" y="118">材料卡 · AI 讲解卡</text><text class="node-copy" x="26" y="148">作者卡 · 追问卡 · 实践记录</text><path d="M26 174H282" stroke="#d6e8e6" stroke-width="5" stroke-linecap="round"/><circle cx="78" cy="174" r="10" fill="#41b6ad"/><circle cx="176" cy="174" r="10" fill="#41b6ad"/><circle cx="258" cy="174" r="10" fill="#41b6ad"/></g></g>
+  <g id="optional-human-extension">
+    <path class="optional-flow" d="M1102 387H1180"/><text class="lane-label" x="1168" y="230" fill="#765fd7">仅在用户需要时</text>
+    <g transform="translate(1180 248)"><rect width="548" height="318" rx="32" fill="#ffffff" stroke="#ded7f4" filter="url(#continuation-shadow)"/><text class="lane-label" x="28" y="42" fill="#765fd7">高判断卡点 · 可选出口</text><text class="node-title" x="28" y="83">寻找适合咨询的博主</text><text class="node-copy" x="28" y="116">不是“问博主”的前置条件，而是之后可能发生的一步</text><g transform="translate(28 142)"><rect width="142" height="40" rx="20" fill="#eef3ff"/><text class="chip" x="31" y="26">项目评估</text><rect x="154" width="142" height="40" rx="20" fill="#fff2e8"/><text class="chip" x="185" y="26">审美校准</text><rect x="308" width="154" height="40" rx="20" fill="#edf8f4"/><text class="chip" x="337" y="26">真实经历</text></g><path d="M28 211H520" stroke="#e6e1f5"/><circle cx="45" cy="244" r="12" fill="#765fd7"/><text class="node-copy" x="70" y="250">作者网络 + 当前目标 + 作品或实验</text><circle cx="45" cy="282" r="12" fill="#765fd7" opacity="0.62"/><text class="node-copy" x="70" y="288">系统给出适配依据，用户决定是否联系</text></g>
+    <path class="optional-flow" d="M1454 566V646H942V498"/><rect x="1168" y="628" width="286" height="48" rx="24" fill="#f0ecff"/><text class="chip" x="1201" y="659" fill="#6b56cc">用户可把反馈记录到画布</text>
+  </g>
+</svg>

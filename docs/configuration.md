@@ -9,16 +9,16 @@
 | `DEEPSEEK_API_KEY` | 模型 API 凭证 |
 | `DEEPSEEK_BASE_URL` | 模型服务地址；按所用服务的接口配置 |
 | `DEEPSEEK_MODEL_NAME` | 实际可用的模型标识 |
-| `DEEPSEEK_CONTEXT_TOKENS` | 本轮按用户指定显式设为 `500000`；它是上下文窗口，单次输出上限独立，其他provider仍需配置各自能力 |
+| `DEEPSEEK_CONTEXT_TOKENS` | 实际 provider 的上下文窗口；与单次输出上限分开配置，不因业务允许 500,000 就假定服务支持该窗口 |
 | `DEEPSEEK_MAX_OUTPUT_TOKENS` | 模型单次最大输出；发送的 max_tokens 不超过此值 |
 | `ZHIHU_ACCESS_SECRET` | 知乎开发者 API 凭证 |
 | `ZHIHU_API_BASE_URL` | 知乎检索与资料服务地址 |
 
-五个 provider 连接字段必须完整，生成管线才进入就绪状态。生产还必须显式填写上述六个窗口/输出字段；窗口接受 32,000–2,000,000，输出接受 1,024–131,072，输出加 4,096 必须小于有效窗口（业务上限 500,000）。配置依据应记录实际服务、模型、能力文档及核对日期，不按模型名字推测。
+五个 provider 连接字段必须完整，生成管线才进入就绪状态。生产还必须显式填写上述两个窗口/输出字段；窗口接受 32,000–2,000,000，输出接受 1,024–131,072，输出加 4,096 必须小于有效窗口（业务上限 500,000）。配置依据应记录实际服务、模型、能力文档及核对日期，不按模型名字推测。
 
-本地模型未配置时使用应用保守默认窗口64,000、输出16,384；这不是厂商能力声明。配置的窗口与业务上限500,000取较小值，再扣输出与安全余量；UTF-8字节上界是保守预检，真实usage单独记录。所有讲解由LLM生成，知乎仅用于搜索及资料接口；已移除直答和四项ZHIHU_FAST/DEEP窗口配置，生产只需明确LLM窗口与输出上限。校验入口见 [capabilities.ts](../server/durable/capabilities.ts)、[config.ts](../server/config.ts) 和 [bootstrap.ts](../server/durable/bootstrap.ts)。
+本地窗口/输出字段未配置时使用应用保守默认窗口64,000、输出16,384；这不是厂商能力声明。配置的窗口与业务上限500,000取较小值，再扣输出与安全余量；UTF-8字节上界是保守预检，真实usage单独记录。所有讲解由LLM生成，知乎仅用于搜索及资料接口；已移除直答和四项ZHIHU_FAST/DEEP窗口配置，生产只需明确LLM窗口与输出上限。校验入口见 [capabilities.ts](../server/durable/capabilities.ts)、[config.ts](../server/config.ts) 和 [bootstrap.ts](../server/durable/bootstrap.ts)。
 
-PDF 使用真实知乎异步解析 API，并用 Poppler 的 pdftotext 核对、保留完整文字层，补充远端独有的 OCR / 公式块。生产镜像已安装 poppler-utils 和中文映射 poppler-data；本地开发可用 Homebrew 安装 poppler，Debian/Ubuntu 安装这两个包。没有本机提取器时仅能使用远端结果，不能保证远端保留全部标题。全网检索沿用知乎开发者服务中的站外检索能力。模型、检索和 PDF 服务不可用时不会自动切换示例结果。
+PDF 使用真实知乎异步解析 API，并用 Poppler 的 pdftotext 核对、保留完整文字层，补充远端独有的 OCR / 公式块。生产镜像已安装 poppler-utils 和中文映射 poppler-data；本地开发可用 Homebrew 安装 poppler，Debian/Ubuntu 安装这两个包。远端解析失败或 90 秒仍未就绪时，若本地已提取至少 80 字，则使用真实文字层并明确标注图片、扫描页或公式可能缺失；没有可读文字时不能伪装成功。没有本机提取器时仅能使用远端结果，不能保证远端保留全部标题。全网检索沿用知乎开发者服务中的站外检索能力。模型、检索和 PDF 服务不可用时不会自动切换示例结果。
 
 ## 本地运行与数据库
 
@@ -103,4 +103,4 @@ OAuth Token 以 AES-256-GCM 加密保存，浏览器只接收随机会话 Cookie
 
 ## 模型与思考强度
 
-`DEEPSEEK_MODEL_NAME=deepseek-flash` 同时用于快速回答和深度思考。快速显式 `thinking=disabled` 且不传 reasoning_effort；深度显式 `thinking=enabled`、`reasoning_effort=low`；首页新任务默认快速。R2 名称提取保留 `thinking=disabled` 的短提取例外。 最终路线生成 R4 是快速模式的唯一思考例外：也使用 enabled/low，同一步骤修复保持 low；其他快速步骤仍 disabled。已有任务冻结的深度不被界面默认值覆盖。参数依据见 [DeepSeek 官方说明](https://api-docs.deepseek.com/zh-cn/guides/thinking_mode/)。状态条读取模型实际思考流，与正式正文及校验结果独立；不用服务日志保存思考全文。
+`DEEPSEEK_MODEL_NAME=deepseek-flash` 同时用于快速回答和深度思考。快速显式 `thinking=disabled` 且不传 reasoning_effort；深度显式 `thinking=enabled`、`reasoning_effort=low`；首页新任务默认快速。R2 名称提取保留 `thinking=disabled` 的短提取例外。 最终路线生成 R4 是快速模式的唯一思考例外：也使用 enabled/low；结构恢复由程序执行，不新增模型调用，其他快速步骤仍 disabled。已有任务冻结的深度不被界面默认值覆盖。参数依据见 [DeepSeek 官方说明](https://api-docs.deepseek.com/zh-cn/guides/thinking_mode/)。状态条读取模型实际思考流，与正式正文及校验结果独立；不用服务日志保存思考全文。

@@ -1,8 +1,0 @@
-
-> threadpeak-ux-ui@2.0.0 build
-> tsc -b && vite build
-
-server/path-generation/staged-plan.ts(114,63): error TS2322: Type 'string | false' is not assignable to type 'boolean'.
-  Type 'string' is not assignable to type 'boolean'.
-server/path-generation/staged-plan.ts(125,63): error TS2322: Type 'string | false' is not assignable to type 'boolean'.
-  Type 'string' is not assignable to type 'boolean'.

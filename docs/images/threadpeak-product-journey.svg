@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="760" viewBox="0 0 1800 760" role="img" aria-labelledby="journey-title journey-desc">
+  <title id="journey-title">问山从真实目标到个人知识脉络的产品旅程</title>
+  <desc id="journey-desc">用户从真实目标出发，经 AI 访谈选择个性化路线，在无限画布中使用知乎资料、问 AI 和问博主持续学习；遇到高判断问题时，可以选择寻找适合咨询的博主。</desc>
+  <defs>
+    <linearGradient id="journey-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffefa"/><stop offset="0.52" stop-color="#f7fbff"/><stop offset="1" stop-color="#f2fbf7"/></linearGradient>
+    <linearGradient id="journey-brand" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2379ed"/><stop offset="0.55" stop-color="#22b8b2"/><stop offset="1" stop-color="#58b77a"/></linearGradient>
+    <pattern id="journey-dots" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.1" fill="#5c9bd5" opacity="0.1"/></pattern>
+    <filter id="journey-shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#2b6d9b" flood-opacity="0.08"/></filter>
+    <marker id="journey-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#2f7bea"/></marker>
+    <marker id="journey-arrow-warm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#e78931"/></marker>
+    <style>
+      text { font-family: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #182735; }
+      .eyebrow { font-size: 18px; font-weight: 600; letter-spacing: 3px; fill: #2379ed; }
+      .headline { font-size: 42px; font-weight: 700; letter-spacing: -0.6px; }
+      .subhead { font-size: 21px; font-weight: 450; fill: #557087; }
+      .step { font-size: 15px; font-weight: 700; letter-spacing: 2px; fill: #2379ed; }
+      .node-title { font-size: 25px; font-weight: 680; }
+      .node-copy { font-size: 19px; font-weight: 450; fill: #587086; }
+      .chip { font-size: 17px; font-weight: 600; fill: #40586c; }
+      .optional-title { font-size: 22px; font-weight: 680; }
+      .optional-copy { font-size: 18px; font-weight: 450; fill: #63778a; }
+      .flow { fill: none; stroke: #2f7bea; stroke-width: 3.2; marker-end: url(#journey-arrow); }
+      .optional-flow { fill: none; stroke: #e78931; stroke-width: 3.2; marker-end: url(#journey-arrow-warm); }
+      .optional-link { fill: none; stroke: #e78931; stroke-width: 3; marker-end: url(#journey-arrow-warm); }
+    </style>
+  </defs>
+  <rect width="1800" height="760" rx="34" fill="url(#journey-bg)"/><rect width="1800" height="760" rx="34" fill="url(#journey-dots)"/>
+  <rect x="54" y="42" width="10" height="103" rx="5" fill="url(#journey-brand)"/>
+  <text class="eyebrow" x="88" y="66">PRODUCT JOURNEY</text><text class="headline" x="88" y="113">一个目标，怎样长成可以继续使用的知识脉络</text><text class="subhead" x="88" y="148">访谈负责选路，画布承接学习；需要真人经验时，再从作者网络里找人</text>
+  <g id="main-flow" transform="translate(58 224)">
+    <path class="flow" d="M236 112H282"/><path class="flow" d="M510 112H556"/><path class="flow" d="M784 112H830"/><path class="flow" d="M1058 112H1104"/><path class="flow" d="M1370 112H1416"/>
+    <g id="goal-node"><rect width="236" height="224" rx="28" fill="#ffffff" stroke="#bcd7fa" filter="url(#journey-shadow)"/><path d="M28 2H208" stroke="#2379ed" stroke-width="5" stroke-linecap="round"/><text class="step" x="24" y="38">01 · 起点</text><circle cx="44" cy="84" r="18" fill="#eaf2ff"/><path d="M36 89L43 78L51 89M41 89L47 82L55 91" fill="none" stroke="#2379ed" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><text class="node-title" x="24" y="130">真实目标</text><text class="node-copy" x="24" y="164">想做的作品</text><text class="node-copy" x="24" y="190">要解决的问题</text></g>
+    <g id="interview-node" transform="translate(282)"><rect width="228" height="224" rx="28" fill="#ffffff" stroke="#bce9e3" filter="url(#journey-shadow)"/><path d="M28 2H200" stroke="#22aaa3" stroke-width="5" stroke-linecap="round"/><text class="step" x="24" y="38" fill="#168d87">02 · 收束</text><circle cx="44" cy="84" r="18" fill="#eaf8f6"/><path d="M35 79H53M35 86H48M35 93H44" fill="none" stroke="#22aaa3" stroke-width="2.2" stroke-linecap="round"/><text class="node-title" x="24" y="130">AI 访谈</text><text class="node-copy" x="24" y="164">基础 · 期限 · 资源</text><text class="node-copy" x="24" y="190">成果 · 边界 · 取舍</text></g>
+    <g id="route-node" transform="translate(556)"><rect width="228" height="224" rx="28" fill="#ffffff" stroke="#c9d7fb" filter="url(#journey-shadow)"/><path d="M28 2H200" stroke="#5d7eea" stroke-width="5" stroke-linecap="round"/><text class="step" x="24" y="38" fill="#526fd1">03 · 导航</text><circle cx="44" cy="84" r="18" fill="#eef1ff"/><path d="M34 91C39 74 49 96 55 77M34 91L39 86M55 77L50 79" fill="none" stroke="#5d7eea" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><text class="node-title" x="24" y="130">个性化路线</text><text class="node-copy" x="24" y="164">阶段与概念</text><text class="node-copy" x="24" y="190">允许分叉与汇合</text></g>
+    <g id="canvas-node" transform="translate(830)"><rect width="228" height="224" rx="28" fill="#ffffff" stroke="#f3d7ad" filter="url(#journey-shadow)"/><path d="M28 2H200" stroke="#e79a3d" stroke-width="5" stroke-linecap="round"/><text class="step" x="24" y="38" fill="#c9791f">04 · 学习</text><circle cx="44" cy="84" r="18" fill="#fff5e8"/><rect x="34" y="76" width="20" height="16" rx="3" fill="none" stroke="#d99138" stroke-width="2"/><path d="M39 81H49M39 86H47" stroke="#d99138" stroke-width="2" stroke-linecap="round"/><text class="node-title" x="24" y="130">概念无限画布</text><text class="node-copy" x="24" y="164">知乎资料 · AI 教学</text><text class="node-copy" x="24" y="190">来源与实践记录</text></g>
+    <g id="continue-node" transform="translate(1104)"><rect width="266" height="224" rx="28" fill="#ffffff" stroke="#bfe7ed" filter="url(#journey-shadow)"/><path d="M28 2H238" stroke="#2ba9bb" stroke-width="5" stroke-linecap="round"/><text class="step" x="24" y="38" fill="#238b9b">05 · 随时继续</text><text class="node-title" x="24" y="82">双学习入口</text><rect x="24" y="107" width="96" height="40" rx="20" fill="#eaf2ff"/><text class="chip" x="46" y="133" fill="#2379ed">问 AI</text><rect x="130" y="107" width="112" height="40" rx="20" fill="#e9f8f5"/><text class="chip" x="150" y="133" fill="#168d87">问博主</text><text class="node-copy" x="24" y="178">继续解释问题</text><text class="node-copy" x="24" y="202">阅读创作者观点</text></g>
+    <g id="knowledge-node" transform="translate(1416)"><rect width="268" height="224" rx="28" fill="#ffffff" stroke="#bee6cb" filter="url(#journey-shadow)"/><path d="M28 2H240" stroke="#58b77a" stroke-width="5" stroke-linecap="round"/><text class="step" x="24" y="38" fill="#3e9e61">06 · 沉淀</text><circle cx="44" cy="84" r="18" fill="#eaf8ef"/><path d="M35 78H44V92H35ZM45 75H55V92H45Z" fill="none" stroke="#48a66a" stroke-width="2" stroke-linejoin="round"/><text class="node-title" x="24" y="130">个人知识脉络</text><text class="node-copy" x="24" y="164">可回查 · 可追问</text><text class="node-copy" x="24" y="190">可继续使用</text></g>
+  </g>
+  <g id="optional-consultation">
+    <path class="optional-flow" d="M1608 448V492H1518V516"/><rect x="1272" y="468" width="268" height="34" rx="17" fill="#fff5e8"/><text class="chip" x="1292" y="491" fill="#b96818">需要真人反馈时，由此进入</text>
+    <rect x="262" y="526" width="1276" height="156" rx="30" fill="#ffffff" stroke="#f0c993" filter="url(#journey-shadow)"/><rect x="262" y="526" width="9" height="156" rx="4.5" fill="#e78931"/>
+    <text class="step" x="302" y="565" fill="#b96818">可选延伸</text><text class="optional-title" x="302" y="608">现有知识仍补不上外部参照</text>
+    <g transform="translate(302 628)"><rect width="116" height="36" rx="18" fill="#eef3ff"/><text class="chip" x="24" y="24">项目评估</text><rect x="128" width="116" height="36" rx="18" fill="#fff2e8"/><text class="chip" x="152" y="24">审美反馈</text><rect x="256" width="132" height="36" rx="18" fill="#eef8f4"/><text class="chip" x="276" y="24">真实经历</text></g>
+    <path class="optional-link" d="M734 604H820"/><text class="optional-title" x="852" y="594">寻找合适的咨询博主</text><text class="optional-copy" x="852" y="624">用当前目标、卡片和作者证据说明为什么匹配</text><text class="optional-copy" x="852" y="651">用户决定是否联系；用户可将反馈记录在知识脉络里</text>
+  </g>
+</svg>

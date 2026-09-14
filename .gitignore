@@ -9,22 +9,14 @@ dist/
 .tmp-chrome/
 server/.data/
 
-# Local provider evaluation payloads; reviewed summaries live beside this directory.
-qa/evidence/goal-agents/raw/
-qa/evidence/showcase/raw/
-qa/evidence/project-audit-fixes-2026-09-08/raw/
-
 # Local QA reports and provider/model-response evidence. Keep these on the
 # workstation only; they may include real prompt and response payloads.
 qa/evidence/thinking-2026-09-10/
 qa/evidence/thinking-reliability-2026-09-10/
-qa/collections-2026-09-10.md
 qa/collections-review.html
 qa/collections-review.tsx
-qa/thinking-2026-09-10.md
 qa/thinking-output-review.html
 qa/thinking-output-review.tsx
-qa/thinking-reliability-2026-09-10.md
 qa/thinking-review.html
 qa/thinking-review.tsx
 scripts/verify-thinking-flow.mjs
@@ -42,15 +34,26 @@ coverage/
 
 # Local presentation production and review records; no raw capture assets in Git.
 /design/launch-film-2026-09-11/
-/qa/author-avatar-2026-09-12.md
-/qa/introduction-integration-2026-09-13.md
 /qa/introduction-motion.html
 /qa/introduction-responsive.html
-/qa/launch-film-2026-09-11.md
-/qa/login-redesign-2026-09-13.md
 /qa/login-responsive.html
 /qa/login-states.html
-/qa/oauth-integration-2026-09-12.md
-/qa/path-card-drift-2026-09-12.md
-/qa/vps-live-2026-09-13.md
-/qa/ui-fixes-2026-09-13.md
+
+# Publication policy: reproducible QA code and minimal public provenance only.
+# Existing dated reports remain locally and in the history index.
+/qa/*.md
+!/qa/README.md
+/qa/product-copy-*/
+/qa/evidence/*
+!/qa/evidence/author-review-2026-09-09.json
+!/qa/evidence/showcase/
+/qa/evidence/showcase/*
+!/qa/evidence/showcase/source-review.json
+!/qa/evidence/showcase/workflows.json
+!/qa/evidence/ux-ui-2026-09-08/
+/qa/evidence/ux-ui-2026-09-08/*
+!/qa/evidence/ux-ui-2026-09-08/author-hero/
+/qa/evidence/ux-ui-2026-09-08/author-hero/*
+!/qa/evidence/ux-ui-2026-09-08/author-hero/sources.json
+/design/route-covers/*.png
+/docs/ux-ui-fix-plan-2026-09-07.md

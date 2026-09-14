@@ -1,6 +1,0 @@
-PASS real-swing-and-expanded-blue-coverage
-PASS route-filter-and-scroll-pause
-PASS reduced-motion-and-responsive-themes
-PASS other-page-backgrounds-and-remount
-PASS axe-light-and-dark
-RESULT true

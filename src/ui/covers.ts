@@ -1,4 +1,4 @@
-// Reviewed originals and prompts are retained in design/route-covers.
+// Shipped WebP covers: public/art/covers; prompts and archived-master hashes: design/route-covers/generation.json.
 export const COVER_IDS = [
   '01-trail', '02-library', '03-vectors', '04-observatory',
   '05-bridge', '06-garden', '07-laboratory', '08-ocean',

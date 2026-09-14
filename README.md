@@ -46,8 +46,9 @@ cp .env.example .env
 ```dotenv
 DEEPSEEK_API_KEY=
 DEEPSEEK_BASE_URL=
-DEEPSEEK_MODEL_NAME=
+DEEPSEEK_MODEL_NAME=deepseek-flash
 DEEPSEEK_CONTEXT_TOKENS=
+DEEPSEEK_MAX_OUTPUT_TOKENS=
 ZHIHU_ACCESS_SECRET=
 ZHIHU_API_BASE_URL=
 ```
@@ -70,16 +71,16 @@ npm run dev
 
 打开 **[localhost:4301](http://localhost:4301)**。API 默认监听 `127.0.0.1:4312`，前端通过同源代理访问它。
 
-本地数据保存在 `server/.data/product-v2`。匿名工作区依靠浏览器 Cookie 找回身份；需要正式账号或多副本运行时，请使用[部署指南](deploy/README.md)中的 PostgreSQL 和身份配置。
+本地数据保存在 `server/.data/product-v2`。游客显式登录后依靠当前浏览器的 Cookie 恢复独立工作区；不同电脑或浏览器档案的游客不会合并；需要正式账号或多副本运行时，请使用[部署指南](deploy/README.md)中的 PostgreSQL 和身份配置。
 
 ## 开始一次学习
 
-1. 在首页描述想完成的事，按需添加资料并选择检索范围。
-2. 回答目标访谈，也可以直接填写自己的情况；当前题组答完后自动生成路线。
+1. 从产品介绍页进入知乎登录或游客入口，在学习首页描述想完成的事，按需添加资料并选择检索范围。
+2. 回答目标访谈，也可以直接填写自己的情况；当前题组答完且资料准备完成后自动生成路线。
 3. 打开路线中的概念，阅读收集的资料与首次讲解。
 4. 从卡片发起追问，在画布或文档中整理；下次从历史或“我的”列表继续。
 
-想先了解交互，可以浏览内置的论文、3D 作品、公开文章选集等[编选示例](docs/showcase.md)。知乎授权域还提供显式的[本地演示模式](docs/configuration.md#知乎账号与演示模式)，模型、搜索和 PDF 解析仍使用真实服务。
+想先了解交互，可以浏览内置的系统理财、摄影、大模型三条[编选示例](docs/showcase.md)。知乎授权域还提供显式的[本地演示模式](docs/configuration.md#知乎账号与演示模式)，模型、搜索和 PDF 解析仍使用真实服务。
 
 ## 开发
 
@@ -99,7 +100,7 @@ src/        页面、学习工作区、阅读与 3D 宿主
 server/     持久工作流、provider、鉴权与存储
 packages/   共享合同、API 客户端与运行时原语
 docs/       当前产品、Agent 合同和工程指南
-qa/         可复现的验收页面与证据
+qa/         可复现的验收页面与必要来源账本
 ```
 
 ## 项目状态
@@ -113,6 +114,7 @@ qa/         可复现的验收页面与证据
 | 配置模型、数据库与知乎账号 | [配置指南](docs/configuration.md) |
 | 运行、测试与修改代码 | [开发指南](docs/development.md) |
 | 部署、备份与运维 | [部署指南](deploy/README.md) |
+| 产品故事、使用方式与社区价值 | [产品说明计划书](docs/product-proposal.md) |
 | 产品目标、当前实现与缺口 | [产品说明](docs/product.md) |
 | 工作流、存储与恢复机制 | [工程设计](docs/engineering.md) |
 | Agent 输入、提示词和输出合同 | [Agent 合同](docs/agents.md) |
