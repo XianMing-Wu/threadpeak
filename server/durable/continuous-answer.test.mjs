@@ -40,21 +40,20 @@ test('a later source summary has its own running step instead of inheriting a pr
  await boundedSummary(llm,ctx,'原始资料。'.repeat(200),'first',512,'fast',64000);assert.equal(calls,2)
 })
 
-test('association retries never replay composition; failure and recovery retain frozen prose and use its checkpoint',async t=>{
- const {store,resource}=await fixture(t);let composeCalls=0,attachCalls=0,fail=true;const prompts=[]
+test('invalid associations recover locally, retain frozen prose and publish exactly once',async t=>{
+ const {store,resource}=await fixture(t);let composeCalls=0,attachCalls=0;const prompts=[]
  const tools=new ProductTools({complete:async call=>{
   const data=JSON.parse(call.messages[1].content)
   if(!data.citationCatalog){composeCalls++;assert.equal(data.currentQuestion,input.currentQuestion);const raw=JSON.stringify(answer);call.onText?.(raw);return {kind:'completed',text:raw}}
   attachCalls++;prompts.push(call.messages[0].content);assert.equal(call.thinkingDepth,'fast');call.onText?.('{"placements":[')
   const snapshot=await store.snapshot('owner',resource.id);assert.match(snapshot.job.draft,/同一个点/);assert.deepEqual(snapshot.data,{})
-  return {kind:'completed',text:JSON.stringify(fail?{placements:[{section:'P1',after:'C1',evidenceRefs:['C9.E1']}]}:placeAnswer(data))}
+  return {kind:'completed',text:JSON.stringify({placements:[{section:'P1',after:'C1',evidenceRefs:['C9.E1']}]})}
  }},{})
  const worker=new DurableWorker(store,async ctx=>{const result=await tools.answerCards(ctx,input);await ctx.flush();await store.commit(ctx.job,()=>result)},1,()=>{})
  await worker.execute(await store.claim());let snapshot=await store.snapshot('owner',resource.id)
- assert.equal(snapshot.job.status,'waiting');assert.match(snapshot.job.draft,/用矩阵变换/);assert.equal(composeCalls,1);assert.equal(attachCalls,3);assert.equal(new Set(prompts).size,1)
- assert.equal(snapshot.job.activities.find(a=>a.id==='answer:write').status,'done');assert.equal(snapshot.job.activities.find(a=>a.id==='answer:attach').status,'waiting')
- fail=false;await store.resume('owner',resource.id);await worker.execute(await store.claim());snapshot=await store.snapshot('owner',resource.id)
- assert.equal(snapshot.job.status,'completed');assert.equal(composeCalls,1);assert.equal(attachCalls,4);assert.equal(snapshot.data.paragraphs[0].text,answer.sections[0].text)
+ assert.equal(snapshot.job.status,'completed');assert.equal(composeCalls,1);assert.equal(attachCalls,1);assert.equal(new Set(prompts).size,1)
+ assert.equal(snapshot.job.activities.find(a=>a.id==='answer:write').status,'done');assert.equal(snapshot.job.activities.find(a=>a.id==='answer:attach').status,'done')
+ assert.equal(snapshot.data.paragraphs[0].text,answer.sections[0].text);assert.equal(snapshot.data.paragraphs[0].basisId,'a')
  const events=await store.events('owner',resource.id,0),drafts=events.filter(e=>e.kind==='job.progress').map(e=>e.payload)
  assert.ok(drafts.length>0);assert.ok(drafts.every(s=>s.phase&&!Object.hasOwn(s,'draft')));assert.equal(events.filter(e=>e.kind==='job.completed').length,1)
 })
@@ -67,7 +66,7 @@ test('the last throttled chunk is flushed and phase changes never clear it; late
  await assert.rejects(ctx.flush(),e=>e.code==='LEASE_LOST');assert.equal((await store.snapshot('owner',resource.id)).job.status,'cancelled')
 })
 
-test('truncated association recovers with a larger budget, preserves composed prose and commits exactly one answer',async t=>{
+test('truncated association recovers from the frozen catalog without increasing the call count',async t=>{
  const {store,resource}=await fixture(t);let compose=0,attach=0;const budgets=[]
  const tools=new ProductTools({complete:async call=>{
   const data=JSON.parse(call.messages[1].content)
@@ -79,9 +78,9 @@ test('truncated association recovers with a larger budget, preserves composed pr
  const worker=new DurableWorker(store,async ctx=>{const result=await tools.answerCards(ctx,input);await ctx.flush();await store.commit(ctx.job,()=>result)},1,()=>{})
  await worker.execute(await store.claim())
  const snapshot=await store.snapshot('owner',resource.id)
- assert.equal(snapshot.job.status,'completed');assert.equal(compose,1);assert.equal(attach,2);assert.deepEqual(budgets,[4096,8192])
+ assert.equal(snapshot.job.status,'completed');assert.equal(compose,1);assert.equal(attach,1);assert.deepEqual(budgets,[4096])
  assert.equal(snapshot.data.paragraphs[0].text,answer.sections[0].text)
- const thoughts=latestThinkingActivities(snapshot.job.activities);assert.equal(thoughts.length,1);assert.equal(thoughts[0].status,'done');assert.match(thoughts[0].thought,/先前尝试 1（输出已中断）/)
+ const thoughts=latestThinkingActivities(snapshot.job.activities);assert.equal(thoughts.length,1);assert.equal(thoughts[0].status,'waiting');assert.match(thoughts[0].thought,/先前被截断的核对/)
  const events=await store.events('owner',resource.id,0);assert.equal(events.filter(e=>e.kind==='job.completed').length,1)
 })
 

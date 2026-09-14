@@ -64,12 +64,11 @@ test('every new concept needs goal, depth, check and a grounded direct or prereq
   assert.throws(()=>validateGoalPlan(bad,input),/goalAlignment/)
   concept.goalAlignment.materialAnchors[0].quote='这是文件中不存在的公式';assert.throws(()=>validateGoalPlan(output,input),/引文不在/)
 })
-test('new interview calls repair non-three choices with the same prompt and freeze custom placeholder outside options',async t=>{
+test('new interview deterministically recovers non-three choices and freeze custom placeholder outside options',async t=>{
   const store=await fixture(t),ctx=await context(store),calls=[]
   const tools=new ProductTools({complete:async call=>{calls.push(call);const value=JSON.parse(ROUTE_INTERVIEW_OUTPUT);if(calls.length===1)value.questions[0].options.pop();return {kind:'completed',text:JSON.stringify(value)}}},{})
   const result=await tools.planStep(ctx,'R3',{goalContext:{rawGoal:'读论文',userStatements:[]},exploration:exploration()})
-  assert.equal(result.questions[0].options.length,3);assert.equal(calls.length,2)
-  assert.equal(calls[0].messages[0].content,calls[1].messages[0].content)
+  assert.equal(result.questions[0].options.length,3);assert.equal(calls.length,1);assert.ok(result.questions.length>=2)
 })
 test('invalid R4 publishes a goal-based linear route without another call or invented anchors',async t=>{
  for(const output of ['{}','this is not JSON',JSON.stringify({version:'1.0',title:'旧图',carriers:[],concepts:[]})]){
@@ -95,17 +94,16 @@ test('R4 retains valid model content and verified anchors without a repair call'
  assert.equal(calls.length,1);assert.equal(projectRouteToDocument(route).ok,true)
  assert.equal(route.concepts[0].goalAlignment.materialAnchors[0].quote,plan().stages[0][0].concepts[0].goalAlignment.materialAnchors[0].quote)
 })
-test('first teaching reviews every source without turning every source into another paragraph',async t=>{
+test('first teaching selects useful bases before writing and keeps unselected source cards intact',async t=>{
   const store=await fixture(t),ctx=await context(store),calls=[]
   const allowedCards=Array.from({length:10},(_,i)=>({id:`source-${i}`,title:`资料 ${i}`,content:`材料 ${i} 的同一个定义。`}))
   const tools=new ProductTools({complete:async call=>{
-    calls.push(call);const input=JSON.parse(call.messages[1].content);if(input.citationCatalog)return {kind:'completed',text:JSON.stringify(placeAnswer(input))};const cards=input.read_card_scope.cards
-    assert.equal(cards.length,10);assert.equal(input.answerBounds.maxCards,8)
+    calls.push(call);const input=JSON.parse(call.messages[1].content);if(input.candidate_card_scope){assert.equal(input.candidate_card_scope.cards.length,10);return {kind:'completed',text:JSON.stringify({selections:[{ref:'C7',reason:'重复定义中足够清楚的一份'}]})}};if(input.citationCatalog)return {kind:'completed',text:JSON.stringify(placeAnswer(input))};const cards=input.read_card_scope.cards
+    assert.equal(cards.length,1);assert.equal(input.answerBounds.maxCards,8)
     return {kind:'completed',text:JSON.stringify({sourceReview:cards.map(c=>({ref:c.ref,contribution:'重复定义，只选择其中的清晰例子讲解'})),sections:cards.slice(0,calls.length===1?10:2).map(c=>({after:c.ref,title:'当前概念的解释',text:'围绕当前问题说明一个要点。'}))})}
   }},{})
   const output=await tools.answerCards(ctx,{allowedCards,mode:'first_learning',concept:{title:'当前概念'},currentQuestion:'这个概念怎样用于目标？'})
-  assert.equal(calls.length,3);assert.equal(output.paragraphs.length,2)
-  assert.equal(calls[0].messages[0].content,calls[1].messages[0].content)
+  assert.equal(calls.length,3);assert.equal(output.paragraphs[0].basisId,'source-6');assert.ok(output.paragraphs.length<=8);assert.ok(output.paragraphs.every(p=>allowedCards.some(c=>c.id===p.basisId)))
 })
 test('compression preserves complete intent and user negatives, and purpose isolates cached summaries',async t=>{
   const store=await fixture(t),ctx=await context(store),calls=[]

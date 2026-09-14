@@ -9,11 +9,11 @@ import {
   structureRepairUserMessage,
 } from './repair.ts'
 
-test('repair user copy matches the active agent contract', async () => {
+test('legacy repair copy remains isolated from the active deterministic recovery contract', async () => {
   const specs = await readFile(new URL('../../docs/agents.md', import.meta.url), 'utf8')
   assert.match(specs, /### 0\.1 任务、预算与修复/)
-  assert.ok(specs.includes(STRUCTURE_REPAIR_USER_PREFIX))
-  assert.ok(specs.includes(PUBLIC_STRUCTURE_FAILURE_MESSAGE))
+  assert.ok(specs.includes("各生成步骤只调用一次模型"))
+  assert.ok(!specs.includes("面向用户的普通结构失败文案为"))
   assert.equal(
     structureRepairUserMessage('模型输出不符合该 Agent 的指定结构。'),
     `${STRUCTURE_REPAIR_USER_PREFIX}\n失败原因：模型输出不符合该 Agent 的指定结构。`,

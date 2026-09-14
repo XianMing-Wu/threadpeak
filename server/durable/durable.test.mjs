@@ -170,14 +170,14 @@ test('summary provider failure does not produce a prefix or alter the original',
   assert.equal((await s.db.query('SELECT * FROM tp_memories')).length,0)
 })
 
-test('same-agent structure repair validates single-card references; drafts are presentation only',async t=>{
+test('local structure recovery preserves single-card scope; drafts are presentation only',async t=>{
   const s=await fixture(t),r=await s.create('owner','test','repair',{})
   await s.enqueue('owner',r.id,'test','repair-command',{depth:'deep'});const job=await s.claim(),ctx=new TaskContext(s,job,new AbortController().signal),calls=[]
   const llm={complete:async input=>{calls.push(input);const context=JSON.parse(input.messages[1].content);const raw=JSON.stringify(context.citationCatalog?placeAnswer(context):{sections:[{after:calls.length===1?'C9':'C1',title:'解释',text:'引用这一张卡。'}]});input.onText?.(raw);return {kind:'completed',text:raw}}}
   const tools=new ProductTools(llm,{})
   const result=await tools.answerCards(ctx,{allowedCards:[{id:'allowed',title:'卡片',content:'资料'}]})
-  await ctx.flush();assert.equal(result.paragraphs[0].basisId,'allowed');assert.equal(calls.length,3)
-  assert.equal(calls[0].messages[0].content,calls[1].messages[0].content);assert.equal(calls[1].thinkingDepth,'deep')
+  await ctx.flush();assert.equal(result.paragraphs[0].basisId,'allowed');assert.equal(calls.length,2)
+  assert.ok(calls.every(c=>c.thinkingDepth==='deep'));assert.match(result.paragraphs[0].text,/资料/)
   assert.equal((await s.snapshot('owner',r.id)).job.status,'running');assert.deepEqual((await s.snapshot('owner',r.id)).data,{})
   assert.equal(paragraphDraft('{"paragraphs":[{"basisId":"secret-id","text":"一句\\n话"},{"text":"第二段'), '一句\n话\n\n第二段')
 })
@@ -262,11 +262,11 @@ test('learning command replay, empty author evidence, undo provenance and active
   const cross=await app.inject({method:'POST',url:`/api/v2/resources/${id}/cancel`,headers:{...headers,'sec-fetch-site':'cross-site'},payload:{}});assert.equal(cross.statusCode,403)
 })
 
-test('generated math repairs in the same answer agent before any formal result is committed',async t=>{
+test('unrepairable math stays readable verbatim without inventing a different expression',async t=>{
   const s=await fixture(t),r=await s.create('owner','test','math-repair',{});await s.enqueue('owner',r.id,'test','math-repair-command',{depth:'deep'});const job=await s.claim(),ctx=new TaskContext(s,job,new AbortController().signal),calls=[]
   const llm={complete:async input=>{calls.push(input);return {kind:'completed',text:calls.length===1?String.raw`结果 $\unknownMacro{x}$。`:String.raw`结果 $\frac{x}{2}$。`}}}
   const result=await new ProductTools(llm,{}).chat(ctx,{currentMessage:'解释这个式子',conversation:[]})
-  assert.equal(result,String.raw`结果 $\frac{x}{2}$。`);assert.equal(calls.length,2);assert.equal(calls[0].messages[0].content,calls[1].messages[0].content);assert.ok(calls.every(c=>c.thinkingDepth==='deep'))
+  assert.match(result,/unknownMacro/);assert.doesNotMatch(result,/frac/);assert.equal(calls.length,1);assert.ok(calls.every(c=>c.thinkingDepth==='deep'))
   assert.deepEqual((await s.snapshot('owner',r.id)).data,{})
 })
 
@@ -288,19 +288,19 @@ test('route progress and library use resource identity when old documents share 
   assert.equal((await app.inject({url:`/api/v2/paths/${one.id}/progress`,headers:{cookie:foreign}})).statusCode,404)
 })
 
-test('same-agent repairs wrong evidence before chat/tree commit and never reuses the old batch checkpoint',async t=>{
+test('local recovery fixes wrong evidence before chat/tree commit and never reuses the old batch checkpoint',async t=>{
   const s=await fixture(t),r=await s.create('owner','test','citation-repair',{})
   await s.enqueue('owner',r.id,'test','citation-command',{depth:'deep'});const job=await s.claim(),ctx=new TaskContext(s,job,new AbortController().signal),calls=[]
   job.checkpoints['L-answer:cards-v1']={hash:'old-contract',value:{operations:[{tool:'append_cards',after:'C1',cards:[{title:'错引',text:'词源'}]}]}}
   const llm={complete:async input=>{
     calls.push(input);const context=JSON.parse(input.messages[1].content)
-    return {kind:'completed',text:JSON.stringify(context.citationCatalog?{placements:[{section:'P1',after:'C2',evidenceRefs:[calls.length===2?'C1.E2':'C2.E2']}]}:{sections:[{after:'C2',title:'词源',text:'代数一词来自 al-jabr，表示还原。'}]})}
+    if(context.candidate_card_scope)return {kind:'completed',text:JSON.stringify({selections:[{ref:'C2',reason:'词源'}]})}
+    return {kind:'completed',text:JSON.stringify(context.citationCatalog?{placements:[{section:'P1',after:'C1',evidenceRefs:['C2.E2']}]}:{sections:[{after:'C1',title:'词源',text:'代数一词来自 al-jabr，表示还原。'}]})}
   }}
   const answer=await new ProductTools(llm,{}).answerCards(ctx,{allowedCards:[{id:'school',title:'课本',content:'包括代数和几何。'},{id:'history',title:'词源',content:'al-jabr 表示还原。'}]})
   assert.equal(answer.paragraphs[0].basisId,'history');assert.equal(calls.length,3)
-  assert.match(calls[2].messages.at(-1).content,/不在 C2/)
-  assert.equal(calls[1].messages[0].content,calls[2].messages[0].content);assert.equal(calls[1].thinkingDepth,'deep')
-  assert.equal(Object.entries(job.checkpoints).find(([key])=>key.startsWith('L-answer:compose-v4@goal-v1:'))[1].value.answer.sections[0].after,'C2')
+  assert.match(job.checkpoints['diagnostic:L-answer:attach-v4:recovery'].value.reason,/不在 C1/);assert.equal(calls[1].thinkingDepth,'deep')
+  assert.equal(Object.entries(job.checkpoints).find(([key])=>key.startsWith('L-answer:compose-v4@goal-v1:'))[1].value.answer.sections[0].after,'C1')
   assert.deepEqual((await s.snapshot('owner',r.id)).data,{})
 })
 test('citation evidence uses the delivered compressed material version without relabelling it as original',async t=>{
@@ -336,6 +336,7 @@ test('first entry repairs citation batching and mismatched evidence before publi
     const context=JSON.parse(input.messages[1].content),system=input.messages[0].content
     let value
     if(system.includes('首次概念教学'))value={queries:['代数词源','代数基础解释','代数方程']}
+    else if(context.candidate_card_scope)value={selections:context.candidate_card_scope.cards.map(c=>({ref:c.ref,reason:'本课依据'}))}
     else if(system.includes('逐条阅读'))value={evidenceIds:articles.map(a=>a.evidenceId)}
     else{
       answerCalls++
@@ -358,9 +359,9 @@ test('first entry repairs citation batching and mismatched evidence before publi
   const worker=new DurableWorker(s,createFlows(new ProductTools(llm,zhihu)),1,quiet)
   await worker.execute(await s.claim())
   const snapshot=await s.snapshot('owner',resource.id)
-  assert.equal(snapshot.job.status,'completed');assert.equal(searches,3);assert.equal(answerCalls,4)
+  assert.equal(snapshot.job.status,'completed');assert.equal(searches,3);assert.equal(answerCalls,2)
   assert.deepEqual(angles,[])
-  assert.deepEqual(snapshot.data.initialAnswer.map(p=>p.basisId),['history-id','equation-id'])
+  assert.equal(snapshot.data.initialAnswer.length,3);assert.ok(snapshot.data.initialAnswer.every(p=>articles.some(a=>a.evidenceId===p.basisId)))
   const response=snapshot.data.conversations[0].messages[1]
   assert.deepEqual(response.paragraphs,snapshot.data.initialAnswer)
   for(const p of response.paragraphs){const node=snapshot.data.nodes.find(n=>n.id===p.id);assert.deepEqual(node.parents,[p.basisId]);assert.deepEqual(node.sources,[p.basisId])}

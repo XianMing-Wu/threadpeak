@@ -215,3 +215,24 @@ test('remote PDF success with omitted text retains the full text layer and unmat
  assert.equal(resource.body.rawContent.split('Last line is preserved.').length,2);assert.match(resource.body.rawContent,/x\+2/);assert.match(resource.body.rawContent,/x-2/)
  const job=await store.existingCommand(own,`pdf:${final.id}`);assert.equal(job.checkpoints['PDF-content:v2:0'].value.textSource,'local-text+zhihu')
 })
+
+test('remote parse failure recovers only an actual saved text layer and exposes its coverage limit',async t=>{
+ const {store,db,own}=await fixture(t)
+ const text='Extracted first page: a real text layer stays readable.\nExtracted last page: image-only content is not inferred from missing OCR.'
+ const r=await store.create(own,'attachment','pdf-local-fallback',{fileName:'text.pdf',mimeType:'application/pdf',content:'',status:'processing',origin:'upload',hash:'saved-text',bytes:123})
+ await db.query('INSERT INTO tp_material_uploads(resource_id,base64) VALUES($1,$2)',[r.id,Buffer.from('%PDF-').toString('base64')])
+ await store.enqueue(own,r.id,'material.pdf','saved-text-task',{depth:'fast'})
+ const job=await store.claim(),ctx=new TaskContext(store,job,new AbortController().signal)
+ await ctx.step('PDF-local-text:v1',{hash:'saved-text'},async()=>text)
+ let requests=0
+ const api={json:async path=>{requests++;if(path==='/resources/v1/files')return {file_id:'f'};if(path.endsWith('/tasks'))return {task_id:'t'};return {task_status:'failed'}}}
+ const tools=new ProductTools({complete:async()=>({kind:'failed',code:'OUTPUT_EMPTY',retryable:false})},{search:async()=>{throw Error('No search')}})
+ await preparePdf(ctx,tools,api)
+ const result=await store.resource(own,r.id);assert.equal(result.body.status,'ready');assert.equal(result.body.rawContent,text);assert.match(result.body.parseNotice,/扫描页/);assert.equal(requests,3)
+ assert.equal((await db.query('SELECT * FROM tp_material_uploads WHERE resource_id=$1',[r.id])).length,0)
+ const empty=await store.create(own,'attachment','pdf-no-layer',{...result.body,status:'processing',hash:'no-layer',rawContent:undefined})
+ await db.query('INSERT INTO tp_material_uploads(resource_id,base64) VALUES($1,$2)',[empty.id,Buffer.from('%PDF-').toString('base64')])
+ await store.enqueue(own,empty.id,'material.pdf','no-layer-task',{depth:'fast'});const next=await store.claim(),emptyCtx=new TaskContext(store,next,new AbortController().signal)
+ await emptyCtx.step('PDF-local-text:v1',{hash:'no-layer'},async()=>'')
+ await assert.rejects(preparePdf(emptyCtx,tools,api),e=>e.code==='PDF_PARSE_FAILED')
+})

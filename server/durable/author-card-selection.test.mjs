@@ -21,7 +21,7 @@ test('short selections resolve only to the original evidence; unknown and repeat
   assert.equal(sameName.resolve([{evidenceId:'E1'},{evidenceId:'E2'}]).length,2)
 })
 
-test('the same author-selection agent repairs a bad reference with specific feedback at the same depth',async()=>{
+test('a bad author reference recovers to an owner-scoped public candidate without a second generation',async()=>{
   const catalog=authorCardCandidates(evidence),calls=[],checkpoints=[]
   const tools=new ProductTools({complete:async input=>{
     calls.push(input)
@@ -29,8 +29,6 @@ test('the same author-selection agent repairs a bad reference with specific feed
   }},{})
   const ctx={job:{input:{depth:'deep'}},signal:new AbortController().signal,step:async(n,i,work)=>work(),activity:async()=>{},store:{checkpoint:async(j,n,h,v)=>checkpoints.push({n,v})}}
   const selection=await tools.learning(ctx,'A-card-select',{candidates:catalog.candidates,question:'详细讲解一下'},v=>catalog.resolve(v.selections),'A-card-select:refs-v1')
-  assert.equal(calls.length,2);assert.ok(calls.every(c=>c.thinkingDepth==='deep'))
-  assert.equal(calls[0].messages[0].content,calls[1].messages[0].content)
-  assert.match(calls[1].messages.at(-1).content,/selections\[0\].*E1、E2、E3/)
-  assert.equal(catalog.resolve(selection.selections)[0],evidence[1]);assert.equal(checkpoints.length,1)
+  assert.equal(calls.length,1);assert.equal(calls[0].thinkingDepth,'deep')
+  assert.equal(catalog.resolve(selection.selections)[0],evidence[0]);assert.match(selection.selections[0].limitation,/尚不能确认/);assert.equal(checkpoints.length,2)
 })

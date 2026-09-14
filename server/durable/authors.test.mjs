@@ -71,7 +71,7 @@ test('relevance precedes preference, personalization is explainable and hidden/n
  const draft=consultationDraft(AuthorBriefSchema.parse({question:'如何换基',purpose:'consult',attempted:'做了一个例子'}),{...items[0],messageBody:undefined})
  assert.match(draft,/已尝试/);assert.match(draft,/是否开放咨询/);assert.match(draft,/https:\/\/www.zhihu.com/)
 })
-test('N0 with three known people still searches both routes; same-model reference repair and durable topic discovery',async t=>{
+test('N0 with three known people still searches both routes; local source reference recovery and durable topic discovery',async t=>{
  const store=await setup(t),known=[source('a'),source('b'),source('c')]
  await store.create('owner','learning','scope',state(known));let searches=0,attempts=0
  const fresh=source('new'),llm={async complete(input){
@@ -87,7 +87,7 @@ test('N0 with three known people still searches both routes; same-model referenc
  await store.enqueue('owner',r.id,'authors.search','search-command',brief);const job=await store.claim(),ctx=new TaskContext(store,job,new AbortController().signal)
  await searchAuthors(ctx,tools)
  const result=(await store.snapshot('owner',r.id)).data
- assert.equal(searches,2);assert.equal(attempts,2);assert.equal(result.results.length,3);assert.equal(result.candidates.length,4)
+ assert.equal(searches,2);assert.equal(attempts,1);assert.equal(result.results.length,3);assert.equal(result.candidates.length,4)
  assert(result.results.some(a=>a.authorId===fresh.authorId));assert(result.candidates.some(a=>a.authorName===fresh.authorName))
  assert.equal((await readAuthorNetwork(store.db,'owner')).authors.find(a=>a.id===fresh.authorId).topics[0].score,0)
 })

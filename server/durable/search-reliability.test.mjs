@@ -30,15 +30,15 @@ test('all three production false positives and natural variants pass R1 without 
   assert.ok(packZhihuSearchQueries(actual.queries).some(q=>q.query.includes(text)))
  }
 })
-test('malformed JSON and invalid query structure are repaired by the same Agent before worker publishes',async t=>{
+test('malformed JSON recovers valid bounded queries before worker publishes without replay',async t=>{
  const {store,r}=await setup(t),requests=[],valid=querySet('transformer先看论文还是先看教程')
  const invalid=structuredClone(valid);invalid.queries[1].id='Q1';invalid.queries[2].angle='invented_angle'
  const tools=new ProductTools(provider(['{"queries":',invalid,valid],requests),{})
  const worker=new DurableWorker(store,async ctx=>{const output=await tools.planStep(ctx,'R1',{goal});await store.commit(ctx.job,()=>output)},1,()=>{})
  await worker.execute(await store.claim());const snapshot=await store.snapshot('owner',r.id)
- assert.equal(snapshot.job.status,'completed');assert.deepEqual(snapshot.data,valid);assert.equal(requests.length,3)
+ assert.equal(snapshot.job.status,'completed');R1OutputSchema.parse(snapshot.data);packZhihuSearchQueries(snapshot.data.queries);assert.equal(requests.length,1)
  assert.ok(requests.every(r=>r.messages[0].content===requests[0].messages[0].content&&JSON.stringify(r.thinking)===JSON.stringify(requests[0].thinking)))
- assert.match(requests[2].messages.at(-1).content,/angle|unique/)
+ assert.ok(snapshot.data.queries.every(q=>q.text.toLowerCase().includes('transformer')))
  assert.ok(!(await store.events('owner',r.id,0)).some(e=>e.kind==='job.waiting'))
 })
 test('a provider outage is recovered in the same task without repeating the completed query plan',async t=>{

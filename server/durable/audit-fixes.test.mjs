@@ -53,12 +53,12 @@ test('paired summary chunks retain order, checkpoint successful siblings and iso
  const next=seen.length;await run(await context(store,'other-owner','bob'));assert.ok(seen.length>next)
  assert.equal(original.length>100000,true)
 })
-test('formal malformed JSON reaches the same Agent repair through the real adapter',async t=>{
+test('formal malformed JSON recovers an actual query plan through the real adapter without replay',async t=>{
  const store=await fixture(t),ctx=await context(store),requests=[]
  const config={deepseekApiKey:'test',deepseekBaseUrl:'https://example.invalid',deepseekModelName:'test'}
- const adapter=createAgentLlmProvider({config,http:async(_url,init)=>{requests.push(JSON.parse(init.body));return {ok:true,status:200,text:async()=>JSON.stringify({choices:[{finish_reason:'stop',message:{content:requests.length===1?'not JSON':'{"accepted":true}',reasoning_content:'{"accepted":false}'}}]})}}})
- const result=await new ProductTools(adapter,{}).structured(ctx,'formal','fixed prompt',{},value=>{assert.equal(value.accepted,true);return value},1000)
- assert.equal(result.accepted,true);assert.equal(requests.length,2);assert.equal(requests[0].messages[0].content,requests[1].messages[0].content);assert.deepEqual(requests[0].thinking,requests[1].thinking)
+ const adapter=createAgentLlmProvider({config,http:async(_url,init)=>{requests.push(JSON.parse(init.body));return {ok:true,status:200,text:async()=>JSON.stringify({choices:[{finish_reason:'stop',message:{content:'not JSON',reasoning_content:'这不是检索内容'}}]})}}})
+ const result=await new ProductTools(adapter,{}).planStep(ctx,'R1',{goal:'理解矩阵乘法'})
+ assert.equal(result.queries.length,4);assert.equal(requests.length,1);assert.ok(result.queries.every(q=>q.text.includes('矩阵')));assert.ok(!JSON.stringify(result).includes('这不是检索内容'))
 })
 test('search merging keeps semantic URL parameters and reuses raw evidence on a merge-version change',async t=>{
  const store=await fixture(t),ctx=await context(store),item=(id,url)=>({evidenceId:id,title:id,url,summary:'evidence',authorId:null,authorName:null,authorUrl:null});let calls=0
@@ -67,13 +67,12 @@ test('search merging keeps semantic URL parameters and reuses raw evidence on a 
 })
 for(const [name,verify] of Object.entries(platformCases))test(name,async t=>verify((await fixture(t)).db))
 
-test('actual author flow repairs overlong questions, then dispatches the individual searches in completed pairs without loss',async t=>{
+test('actual author flow recovers overlong queries into complete bounded search intentions without model replay',async t=>{
  const store=await fixture(t),state={version:2,routeId:'route',conceptId:'concept',title:'概念',description:'范围',hasDispute:false,initialized:true,phase:'ready',active:'conversation',conversations:[{id:'conversation',title:'会话',date:'2026-09-08',messages:[]}],articles:[{id:'article',title:'材料',summary:'来源内容',author:'来源',authorId:null,likes:null,topic:'概念',sourceKind:'upload'}],nodes:[{id:'root',type:'root',title:'概念',text:'',parents:[],sources:[]},{id:'article',type:'article',title:'材料',text:'来源内容',parents:['root'],sources:['article']}]}
  const r=await store.create('owner','learning','author-query',state),queries=['甲'.repeat(90),'乙'.repeat(90),'丙'.repeat(90)],requests=[],sent=[]
  const tools=new ProductTools({complete:async input=>{requests.push(input);return {kind:'completed',text:JSON.stringify({queries:requests.length===1?['甲'.repeat(20),'乙'.repeat(161),'丙'.repeat(161)]:queries})}}},{search:async q=>{sent.push(q);return {kind:'empty'}},direct:async()=>({kind:'completed',text:'正常零位后的直接解释'})})
  await store.enqueue('owner',r.id,'learning.author','author-query',{depth:'fast',conversationId:'conversation',context:replyInput(state,'解释这个问题',['article'],'conversation'),excludedAuthorIds:[]})
  await createFlows(tools)(new TaskContext(store,await store.claim(),new AbortController().signal))
- assert.equal(requests.length,2);assert.equal(requests[0].messages[0].content,requests[1].messages[0].content)
- assert.deepEqual(sent,queries)
+ assert.equal(requests.length,1);assert.equal(sent[0],'甲'.repeat(20));assert.equal(sent.length,2);assert.ok(sent.every(q=>q.length<=160));assert.ok(sent[1].includes('实践经验'))
  const result=await store.snapshot('owner',r.id);assert.equal(result.job.status,'completed');assert.equal(result.data.nodes.length,2);assert.match(result.data.conversations[0].messages.at(-1).text,/没有返回可核实/)
 })

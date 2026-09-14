@@ -1,21 +1,23 @@
+import {renderCalculationSlots} from '../knowledge/calculation-blocks.ts'
+import {ANSWER_BASIS_PROMPT,validateAnswerBasis} from '../knowledge/answer-basis.ts'
+import {readDamagedPlan} from '../path-generation/recover-plan.ts'
 import { ANSWER_COMPLETENESS,firstLessonFocus,COMPOSE_PROMPT,COMPOSE_OUTPUT,ATTACH_PROMPT,ATTACH_OUTPUT,validateComposition,citationCatalog,attachComposition } from '../knowledge/answer-composition.ts'
 import { GOAL_POLICY, AGENT_CONTRACT_VERSION } from '../agent-runtime/goal-policy.ts'
 import {type DiscoveryInput,type ExplorationInput} from '../path-generation/carrier-exploration.ts'
-import {DIRECT_ROUTE_VERSION,ROUTE_DEPENDENCY_FOCUS,routeTaskFocus,CATALOG_NAMES_PROMPT,CATALOG_NAMES_OUTPUT,validateCatalogNames,catalogNameQuery,RouteInterviewSchema,ROUTE_INTERVIEW_PROMPT,ROUTE_INTERVIEW_OUTPUT,validateDirectRoutePlan,DIRECT_ROUTE_PROMPT,DIRECT_ROUTE_OUTPUT} from '../path-generation/direct-route.ts'
+import {DIRECT_ROUTE_VERSION,ROUTE_DEPENDENCY_FOCUS,routeTaskFocus,CATALOG_NAMES_PROMPT,CATALOG_NAMES_OUTPUT,groundedCatalogNames,validateCatalogNames,catalogNameQuery,RouteInterviewSchema,ROUTE_INTERVIEW_PROMPT,ROUTE_INTERVIEW_OUTPUT,validateDirectRoutePlan,DIRECT_ROUTE_PROMPT,DIRECT_ROUTE_OUTPUT} from '../path-generation/direct-route.ts'
 import type {SearchScope} from '@threadpeak/contracts/search-scope'
-import {validateAnswerMath} from './math-output.ts'
+import {validateAnswerMath,repairAnswerPresentation} from './math-output.ts'
 import {CardScopeSchema,GOAL_ANSWER_FOCUS,readCardScope,type CardMaterial} from '../knowledge/card-tools.ts'
 import {digest} from './store.ts'
 import { z } from 'zod'
 import { AGENT_PROMPTS } from '../agent-runtime/prompts.ts'
 import { SHARED_SYSTEM_PREFIX } from '../agent-runtime/constants.ts'
-import { extractStructuredJson, parseAgentOutput, type ParseAgentOutputInput, type R4Output } from '../agent-runtime/schemas.ts'
+import { parseAgentOutput, type ParseAgentOutputInput, type R4Output } from '../agent-runtime/schemas.ts'
 import { projectRouteToDocument } from '../path-generation/project-document.ts'
 import type { LlmProvider, LlmCompleteResult, ZhihuProvider, ThinkingDepth, SearchEvidence } from '../agent-runtime/types.ts'
 import { packContext, tokenBound, effectiveWindow } from './context.ts'
 import { ToolError, settledParallel, type TaskContext } from './worker.ts'
 import { packZhihuSearchQueries } from '../agent-runtime/pack-search.ts'
-import { structureRepairUserMessage } from '../agent-runtime/repair.ts'
 import {validateGoalPlan,compileStagedPlan,STAGED_PLAN_PROMPT,STAGED_PLAN_OUTPUT} from '../path-generation/staged-plan.ts'
 import {evidenceUrlKey} from '../agent-runtime/evidence-url.ts'
 import { paragraphDraft } from './stream-draft.ts'
@@ -23,6 +25,9 @@ import { modelCall } from './model-call.ts'
 import {recoverPlan,compileRecoveredPlan} from '../path-generation/recover-plan.ts'
 import { reasoningReserve } from '../agent-runtime/thinking-policy.ts'
 import {parseAnswerJson} from '../knowledge/answer-normalization.ts'
+import {parseFormalJson} from '../agent-runtime/formal-json.ts'
+import {normalizeStepOutput} from '../agent-runtime/normalize-step-output.ts'
+import {recoverStructuredValue,readableExcerpt,repairSourceAttributions,recoverableModelOutput} from './output-recovery.ts'
 import {defaultCapabilities,type ToolCapabilities} from './capabilities.ts'
 import {LEARNING_TOOL_SPECS,ROUTE_STEP_SPECS,type RouteStep,type LearningTool} from './agent-specs.ts'
 export {LEARNING_TOOL_SPECS} from './agent-specs.ts'
@@ -31,84 +36,82 @@ export class ProductTools {
   llm: LlmProvider; zhihu: ZhihuProvider; window: number; capabilities:ToolCapabilities
   constructor(llm:LlmProvider, zhihu:ZhihuProvider, capabilities:number|ToolCapabilities=64_000) { this.llm=llm; this.zhihu=zhihu; this.capabilities=typeof capabilities==='number'?defaultCapabilities(capabilities):capabilities;this.window=this.capabilities.llm.window }
   async structured<T>(ctx:TaskContext, name:string, system:string, input:unknown, validate:(value:unknown,prepared:unknown)=>T, output=8192, options:{stream?:boolean;thinkingDepth?:ThinkingDepth;thinking?:'disabled';focus?:string;prepare?:(input:any)=>unknown}={}):Promise<T> {
-    const runtime={system,budget:this.capabilities.llm,formalOutput:2,...options.focus?{focus:options.focus}:{},...options.thinkingDepth?{thinkingDepth:options.thinkingDepth}:{}}
+    const runtime={system,budget:this.capabilities.llm,formalOutput:4,...options.focus?{focus:options.focus}:{},...options.thinkingDepth?{thinkingDepth:options.thinkingDepth}:{}}
     return ctx.step(`${name}@${AGENT_CONTRACT_VERSION}:${digest(runtime).slice(0,16)}`, {input,...runtime}, async()=>{
       const label=({'L-search-plan':'拆解检索方向','L-source-select':'筛选相关资料','A-card-plan':'理解请教问题','A-card-select':'筛选相关博主'} as Record<string,string>)[name.split(':')[0]!]
       if(label)await ctx.activity(name,'read',label)
       const depth:ThinkingDepth=options.thinkingDepth??ctx.job.input.depth??'fast'
       const window=effectiveWindow(this.window)
       const ceiling=Math.min(this.capabilities.llm.output,Math.floor(window*.35))
-      let reserve=Math.min(ceiling,output+reasoningReserve({thinkingDepth:depth,thinking:options.thinking}))
+      const reserve=Math.min(ceiling,output+reasoningReserve({thinkingDepth:depth,thinking:options.thinking}))
       const prepareBase=async()=>{
         const base=await packContext(this.llm,ctx,system,input,depth,{window:this.window,output:reserve,margin:(options.prepare?Math.max(4096,Math.ceil(window*.08)):2048)+(options.focus?tokenBound(options.focus)+64:0),summary:this.capabilities.llm})
         if(options.prepare)base[1]!.content=JSON.stringify(options.prepare(JSON.parse(base[1]!.content)))
         if(options.focus)base.push({role:'user',content:options.focus})
         return base
       }
-      let base=await prepareBase()
-      let previous='',reason=''
-      for(let attempt=0;attempt<3;attempt++){
-        let messages=base
-        if(attempt){
-          const available=window-reserve-512-base.reduce((s,m)=>s+tokenBound(m.content)+64,0)
-          // Diagnostics are expendable, unlike user intent/source text. Bound by bytes too.
-          let concise=''
-          for(const char of reason){if(tokenBound(concise+char)>800)break;concise+=char}
-          const repair=structureRepairUserMessage(concise)
-          // Previous invalid output is diagnostic material, not source evidence.
-          const diagnostic=tokenBound(previous)+tokenBound(repair)+128<=available?previous:'上次输出未通过校验，原始材料仍在前文。'
-          // A rejected route/questionnaire is not a new source or requirement. Repeating
-          // its full JSON anchored real models to the same invalid answer on each repair.
-          messages=options.focus?[...base,{role:'user' as const,content:repair}]:[...base,{role:'assistant' as const,content:diagnostic},{role:'user' as const,content:repair}]
-        }
-        if(messages.reduce((s,m)=>s+tokenBound(m.content)+64,0)+reserve+512>window)throw new ToolError('CONTEXT_REQUIRES_PARTITION',false)
-        const thoughtTitle=label??(name.startsWith('R4')?'安排顺序与并列阶段':name.startsWith('R3')?'准备路线选择题':name==='R1'?'理解学习目标':name.startsWith('L-answer:attach')?'关联知识卡':name.startsWith('L-answer')?'撰写讲解':name.startsWith('N')?'寻找合适的博主':'整理回答')
-        const result=await modelCall(this.llm,ctx,name,thoughtTitle,{messages,json:true,thinkingDepth:depth,thinking:options.thinking,maxTokens:reserve,signal:ctx.signal,
-          ...(options.stream&&attempt===0&&!ctx.job.draft?{onText:(raw:string)=>{const text=paragraphDraft(raw,true);if(text.trim())ctx.draft('正在撰写讲解',text)}}:{})},attempt)
-        if(result.kind==='failed'){
-          if(result.code==='OUTPUT_TRUNCATED'){
-            if(attempt<2&&reserve<ceiling){
-              reserve=Math.min(ceiling,Math.max(reserve*2,reserve+4096))
-              base=await prepareBase()
-              previous='';reason='上次输出达到长度上限，未形成完整结果。输出预算已增加，请重新输出完整 JSON，保持必要字段和真实依据，避免重复铺陈。'
-              continue
-            }
-            // Repeating an identical insufficient cap cannot recover this operation.
-            throw new ToolError('OUTPUT_TRUNCATED',false)
-          }
-          throw new ToolError(result.code??'MODEL_UNAVAILABLE',result.retryable??true)
-        }
-        previous=result.text
-        let validated:T
-        try{
-          const extracted=name.startsWith('L-answer:')?parseAnswerJson(previous):extractStructuredJson(previous)??JSON.parse(previous.replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,''))
-          validated=validate(extracted,JSON.parse(base[1]!.content))
-        }catch(error){reason=error instanceof Error?error.message:'输出不完整';await ctx.store.checkpoint(ctx.job,`diagnostic:${name}:${attempt}`,digest(previous),{reason});continue}
+      const base=await prepareBase(),prepared=JSON.parse(base[1]!.content)
+      if(base.reduce((s,m)=>s+tokenBound(m.content)+64,0)+reserve+512>window)throw new ToolError('CONTEXT_REQUIRES_PARTITION',false)
+      const thoughtTitle=label??(name.startsWith('R3')?'准备路线选择题':name==='R1'?'理解学习目标':name.startsWith('L-answer:basis')?'选择回答依据':name.startsWith('L-answer:attach')?'关联知识卡':name.startsWith('L-answer')?'撰写讲解':name.startsWith('N')?'寻找合适的博主':'整理回答')
+      let streamed='',draftCalculations:unknown
+      const canStream=options.stream&&!ctx.job.draft
+      const result=await modelCall(this.llm,ctx,name,thoughtTitle,{messages:base,json:true,thinkingDepth:depth,thinking:options.thinking,maxTokens:reserve,signal:ctx.signal,onText:raw=>{
+        streamed=raw
+        if(canStream){if(draftCalculations===undefined&&raw.includes('"sections"'))draftCalculations=(readDamagedPlan(raw,false)[0] as {calculations?:unknown}|undefined)?.calculations??[];const text=renderCalculationSlots(paragraphDraft(raw,true),draftCalculations).replace(/\{\{\s*K\d*\}?$/i,'');if(text.trim())ctx.draft('正在撰写讲解',text)}
+      }})
+      ctx.signal.throwIfAborted()
+      if(result.kind==='failed'&&!recoverableModelOutput(result.code))throw new ToolError(result.code??'MODEL_UNAVAILABLE',result.retryable??true)
+      const raw=result.kind==='completed'?result.text:streamed
+      let reason=''
+      try{
+        if(result.kind!=='completed')throw new Error(result.code)
+        const parsed=name.startsWith('L-answer:')?parseAnswerJson(raw):parseFormalJson(raw)
+        const value=validate(normalizeStepOutput(name,parsed),prepared)
         if(label)await ctx.activity(name,'read',label,'done')
-        return validated
+        return value
+      }catch(error){reason=error instanceof Error?error.message:'输出结构未完成'}
+      // Recovery is bounded local computation; no repeat provider call. A second
+      // conservative pass uses only the frozen input if recovered prose is unsafe.
+      await ctx.store.checkpoint(ctx.job,`diagnostic:${name}:recovery`,digest(raw),{reason:reason.slice(0,2400),providerStatus:result.kind})
+      for(const conservative of [false,true]){
+        try{
+          const value=validate(recoverStructuredValue(name,raw,prepared,conservative),prepared)
+          await ctx.store.checkpoint(ctx.job,`diagnostic:${name}:recovered`,digest({raw,conservative}),{basis:conservative?'source_input':'extracted',providerStatus:result.kind})
+          if(label)await ctx.activity(name,'read',label,'done')
+          return value
+        }catch(error){if(conservative)throw error}
       }
-      throw new ToolError('STRUCTURE_NOT_SETTLED',false)
+      throw new Error('Unreachable recovery boundary')
     })
   }
   async learning<T extends LearningTool>(ctx:TaskContext,name:T,input:unknown,validate?:(v:any)=>void,checkpoint:string=name):Promise<z.infer<(typeof LEARNING_TOOL_SPECS)[T]['schema']>>{
     const spec=LEARNING_TOOL_SPECS[name]
     return this.structured(ctx,name==='A-card-plan'?`${checkpoint}:v2`:checkpoint,`${SHARED_SYSTEM_PREFIX}\n${GOAL_POLICY}\n${spec.prompt}\n输出 JSON：${spec.output}`,input,v=>{
       const parsed=spec.schema.parse(v);validate?.(parsed);return parsed as z.infer<(typeof LEARNING_TOOL_SPECS)[T]['schema']>
-    },name==='L-answer'?16_384:4096,name==='L-source-select'?{focus:'请从上文候选中选出最多8篇互补材料，通常3–6篇即可。每篇必须能直接解释当前概念的目标用途或必要反例；相同内容不重复收录。只输出evidenceIds JSON，不因搜索返回很多结果就全部保留。'}:{})
+    },name==='L-answer'?16_384:4096,name==='L-source-select'?{focus:'请从上文候选中选出最多8篇互补材料，由实际质量决定数量，1–2篇能覆盖就不凑3篇，通常3–6篇。只提到同名词、用到了该概念但未解释它的高级应用、或者主要解释别的概念，不算当前讲解的直接依据；不要因为能抽出一句相关话就保留整篇。每篇必须能直接解释当前概念的目标用途或必要反例；相同内容不重复收录。只输出evidenceIds JSON，不因搜索返回很多结果就全部保留。'}:{})
   }
   async answerCards(ctx:TaskContext,input:{allowedCards:CardMaterial[];[key:string]:unknown}){
-    const {allowedCards,...context}=input,scope=readCardScope(allowedCards)
+    const {allowedCards,...context}=input,candidates=readCardScope(allowedCards)
+    await ctx.activity('answer:basis','read','选择回答依据','running',`从 ${allowedCards.length} 张资料中确定本次回答的依据`)
+    const basis=allowedCards.length===1?{selections:[{ref:'C1',reason:'本次唯一明确引用'}]}:await this.structured(ctx,'L-answer:basis-v1',`${SHARED_SYSTEM_PREFIX}\n${GOAL_POLICY}\n${ANSWER_BASIS_PROMPT}`,{...context,candidate_card_scope:candidates.view},validateAnswerBasis,2048)
+    const selected=basis.selections.map(s=>allowedCards[Number(s.ref.slice(1))-1]!)
+    const scope=readCardScope(selected)
+    const basisPlan=basis.selections.map((s,i)=>({ref:scope.view.cards[i]!.ref,focus:s.reason}))
+    await ctx.activity('answer:basis','read','选择回答依据','done',`已选定 ${selected.length} 张资料`)
     const first=context.mode==='first_learning',answerBounds={maxCards:first?8:12}
-    const outputShape=first?COMPOSE_OUTPUT:'{"sections":[{"after":"C1","title":"本段教学要点","text":"承接前文，围绕同一例子推进"}]}'
-    const modeRule=first?'这是首次学习，先审阅所有来源贡献，再组织适合目标的首次讲解。':'这是后续追问：用户要的是当前问题的直接答案。省略 sourceReview，不重播首次定义课；只补理解当前例子必需的基础。'
+    const outputShape=first?COMPOSE_OUTPUT:'{"sections":[{"after":"C1","title":"本段教学要点","blocks":[{"kind":"text","text":"承接前文，围绕同一例子推进"}]}]}'
+    const modeRule=(first?'这是首次学习，先审阅所有来源贡献，再组织适合目标的首次讲解。':'这是后续追问：用户要的是当前问题的直接答案。省略 sourceReview，不重播首次定义课；只补理解当前例子必需的基础。')+' basisPlan已选出本次确实需要的依据；每个ref至少有一段，按focus推进，仅解释该卡支持的要点。同一例子跨依据继续时另开sections项，不能把多个依据的不同要点塞进一个after下。可连续引用同一卡，但不重新引入候选范围中已排除的内容。'
     await ctx.activity('answer:write','write','撰写讲解')
-    const composed=await this.structured(ctx,'L-answer:compose-v4',`${SHARED_SYSTEM_PREFIX}\n${GOAL_POLICY}\n${COMPOSE_PROMPT}\n${first?'':GOAL_ANSWER_FOCUS+'\n'+ANSWER_COMPLETENESS}\n${modeRule}\n输出 JSON：${outputShape}`,{...context,mode:first?'first_learning':'follow_up',answerBounds,read_card_scope:scope.view},(value,prepared)=>{
+    const composed=await this.structured(ctx,'L-answer:compose-v4',`${SHARED_SYSTEM_PREFIX}\n${GOAL_POLICY}\n${COMPOSE_PROMPT}\n${first?'':GOAL_ANSWER_FOCUS+'\n'+ANSWER_COMPLETENESS}\n${modeRule}\n输出 JSON：${outputShape}`,{...context,mode:first?'first_learning':'follow_up',answerBounds,basisPlan,read_card_scope:scope.view},(value,prepared)=>{
       const view=CardScopeSchema.parse((prepared as {read_card_scope:unknown}).read_card_scope)
-      if(view.cards.length!==scope.ids.length||view.cards.some((card,i)=>card.ref!==scope.view.cards[i]!.ref||card.title!==scope.view.cards[i]!.title))throw new Error('压缩不能改变卡片引用范围或绑定')
+      const expected=scope.view.cards
+      if(view.cards.length!==expected.length||view.cards.some((card,i)=>card.ref!==expected[i]!.ref||card.title!==expected[i]!.title))throw new Error('压缩不能改变卡片引用范围或绑定')
       const answer=validateComposition(value,view,answerBounds.maxCards,first)
+      if(view.cards.some(c=>!answer.sections.some(s=>s.after===c.ref)))throw new Error('讲解必须分别覆盖已选定的回答依据，不能将多份依据的内容合成一个父卡')
+      answer.sections=answer.sections.map(section=>({...section,text:repairSourceAttributions(section.text,view.cards)}))
       for(const section of answer.sections)validateAnswerMath(section.text)
       return {answer,view}
-    },16_384,{stream:true,focus:first?firstLessonFocus(context):'请现在直接解决currentQuestion，并保留goalContext中的真实范围和当前概念深度。围绕一个例子连续推进，不因有多篇资料就逐篇复述。正文只教本次必需内容；sourceReview可以指出重复或无关。来源里的产品宣传不是保证：明确需求有助于沟通，不能保证AI一次做对，仍须验证；失败原因也不能一概归到用户表达。删去无依据的成功率、固定返工次数和工具优越性结论；保留具体动作、成立条件和检查方法。逐句保持条件一致：不能前文保证“只改这里不会改其他处”，末尾才补“不能保证”。按用户基础用自己的话重新组织，不能将来源总结直接拼接成课程。对零基础者优先用“上下间距、留白、对齐、顶部区域”等普通中文，未被问到的英文术语不搬成词汇课；用户问到spacing等词时就地解释并给一句能直接使用的中文示例。不能写“这样AI就知道/就能正确生成/AI才能按你的想法生成”之类无条件因果保证，写成“给出了可检查的要求”，随后实际检验。对同一个需求或算例只完整展示一次；后续段落具体推进新的一步，不复述之前的模板。只输出正文JSON。'})
+    },16_384,{stream:true,focus:first?firstLessonFocus(context):GOAL_ANSWER_FOCUS+'\n'+ANSWER_COMPLETENESS})
     await ctx.progress('讲解已整理',composed.answer.sections.map(s=>`## ${s.title}\n\n${s.text}`).join('\n\n'))
     await ctx.activity('answer:write','write','撰写讲解','done')
     await ctx.activity('answer:attach','edit','关联知识卡','running',`${composed.answer.sections.length} 段讲解 · 核对资料依据`)
@@ -155,7 +158,8 @@ export class ProductTools {
   async catalogNames(ctx:TaskContext,input:DiscoveryInput){
     return this.structured(ctx,'R2-names:v6',`${CATALOG_NAMES_PROMPT}\n输出 JSON：${CATALOG_NAMES_OUTPUT}`,input,(value,prepared)=>{
       const source=prepared as DiscoveryInput
-      return validateCatalogNames(value,source.searchScope,[input.goal,input.firstSearch.summary,...(input.attachments??[]).map(a=>a.content)])
+      const sources=[input.goal,...((input.goalContext as {userStatements?:{text:string}[]}|undefined)?.userStatements??[]).map(s=>s.text),input.firstSearch.summary,...(input.attachments??[]).map(a=>a.content)]
+      return validateCatalogNames(groundedCatalogNames(value,source.searchScope,sources),source.searchScope,sources)
     },1024,{thinkingDepth:'fast',thinking:'disabled'})
   }
   async catalogSearches(ctx:TaskContext,names:string[],scope:SearchScope={kind:'zhihu'}){
@@ -179,7 +183,7 @@ export class ProductTools {
     const direct=input.workflow===DIRECT_ROUTE_VERSION
     const modelInput={...input,attachments:(input.attachments??[]).map((a,i)=>({...a,ref:`F${i+1}`}))}
     const system=`${SHARED_SYSTEM_PREFIX}\n${GOAL_POLICY}\n${direct?DIRECT_ROUTE_PROMPT:STAGED_PLAN_PROMPT} searchScope.kind=collections 时只根据所选资料安排学习，不虚构外部来源。\n输出 JSON：${direct?DIRECT_ROUTE_OUTPUT:STAGED_PLAN_OUTPUT}`
-    const focus=routeTaskFocus(modelInput,'plan')+'\n'+ROUTE_DEPENDENCY_FOCUS,runtime={system,focus,budget:this.capabilities.llm,recovery:'route-recovery-v2'}
+    const focus=routeTaskFocus(modelInput,'plan')+'\n'+ROUTE_DEPENDENCY_FOCUS,runtime={system,focus,budget:this.capabilities.llm,recovery:'route-recovery-v3'}
     return ctx.step(`R4-plan:recover-v1@${AGENT_CONTRACT_VERSION}:${digest(runtime).slice(0,16)}`,{input,...runtime},async()=>{
       const output=Math.min(this.capabilities.llm.output,Math.floor(effectiveWindow(this.window)*.35),24576+8192)
       let prepared=modelInput,streamed='',summarizedRefs=new Set<string>(),result:LlmCompleteResult,attempted=false
@@ -206,7 +210,7 @@ export class ProductTools {
       let rejection=''
       if(result.kind==='completed'){
         try{
-          const value=extractStructuredJson(raw)??JSON.parse(raw)
+          const value=parseFormalJson(raw)
           const plan=direct?validateDirectRoutePlan(value,prepared):validateGoalPlan(value,prepared)
           const route=compileStagedPlan(plan,scope,attachmentSourceIds,summarizedRefs)
           if(projectRouteToDocument(route).ok){
@@ -251,22 +255,22 @@ export class ProductTools {
     const system=`${SHARED_SYSTEM_PREFIX}\n${AGENT_PROMPTS.R5}`,budget=this.capabilities.llm
     return ctx.step(`R5@${AGENT_CONTRACT_VERSION}:${digest({system,budget}).slice(0,16)}`,input,async()=>{
       const depth=ctx.job.input.depth??'fast',ceiling=Math.min(budget.output,Math.floor(effectiveWindow(this.window)*.35))
-      let output=Math.min(ceiling,8192+reasoningReserve({thinkingDepth:depth}))
-      const prepareMessages=()=>packContext(this.llm,ctx,system,input,depth,{window:this.window,output,margin:2048,summary:budget})
-      let messages=await prepareMessages()
-      let repair=''
-      for(let attempt=0;attempt<3;attempt++){
-        const result=await modelCall(this.llm,ctx,'R5','组织回答',{messages:repair?[...messages,{role:'user',content:repair}]:messages,json:false,thinkingDepth:depth,maxTokens:output,signal:ctx.signal,onText:text=>ctx.draft('正在回答',text)},attempt)
-        if(result.kind==='failed'){
-          if(result.code==='OUTPUT_TRUNCATED'){
-            if(attempt<2&&output<ceiling){output=Math.min(ceiling,Math.max(output*2,output+4096));messages=await prepareMessages();repair='上次输出达到长度上限，请围绕原问题重新给出完整回答，避免重复。';continue}
-            throw new ToolError('OUTPUT_TRUNCATED',false)
-          }
-          throw new ToolError(result.code??'MODEL_UNAVAILABLE',result.retryable??true)
-        }
-        try{validateAnswerMath(result.text);return result.text}catch(error){repair=`上次回答包含无法渲染的公式。请针对原问题重新给出完整回答。${error instanceof Error?error.message:''}`}
+      const output=Math.min(ceiling,8192+reasoningReserve({thinkingDepth:depth}))
+      const messages=await packContext(this.llm,ctx,system,input,depth,{window:this.window,output,margin:2048,summary:budget})
+      let streamed='',draftCalculations:unknown
+      const result=await modelCall(this.llm,ctx,'R5','组织回答',{messages,json:false,thinkingDepth:depth,maxTokens:output,signal:ctx.signal,onText:text=>{streamed=text;ctx.draft('正在回答',text)}})
+      ctx.signal.throwIfAborted()
+      if(result.kind==='failed'&&!recoverableModelOutput(result.code))throw new ToolError(result.code??'MODEL_UNAVAILABLE',result.retryable??true)
+      const raw=result.kind==='completed'?result.text:streamed
+      const repaired=repairAnswerPresentation(raw.trim())
+      if(repaired){
+        await ctx.store.checkpoint(ctx.job,'diagnostic:R5-output',digest(raw),{providerStatus:result.kind,presentationRepaired:repaired!==raw})
+        return repaired
       }
-      throw new ToolError('MATH_NOT_SETTLED',false)
+      const context=JSON.parse(messages[1]!.content),question=String(context.currentMessage??context.goal??'当前学习目标')
+      const materials=(Array.isArray(context.attachments)?context.attachments:[]).filter((a:any)=>typeof a.content==='string').slice(0,3)
+      return `当前问题是：${question}\n\n`+(materials.length?materials.map((a:any)=>`### ${a.fileName??'已有材料'}\n\n${readableExcerpt(a.content,600)}`).join('\n\n'):'可以从一个具体例子继续说明你最想弄清楚的部分。')
+
     })
   }
 }

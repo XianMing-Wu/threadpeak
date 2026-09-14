@@ -86,10 +86,16 @@ export function createAgentLlmProvider(ports: { config: ProviderConfig; http: Ht
         if (raw.length > MAX_RESPONSE_CHARS) return failure('OUTPUT_LIMIT', false)
         const payload = record(JSON.parse(raw)), choice = record(payload.choices?.[0]), message = record(choice.message)
         const metadata={usage:readUsage(payload.usage),diagnostic:providerDiagnostic(response.status,payload,response.headers)}
-        if (choice.finish_reason !== 'stop') return {...failure(choice.finish_reason==='length'?'OUTPUT_TRUNCATED':choice.finish_reason==='insufficient_system_resource'?'PROVIDER_BUSY':'OUTPUT_INCOMPLETE', true),...metadata}
         const content = typeof message.content === 'string' ? message.content : ''
         const reasoning = typeof message.reasoning_content === 'string' ? message.reasoning_content : typeof message.reasoning === 'string' ? message.reasoning : ''
         if (reasoning) input.onReasoning?.(reasoning)
+        // Expose the formal draft to bounded domain recovery while preserving
+        // the provider failure; reasoning never becomes a formal response.
+        if (choice.finish_reason !== 'stop') {
+          input.signal?.throwIfAborted()
+          if(content)input.onText?.(content)
+          return {...failure(choice.finish_reason==='length'?'OUTPUT_TRUNCATED':choice.finish_reason==='insufficient_system_resource'?'PROVIDER_BUSY':'OUTPUT_INCOMPLETE', true),...metadata}
+        }
         if (!content.trim()) return {...failure('OUTPUT_EMPTY', true),...metadata}
         input.signal?.throwIfAborted()
         input.onText?.(content)

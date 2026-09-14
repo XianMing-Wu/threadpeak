@@ -72,7 +72,7 @@ export function registerMaterialRoutes(app:FastifyInstance,store:DurableStore,wo
     if(snapshot.kind!=='attachment')throw new CommandError('NOT_FOUND',404)
     const [task]=await store.db.query<{error_code:string}>('SELECT error_code FROM tp_jobs WHERE owner_id=$1 AND resource_id=$2 ORDER BY created_at DESC LIMIT 1',[owner(request),snapshot.id])
     const messages:Record<string,string>={ZHIHU_AUTH_FAILED:'知乎资料授权校验未通过，请重新连接账号后继续。',COLLECTION_EMPTY:'这里还没有可读取的公开内容，可以选择其他收藏夹。',COLLECTION_TOO_LARGE:'收藏夹内容较多，请分成较小的专题收藏夹后添加。',ATTACHMENT_TEXT_SIZE:'资料正文较长，请拆成较小的专题后添加。',PDF_PARSE_FAILED:'这份 PDF 未能解析，请检查文件后重新添加。',ZHIHU_REAUTHORIZE:'知乎授权已到期，请重新连接账号后继续。',PDF_UNREADABLE:'这份 PDF 没有可读取的文字或摘要。'}
-    return {...materialView({id:snapshot.id,body:snapshot.data} as Resource<Material>),job:snapshot.job,notice:task?messages[task.error_code]:undefined}
+    return {...materialView({id:snapshot.id,body:snapshot.data} as Resource<Material>),job:snapshot.job,notice:task&&messages[task.error_code]||snapshot.data.parseNotice}
   })
   app.get('/api/v2/zhihu/folders',async request=>{
     if(!owner(request).startsWith('account:zhihu:'))throw new CommandError('ZHIHU_LOGIN_REQUIRED',401)

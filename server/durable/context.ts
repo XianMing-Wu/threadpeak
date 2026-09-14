@@ -1,3 +1,4 @@
+import {readableExcerpt,recoverableModelOutput} from './output-recovery.ts'
 import { createHash } from 'node:crypto'
 import type { ChatMessage, LlmProvider, ThinkingDepth } from '../agent-runtime/types.ts'
 import { semanticChunks, SUMMARY_POLICY } from '../agent-runtime/semantic-chunks.ts'
@@ -37,7 +38,7 @@ function fields(value: unknown, path = '', result: Field[] = []): Field[] {
 }
 export async function boundedSummary(llm:LlmProvider,ctx:TaskContext,text:string,source:string,target:number,depth:ThinkingDepth,configuredWindow:number,purpose:unknown={task:'保留整份资料的知识范围、关系和条件，尚未指定学习目标'},capability?:ProviderBudget):Promise<string>{
   const budget=Math.max(512,Math.floor(target)),window=effectiveWindow(configuredWindow)
-  const key=createHash('sha256').update(JSON.stringify({version:AGENT_CONTRACT_VERSION,requestVersion:3,thinkingPolicy:THINKING_POLICY_VERSION,policy:SUMMARY_POLICY,capability,source,text,budget,depth,window,purpose})).digest('hex')
+  const key=createHash('sha256').update(JSON.stringify({version:AGENT_CONTRACT_VERSION,requestVersion:4,thinkingPolicy:THINKING_POLICY_VERSION,policy:SUMMARY_POLICY,capability,source,text,budget,depth,window,purpose})).digest('hex')
   return ctx.step(`memory:${key}`,{source,budget,key},async()=>{
     const [memory]=await ctx.store.db.query<{summary:string}>('SELECT summary FROM tp_memories WHERE owner_id=$1 AND source_hash=$2',[ctx.job.owner_id,key])
     const started=Date.now()
@@ -58,22 +59,14 @@ export async function boundedSummary(llm:LlmProvider,ctx:TaskContext,text:string
         const messages:ChatMessage[]=[{role:'system',content:SUMMARY_POLICY},{role:'user',content:JSON.stringify(input)},{role:'user',content:`请现在只返回这段来源的摘要，最多${input.maximumCharacters}个字符。合并重复和无关铺陈，保留与purpose有关的条件差异；来源的营销结论注明“原文声称”。不要复述整段，不输出标题。`}]
         if(messages.reduce((n,m)=>n+tokenBound(m.content)+64,0)+output+1024>window)throw new ToolError('CONTEXT_REQUIRES_PARTITION',false)
         const result=await ctx.step(`memory-part:${key}:${pass}:${index}`,input,async()=>{
-          const ceiling=Math.min(capability?.output??16384,window-messages.reduce((n,m)=>n+tokenBound(m.content)+64,0)-1024)
-          let partOutput=output
-          for(let attempt=0;attempt<3;attempt++){
-            modelCalls++
-            const response=await modelCall(llm,ctx,`memory-part:${key}:${pass}:${index}`,'整理长资料',{messages,json:false,thinkingDepth:depth,maxTokens:partOutput,signal:ctx.signal},attempt)
-            if(response.kind==='failed'){
-              if(response.code==='OUTPUT_TRUNCATED'){
-                if(attempt<2&&partOutput<ceiling){partOutput=Math.min(ceiling,Math.max(partOutput*2,partOutput+4096));continue}
-                throw new ToolError('OUTPUT_TRUNCATED',false)
-              }
-              throw new ToolError(response.code??'SUMMARY_UNAVAILABLE',response.retryable??true)
-            }
-            if(!response.text.trim())throw new ToolError('SUMMARY_EMPTY')
-            return response.text.trim()
-          }
-          throw new ToolError('OUTPUT_TRUNCATED',false)
+          modelCalls++
+          let streamed=''
+          const response=await modelCall(llm,ctx,`memory-part:${key}:${pass}:${index}`,'整理长资料',{messages,json:false,thinkingDepth:depth,maxTokens:output,signal:ctx.signal,onText:value=>{streamed=value}})
+          ctx.signal.throwIfAborted()
+          if(response.kind==='failed'&&!recoverableModelOutput(response.code))throw new ToolError(response.code??'SUMMARY_UNAVAILABLE',response.retryable??true)
+          const formal=response.kind==='completed'?response.text.trim():streamed.trim()
+          if(formal&&response.kind==='completed')return formal
+          return '原文摘录（非生成摘要）：'+readableExcerpt(parts[index]!,Math.max(128,Math.floor(perPart/4)-24))
         })
         return result
       }
@@ -84,6 +77,7 @@ export async function boundedSummary(llm:LlmProvider,ctx:TaskContext,text:string
         for(const result of pair)if(result.status==='fulfilled')summaries.push(result.value)
       }
       candidate=summaries.join('\n')
+      if(tokenBound(candidate)>budget)candidate='原文摘录（不同位置，非完整总结）：'+readableExcerpt(text,Math.max(128,Math.floor(budget/4)-32))
       if(tokenBound(candidate)<=budget){
         await ctx.store.db.query('INSERT INTO tp_memories(owner_id,source_hash,summary,created_at) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING',[ctx.job.owner_id,key,candidate,Date.now()])
         await ctx.activity(`context:summary:${key}`,'read','整理长资料','done')

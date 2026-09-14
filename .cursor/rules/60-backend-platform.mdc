@@ -14,9 +14,9 @@ alwaysApply: false
 - 所有知乎 API 共用持久两路并发额度，跨任务/同库服务实例生效；HTTP 429 触发共享冷却并遵守 Retry-After，不丢任何已规划查询。
 - 同库请求发送间隔与并发上限分别执行；缓存遵循 agents.md 的账号/完整上下文隔离，DeepSeek KV 命中只按真实 usage 记录，不把未知写成零或声称必定命中。
 - 临时故障退避恢复，配置/鉴权等待处理；停止与完成的先后由数据库决定。浏览器断连不自动取消。
-- 只使用真实 provider。L-answer 完整正式输出先按 agents.md 程序归一化，格式和展示差异不重写正文；引用及真实内容仍校验。其他未能安全修复的 JSON/引用/renderer 错误由同一 Agent 修复。R4 按 agents.md 的容错例外提取并编译，无法确定并列时串联，记录程序恢复来源；禁止 fixture 或伪造证据。
+- 只使用真实 provider。L-answer 完整正式输出先按 agents.md 程序归一化，格式和展示差异不重写正文；引用及真实内容仍校验。其他异常模型输出依照 agents.md 的步骤恢复规则使用真实输入恢复，不重发模型；权限、取消和数据库失败仍须传播。R4 按 agents.md 的容错例外提取并编译，无法确定并列时串联，记录程序恢复来源；禁止 fixture 或伪造证据。
 - 搜索意图和访谈适配由当前 Agent 按提示词自查；不得用关键词或载体名称命中作为语义硬拦截。结构、引用回查和取消栅栏仍必须通过。
-- 两档都使用 deepseek-flash，快速 thinking=disabled 且省略 reasoning_effort，深度 thinking=enabled、reasoning_effort=low；R2 始终 disabled。 最终路线生成 R4 是快速模式的唯一思考例外：也使用 enabled/low，同一步骤修复保持 low；其他快速步骤仍 disabled。真实 reasoning 以独立所有者任务状态流保存，不写正文/日志；调用参数和预算见 Agent 共用合同。空正文、仅 reasoning、流断开、length 截断都不是完成。
+- 两档都使用 deepseek-flash，快速 thinking=disabled 且省略 reasoning_effort，深度 thinking=enabled、reasoning_effort=low；R2 始终 disabled。 最终路线生成 R4 是快速模式的唯一思考例外：也使用 enabled/low，结构恢复不另发模型调用；其他快速步骤仍 disabled。真实 reasoning 以独立所有者任务状态流保存，不写正文/日志；调用参数和预算见 Agent 共用合同。空正文、仅 reasoning、流断开、length 截断都不是完成。
 - 调用预算取业务上限和已配置 provider 能力的较小值，扣真实输出和安全余量；分块来源摘要不覆盖原文，不截断 JSON，保持所选深度；用户裁决的R2a名称提取例外，始终thinking=disabled。
 - 所有秘密、provider 地址和模型名只在服务端。禁止原始错误/stack/密钥/全文进入公开日志；展示安全的继续/恢复状态。
 - 生产必须配置 PostgreSQL、身份验证、公开源和模型能力；显式游客会话同样校验所有者、CSRF 与限流，游客恢复令牌不能直接访问业务 API，游客不能调用授权个人资料接口。本地隔离 cookie 不是知乎登录。鉴权、CSRF、限流、持久恢复与真实 provider gate 均需验收。

@@ -5,6 +5,7 @@ import {openDatabase,migrate} from './database.ts'
 import {DurableStore} from './store.ts'
 import {TaskContext} from './worker.ts'
 import {ProductTools} from './tools.ts'
+import {LEARNING_TOOL_SPECS} from './agent-specs.ts'
 import {modelCall} from './model-call.ts'
 import {pathTrace} from './path-trace.ts'
 const config={deepseekBaseUrl:'https://api.deepseek.com',deepseekApiKey:'test-only',deepseekModelName:'deepseek-flash'}
@@ -23,25 +24,22 @@ test('fast disables thinking without effort; deep enables low; catalog extractio
  assert.ok(requests.every(r=>!('temperature' in r)))
 })
 
-test('truncated structured output increases its cap within the same operation and only checkpoints a complete validated result',async t=>{
+test('truncated structured output uses frozen input and checkpoints a validated result without replay',async t=>{
  const {ctx,job}=await fixture(t),requests=[]
- const llm=createAgentLlmProvider({config,http:async(_url,init)=>{
-  const body=JSON.parse(init.body);requests.push(body)
-  return {ok:true,status:200,text:async()=>JSON.stringify({choices:[{finish_reason:requests.length===1?'length':'stop',message:{content:requests.length===1?'{"ok":':'{"ok":true}'}}]})}
- }})
- const tools=new ProductTools(llm,{},500000)
- const result=await tools.structured(ctx,'L-answer:attach-test','same system',{},v=>{assert.equal(v.ok,true);return v},4096)
- assert.deepEqual(result,{ok:true});assert.deepEqual(requests.map(r=>r.max_tokens),[4096,8192])
- assert.ok(requests.every(r=>r.thinking.type==='disabled'&&r.messages[0].content==='same system'))
- const successful=Object.entries(job.checkpoints).filter(([key])=>key.startsWith('L-answer:attach-test@'))
- assert.equal(successful.length,1);assert.deepEqual(successful[0][1].value,{ok:true})
+ const llm=createAgentLlmProvider({config,http:async(_url,init)=>{requests.push(JSON.parse(init.body));return {ok:true,status:200,text:async()=>JSON.stringify({choices:[{finish_reason:'length',message:{content:'{"queries":'}}]})}}})
+ const result=await new ProductTools(llm,{},500000).learning(ctx,'L-search-plan',{concept:{title:'矩阵乘法'},currentQuestion:'怎样做矩阵乘法'})
+ LEARNING_TOOL_SPECS['L-search-plan'].schema.parse(result);assert.equal(requests.length,1);assert.equal(requests[0].max_tokens,4096)
+ assert.ok(result.queries.every(q=>q.includes('矩阵')))
+ const successful=Object.entries(job.checkpoints).filter(([key])=>key.startsWith('L-search-plan@'))
+ assert.equal(successful.length,1);assert.deepEqual(successful[0][1].value,result)
+ assert.equal(job.checkpoints['diagnostic:L-search-plan:recovered'].value.providerStatus,'failed')
 })
 
-test('a truncated response at the configured output ceiling fails without repeating the same inadequate request',async t=>{
+test('a truncated response at the output ceiling still recovers valid questions in one call',async t=>{
  const {ctx,job}=await fixture(t);let calls=0
  const tools=new ProductTools({complete:async()=>{calls++;return {kind:'failed',code:'OUTPUT_TRUNCATED',retryable:true}}},{},{llm:{window:64000,output:4096,namespace:'test'}})
- await assert.rejects(tools.structured(ctx,'bounded','same system',{},v=>v,4096),e=>e.code==='OUTPUT_TRUNCATED'&&!e.retryable)
- assert.equal(calls,1);assert.equal(Object.keys(job.checkpoints).length,0)
+ const result=await tools.learning(ctx,'L-search-plan',{concept:{title:'矩阵运算'}},undefined,'L-search-plan:ceiling')
+ LEARNING_TOOL_SPECS['L-search-plan'].schema.parse(result);assert.equal(calls,1);assert.ok(Object.keys(job.checkpoints).some(k=>k.startsWith('L-search-plan:ceiling@')))
 })
 
 test('real stream adapter persists reasoning before a formal result, restores via owner snapshot and keeps event logs/body clean',async t=>{
@@ -75,12 +73,13 @@ test('reasoning-only or truncated stream preserves its separate incomplete state
  const snapshot=await store.snapshot('owner',resource.id);assert.equal(snapshot.job.draft,'');assert.equal(snapshot.job.activities[0].status,'waiting');assert.equal(snapshot.data.status,'running')
 })
 
-test('repair uses the same depth and keeps separate reasoning for each attempt',async t=>{
+test('local repair preserves the original reasoning record and does not call a second attempt',async t=>{
  const {ctx,store,resource}=await fixture(t);ctx.job.input.depth='deep'
- const requests=[];const llm={complete:async r=>{requests.push(r);r.onReasoning('第'+requests.length+'次核对');return {kind:'completed',text:requests.length===1?'wrong':'{"ok":true}'}}}
- await new ProductTools(llm,{search:async()=>({kind:'empty'})},500000).structured(ctx,'R3:v6','same prompt',{},v=>v)
- const snapshot=await store.snapshot('owner',resource.id);assert.equal(snapshot.job.activities.length,2);assert.equal(new Set(snapshot.job.activities.map(a=>a.id)).size,2)
- assert.ok(requests.every(r=>r.thinkingDepth==='deep'));assert.equal(snapshot.job.draft,'')
+ const requests=[];const llm={complete:async r=>{requests.push(r);r.onReasoning('真实的本次思考');return {kind:'completed',text:'wrong'}}}
+ const result=await new ProductTools(llm,{search:async()=>({kind:'empty'})},500000).planStep(ctx,'R3',{goal:'理解矩阵'})
+ assert.ok(result.questions.length>=2)
+ const snapshot=await store.snapshot('owner',resource.id);assert.equal(snapshot.job.activities.length,1);assert.equal(requests.length,1)
+ assert.equal(requests[0].thinkingDepth,'deep');assert.equal(snapshot.job.activities[0].thought,'真实的本次思考');assert.equal(snapshot.job.draft,'')
 })
 
 test('cancellation fences late reasoning writes and cannot publish a completion',async t=>{
@@ -125,21 +124,17 @@ test('a new route follow-up freezes its selected depth, independently of the alr
  }
 })
 
-test('plain answers and long-material summaries recover truncated output without changing input or depth',async t=>{
+test('plain answers and summaries retain actual text after truncation without retrying or changing depth',async t=>{
  const {boundedSummary}=await import('./context.ts')
  for(const depth of ['fast','deep']){
-  const {ctx}=await fixture(t)
-  ctx.job.input.depth=depth
+  const {ctx}=await fixture(t);ctx.job.input.depth=depth
   for(const operation of ['chat','summary']){
    const requests=[]
-   const llm={complete:async input=>{requests.push(input);return requests.length===1?{kind:'failed',code:'OUTPUT_TRUNCATED',retryable:true}:{kind:'completed',text:'完整且有条件的回答。'}}}
+   const llm={complete:async input=>{requests.push(input);input.onText?.('已经接收到的正文。');return {kind:'failed',code:'OUTPUT_TRUNCATED',retryable:true}}}
    const tools=new ProductTools(llm,{},{llm:{window:500000,output:32768,namespace:'test'}})
-   const output=operation==='chat'?await tools.chat(ctx,{question:`问题-${depth}`}):await boundedSummary(llm,ctx,'原文：旋转须声明方向与中心。',`source-${depth}`,1024,depth,500000,{},tools.capabilities.llm)
-   assert.equal(output,'完整且有条件的回答。');assert.equal(requests.length,2)
-   assert.ok(requests[1].maxTokens>requests[0].maxTokens)
-   assert.ok(requests.every(r=>r.thinkingDepth===depth))
-   assert.equal(requests[0].messages[0].content,requests[1].messages[0].content)
-   assert.equal(requests[0].messages[1].content,requests[1].messages[1].content)
+   const output=operation==='chat'?await tools.chat(ctx,{currentMessage:`问题-${depth}`}):await boundedSummary(llm,ctx,'原文：旋转须声明方向与中心。',`source-${depth}`,1024,depth,500000,{},tools.capabilities.llm)
+   if(operation==='chat')assert.equal(output,'已经接收到的正文。');else assert.match(output,/原文摘录.*旋转须声明方向与中心/)
+   assert.equal(requests.length,1);assert.equal(requests[0].thinkingDepth,depth)
   }
  }
 })
@@ -172,4 +167,18 @@ test('final route recovers available formal stream after provider failure and ne
  assert.equal(calls,1);assert.equal(route.concepts[0].title,'二维坐标')
  assert.ok(!JSON.stringify(route).includes('这不是路线内容'))
  assert.equal(ctx.job.checkpoints['diagnostic:R4-recovery'].value.providerStatus,'failed')
+})
+
+test('actual adapter output failure codes recover once without hiding provider status',async t=>{
+ for(const [name,events] of [
+  ['empty',chunk({reasoning_content:'只思考'},'stop')+'data: [DONE]\n\n'],
+  ['interrupted',chunk({content:'{"queries":["矩阵维度如何检查","矩阵乘法"'})],
+  ['invalid-frame',chunk({content:'{"queries":["矩阵维度如何检查","矩阵乘法"'})+'data: invalid-json\n\n'],
+ ]){
+  const {ctx,job}=await fixture(t);let calls=0
+  const llm=createAgentLlmProvider({config,http:async()=>{calls++;return {ok:true,status:200,body:new ReadableStream({start(c){c.enqueue(encoder.encode(events));c.close()}}),text:async()=>''}}})
+  const result=await new ProductTools(llm,{}).learning(ctx,'L-search-plan',{concept:{title:'矩阵乘法'}},undefined,'L-search-plan:'+name)
+  LEARNING_TOOL_SPECS['L-search-plan'].schema.parse(result);assert.equal(calls,1)
+  assert.equal(job.checkpoints[`diagnostic:L-search-plan:${name}:recovered`].value.providerStatus,'failed')
+ }
 })

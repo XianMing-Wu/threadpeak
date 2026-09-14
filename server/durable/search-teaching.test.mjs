@@ -50,6 +50,7 @@ test('six-query first lesson persists ordered H2 Markdown with a real source per
  const llm={complete:async input=>{const c=JSON.parse(input.messages[1].content);seen.push(c);let out
   if(c.materials)out={queries}
   else if(c.candidates)out={evidenceIds:['2','0']}
+  else if(c.candidate_card_scope)out={selections:c.candidate_card_scope.cards.map(c=>({ref:c.ref,reason:'互补依据'}))}
   else if(c.citationCatalog)out=placeAnswer(c)
   else {assert.equal(c.mode,'first_learning');assert.equal(c.directAnswers,undefined);out={sourceReview:c.read_card_scope.cards.map(c=>({ref:c.ref,contribution:'互补依据'})),sections:[{after:'C2',title:'从操作开始',text:'先完成这步操作。'},{after:'C1',title:'用操作解释关系',text:'沿用上一步的结果解释关系。'}]}}
   return {kind:'completed',text:JSON.stringify(out)}
@@ -60,7 +61,7 @@ test('six-query first lesson persists ordered H2 Markdown with a real source per
  assert.equal((result.data.initialMarkdown.match(/^## /gm)??[]).length,2);assert.equal((result.data.initialMarkdown.match(/参考来源：/g)??[]).length,2)
  assert.match(result.data.initialMarkdown,/https:\/\/zhuanlan.zhihu.com\/p\/0/);assert.deepEqual(result.data.initialAnswer.map(p=>p.basisId),['0','2'])
  for(const input of seen.filter(c=>!c.citationCatalog))assert.deepEqual(input.concept.learningSummary,initial.learningSummary)
- const checkpoints=(await store.resource('owner',resource.id)).body;assert.equal(checkpoints.phase,'ready');assert.equal(seen.length,4)
+ const checkpoints=(await store.resource('owner',resource.id)).body;assert.equal(checkpoints.phase,'ready');assert.equal(seen.length,5)
 })
 
 for(const people of [1,2,3])test(`ask blogger publishes ${people} distinct author cards with their own complete article and source, including a relative-best choice`,async t=>{
@@ -71,14 +72,14 @@ for(const people of [1,2,3])test(`ask blogger publishes ${people} distinct autho
   assert.equal(c.conversation[0].content,'前面这个式子我还没有理解。');assert.equal(c.conversation[1].role,'assistant')
   if(c.candidates){assert.deepEqual(c.candidates[0].comments,['读者指出适用条件']);assert.equal(c.candidates[0].editedAt,1700000000)}
   if(!c.candidates)out={queries}
-  else {selections++;out={normalizedQuestion:'该怎么处理',selections:selections===1?[]:Array.from({length:people},(_,i)=>({evidenceId:`E${i+1}`,reason:'这篇至少解释其中一个具体操作',limitation:'未覆盖全部情境'}))}}
+  else {selections++;out={normalizedQuestion:'该怎么处理',selections:Array.from({length:people},(_,i)=>({evidenceId:`E${i+1}`,reason:'这篇至少解释其中一个具体操作',limitation:'未覆盖全部情境'}))}}
   return {kind:'completed',text:JSON.stringify(out)}
  }}
  const tools=new ProductTools(llm,{search:async q=>{assert.equal(q,queries[searches++]);return {kind:'hits',items:sources}},direct:()=>assert.fail('no fallback')})
  await store.enqueue('owner',resource.id,'learning.author','ask',{conversationId:'chat',depth:'fast',context:replyInput(s,'该怎么处理',['host'],'chat'),excludedAuthorIds:['old-author']})
  await createFlows(tools)(new TaskContext(store,await store.claim(),new AbortController().signal))
  const result=await store.snapshot('owner',resource.id),message=result.data.conversations[0].messages.at(-1),cards=result.data.nodes.filter(n=>n.type==='author')
- assert.equal(result.job.status,'completed');assert.equal(searches,4);assert.equal(selections,2);assert.equal(cards.length,people);assert.equal(message.paragraphs.length,people)
+ assert.equal(result.job.status,'completed');assert.equal(searches,4);assert.equal(selections,1);assert.equal(cards.length,people);assert.equal(message.paragraphs.length,people)
  assert.equal(new Set(cards.map(n=>n.author.id)).size,people)
  for(const [i,card] of cards.entries()){assert.deepEqual(card.parents,['host']);assert.equal(card.text,sources[i].summary);assert.equal(card.author.url,sources[i].url);assert.equal(card.author.coverageLimit,'未覆盖全部情境');assert.equal(message.paragraphs[i].id,card.id)}
  validateTree(result.data.nodes);LearningSchema.parse(result.data)

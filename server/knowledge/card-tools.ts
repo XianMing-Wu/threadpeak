@@ -10,9 +10,9 @@ export const CARD_TOOLS=Object.freeze({
   read_card_scope:Object.freeze({description:'读取本次用户引用的卡片；未选择时由服务端放入全部文章。',outputSchema:CardScopeSchema}),
   append_cards:Object.freeze({description:'在 after 指定的一张卡片后追加一段回答，并从该卡片摘取 evidence 供回查。',inputSchema:AppendCardsSchema}),
 })
-export const GOAL_ANSWER_FOCUS=`先把本次 currentQuestion 和 conceptAlignment 作为教学边界，再阅读来源。一个概念只是通往最终目标的一步：当前只学注意力的矩阵形状，就围绕形状和一个算例说明，不顺便教完整 Transformer、训练、多头注意力或代码。用户明确不需要实现代码时不加代码章节；已经会矩阵乘法就直接用它解释当前问题，不把旧基础重讲一遍。
-阅读全部来源后按教学要点写正文，每个要点只讲一次，通常 3–6 段，最多 answerBounds.maxCards 段。十篇文章讲同一规则，sourceReview 仍有十项，正文不需要十段；“材料完整审阅”和“逐篇改写”是两回事。sourceReview.contribution 可以明确说这篇重复了什么，哪些部分超出当前目标，因此不用于正文。先用一段衔接用户目标，接着解释当前概念、一个具体例子、最相关的限制和一个可观察的小任务；不为了来源覆盖扩写。
-目标原话高于 interpretation.openQuestions，已说会什么、不要什么、没设期限就不要重新询问。来源的错误和缺省条件不能因为有引文就照抄：数学符号和形状须前后一致，结论要写必要前提，不能把正交、线性无关、统计独立混作一个概念。未被可靠材料支持的推导不展开，更不能为补齐体系猜补公式。比较观点须保留条件和不确定性。同一技术任务只讲一套相容的实现方案：不能把旧版全局脚本和新版模块混用，不能把旧 CDN 地址改成 @latest 就宣称当前可用；来源无法确认版本时说明限制，优先使用材料里明确且一致的版本。数学检查的例子：比较内积和方向需留意向量长度；推导点积方差为维数需写明零均值、单位方差及独立性条件；注意力权重的一行对 V 的所有行加权，而非只对 V 第一行。这些是检查方式，不是要求每次都教这些内容。输出前自己删掉重复、目标外内容和与前文矛盾的表述，再输出 JSON。`
+export const GOAL_ANSWER_FOCUS=`以currentQuestion、用户原话和当前概念深度限定回答；已确认掌握的内容直接衔接，未知基础不能视为零基础。用户同时问多项内容时，在同一个对象上逐项回答，必要的局部前置就地解释，不扩展成全学科。
+篇幅由问题决定：能用一两段答清楚的不要扩写；每块必须增加新的必要信息、操作或依据。材料全部审阅，但正文不逐篇改写、轮换来源、不重复模板。缺少材料时，一次说明能确认的事实、不能确认的内容及最小补充项即可，不围绕“信息不足”反复讲一课。
+解释须和具体演算、代码运行语义或实际材料一致。数值、单位、维度、符号、执行顺序、条件和精度逐项核对；类比只能解释已证实的关系，不让类比中的措辞覆盖实际过程。不同版本或条件的方案分开说明，不拼成一套不相容的实现。资料提出结论不证明结论成立，作品尚未提供也不能评判其细节。审美与人生选择保留个人价值和多种成立方式，不把可观察的技术检查当作唯一价值标准。正文先直接回应，再推进例子，最后按需给一个局部检验，避免重复和无条件保证。自检只核对前文已建立的内容，不增加新的对应关系、门槛或定理。任何“足以判断”的标准必须覆盖所有必要条件，不能用完成部分步骤代替结论成立。`
 export type CardMaterial={id:string;title:string;content:string}
 export function readCardScope(materials:readonly CardMaterial[]){
   if(!materials.length||new Set(materials.map(c=>c.id)).size!==materials.length)throw new Error('卡片范围必须非空且无重复')

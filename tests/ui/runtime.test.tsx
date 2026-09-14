@@ -94,14 +94,16 @@ test('account switching clears both key prefixes and restores only the matching 
  await switchWorkspace('alice');expect(localStorage.getItem('tp-private')).toBe('alice-only');expect(localStorage.getItem(LEGACY_WORKSPACE_KEY)).toBe('alice archive')
 })
 
-test('StrictMode mount replay still starts exactly one durable route and preserves recoverable failure',async()=>{
+test('StrictMode mount replay starts one durable route and malformed model output becomes answerable questions',async()=>{
  const server=await backend()
  try{
   const conversation=createHomeConversation('路线挂载恢复回归','route')
   render(createElement(StrictMode,null,createElement(ChatRoutePanel,{conversationId:conversation.id,query:conversation.query,onRouteReady:()=>{}})))
-  await screen.findByText('这次还没完成，已收集的资料和选择都已保留。',{}, {timeout:10000})
+  await screen.findByLabelText('用自己的话回答',{}, {timeout:10000})
+  await waitFor(async()=>expect((await server.store.db.query<{status:string}>('SELECT status FROM tp_jobs'))[0].status).toBe('completed'))
   const jobs=await server.store.db.query<{status:string}>('SELECT status FROM tp_jobs')
-  expect(jobs).toHaveLength(1);expect(jobs[0].status).toBe('waiting')
+  expect(jobs).toHaveLength(1);expect(jobs[0].status).toBe('completed')
+  expect(screen.queryByText('这次还没完成，已收集的资料和选择都已保留。')).toBeNull()
   expect(screen.queryByText('生成已停止。')).toBeNull()
  }finally{cleanup();await server.close()}
 })

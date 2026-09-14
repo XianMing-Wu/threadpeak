@@ -5,14 +5,19 @@ import {projectRouteToDocument} from './project-document.ts'
 type RecordValue=Record<string,unknown>
 const object=(v:unknown):RecordValue=>v&&typeof v==='object'&&!Array.isArray(v)?v as RecordValue:{}
 const array=(v:unknown):unknown[]=>Array.isArray(v)?v:[]
-const text=(v:unknown,max=1200)=>typeof v==='string'?v.trim().slice(0,max):''
+const text=(v:unknown,max=1200)=>typeof v==='string'?v.trim().slice(0,max).replace(/[\uD800-\uDBFF]$/u,''):''
 const first=(v:RecordValue,...keys:string[])=>keys.map(k=>v[k]).find(x=>x!==undefined)
 const title=(v:unknown)=>typeof v==='string'?text(v,160):text(first(object(v),'title','name','label','标题','名称'),160)
 const normalize=(s:string)=>s.normalize('NFC').replace(/\s+/gu,'')
+/** Named containers are a lossless alternative notation for ordered records. */
+const sequence=(v:unknown):unknown[]=>Array.isArray(v)?v:v&&typeof v==='object'?Object.entries(v).map(([key,item])=>{
+  const entry=object(item)
+  return Object.keys(entry).length?{...entry,...title(entry)?{}:{title:key}}:typeof item==='string'?{title:key,description:item}:item
+}):[]
 
 /** Bounded, data-only recovery. No eval; strings and completed members survive EOF.
- * This parser is exclusive to route recovery, never used for commands or identity. */
-export function readDamagedPlan(source:string):unknown[] {
+ * Used only by read-only output recovery; never interprets commands or grants identity. */
+export function readDamagedPlan(source:string,preserveOpenStrings=true):unknown[] {
   const input=source.slice(0,1_000_000),roots:unknown[]=[]
   let i=0,operations=0
   const skip=()=>{while(i<input.length&&/\s/.test(input[i]!))i++}
@@ -31,7 +36,7 @@ export function readDamagedPlan(source:string):unknown[] {
         value+=escape[next]??`\\${next}`
       }else value+=c
     }
-    return value
+    return preserveOpenStrings?value:undefined
   }
   function value(depth=0):unknown {
     skip()
@@ -49,7 +54,7 @@ export function readDamagedPlan(source:string):unknown[] {
         if(list){const item=value(depth+1);if(item!==undefined)out.push(item)}
         else{
           let key:string
-          if(input[i]==='"'||input[i]==="'")key=string()
+          if(input[i]==='"'||input[i]==="'")key=string()??''
           else{const from=i;while(i<input.length&&!/[:\s,{}\[\]]/.test(input[i]!))i++;key=input.slice(from,i)}
           skip()
           if(input[i]!==':'){if(i===start)i++;continue}
@@ -114,8 +119,8 @@ export function recoverPlan(raw:unknown,input:RecoveryInput):{plan:StagedPlan;ba
   const statements=[rawGoal,...array(context.userStatements).map(s=>text(object(s).text,6000))].filter(Boolean)
   const roots=typeof raw==='string'?readDamagedPlan(raw):[raw]
   const candidates=[...roots]
-  for(const root of roots)for(const key of ['route','plan','path','data','result'])if(object(root)[key])candidates.push(object(root)[key])
-  const root=candidates.find(v=>array(object(v).stages).length||array(object(v).carriers).length||array(object(v).concepts).length)||candidates.find(Array.isArray)||candidates[0]
+  for(let i=0;i<candidates.length&&i<128;i++)for(const key of ['route','plan','path','data','result','output'])if(object(candidates[i])[key])candidates.push(object(candidates[i])[key])
+  const root=candidates.find(v=>sequence(first(object(v),'stages','phases','阶段')).length||sequence(object(v).carriers).length||sequence(object(v).concepts).length)||candidates.find(Array.isArray)||candidates[0]
   const record=object(root),files=input.attachments??[]
   const originalGoal=object(record.learningGoal)
   const strings=(v:unknown)=>array(v).map(x=>text(x)).filter(Boolean).slice(0,12)
@@ -151,23 +156,24 @@ export function recoverPlan(raw:unknown,input:RecoveryInput):{plan:StagedPlan;ba
   function carrier(value:unknown):Carrier|undefined {
     const v=object(value),name=title(value)
     const global=array(record.concepts).filter(c=>object(c).carrierId!==undefined&&object(c).carrierId===v.id)
-    const values=array(first(v,'concepts','nodes','topics','知识点')).length?array(first(v,'concepts','nodes','topics','知识点')):global
+    const local=sequence(first(v,'concepts','nodes','topics','知识点'))
+    const values=local.length?local:global
     const concepts=values.map(c=>concept(c,name||title(c))).filter((c):c is Concept=>!!c)
     if(!concepts.length){const self=concept(value,name);if(self)concepts.push(self)}
     if(!concepts.length)return undefined
     return {title:name||concepts[0]!.title,description:text(first(v,'description','summary','说明'),500)||`围绕${name||concepts[0]!.title}推进当前学习目标。`.slice(0,500),concepts}
   }
   let stages:Carrier[][]=[],linear=true
-  const rawStages=array(record.stages)
+  const rawStages=sequence(first(record,'stages','phases','阶段'))
   if(rawStages.length){
     for(const stage of rawStages){
-      const s=object(stage),items=Array.isArray(stage)?stage:array(s.carriers).length?array(s.carriers):[stage]
+      const s=object(stage),named=sequence(first(s,'carriers','subjects','载体')),items=Array.isArray(stage)?stage:named.length?named:[stage]
       const carriers=items.map(carrier).filter((c):c is Carrier=>!!c)
       const explicitParallel=s.parallel===true||s.parallel===1||typeof s.parallel==='string'&&/^(?:true|parallel|并列|并行)$/i.test(s.parallel.trim())||Array.isArray(stage)
       if(explicitParallel&&carriers.length===2){stages.push(carriers);linear=false}else stages.push(...carriers.map(c=>[c]))
     }
   }else{
-    const items=Array.isArray(root)?root:array(record.carriers).length?array(record.carriers):array(record.concepts)
+    const items=Array.isArray(root)?root:sequence(record.carriers).length?sequence(record.carriers):sequence(record.concepts)
     stages=items.map(carrier).filter((c):c is Carrier=>!!c).map(c=>[c])
   }
   if(!stages.length&&typeof raw==='string'){
