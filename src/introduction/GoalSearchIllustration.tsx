@@ -3,8 +3,8 @@ import {goalTypingAt} from './goal-typing';
 
 export const goalExamples=[
  {goal:'做一个能回答资料问题的助手',steps:['调用模型','接入资料','检查回答']},
- {goal:'用 Python 自动整理每周报表',steps:['读取表格','整理数据','生成报表']},
- {goal:'读懂并复现一篇注意力论文',steps:['理解公式','运行基线','对照结果']},
+ {goal:'拍好一组有故事的旅行照片',steps:['观察光线','练习构图','编排组照']},
+ {goal:'看懂收支，制定自己的储蓄计划',steps:['记录收支','明确目标','核对风险']},
 ] as const;
 
 /** Complete characters, a measured caret and the route use the same clock. */
@@ -28,7 +28,7 @@ export function GoalSearchIllustration({example,active=true}:{example:number;act
   return()=>{cancelAnimationFrame(frame);document.removeEventListener('visibilitychange',resume);motion.removeEventListener('change',resume);};
  },[active,example,letters.length]);
  useLayoutEffect(()=>{let alive=true;const measure=()=>{if(alive&&text.current&&caret.current){const width=text.current.getComputedTextLength?.()??0;caret.current.setAttribute('transform',`translate(${Math.min(298,width+2)} 0)`)}};measure();void document.fonts?.ready.then(measure);return()=>{alive=false}},[count,active]);
- return <svg ref={host} className="finale-drawing goal-search-drawing" data-typed-count={count} viewBox="0 0 370 260" fill="none" role="img" aria-label={`输入目标：${item.goal}，整理出${item.steps.join('、')}三个学习方向`}>
+ return <svg ref={host} className="finale-drawing goal-search-drawing" data-typed-count={count} viewBox="0 0 370 260" fill="none" role="img" aria-label={`目标示例：${item.goal}；访谈后可能形成的三个阶段：${item.steps.join('、')}`}>
   <ellipse cx="185" cy="241" rx="131" ry="10" fill="#f6f9fc"/>
   <path d="M27 61 342 52 349 151 33 160Z" fill="#f5f9ff" stroke="#e0ebfa"/>
   <rect x="16" y="37" width="336" height="112" rx="15" fill="white" stroke="#b9d3f5" strokeWidth="1.3"/>

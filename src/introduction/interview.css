@@ -57,3 +57,7 @@
  .interview-intent{display:none}.route-node-title{width:68px}.route-concept-type{width:15px}
  .route-concept-type::after{height:9px}.interview-example{right:5%;font-size:8px}.route-failure{left:8%;right:8%;top:65%}
 }
+
+.route-story-caption{position:absolute;left:49%;right:3%;bottom:8px;margin:0;color:#607684;font:12px/1.6 CardSans,sans-serif;opacity:var(--scene-fade)}
+.route-story-caption strong{display:block;color:#2f60b0;font-weight:500;margin-bottom:3px}.route-story-caption span{display:block}
+@container interview (max-width:739px){.route-story-caption{left:6%;right:6%;bottom:8px;font-size:10px}}

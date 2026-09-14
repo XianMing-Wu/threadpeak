@@ -112,6 +112,6 @@ export function LearningStoryScene({transition}:{transition:RefObject<ScrollTran
    <div className="learn-object learn-demo-cursor" aria-hidden="true"><LearningGuideCursor/></div>
    <article className="learn-object learn-custom" data-node-id="showcase-custom-context-budget" data-parent-id={customSibling?content.answers[4].id:content.followup.paragraphs[0].id}><LearningCardModel kind="custom"><LearningCardContent stream={{transition,start:1.793,end:1.858}} node={{id:"showcase-custom-context-budget",type:"custom",title:customTitle,text:customText,sources:[],parents:[customSibling?content.answers[4].id:content.followup.paragraphs[0].id]}} fullText={customText}/></LearningCardModel></article>
   </div></div>
-  <span className="learn-scenario-note">目标驱动的学习示例</span>
+  <span className="learn-scenario-note">选中任意卡片，问 AI 或检索博主公开观点，让理解继续生长。</span>
  </section>;
 }

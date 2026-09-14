@@ -1,6 +1,5 @@
 import {useState,useEffect,type RefObject} from 'react';
 import {Glyph,IconButton} from '../learning-v2/atoms';
-import {aiQuickActions} from '../learning-v2/NodePrompt';
 import {SendControl} from '../components/SendControl';
 import {learningProgress,part,chapterStops} from './learning-motion';
 import type {ScrollTransition} from './scroll-transition';
@@ -9,7 +8,7 @@ import {cycleDialogFocus} from '../learning-v2/dialog-focus';
 type Phase='waiting'|'focused'|'typing'|'ready'|'sending';
 /** Source NodePrompt UI, with a scroll-controlled demonstration instead of a network request. */
 export function LearningProductPrompt({author=false,question,title,onSubmit,onClose,transition}:{transition:RefObject<ScrollTransition>;author?:boolean;question:string;title:string;onSubmit:()=>void;onClose:()=>void}){
- const [depth,setDepth]=useState(false),[state,setState]=useState({typed:'',phase:'waiting' as Phase,pressure:0});
+ const [state,setState]=useState({typed:'',phase:'waiting' as Phase,pressure:0});
  useEffect(()=>{
   let frame=0,last='';const media=matchMedia('(prefers-reduced-motion: reduce)');const chars=[...question],weights=chars.map(c=>/[，。？、：]/.test(c)?2.1:1),total=weights.reduce((n,w)=>n+w,0);
   const focus=author?1.077:.779,start=author?1.09:.791,end=author?1.122:.821,send=author?1.138:.834;
@@ -20,10 +19,10 @@ export function LearningProductPrompt({author=false,question,title,onSubmit,onCl
   };frame=requestAnimationFrame(tick);return()=>cancelAnimationFrame(frame);
  },[transition,question,author]);
  const {typed,phase,pressure}=state,focused=phase!=='waiting'&&phase!=='sending',closeLabel=author?'关闭问博主输入框':'关闭询问 AI 输入框';
- const field=<div className="learn-input-field"><textarea aria-label={author?'问博主的问题':'询问 AI 的问题'} value={typed} readOnly rows={author?3:2}/><div className="learn-input-mirror" aria-hidden="true">{typed||(!focused?<span>{author?'想请博主解释什么？':'询问 AI'}</span>:null)}{focused&&<i className="learn-insertion-caret"/>}</div></div>;
- const send=<span className="learn-send-feedback" style={{'--button-press':pressure} as React.CSSProperties}><SendControl submitting={phase==='sending'} disabled={!typed.trim()} onSend={onSubmit} sendLabel={author?'发送问博主问题':'发送询问 AI 问题'}/></span>;
+ const field=<div className="learn-input-field"><textarea aria-label={author?'问博主的问题':'询问 AI 的问题'} value={typed} readOnly rows={author?3:2}/><div className="learn-input-mirror" aria-hidden="true">{typed||(!focused?<span>{author?'想查找哪些公开观点？':'询问 AI'}</span>:null)}{focused&&<i className="learn-insertion-caret"/>}</div></div>;
+ const send=<span className="learn-send-feedback" style={{'--button-press':pressure} as React.CSSProperties}><SendControl submitting={phase==='sending'} disabled={!typed.trim()} onSend={onSubmit} sendLabel={author?'查看公开观点示例':'查看 AI 追问示例'}/></span>;
  return <form className={`lp-node-prompt ${author?'':'lp-ai-quick'}`} data-input-focus={focused} data-phase={phase} role="dialog" aria-label={author?'问博主':'询问 AI'} onSubmit={e=>{e.preventDefault();onSubmit();}} onPointerDown={e=>e.stopPropagation()} onKeyDown={e=>{cycleDialogFocus(e);e.stopPropagation();if(e.key==='Escape'){e.preventDefault();onClose();}}}>
-  {author?<><header><span><Glyph name="message" size={17}/><strong>问博主</strong></span><IconButton icon="close" label={closeLabel} onClick={onClose}/></header><div className="lp-node-prompt-sources" aria-label="本次引用节点"><span title={title}><Glyph name="graph" size={12}/><span>{title}</span></span></div>{field}</>:<><div className="lp-ai-input"><Glyph name="spark" size={19}/>{field}{send}</div><div className="lp-quick-actions"><span>快速操作</span>{aiQuickActions.map(action=><button type="button" key={action.label} onClick={onSubmit}><Glyph name={action.icon} size={19}/>{action.label}</button>)}</div></>}
-  <footer><button type="button" className="lp-node-prompt-depth" aria-pressed={depth} onClick={()=>setDepth(!depth)}><Glyph name="spark" size={author?14:13}/>{depth?'深度思考':'快速回答'}</button><span role="status">{phase==='sending'?'正在发送…':author?'Shift + Enter 换行':'Esc 关闭'}</span>{author?send:<IconButton icon="close" label={closeLabel} onClick={onClose}/>}</footer>
+  {author?<><header><span><Glyph name="message" size={17}/><strong>问博主</strong></span><IconButton icon="close" label={closeLabel} onClick={onClose}/></header><div className="lp-node-prompt-sources" aria-label="本次引用节点"><span title={title}><Glyph name="graph" size={12}/><span>{title}</span></span></div>{field}</>:<><div className="lp-ai-input"><Glyph name="spark" size={19}/>{field}{send}</div><div className="lp-quick-actions"><span>选中卡片，接着追问</span><button type="button" onClick={onSubmit}><Glyph name="spark" size={19}/>查看这次追问</button></div></>}
+  <footer><span className="lp-node-prompt-depth"><Glyph name="spark" size={author?14:13}/>快速回答</span><span role="status">{phase==='sending'?'展示结果…':author?'公开观点，不联系本人':'Esc 关闭'}</span>{author?send:<IconButton icon="close" label={closeLabel} onClick={onClose}/>}</footer>
  </form>;
 }

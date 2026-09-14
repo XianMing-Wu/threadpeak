@@ -36,7 +36,7 @@ export function ArticleCard({data,width=1080,assetSource=staticFile,nativeImages
    <div style={{position:'absolute',left:185,top:360,width:500,fontSize:37,lineHeight:1.3,color:muted,overflow:'hidden',whiteSpace:'nowrap',textOverflow:'ellipsis'}}>{data.badgeText||'知乎回答 · 学习经验分享'}</div>
    <div style={{position:'absolute',left:713,top:303,width:219,height:88,borderRadius:48,background:'#eaf4ff',display:'flex',alignItems:'center',justifyContent:'center',gap:11,color:blue,fontSize:42,fontWeight:550}}><Icon name="plus" size={45} color={blue}/>关注</div>
    <div style={{position:'absolute',right:46,top:318}}><Icon name="share" size={70}/></div>
-   <div style={{position:'absolute',left:48,top:440,fontSize:36,color:muted,display:'flex',alignItems:'center',gap:5}}>{count(data.votes)} 人赞同 · 要点整理<Icon name="chevron" size={35} color={muted}/></div>
+   <div style={{position:'absolute',left:48,top:440,fontSize:36,color:muted,display:'flex',alignItems:'center',gap:5}}>{count(data.votes)} 人赞同 · 观点整理<Icon name="chevron" size={35} color={muted}/></div>
    <div style={{position:'absolute',right:48,top:440,display:'flex',gap:10,alignItems:'center',color:blue,fontSize:39}}><Icon name="headphones" size={42} color={blue}/>听内容</div>
    <div style={{position:'absolute',left:48,top:515,width:824,height:88,borderRadius:50,background:'#edf5ff',display:'flex',gap:14,alignItems:'center',padding:'0 28px',color:blue,fontSize:40}}><Icon name="book" size={44} color={blue}/>学习话题 · {data.topic}<span style={{marginLeft:'auto'}}><Icon name="chevron" size={35} color={blue}/></span></div>
    <h2 style={{position:'absolute',left:49,top:635,margin:0,fontSize:54,fontWeight:550}}>目录</h2>

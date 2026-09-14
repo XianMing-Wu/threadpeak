@@ -17,10 +17,10 @@ export function InterviewScene({story,beat,transition}:{story:StoryState;beat:nu
    <img className="kanshan-interviewer" src={`${import.meta.env.BASE_URL}introduction/interview/kanshan-ink.png`} alt="刘看山面向学习者，抬手交流" width="1254" height="1254"/></div>
    <div className="interview-intent" data-beat={beat}>
     {beat===0?<p>为求职，做一个<br/><em>懂资料的文档助手。</em></p>:beat===1?<p>带着已有的基础，<br/><em>从第一次调用出发。</em></p>:<p>把应用做好，<br/><em>也把思路讲清楚。</em></p>}
-    <span>{beat===0?'让想法，落到一件具体的作品。':beat===1?'Python · HTTP · 下一步': '这一次，暂不训练底层模型。'}</span>
+    <span>{beat===0?'让想法，落到一件具体的作品。':beat===1?'Python · HTTP · 下一步': '每周六小时，先完成可验证的小步骤。'}</span>
    </div>
   </div>
   {warmed&&<Suspense fallback={null}><ScrollRouteScene transition={transition}/></Suspense>}
-  <p className="interview-example">访谈与路线示例</p>
+  <p className="interview-example">访谈片段 · 确认目标、基础、时间与限制</p>
  </section>;
 }

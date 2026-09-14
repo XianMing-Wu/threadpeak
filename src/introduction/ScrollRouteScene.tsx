@@ -7,6 +7,7 @@ import idleUrl from '../vendor/learning-path-3d/assets/liu-kanshan-idle.glb?url'
 import type {ScrollTransition} from './scroll-transition';
 import {choreographyAt,falling,linear,range,routeTimes} from './route-choreography';
 import {carrierPositions,guideAt,conceptLifecycle} from './route-guide';
+import {fitRouteFrame,type RouteFrameItem} from './route-framing';
 import {FlowRibbon} from './FlowRibbon';
 import {FlowBloom} from './FlowBloom';
 import {startCardScreen,rootBox} from './learning-motion';
@@ -123,15 +124,43 @@ export default function ScrollRouteScene({transition}:{transition:RefObject<Scro
     if(w>0&&h>0){
      if(w!==lastW||h!==lastH){renderer.setSize(w,h,false);lastW=w;lastH=h;}lastP=raw;dirty=false;
      const s=choreographyAt(raw),tour=guideAt(raw),mobile=w<740;
-     const elevation=T.MathUtils.degToRad(55),vertical=18*Math.sin(elevation);
-     const pixels=Math.min(w*(mobile?.89:.55)/12.6,h*(mobile?.46:.88)/vertical);
-     const fullPixels=Math.min(w*.85/10,h*.90/vertical);
-     let px=T.MathUtils.lerp(pixels,fullPixels,s.expand);
-     const destination=concepts[0].position,target=V(1.3*s.expand,0,-.15);
-     target.lerp(destination,range(raw,6.88,7.06));px*=1+range(raw,7.01,7.28)**2*15;
+     const elevation=T.MathUtils.degToRad(55),sin=Math.sin(elevation),cos=Math.cos(elevation);
+     const caption=el.querySelector<HTMLElement>('.route-story-caption')!;
+     const left=T.MathUtils.lerp(w*(mobile?.035:.46),w*.035,s.expand),right=w*.975;
+     caption.style.left=`${left}px`;caption.style.right=`${w-right}px`;
+     const sceneBottom=h-caption.offsetHeight-20;
+     const sceneTop=mobile?h*.52*(1-s.expand)+10:14;
+     const items:RouteFrameItem[]=subjectPositions.map(p=>({x:p.x,y:p.z*sin-.3*cos,left:0,right:0,top:0,bottom:0,worldRadius:.82}));
+     // Reserve only the mascot's current silhouette, not its abandoned platform.
+     const walkA=range(raw,6.20,6.51),walkB=range(raw,6.51,6.83);
+     const mascotPosition=subjectPositions[0].clone().lerp(subjectPositions[1],walkA).lerp(concepts[0].position,walkB);
+     items.push({x:mascotPosition.x,y:mascotPosition.z*sin-2.65*cos,left:0,right:0,top:0,bottom:0,worldRadius:.65});
+     const conceptOffset=(index:number)=>.47+(index===0?range(raw,6.64,6.82)*1.05:0);
+     const fittingGroups=Array.from({length:4},()=>[...items]);
+     for(const {element,kind,index} of labels){
+      const width=element.offsetWidth,height=element.offsetHeight||width*6;
+      if(kind==='concept'){
+       const c=concepts[index],above=c.local%2===0;
+       fittingGroups[c.carrier-1].push({x:c.position.x,y:c.position.z*sin-.445*cos+(above?-conceptOffset(index):.47),left:width/2,right:width/2,top:above?height+12:0,bottom:above?0:height+14,worldRadius:.03});
+      }else{
+       fittingGroups[index-1].push({x:subjectPositions[2].x-.71,y:subjectPositions[index].z*sin-.523*cos,left:width+24,right:0,top:height/2+(index===3?64:0),bottom:height/2-(index===3?64:0)});
+      }
+     }
+     const frames=fittingGroups.map(group=>fitRouteFrame(group,{left,top:sceneTop,right,bottom:sceneBottom}));
+     // Move between complete stage frames while travelling, and hold a stable
+     // frame while its concepts are being read. Hidden labels do not shrink it.
+     const stage=Math.min(3,Math.max(0,Math.floor((tour.number-2)/2)));
+     const next=tour.number>1&&tour.number<9&&tour.number%2===1?Math.min(3,stage+1):stage;
+     const blend=next===stage?0:tour.local*tour.local*(3-2*tour.local);
+     const mixFrame=(a:typeof frames[number],b:typeof frames[number],t:number)=>({scale:T.MathUtils.lerp(a.scale,b.scale,t),labelScale:T.MathUtils.lerp(a.labelScale,b.labelScale,t),x:T.MathUtils.lerp(a.x,b.x,t),y:T.MathUtils.lerp(a.y,b.y,t)});
+     const stageFrame=mixFrame(frames[stage],frames[next],blend);
+     const framing=raw>=5.52?mixFrame(frames[3],frames[0],range(raw,5.52,5.87)):stageFrame;
+     let px=framing.scale;
+     const destination=concepts[0].position,target=V();
+     const focus=range(raw,6.88,7.06);target.lerp(destination,focus);px*=1+range(raw,7.01,7.28)**2*15;
      camera.left=-w/px/2;camera.right=w/px/2;camera.top=h/px/2;camera.bottom=-h/px/2;
-     camera.position.copy(target).add(V(0,Math.sin(elevation)*30,Math.cos(elevation)*30*(1-.72*s.portal)));camera.lookAt(target);
-     camera.setViewOffset(w,h,-w*(mobile?-.21:.12)*(1-s.expand),-h*(mobile?.245:0)*(1-s.expand),w,h);camera.updateProjectionMatrix();camera.updateMatrixWorld();
+     camera.position.copy(target).add(V(0,sin*30,cos*30*(1-.72*s.portal)));camera.lookAt(target);
+     camera.setViewOffset(w,h,(w/2-framing.x)*(1-focus),(h/2-framing.y)*(1-focus),w,h);camera.updateProjectionMatrix();camera.updateMatrixWorld();
      world.visible=raw>=1.70;el.dataset.phase=s.phase;el.dataset.progress=raw.toFixed(5);el.dataset.tourStep=String(tour.number);el.dataset.activeCarrier=tour.carrier===null?'':subjectIds[tour.carrier];
      greens.forEach((g,i)=>{const drop=falling(raw,1.76+i*.052,.20),open=i>0&&i<5?conceptLifecycle(raw,i,0,1).openness:0;g.position.y=drop.height;g.visible=drop.visible;g.scale.set(1+.07*open,drop.squash,1+.07*open);});
      roads.forEach((g,i)=>{const d=falling(raw,2.25+i*.012,.20);g.position.y=-.005+d.height;g.visible=d.visible;});
@@ -150,7 +179,7 @@ export default function ScrollRouteScene({transition}:{transition:RefObject<Scro
      bridge.forEach((piece,i)=>{const state=conceptLifecycle(raw,2,i*.45,3);piece.visible=state.visible&&state.opacity>.002;piece.position.y=state.height;fadeGroup(piece,state.opacity);});
      el.dataset.bridgeVisible=String(bridge.some(g=>g.visible));
      el.dataset.visibleConcepts=String(blues.filter(b=>b.visible).length);el.dataset.visibleConceptIds=concepts.filter((_,i)=>blues[i].visible).map(c=>c.id).join(',');
-     const landing=falling(raw,routeTimes.mascot[0],.20),walkA=range(raw,6.20,6.51),walkB=range(raw,6.51,6.83);
+     const landing=falling(raw,routeTimes.mascot[0],.20);
      const lengthA=subjectPositions[0].distanceTo(subjectPositions[1]),lengthB=subjectPositions[1].distanceTo(destination),travel=lengthA*walkA+lengthB*walkB;
      hero.position.copy(subjectPositions[0]).lerp(subjectPositions[1],walkA).lerp(destination,walkB);
      hero.position.y=(walkB>0?surfaceAt(lengthB*walkB,lengthB,.523,.445):surfaceAt(lengthA*walkA,lengthA))+.012+landing.height;
@@ -175,20 +204,17 @@ export default function ScrollRouteScene({transition}:{transition:RefObject<Scro
       if(kind==='subject'){
        const start=subjectPositions[index].clone().add(V(-.78,.55,0)).project(camera),ax=(start.x*.5+.5)*w,ay=(-start.y*.5+.5)*h;
        let tx:number,ty:number;
-       if(mobile){x=9;y-=index===3?48:0;element.style.transform=`translate(${x}px,${y}px) translateY(-50%)`;tx=x+68+8;ty=y;}
-       else{
-        // Both parallel carriers share a clear label gutter outside the diamond.
-        const gutter=V(subjectPositions[2].x,.523,subjectPositions[index].z).project(camera);
-        x=(gutter.x*.5+.5)*w-px*.71-24;y-=index===3?64:0;
-        element.style.transform=`translate(${x}px,${y}px) translate(-100%,-50%)`;
-        tx=x+10;ty=y;
-       }
+       // Labels and arrows use the same measured gutter included in camera fitting.
+       const gutter=V(subjectPositions[2].x,.523,subjectPositions[index].z).project(camera);
+       x=(gutter.x*.5+.5)*w-px*.71-24*framing.labelScale;y-=index===3?64*framing.labelScale:0;
+       element.style.transform=`translate(${x}px,${y}px) scale(${framing.labelScale}) translate(-100%,-50%)`;
+       tx=x+10;ty=y;
        const curved=index===3;
        const d=curved?`M ${ax} ${ay-5} C ${ax-12} ${ty-34},${tx+44} ${ty-24},${tx} ${ty}`:`M ${ax} ${ay} Q ${(ax+tx)/2} ${ay-3},${tx} ${ty}`;
        const arrow=arrows[index-1];arrow.style.opacity=String(alpha);arrow.style.visibility=alpha<.005?'hidden':'visible';
        for(const path of arrow.children)path.setAttribute('d',`${d} M ${tx+7} ${ty-5} L ${tx} ${ty} L ${tx+7} ${ty+5}`);
       }else{
-       const above=concepts[index].local%2===0;y+=above?-(px*.47+12):(px*.47+14);element.style.transform=`translate(${x}px,${y}px) translate(-50%,${above?'-100%':'0'})`;
+       const above=concepts[index].local%2===0;y+=above?-(px*conceptOffset(index)+12*framing.labelScale):(px*.47+14*framing.labelScale);element.style.transform=`translate(${x}px,${y}px) scale(${framing.labelScale}) translate(-50%,${above?'-100%':'0'})`;
       }
       element.style.opacity=String(alpha);element.style.visibility=alpha<.005?'hidden':'visible';element.dataset.visible=String(alpha>.5);
      });
@@ -215,6 +241,7 @@ export default function ScrollRouteScene({transition}:{transition:RefObject<Scro
  },[transition,retry]);
  return <div ref={host} className="scroll-route" aria-label="随滚动展开的 Agent 学习路线示例">
   <canvas ref={canvas} aria-label="纵向绿色载体路线，蓝色概念水平向右展开"/>
+  <p className="route-story-caption"><strong>3D 学习路线</strong><span>绿色是阶段，蓝色是概念；独立能力分头学，再汇入同一个作品。</span></p>
   <div className="route-floating-labels" ref={labelsHost}/>
   <div className="route-portal" aria-hidden="true"/>
   <svg className="route-match-cut" aria-hidden="true"><defs><radialGradient id="route-orb-light" cx="35%" cy="25%" r="75%"><stop stopColor="#559dff"/><stop offset=".55" stopColor="#2679ec"/><stop offset="1" stopColor="#1763d4"/></radialGradient></defs><ellipse cx="0" cy="0" rx="0" ry="0" fill="url(#route-orb-light)"/></svg>

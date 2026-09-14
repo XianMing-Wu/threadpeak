@@ -4,8 +4,8 @@
   "license": "SIL Open Font License 1.1",
   "source": "Same pinned font as lettering-source.json",
   "labels": {
-    "footprint-heading": "循着问题，找到来处。",
-    "network-heading": "让来源，彼此连接。",
+    "footprint-heading": "记住问题，也记住内容的来处。",
+    "network-heading": "循着经验，寻找请教线索。",
     "network-topic-0": "LLM 应用开发基础",
     "network-topic-1": "Agent 循环与受控工具",
     "network-topic-2": "检索增强生成 · RAG",

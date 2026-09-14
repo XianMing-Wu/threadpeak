@@ -17,7 +17,8 @@ import {LearningStoryScene} from './LearningStoryScene';
 import {choreographyAt,storyAt} from './route-choreography';
 import {SCROLL_SCREENS,scrollScreensAt} from './scroll-pacing';
 import {initialStory,interviewLayout,interviewTurns,type StoryState} from './interview';
-import {characterGoals,columnLayout,goals,mix,segment,useScrollTransition,type GoalId,type ScrollTransition} from './scroll-transition';
+import {CHAPTER_STEPS,STORY_STEPS} from './story-steps';
+import {characterGoals,columnLayout,goals,mix,segment,seekStory,useScrollTransition,type GoalId,type ScrollTransition} from './scroll-transition';
 
 function useReducedMotion(){
   const[value,setValue]=useState(()=>matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -303,7 +304,7 @@ export function OrbitScene({transition,frame,activeGoal,onGoal,onStory,beat}:{tr
     onKeyDown={event=>{if(event.key==='Escape'){setPinned(null);setFocus(null);setHover(null);(document.activeElement as HTMLElement)?.blur();}}}>
     <div className="hero-copy">
       <h1><span>一个问题，</span><img src={answerLettering} alt="不止一种答案。"/></h1>
-      <p>听见不同的经验，<br/>找到自己的学习路径。</p>
+      <p>建议各有适用条件，<br/>从自己的目标与基础出发。</p>
     </div>
       <div className="controls scene-controls">
         <button type="button" aria-label={paused?'继续环绕':'暂停环绕'} aria-pressed={paused} disabled={!complete} onClick={()=>setPaused(value=>!value)}>
@@ -348,7 +349,13 @@ export function App(){
  const beat=storyState.beat;
  return <main className="scroll-story" ref={story} style={{height:`${(SCROLL_SCREENS+1)*100}svh`}}>
   <ShowcaseNavigation transition={transition}/>
-  <nav className="chapter-shortcuts" aria-label="章节跳转"><a href="#goals">跳到不同的目标</a><a href="#interview">跳到目标访谈</a><a href="#route">跳到学习路线</a><a href="#learning">跳到知识脉络学习</a><a href="#authors">跳到博主网络</a><a href="#ask-authors">跳到问博主</a><a href="#begin">跳到开始学习</a></nav>
+  <nav className="chapter-shortcuts" aria-label="章节跳转" onClick={e=>{
+   if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+   const link=(e.target as Element).closest('a');
+   if(link?.hash!==location.hash)return;
+   const step=STORY_STEPS.find(s=>s.id===CHAPTER_STEPS[link.hash.slice(1)]);
+   if(step){e.preventDefault();seekStory(step.raw);}
+  }}><a href="#goals">跳到不同的目标</a><a href="#interview">跳到目标访谈</a><a href="#route">跳到学习路线</a><a href="#learning">跳到知识脉络学习</a><a href="#authors">跳到博主网络</a><a href="#ask-authors">跳到进一步请教</a><a href="#begin">跳到开始学习</a></nav>
   <span className="chapter-anchor" id="goals" style={{top:`${scrollScreensAt(1.10)*100+14}svh`}} aria-hidden="true"/>
   <span className="chapter-anchor" id="interview" style={{top:`${scrollScreensAt(1.65)*100}svh`}} aria-hidden="true"/>
   <span className="chapter-anchor" id="route" style={{top:`${scrollScreensAt(1.79)*100}svh`}} aria-hidden="true"/>

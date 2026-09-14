@@ -43,6 +43,6 @@ export function GoalPanel({active,onSelect}:{active:GoalId;onSelect:(id:GoalId)=
     </div>
    </button>)}
   </div>
-  <p className="goal-context">目标示例<span>同一个目标，也可以有不同走法。</span></p>
+  <p className="goal-context">目标示例<span>同一目标，基础和限制不同，走法也不同。</span></p>
  </section>;
 }

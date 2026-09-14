@@ -45,8 +45,8 @@ test('goal-only illustration switches the goal and all three corresponding steps
  const view=render(<GoalSearchIllustration example={0}/>);
  expect(screen.getByRole('img').getAttribute('aria-label')).toContain('接入资料');
  view.rerender(<GoalSearchIllustration example={1}/>);
- expect(screen.getByRole('img').getAttribute('aria-label')).toContain('用 Python 自动整理每周报表');
- expect(screen.getByText('读取表格')).toBeTruthy();expect(screen.getByText('生成报表')).toBeTruthy();
+ expect(screen.getByRole('img').getAttribute('aria-label')).toContain('拍好一组有故事的旅行照片');
+ expect(screen.getByText('观察光线')).toBeTruthy();expect(screen.getByText('编排组照')).toBeTruthy();
  expect(screen.queryByText('接入资料')).toBeNull();
 })
 

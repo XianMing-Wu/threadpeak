@@ -35,7 +35,7 @@ export function AuthorNetworkStoryScene({transition}:{transition:RefObject<Scrol
 
  const f=authorFootprint(selected),realQuestion=arrivingAuthors.includes(selected)?projectScenario.footprintQuestion:f.group.questions[0]?.text,derived=f.group.cards.filter(c=>c.kind!=='article');
  const sourceTitle=trimTitle(f.evidence.title),colon=sourceTitle.search(/[:：]/),sourceLead=colon>0&&colon<15?sourceTitle.slice(0,colon):'',sourceRest=sourceLead?sourceTitle.slice(colon+1):sourceTitle;
- const preview=selected===arrivingAuthors[0]?'已记下请求检查点；带着失败链路，请教上下文在哪一步混入。':selected===arrivingAuthors[1]?'已梳理接口与应用的存储责任；下一步请教实际链路中的边界。':selected===arrivingAuthors[2]?'已记录并发与会话归属的检查项；准备脱敏日志，进一步请教。':derived[0]?.title??f.evidence.title;
+ const preview=selected===arrivingAuthors[0]?'已记下请求检查点：核对第二轮实际带入的历史。':selected===arrivingAuthors[1]?'已对比历史管理方式：结合接口支持与迁移需要作选择。':selected===arrivingAuthors[2]?'已区分上下文预算与用户隔离：记录各自需要验证的条件。':derived[0]?.title??f.evidence.title;
  useEffect(()=>{
   const el=host.current!,stage=el.querySelector<SVGSVGElement>('.author-stage')!,bridges=[...el.querySelectorAll<HTMLElement>('.network-bridge')],travelers=[...el.querySelectorAll<HTMLElement>('.network-traveler')];
   const viewport=el.querySelector<HTMLElement>('.network-viewport')!;
@@ -91,20 +91,20 @@ export function AuthorNetworkStoryScene({transition}:{transition:RefObject<Scrol
  },[transition]);
  return <section ref={host} className="author-network-scene" data-active="false" aria-label="博主网络与学习足迹展示" aria-hidden="true" inert>
   <svg className="author-stage" viewBox="0 0 1400 820">
-   <g data-network-heading="footprint"><text className="network-eyebrow">学习足迹</text><image href={footprintHeading} className="network-heading-art" y="22" width="620" height="48"><title>记住问题，也记住帮过你的人。</title></image></g>
+   <g data-network-heading="footprint"><text className="network-eyebrow">学习足迹</text><image href={footprintHeading} className="network-heading-art" y="22" width="620" height="48"><title>记住问题，也记住内容的来处。</title></image></g>
    <g className="footprint-wires" fill="none">{footprintPaths.map((d,i)=><g data-footprint-wire={i} key={d}><path d={d} pathLength="1" className="footprint-wire-base"/>{["halo","color","core"].map(c=><path key={c} d={d} pathLength="100" className={`footprint-wire-light wire-${c}`}/>)}<circle cx={[192,528,201,535][i]} cy={[330,298,526,526][i]} r="2.5" fill="white" stroke="#9eb6c8"/></g>)}</g>
-   <g className="footprint-identity" aria-label={`${f.author.name}的学习足迹`}>
+   <g className="footprint-identity" aria-label={`我与 ${f.author.name} 的公开内容相关的学习足迹`}>
     <rect x="233" y="363" width="240" height="106" rx="18" fill="#fff" stroke="#dce6ec"/>
     <foreignObject x="246" y="387" width="58" height="58"><CardAvatar name={f.author.name} src={f.evidence.avatar??undefined}/></foreignObject>
     <text x="323" y="412" className="footprint-name">{f.author.name.length>13?f.author.name.slice(0,12)+'…':f.author.name}</text><text x="323" y="438" className="footprint-meta">与这个卡点相关的博主</text>
    </g>
    <Paper id="source" {...footprintBoxes.source} label="关联的知乎文章"><div className="footprint-kicker"><FootprintMark kind="source"/> 来源文章</div><h3>{sourceLead&&<span className="footprint-title-topic">{sourceLead}</span>}{sourceRest}</h3></Paper>
-   <Paper id="concept" {...footprintBoxes.concept} label="当前项目的学习任务"><div className="footprint-kicker"><FootprintMark kind="concept"/> 我的目标</div><h3>{arrivingAuthors.includes(selected)?'文档助手：从单人跑通到双人试用':f.group.title.split('：').slice(-1)}</h3></Paper>
+   <Paper id="concept" {...footprintBoxes.concept} label="当前项目的学习任务"><div className="footprint-kicker"><FootprintMark kind="concept"/> 我的目标</div><h3>{arrivingAuthors.includes(selected)?'文档助手：接住第二轮追问':f.group.title.split('：').slice(-1)}</h3></Paper>
    <Paper id="question" {...footprintBoxes.question} label={realQuestion?'当时的追问':'学习起点'}><div className="footprint-kicker"><FootprintMark kind="question"/>{realQuestion?'当时的追问':'学习起点'}</div><p className="footprint-question-copy">{realQuestion??`围绕「${f.group.title.split('：')[0]}」阅读与理解。`}</p></Paper>
    <Paper id="card" {...footprintBoxes.card} label="关联的知识卡片"><div className="footprint-kicker"><FootprintMark kind="card"/> {realQuestion?'留下的线索':'理解卡片'}</div><p className="footprint-card-copy">{preview}</p></Paper>
-   <g className="footprint-note" transform="translate(40 758)"><text>学到了哪一步、试过什么、谁的内容帮过你，</text><text y="26">都留在这里，下一次请教就有据可循。</text></g>
-   <g data-network-heading="network"><text className="network-eyebrow">博主网络</text><image href={networkHeading} className="network-heading-art" y="22" width="565" height="48"><title>遇到难题，知道向谁请教。</title></image></g>
-   <g className="network-footnote"><text>让真实问题与相关经验相连，付费请教前知道该找谁。</text><text y="24" className="network-provenance">点选博主，回看与你有关的足迹 · 拖动探索关系</text></g>
+   <g className="footprint-note" transform="translate(40 758)"><text>学到了哪一步、试过什么、谁的内容帮过你，</text><text y="26">逐步留下来，让下一次学习与请教有据可循。</text></g>
+   <g data-network-heading="network"><text className="network-eyebrow">博主网络</text><image href={networkHeading} className="network-heading-art" y="22" width="565" height="48"><title>循着经验，寻找请教线索。</title></image></g>
+   <g className="network-footnote"><text>从问题、文章和使用反馈出发，回看经验并寻找新线索。</text><text y="24" className="network-provenance">点选博主，回看与你有关的足迹 · 拖动探索关系</text></g>
   </svg>
   <div className="network-viewport"><AuthorNetwork3D transition={transition} selected={selected} onSelect={setSelected}/></div>
   {featured.map((a,i)=><div className="network-bridge learn-author" key={a.id} data-bridge={i}><LearningCardModel kind="author"><LearningCardContent node={{...a,type:'author',origin:'author',author:{...a.author,sourceKind:'zhihu'},text:a.markdown}} fullText={a.text}/></LearningCardModel></div>)}

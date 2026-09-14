@@ -162,3 +162,6 @@
 .learn-root h3{margin:34px 0 0;height:128px}.learn-root h3 img{display:block;width:290px;height:128px;object-fit:contain;object-position:left center}.learn-root p{font-size:15px;line-height:1.85;margin:20px 0 0;color:#647b8c}
 
 .learn-scenario-note{position:absolute;right:26px;bottom:10px;font:11px CardSans,sans-serif;color:#8b9da9;pointer-events:none}
+/* Evidence labels belong to the reading surface, outside the original source. */
+.learn-evidence-label{margin:0;padding:10px 20px 0;font:12px/1.5 CardSans,sans-serif;color:#66798a}
+@media(max-width:740px){.learn-scenario-note{left:16px;right:16px;bottom:6px;text-align:center;font-size:9px;line-height:1.5}}

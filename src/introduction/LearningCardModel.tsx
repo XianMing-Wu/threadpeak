@@ -42,6 +42,8 @@ export function LearningCardContent({node,fullText,editing,onFinishEdit,stream}:
  const displayed:GraphNode=source?{id:source.id,type:'article',title:source.title,text:source.text,sources:[source.id],parents:[]}:{...node,author:node.author?{...node.author,matchReason:undefined}:undefined,title:expanded?node.title:current.title,text:expanded?(fullText??node.text):current.text};
  return <div ref={face} className="learn-card-ink" data-streaming={!expanded&&current.streaming} data-expanded={expanded} data-source-reading={!!source}><div className="learn-product-ui learn-product-card">
   <LearningData value={{articles:readingArticles.map(a=>({...a,summary:a.text,likes:null,authorId:null,topic:content.provenance.conceptId,sourceKind:'zhihu' as const})),concept:content.provenance.conceptId}}>
+   {!source&&!expanded&&(node.type==='article'||node.type==='author')&&<p className="learn-evidence-label">{node.type==='author'?'公开观点整理':'本课阅读提示'}</p>}
+   {expanded&&(source||node.type==='article'||node.type==='author')&&<p className="learn-evidence-label">公开资料节选 · 可回查来源</p>}
    {source&&<button className="learn-source-back" onClick={e=>{e.stopPropagation();collapse();}}>← 返回当前卡片</button>}
    <GraphCard key="markdown-stream" node={displayed} toolbar={false} expanded={expanded} onExpand={toggle} onOriginal={toggle} onSource={openSource} editing={editing} onFinishEdit={onFinishEdit}/>
   </LearningData>
