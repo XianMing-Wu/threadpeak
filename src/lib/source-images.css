@@ -37,17 +37,19 @@
   font-weight: 400;
 }
 
-/* An inline equation is one box. KaTeX's internal vertical layout must never scroll. */
-
 .md-body .tp-math.is-inline {
-  display: inline-block;
+  display: inline;
   white-space: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: visible;
   overflow-wrap: normal;
   max-width: 100%;
-  scrollbar-width: none;
-  padding: .35em 0;
+  padding: 0;
+  vertical-align: baseline;
+}
+
+.md-body .tp-math.is-inline .katex {
+  font-size: 1em;
+  line-height: 1;
 }
 
 .md-body .tp-math .katex-display {

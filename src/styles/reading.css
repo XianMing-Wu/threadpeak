@@ -75,11 +75,12 @@
 .tp-math {
   display: inline;
   max-width: 100%;
-  vertical-align: middle;
+  vertical-align: baseline;
 }
 
 .tp-math.is-inline {
   display: inline;
+  vertical-align: baseline;
 }
 
 .tp-math.is-display {

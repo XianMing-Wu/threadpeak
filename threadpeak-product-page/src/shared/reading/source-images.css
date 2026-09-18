@@ -1,0 +1,125 @@
+.md-body img.tp-source-image {
+  object-fit: contain;
+  max-width: 100%;
+  height: auto;
+  margin: .7em 0;
+  display: block;
+}
+
+.md-body img.tp-source-image.is-formula {
+  vertical-align: middle;
+  max-width: 100%;
+  height: auto;
+  margin: 0 .12em;
+  display: inline-block;
+}
+
+.md-body .tp-source-image-fallback {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: inherit;
+  border-bottom: 1px dotted var(--line-3);
+  display: inline;
+}
+
+.md-body .tp-source-image-status {
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+
+.md-body .tp-source-excerpt-note {
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+  margin: .7em 0 0;
+  font-weight: 400;
+  line-height: 1.65;
+}
+
+.md-body .tp-math.is-inline {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  max-width: 100%;
+  padding: 0;
+  display: inline;
+  overflow: visible;
+  vertical-align: baseline;
+}
+
+.md-body .tp-math.is-inline .katex {
+  font-size: 1em;
+  line-height: 1;
+}
+
+.md-body .tp-math .katex-display {
+  margin: 0;
+  overflow: visible;
+}
+
+.md-body .tp-math.is-display {
+  scrollbar-width: none;
+  padding: .2em 0;
+  overflow: auto hidden;
+}
+
+.md-body .tp-math::-webkit-scrollbar {
+  display: none;
+}
+
+.md-body .tp-math .katex-html {
+  white-space: nowrap;
+}
+
+.tp-source-reading-label {
+  font-size: var(--fs-meta);
+  color: var(--ink-2);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  line-height: 1.6;
+  display: flex;
+}
+
+.tp-source-reading-label > span {
+  color: var(--ink-3);
+}
+
+.tp-source-reading > details {
+  border-top: 1px solid var(--line-1);
+  margin-top: 22px;
+  padding-top: 14px;
+}
+
+.tp-source-reading > details > summary {
+  font-size: var(--fs-meta);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.tp-source-reading-state {
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+  border: 1px solid var(--line-1);
+  background: var(--surface-1);
+  border-radius: var(--r-card);
+  padding: 18px;
+}
+
+.tp-source-reading-state > p {
+  margin: 0;
+}
+
+.tp-source-reading-state button {
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-control);
+  background: var(--surface-1);
+  color: var(--accent);
+  font-size: var(--fs-body);
+  margin-top: 12px;
+  padding: 7px 12px;
+}
+
+.tp-source-reading-state button:hover {
+  border-color: var(--line-3);
+  color: var(--accent-hover);
+}

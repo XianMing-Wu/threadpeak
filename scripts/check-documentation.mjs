@@ -131,7 +131,22 @@ export async function checkDocumentation(directory = root) {
   const files = await repositoryFiles(directory)
   const documents = new Map(await Promise.all(files.filter(name => /\.(?:md|mdc)$/.test(name)).map(async name => [name, await readFile(path.join(directory, name), 'utf8')])))
   const pkg = JSON.parse(await readFile(path.join(directory, 'package.json'), 'utf8'))
-  const errors = validateDocuments(documents, files, pkg.scripts), rules = new Map()
+  // Excluded research/assets directories are not documentation to lint, but an
+  // explicit link to an existing file there is still a valid local reference.
+  const linkedTargets = new Set()
+  for (const [name, source] of documents) for (const { url } of inspectMarkdown(source).links) {
+    if (/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(url)) continue
+    try {
+      const local = decodeURIComponent(url.split('#')[0].split('?')[0])
+      const target = path.posix.normalize(path.posix.join(path.posix.dirname(name), local))
+      if (local && !local.startsWith('/') && target !== '..' && !target.startsWith('../')) linkedTargets.add(target)
+    } catch { /* validateDocuments reports malformed URLs. */ }
+  }
+  const existingTargets = (await Promise.all([...linkedTargets].map(async target => {
+    const info = await stat(path.join(directory, target)).catch(() => null)
+    return info?.isFile() || info?.isDirectory() ? target : null
+  }))).filter(Boolean)
+  const errors = validateDocuments(documents, [...files, ...existingTargets], pkg.scripts), rules = new Map()
   const agentsLinks = new Set(inspectMarkdown(documents.get('AGENTS.md')).links.map(link => link.url))
   for (const [name, source] of documents) if (name.startsWith('.cursor/rules/') && name.endsWith('.mdc')) {
     try {

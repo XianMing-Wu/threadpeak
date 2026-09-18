@@ -1,0 +1,32 @@
+.home-landscape {
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  justify-content: center;
+  height: 132px;
+  display: flex;
+  position: absolute;
+  inset: 10px 0 auto;
+  overflow: hidden;
+}
+
+.home-landscape svg {
+  width: min(470px, 90%);
+  height: 100%;
+  display: block;
+}
+
+.home:has(.home-landscape):before {
+  display: none;
+}
+
+@media (width <= 760px) {
+  .home-landscape {
+    height: 115px;
+    top: 15px;
+  }
+
+  .home-landscape svg {
+    width: min(410px, 96%);
+  }
+}

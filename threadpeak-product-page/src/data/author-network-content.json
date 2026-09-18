@@ -1,0 +1,3296 @@
+{
+  "provenance": {
+    "scope": "产品展示，已保存的大模型理论学习路线示例与问博主检索快照",
+    "inputs": [
+      "src/showcase/learnings.json",
+      "src/showcase/routes.json",
+      "learning-content.json"
+    ],
+    "identity": "原始证据 ID；不按同名作者合并",
+    "timestamps": "0 表示展示投影不提供时间，不在 UI 展示",
+    "preferences": "未模拟使用次数、评分或已联系状态"
+  },
+  "network": {
+    "version": 3,
+    "authors": [
+      {
+        "id": "author-ev-4b4af40127f923e8fd6b5fe03a07bcbb",
+        "name": "林启衡",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "4b4af40127f923e8fd6b5fe03a07bcbb",
+            "authorId": "author-ev-4b4af40127f923e8fd6b5fe03a07bcbb",
+            "authorName": "林启衡",
+            "title": "先把下一词、表征、注意力和生成收成一张图 - 知乎",
+            "summary": "先把下一词、表征、注意力和生成收成一张图。一轮最少包含提议、校验、执行、回填和停止。第一次只用只读工具。",
+            "url": "https://zhuanlan.zhihu.com/p/2078771037387466682?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-1:4b4af40127f923e8fd6b5fe03a07bcbb",
+                "topicId": "llm-application-concept-1",
+                "topic": "计算最优如何定",
+                "question": "",
+                "resourceId": "llm-application-concept-1",
+                "carrierId": "carrier-job-contract",
+                "carrier": "规模与预算",
+                "nodeIds": [
+                  "4b4af40127f923e8fd6b5fe03a07bcbb",
+                  "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-0"
+                ],
+                "nodeTitles": {
+                  "4b4af40127f923e8fd6b5fe03a07bcbb": "先把下一词、表征、注意力和生成收成一张图 - 知乎",
+                  "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-0": "先把四层收成一张总图"
+                },
+                "nodeKinds": {
+                  "4b4af40127f923e8fd6b5fe03a07bcbb": "article",
+                  "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-0": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/luoxiansheng.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-1",
+            "title": "计算最优如何定",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-b91f89c7433b7ce4e9e08e0902973b01",
+        "name": "苏晚青",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "b91f89c7433b7ce4e9e08e0902973b01",
+            "authorId": "author-ev-b91f89c7433b7ce4e9e08e0902973b01",
+            "authorName": "苏晚青",
+            "title": "工具调用是程序契约，不是对话技巧 - 知乎",
+            "summary": "工具调用是程序契约，不是对话技巧。缺字段和越界路径必须失败，不能补默认值。",
+            "url": "https://www.zhihu.com/question/575983484/answer/2066669584233522398?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-1:b91f89c7433b7ce4e9e08e0902973b01",
+                "topicId": "llm-application-concept-1",
+                "topic": "计算最优如何定",
+                "question": "",
+                "resourceId": "llm-application-concept-1",
+                "carrierId": "carrier-job-contract",
+                "carrier": "规模与预算",
+                "nodeIds": [
+                  "b91f89c7433b7ce4e9e08e0902973b01",
+                  "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-1"
+                ],
+                "nodeTitles": {
+                  "b91f89c7433b7ce4e9e08e0902973b01": "工具调用是程序契约，不是对话技巧 - 知乎",
+                  "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-1": "下一轮要带上需要的观察"
+                },
+                "nodeKinds": {
+                  "b91f89c7433b7ce4e9e08e0902973b01": "article",
+                  "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-1": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/da-mianyang.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-1",
+            "title": "计算最优如何定",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-fcaa79510d00451c65dfea18cd6ba683",
+        "name": "韩牧之",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "fcaa79510d00451c65dfea18cd6ba683",
+            "authorId": "author-ev-fcaa79510d00451c65dfea18cd6ba683",
+            "authorName": "韩牧之",
+            "title": "失败轨迹比成功回复更值得留下来 - 知乎",
+            "summary": "失败轨迹比成功回复更值得留下来。目录可以摘要，写入拒绝要留原文。",
+            "url": "https://zhuanlan.zhihu.com/p/2078077977661813850?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-1:fcaa79510d00451c65dfea18cd6ba683",
+                "topicId": "llm-application-concept-1",
+                "topic": "计算最优如何定",
+                "question": "",
+                "resourceId": "llm-application-concept-1",
+                "carrierId": "carrier-job-contract",
+                "carrier": "规模与预算",
+                "nodeIds": [
+                  "fcaa79510d00451c65dfea18cd6ba683",
+                  "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-3"
+                ],
+                "nodeTitles": {
+                  "fcaa79510d00451c65dfea18cd6ba683": "失败轨迹比成功回复更值得留下来 - 知乎",
+                  "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-3": "失败先定位到哪一层"
+                },
+                "nodeKinds": {
+                  "fcaa79510d00451c65dfea18cd6ba683": "article",
+                  "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-3": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/token-jujin.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-1",
+            "title": "计算最优如何定",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-b3365850817dd1343f5efe3799e451dd",
+        "name": "乔北辰",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "b3365850817dd1343f5efe3799e451dd",
+            "authorId": "author-ev-b3365850817dd1343f5efe3799e451dd",
+            "authorName": "乔北辰",
+            "title": "第一次循环只用只读工具 - 知乎",
+            "summary": "第一次循环只用只读工具。能列为文件，还不等于可以改仓库。",
+            "url": "https://zhuanlan.zhihu.com/p/2060731609859544003?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-1:b3365850817dd1343f5efe3799e451dd",
+                "topicId": "llm-application-concept-1",
+                "topic": "计算最优如何定",
+                "question": "",
+                "resourceId": "llm-application-concept-1",
+                "carrierId": "carrier-job-contract",
+                "carrier": "规模与预算",
+                "nodeIds": [
+                  "b3365850817dd1343f5efe3799e451dd",
+                  "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-4",
+                  "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-5"
+                ],
+                "nodeTitles": {
+                  "b3365850817dd1343f5efe3799e451dd": "第一次循环只用只读工具 - 知乎",
+                  "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-4": "第二轮请求，要带上需要的历史",
+                  "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-5": "用一次小检查，确认循环真的接通"
+                },
+                "nodeKinds": {
+                  "b3365850817dd1343f5efe3799e451dd": "article",
+                  "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-4": "answer",
+                  "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-5": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/FireMan.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-1",
+            "title": "计算最优如何定",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-168f3758f439a66b6aff2a3972f5a23e",
+        "name": "闻栖迟",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "168f3758f439a66b6aff2a3972f5a23e",
+            "authorId": "author-ev-168f3758f439a66b6aff2a3972f5a23e",
+            "authorName": "闻栖迟",
+            "title": "先看住一轮可观察的循环 - 知乎",
+            "summary": "先看住一轮可观察的循环。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/1914001090879427638?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-1:168f3758f439a66b6aff2a3972f5a23e",
+                "topicId": "llm-application-concept-1",
+                "topic": "计算最优如何定",
+                "question": "",
+                "resourceId": "llm-application-concept-1",
+                "carrierId": "carrier-job-contract",
+                "carrier": "规模与预算",
+                "nodeIds": [
+                  "168f3758f439a66b6aff2a3972f5a23e",
+                  "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-2"
+                ],
+                "nodeTitles": {
+                  "168f3758f439a66b6aff2a3972f5a23e": "先看住一轮可观察的循环 - 知乎",
+                  "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-2": "输出预算控制长度，参数不保证正确"
+                },
+                "nodeKinds": {
+                  "168f3758f439a66b6aff2a3972f5a23e": "article",
+                  "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-2": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/fanstuck.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-1",
+            "title": "计算最优如何定",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-9a498b90e025c6ff4a3ee4a7bc6bdadb",
+        "name": "江晚舟",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "9a498b90e025c6ff4a3ee4a7bc6bdadb",
+            "authorId": "author-ev-9a498b90e025c6ff4a3ee4a7bc6bdadb",
+            "authorName": "江晚舟",
+            "title": "停止条件要写在宿主里 - 知乎",
+            "summary": "停止条件要写在宿主里。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2075632400139285006?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-2:9a498b90e025c6ff4a3ee4a7bc6bdadb",
+                "topicId": "llm-application-concept-2",
+                "topic": "表征从向量来",
+                "question": "",
+                "resourceId": "llm-application-concept-2",
+                "carrierId": "carrier-job-contract",
+                "carrier": "规模与预算",
+                "nodeIds": [
+                  "9a498b90e025c6ff4a3ee4a7bc6bdadb",
+                  "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-0",
+                  "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-5"
+                ],
+                "nodeTitles": {
+                  "9a498b90e025c6ff4a3ee4a7bc6bdadb": "停止条件要写在宿主里 - 知乎",
+                  "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-0": "工具调用必须先被程序看懂",
+                  "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-5": "用三份输入检验这条链路"
+                },
+                "nodeKinds": {
+                  "9a498b90e025c6ff4a3ee4a7bc6bdadb": "article",
+                  "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-0": "answer",
+                  "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-5": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/xiancai.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-2",
+            "title": "表征从向量来",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-6259ba57c8d8c9eb9814fabb576a3137",
+        "name": "陆承野",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "6259ba57c8d8c9eb9814fabb576a3137",
+            "authorId": "author-ev-6259ba57c8d8c9eb9814fabb576a3137",
+            "authorName": "陆承野",
+            "title": "先看住一轮可观察的循环 - 知乎",
+            "summary": "重试需要设置明确限制：\n・最大重试次数；\n・单次请求超时时间；\n・总处理时长；\n・Token 上限；\n・费用上限；\n・哪些错误允许重试；\n・连续失败后如何处理。\n不要无限重试。\n同时要区分不同错误：\n・JSON 格式错误可以重试；\n・字段类型错误可以重试；\n・权限不足不应该通过重试解决；\n・操作越界应该直接拒绝；\n・高风险业务冲突应该转人工确认。\n2. 安全降级\n多次重试仍然失败时，可以根据场景选择：\n・返回 \"unknown\"；\n・使用可控的默认结果；\n・降级为只读模式；\n・暂停自动执行；\n・要求用户补充信息；\n・转交人工处理；\n・将确定性部分交给普通程序完成。\n对于写入、删除、付款、退款、账号权限等操作，默认降级策略应该是“不执行”，而不是猜测模型的真实意图。\n3. 使用结构化错误\n不仅成功结果要结构化，错",
+            "url": "https://zhuanlan.zhihu.com/p/2077198510626288228?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-2:6259ba57c8d8c9eb9814fabb576a3137",
+                "topicId": "llm-application-concept-2",
+                "topic": "表征从向量来",
+                "question": "",
+                "resourceId": "llm-application-concept-2",
+                "carrierId": "carrier-job-contract",
+                "carrier": "规模与预算",
+                "nodeIds": [
+                  "6259ba57c8d8c9eb9814fabb576a3137",
+                  "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-3"
+                ],
+                "nodeTitles": {
+                  "6259ba57c8d8c9eb9814fabb576a3137": "先看住一轮可观察的循环 - 知乎",
+                  "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-3": "重试只修当前错误，不偷偷扩大权限"
+                },
+                "nodeKinds": {
+                  "6259ba57c8d8c9eb9814fabb576a3137": "article",
+                  "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-3": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/sangeng-denghuo.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-2",
+            "title": "表征从向量来",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-e57664a9fc6787d73c2c25ebedd77a14",
+        "name": "许清和",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "e57664a9fc6787d73c2c25ebedd77a14",
+            "authorId": "author-ev-e57664a9fc6787d73c2c25ebedd77a14",
+            "authorName": "许清和",
+            "title": "停止条件要写在宿主里 - 知乎",
+            "summary": "停止条件要写在宿主里。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2072788272552724391?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-2:e57664a9fc6787d73c2c25ebedd77a14",
+                "topicId": "llm-application-concept-2",
+                "topic": "表征从向量来",
+                "question": "",
+                "resourceId": "llm-application-concept-2",
+                "carrierId": "carrier-job-contract",
+                "carrier": "规模与预算",
+                "nodeIds": [
+                  "e57664a9fc6787d73c2c25ebedd77a14",
+                  "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-4"
+                ],
+                "nodeTitles": {
+                  "e57664a9fc6787d73c2c25ebedd77a14": "停止条件要写在宿主里 - 知乎",
+                  "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-4": "原生结构约束有边界"
+                },
+                "nodeKinds": {
+                  "e57664a9fc6787d73c2c25ebedd77a14": "article",
+                  "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-4": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/yu-yang.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-2",
+            "title": "表征从向量来",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-4631ddea4ee5d98959b7f03fad6f116e",
+        "name": "莫听潮",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "4631ddea4ee5d98959b7f03fad6f116e",
+            "authorId": "author-ev-4631ddea4ee5d98959b7f03fad6f116e",
+            "authorName": "莫听潮",
+            "title": "回填失败，下一轮只会假装记得 - 知乎",
+            "summary": "回填失败，下一轮只会假装记得。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2078177629564298026?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-2:4631ddea4ee5d98959b7f03fad6f116e",
+                "topicId": "llm-application-concept-2",
+                "topic": "表征从向量来",
+                "question": "",
+                "resourceId": "llm-application-concept-2",
+                "carrierId": "carrier-job-contract",
+                "carrier": "规模与预算",
+                "nodeIds": [
+                  "4631ddea4ee5d98959b7f03fad6f116e",
+                  "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-1"
+                ],
+                "nodeTitles": {
+                  "4631ddea4ee5d98959b7f03fad6f116e": "回填失败，下一轮只会假装记得 - 知乎",
+                  "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-1": "把字段、类型与缺失情况说清楚"
+                },
+                "nodeKinds": {
+                  "4631ddea4ee5d98959b7f03fad6f116e": "article",
+                  "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-1": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/yizhanlu.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-2",
+            "title": "表征从向量来",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-2fa6c94a09b283afee5a5fe018581b85",
+        "name": "晏北林",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "2fa6c94a09b283afee5a5fe018581b85",
+            "authorId": "author-ev-2fa6c94a09b283afee5a5fe018581b85",
+            "authorName": "晏北林",
+            "title": "Agent开发“枕边风” - 知乎",
+            "summary": "正确做法：指令和数据分开\nresponse = await llm.ainvoke(\n    role,\n    system=\"你是一个任务规划器。{角色定义}{输出格式}{行为约束}\",\n    user=f\"桌面状态：{desktop_context}\\n对话历史：{memory}\\n用户指令：{instruction}\"\n)\n改了之后 JSON 格式输出的成功率明显上来了。LLM 对 System Message 里的指令确实更听话。\n7.2 JSON 解析\nLLM 不会每次都乖乖返回合法 JSON。你让它\"返回 JSON\"，它可能会这样：\n好的，以下是 JSON 格式的结果：\n\n​```json\n{\"goal\": \"发送消息\", ...}\n​```\n\n希望这对你有帮助！\n你当然需要一个能从这种乱七八糟",
+            "url": "https://zhuanlan.zhihu.com/p/2030337740039009013?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-2:2fa6c94a09b283afee5a5fe018581b85",
+                "topicId": "llm-application-concept-2",
+                "topic": "表征从向量来",
+                "question": "",
+                "resourceId": "llm-application-concept-2",
+                "carrierId": "carrier-job-contract",
+                "carrier": "规模与预算",
+                "nodeIds": [
+                  "2fa6c94a09b283afee5a5fe018581b85",
+                  "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-2"
+                ],
+                "nodeTitles": {
+                  "2fa6c94a09b283afee5a5fe018581b85": "Agent开发“枕边风” - 知乎",
+                  "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-2": "先解析，再校验；失败不补成成功"
+                },
+                "nodeKinds": {
+                  "2fa6c94a09b283afee5a5fe018581b85": "article",
+                  "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-2": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/guima-mark.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-2",
+            "title": "表征从向量来",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-f7dbc868864e9aef29b369f9aabf4c56",
+        "name": "江晚舟",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "f7dbc868864e9aef29b369f9aabf4c56",
+            "authorId": "author-ev-f7dbc868864e9aef29b369f9aabf4c56",
+            "authorName": "江晚舟",
+            "title": "副本里能改，主机上不能碰 - 知乎",
+            "summary": "副本里能改，主机上不能碰。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2076331112293573461?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-3:f7dbc868864e9aef29b369f9aabf4c56",
+                "topicId": "llm-application-concept-3",
+                "topic": "分数怎样打出",
+                "question": "",
+                "resourceId": "llm-application-concept-3",
+                "carrierId": "carrier-job-tools",
+                "carrier": "网络与注意力",
+                "nodeIds": [
+                  "f7dbc868864e9aef29b369f9aabf4c56",
+                  "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-0",
+                  "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-3"
+                ],
+                "nodeTitles": {
+                  "f7dbc868864e9aef29b369f9aabf4c56": "副本里能改，主机上不能碰 - 知乎",
+                  "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-0": "模型缺少资料时，先提出一次查询",
+                  "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-3": "工具结果是证据，不是新的系统命令"
+                },
+                "nodeKinds": {
+                  "f7dbc868864e9aef29b369f9aabf4c56": "article",
+                  "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-0": "answer",
+                  "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-3": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/xiancai.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-3",
+            "title": "分数怎样打出",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-d4db02aa6e7ec1e864d0fce8713882ae",
+        "name": "纪南枝",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "d4db02aa6e7ec1e864d0fce8713882ae",
+            "authorId": "author-ev-d4db02aa6e7ec1e864d0fce8713882ae",
+            "authorName": "纪南枝",
+            "title": "Agent系列1-一个Agent最小可用原型 - 知乎",
+            "summary": "很多人第一次想写 Agent，打开编辑器反而懵了：框架文档动辄几百行示例，MCP、记忆、规划一堆概念砸过来。但 Agent 的本质其实朴素：一个会调工具的大模型，外面套一层循环。这一节我们把它拆到最薄，用 100 行左右代码，跑通一个能查天气、能算数的真 Agent，再把它的命门一个个点出来。\n1、先把骨架立起来：一个 Agent 由什么组成\n一个能做事的 Agent，剥掉所有花哨包装，核心就四块。系统 Prompt 定义它”该干什么、边界在哪”，工具定义告诉它”能调哪些能力”，决策循环让它”想一步、做一步”，结果输出把答案交还给你。这四块里，只有决策循环是新东西，其余三块（Prompt 怎么写、工具怎么描述）你其实已经不陌生。\n系统 Prompt 不是越厚越好，它的任务是划边界：你这个 Agent 是干什么的",
+            "url": "https://zhuanlan.zhihu.com/p/2073454731192693281?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-3:d4db02aa6e7ec1e864d0fce8713882ae",
+                "topicId": "llm-application-concept-3",
+                "topic": "分数怎样打出",
+                "question": "",
+                "resourceId": "llm-application-concept-3",
+                "carrierId": "carrier-job-tools",
+                "carrier": "网络与注意力",
+                "nodeIds": [
+                  "d4db02aa6e7ec1e864d0fce8713882ae",
+                  "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-1",
+                  "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-4"
+                ],
+                "nodeTitles": {
+                  "d4db02aa6e7ec1e864d0fce8713882ae": "Agent系列1-一个Agent最小可用原型 - 知乎",
+                  "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-1": "最小循环只有一个核心分岔",
+                  "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-4": "给循环一个确定的终点"
+                },
+                "nodeKinds": {
+                  "d4db02aa6e7ec1e864d0fce8713882ae": "article",
+                  "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-1": "answer",
+                  "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-4": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/stivensss.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-3",
+            "title": "分数怎样打出",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-2cf175bfc4b9fc865c11758e3c5d3de8",
+        "name": "霍清川",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "2cf175bfc4b9fc865c11758e3c5d3de8",
+            "authorId": "author-ev-2cf175bfc4b9fc865c11758e3c5d3de8",
+            "authorName": "霍清川",
+            "title": "Function Calling 实战——让大模型学会”伸手拿工具” - 知乎",
+            "summary": "🛠️ 第11篇：Function Calling 实战——让大模型学会”伸手拿工具”\n阶段三收官篇：Prompt工程 → Agent的桥 | 预计阅读时间：35分钟 | 难度：⭐⭐⭐\n📌 学习目标\n・理解 Function Calling 的完整调用闭环\n・学会把 Python 函数包装成模型可用的工具\n・实现”模型申请调用 → 程序执行 → 结果回传”的循环\n・写一个真正能查天气（模拟）的助手\n・理解工具白名单和基本安全原则\n一、从”会说”到”会做”：关键一跃\n到目前为止，我们的程序和大模型对话后只能拿到文字。如果用户问”北京天气怎么样？”，模型只能凭训练时的旧知识瞎猜——因为它没有手。\nFunction Calling（函数调用） 就是给模型装手的方式：\n这个闭环，就是 Agent 最核心的 思考 → 行动",
+            "url": "https://zhuanlan.zhihu.com/p/2080581232409194633?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-3:2cf175bfc4b9fc865c11758e3c5d3de8",
+                "topicId": "llm-application-concept-3",
+                "topic": "分数怎样打出",
+                "question": "",
+                "resourceId": "llm-application-concept-3",
+                "carrierId": "carrier-job-tools",
+                "carrier": "网络与注意力",
+                "nodeIds": [
+                  "2cf175bfc4b9fc865c11758e3c5d3de8",
+                  "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-2",
+                  "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-5"
+                ],
+                "nodeTitles": {
+                  "2cf175bfc4b9fc865c11758e3c5d3de8": "Function Calling 实战——让大模型学会”伸手拿工具” - 知乎",
+                  "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-2": "沿同一问题走完一次调用",
+                  "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-5": "检查：指出真正发生动作的那一步"
+                },
+                "nodeKinds": {
+                  "2cf175bfc4b9fc865c11758e3c5d3de8": "article",
+                  "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-2": "answer",
+                  "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-5": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/luoxiansheng.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-3",
+            "title": "分数怎样打出",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-df2a58551d5000f2ca235a7d21e9bde2",
+        "name": "唐既望",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "df2a58551d5000f2ca235a7d21e9bde2",
+            "authorId": "author-ev-df2a58551d5000f2ca235a7d21e9bde2",
+            "authorName": "唐既望",
+            "title": "Agent自我纠错与验证机制设计:从自信回答到可验证执行 - 知乎",
+            "summary": "Reflection 的价值，不是让 Agent 表现得谦虚，而是让系统真的变稳。\n6.3 成功案例也值得反思\n反思不只发生在失败后。\n如果一次任务完成得很好，也应该沉淀成功路径。\n比如某次 Agent 成功完成用户流失分析，是因为它先确认了时间窗口，再按渠道和套餐做分群，最后用反馈和版本记录交叉验证原因。那么这条路径就可以变成同类任务的默认流程：\n这就是从一次成功执行，沉淀成可复用 Skill。\n6.4 Reflection 不是什么都写进记忆\n这里要特别小心。\n不是所有反思都应该进入长期记忆。\n适合写入长期记忆的内容通常有三个特征：\n・稳定：不是一次偶然现象\n・可复用：未来同类任务还会用到\n・低风险：不会引入隐私、偏见或错误假设\n不适合写入长期记忆的内容包括：\n・一次性的用户隐私数据\n・未验证的业务猜测\n・",
+            "url": "https://zhuanlan.zhihu.com/p/2077699637000007714?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-4:df2a58551d5000f2ca235a7d21e9bde2",
+                "topicId": "llm-application-concept-4",
+                "topic": "权重如何归一",
+                "question": "",
+                "resourceId": "llm-application-concept-4",
+                "carrierId": "carrier-job-tools",
+                "carrier": "网络与注意力",
+                "nodeIds": [
+                  "df2a58551d5000f2ca235a7d21e9bde2",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-5",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-7"
+                ],
+                "nodeTitles": {
+                  "df2a58551d5000f2ca235a7d21e9bde2": "Agent自我纠错与验证机制设计:从自信回答到可验证执行 - 知乎",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-5": "返回了内容，也要检查有没有回答原问题",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-7": "用两种失败检验，而不是再换一个项目"
+                },
+                "nodeKinds": {
+                  "df2a58551d5000f2ca235a7d21e9bde2": "article",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-5": "answer",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-7": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/mie-xiaoyang.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-4",
+            "title": "权重如何归一",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-147a174e4240c118779dbb33481ea4ee",
+        "name": "阮青桐",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "147a174e4240c118779dbb33481ea4ee",
+            "authorId": "author-ev-147a174e4240c118779dbb33481ea4ee",
+            "authorName": "阮青桐",
+            "title": "副本里能改，主机上不能碰 - 知乎",
+            "summary": "import json\nimport time\nfrom typing import Any, Optional\n\nclass ToolExecutor:\n    \"\"\"\n    带错误分类和重试策略的工具执行器\n    区分参数错误、临时服务错误、空结果、永久性错误四类\n    \"\"\"\n\n    # 需要指数退避重试的状态码（临时服务错误）\n    TRANSIENT_HTTP_CODES = {429, 500, 502, 503, 504}\n    # 永久性错误，直接终止\n    PERMANENT_HTTP_CODES = {400, 401, 403, 404}\n\n    def execute_with_retry(\n        self,\n        tool_call: dict,\n ",
+            "url": "https://zhuanlan.zhihu.com/p/2028442861201278255?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-4:147a174e4240c118779dbb33481ea4ee",
+                "topicId": "llm-application-concept-4",
+                "topic": "权重如何归一",
+                "question": "",
+                "resourceId": "llm-application-concept-4",
+                "carrierId": "carrier-job-tools",
+                "carrier": "网络与注意力",
+                "nodeIds": [
+                  "147a174e4240c118779dbb33481ea4ee",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-2"
+                ],
+                "nodeTitles": {
+                  "147a174e4240c118779dbb33481ea4ee": "副本里能改，主机上不能碰 - 知乎",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-2": "把重试计数放在程序里"
+                },
+                "nodeKinds": {
+                  "147a174e4240c118779dbb33481ea4ee": "article",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-2": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/wu-shixiong.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-4",
+            "title": "权重如何归一",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-1bec6142b9cb3de4d37e36d35214d831",
+        "name": "岑望远",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "1bec6142b9cb3de4d37e36d35214d831",
+            "authorId": "author-ev-1bec6142b9cb3de4d37e36d35214d831",
+            "authorName": "岑望远",
+            "title": "AI学习Agent系列篇6:工具调用工程化——容错、熔断、降级与超时 - 知乎",
+            "summary": "但防御不是万能的。当Schema校验通过了、参数类型也对、工具确实被正确调用了——然后网络超时了。或者API返回429限流了。或者工具内部抛了个NullPointerException。这些是P03的防御手段管不到的领域：执行层故障。\n这时候问题来了。传统微服务的容错方案——重试、熔断、降级、超时——能直接搬到Agent上吗？\n不能简单搬运。原因是Agent有一个传统微服务不存在的环节：错误信息会被喂回给LLM。传统微服务中，一个API调用失败，错误进入日志，运维处理。Agent中，一个工具调用失败，错误信息作为Tool Message注入回上下文，LLM会基于这个错误信息做下一步推理决策——可能是重试，可能是换一个工具，也可能是陷入死循环反复调用同一个失败的工具。\n这意味着Agent的容错设计不仅要”让故障不",
+            "url": "https://zhuanlan.zhihu.com/p/2069921326844924940?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-4:1bec6142b9cb3de4d37e36d35214d831",
+                "topicId": "llm-application-concept-4",
+                "topic": "权重如何归一",
+                "question": "",
+                "resourceId": "llm-application-concept-4",
+                "carrierId": "carrier-job-tools",
+                "carrier": "网络与注意力",
+                "nodeIds": [
+                  "1bec6142b9cb3de4d37e36d35214d831",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-1"
+                ],
+                "nodeTitles": {
+                  "1bec6142b9cb3de4d37e36d35214d831": "AI学习Agent系列篇6:工具调用工程化——容错、熔断、降级与超时 - 知乎",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-1": "先判断：重新发送能解决什么"
+                },
+                "nodeKinds": {
+                  "1bec6142b9cb3de4d37e36d35214d831": "article",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-1": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/wubian-de-jie.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-4",
+            "title": "权重如何归一",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-663262ba8ee7714a9e41960b97af7d2a",
+        "name": "谢临风",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "663262ba8ee7714a9e41960b97af7d2a",
+            "authorId": "author-ev-663262ba8ee7714a9e41960b97af7d2a",
+            "authorName": "谢临风",
+            "title": "从闲聊到落地:Agent 蜕变的关键 — 工具调用 - 知乎",
+            "summary": "・网络超时\n・连接失败\n・429 限流\n・502 / 503\n・retryable=true 的工具错误\n不适合重试：\n・参数错误\n・权限不足\n・业务规则不满足\n・用户未确认\n・非幂等写操作\n推荐策略：\n5.4 Circuit Breaker\n熔断用于防止某个工具或外部服务持续失败时拖垮系统。\n触发条件示例：\n熔断后：\n・暂停调用该工具\n・返回降级结果\n・通知 Agent 不要继续尝试\n・记录告警\n・进入半开状态后探测恢复\n5.5 降级策略\n工具不可用时可以：\n・使用缓存结果\n・换备用工具\n・缩小任务范围\n・返回当前无法完成\n・转人工\n・延迟任务\n示例：\n5.6 防止 Agent 无限循环\n运行时限制：\n还可以检测：\n・是否连续调用同一工具\n・是否连续失败\n・是否状态没有变化\n・是否重复生成同一参数\n・是否没有",
+            "url": "https://zhuanlan.zhihu.com/p/2048063786100201123?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-4:663262ba8ee7714a9e41960b97af7d2a",
+                "topicId": "llm-application-concept-4",
+                "topic": "权重如何归一",
+                "question": "",
+                "resourceId": "llm-application-concept-4",
+                "carrierId": "carrier-job-tools",
+                "carrier": "网络与注意力",
+                "nodeIds": [
+                  "663262ba8ee7714a9e41960b97af7d2a",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-4",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-6"
+                ],
+                "nodeTitles": {
+                  "663262ba8ee7714a9e41960b97af7d2a": "从闲聊到落地:Agent 蜕变的关键 — 工具调用 - 知乎",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-4": "给模型和界面一个清楚的失败结果",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-6": "同时限制循环和单个工具"
+                },
+                "nodeKinds": {
+                  "663262ba8ee7714a9e41960b97af7d2a": "article",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-4": "answer",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-6": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/li-dongpo.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-4",
+            "title": "权重如何归一",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-7ed42c2be9d64bc2953137dea71ade1a",
+        "name": "卞知微",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "7ed42c2be9d64bc2953137dea71ade1a",
+            "authorId": "author-ev-7ed42c2be9d64bc2953137dea71ade1a",
+            "authorName": "卞知微",
+            "title": "越界路径先拒绝，再谈检索 - 知乎",
+            "summary": "越界路径先拒绝，再谈检索。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2076001414309068835?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-4:7ed42c2be9d64bc2953137dea71ade1a",
+                "topicId": "llm-application-concept-4",
+                "topic": "权重如何归一",
+                "question": "",
+                "resourceId": "llm-application-concept-4",
+                "carrierId": "carrier-job-tools",
+                "carrier": "网络与注意力",
+                "nodeIds": [
+                  "7ed42c2be9d64bc2953137dea71ade1a",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-3"
+                ],
+                "nodeTitles": {
+                  "7ed42c2be9d64bc2953137dea71ade1a": "越界路径先拒绝，再谈检索 - 知乎",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-3": "需要模型修正时，只交给它可修的部分"
+                },
+                "nodeKinds": {
+                  "7ed42c2be9d64bc2953137dea71ade1a": "article",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-3": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/yangwang-xingkong.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-4",
+            "title": "权重如何归一",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-7903623fadc366015d508213ea411be1",
+        "name": "卫承安",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "7903623fadc366015d508213ea411be1",
+            "authorId": "author-ev-7903623fadc366015d508213ea411be1",
+            "authorName": "卫承安",
+            "title": "越界路径先拒绝，再谈检索 - 知乎",
+            "summary": "越界路径先拒绝，再谈检索。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2043700955665921887?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-4:7903623fadc366015d508213ea411be1",
+                "topicId": "llm-application-concept-4",
+                "topic": "权重如何归一",
+                "question": "",
+                "resourceId": "llm-application-concept-4",
+                "carrierId": "carrier-job-tools",
+                "carrier": "网络与注意力",
+                "nodeIds": [
+                  "7903623fadc366015d508213ea411be1",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-0"
+                ],
+                "nodeTitles": {
+                  "7903623fadc366015d508213ea411be1": "越界路径先拒绝，再谈检索 - 知乎",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-0": "让同一个查询失败一次"
+                },
+                "nodeKinds": {
+                  "7903623fadc366015d508213ea411be1": "article",
+                  "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-0": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/xiancai.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-4",
+            "title": "权重如何归一",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-b308945718b7e720f7169b8ac1aed0a9",
+        "name": "尹拾光",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "b308945718b7e720f7169b8ac1aed0a9",
+            "authorId": "author-ev-b308945718b7e720f7169b8ac1aed0a9",
+            "authorName": "尹拾光",
+            "title": "丢掉重复的 ls，不要丢掉拒绝原因 - 知乎",
+            "summary": "丢掉重复的 ls，不要丢掉拒绝原因。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2048037201888409506?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-5:b308945718b7e720f7169b8ac1aed0a9",
+                "topicId": "llm-application-concept-5",
+                "topic": "位置如何进来",
+                "question": "",
+                "resourceId": "llm-application-concept-5",
+                "carrierId": "carrier-job-evidence",
+                "carrier": "词表与损失",
+                "nodeIds": [
+                  "b308945718b7e720f7169b8ac1aed0a9",
+                  "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-0"
+                ],
+                "nodeTitles": {
+                  "b308945718b7e720f7169b8ac1aed0a9": "丢掉重复的 ls，不要丢掉拒绝原因 - 知乎",
+                  "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-0": "从一份看得懂的短仓库开始"
+                },
+                "nodeKinds": {
+                  "b308945718b7e720f7169b8ac1aed0a9": "article",
+                  "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-0": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/pp22dds.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-5",
+            "title": "位置如何进来",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-13fb83382debe9ee4978ca5a4ae4b4c9",
+        "name": "江晚舟",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "13fb83382debe9ee4978ca5a4ae4b4c9",
+            "authorId": "author-ev-13fb83382debe9ee4978ca5a4ae4b4c9",
+            "authorName": "江晚舟",
+            "title": "压缩按阶段切换，不要一刀切摘要 - 知乎",
+            "summary": "压缩按阶段切换，不要一刀切摘要。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2078901683371914736?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-5:13fb83382debe9ee4978ca5a4ae4b4c9",
+                "topicId": "llm-application-concept-5",
+                "topic": "位置如何进来",
+                "question": "",
+                "resourceId": "llm-application-concept-5",
+                "carrierId": "carrier-job-evidence",
+                "carrier": "词表与损失",
+                "nodeIds": [
+                  "13fb83382debe9ee4978ca5a4ae4b4c9",
+                  "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-4"
+                ],
+                "nodeTitles": {
+                  "13fb83382debe9ee4978ca5a4ae4b4c9": "压缩按阶段切换，不要一刀切摘要 - 知乎",
+                  "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-4": "先人工核对，再交给检索算法"
+                },
+                "nodeKinds": {
+                  "13fb83382debe9ee4978ca5a4ae4b4c9": "article",
+                  "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-4": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/xiancai.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-5",
+            "title": "位置如何进来",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-75d442882f025af54cebfbd24bf2b21a",
+        "name": "聂晚晴",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "75d442882f025af54cebfbd24bf2b21a",
+            "authorId": "author-ev-75d442882f025af54cebfbd24bf2b21a",
+            "authorName": "聂晚晴",
+            "title": "Skills 用到再注入，用完就移出 - 知乎",
+            "summary": "Skills 用到再注入，用完就移出。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2075686630032261772?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-5:75d442882f025af54cebfbd24bf2b21a",
+                "topicId": "llm-application-concept-5",
+                "topic": "位置如何进来",
+                "question": "",
+                "resourceId": "llm-application-concept-5",
+                "carrierId": "carrier-job-evidence",
+                "carrier": "词表与损失",
+                "nodeIds": [
+                  "75d442882f025af54cebfbd24bf2b21a",
+                  "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-3"
+                ],
+                "nodeTitles": {
+                  "75d442882f025af54cebfbd24bf2b21a": "Skills 用到再注入，用完就移出 - 知乎",
+                  "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-3": "在拆开之前，保留原文位置"
+                },
+                "nodeKinds": {
+                  "75d442882f025af54cebfbd24bf2b21a": "article",
+                  "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-3": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/hanjiang-guying.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-5",
+            "title": "位置如何进来",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-29675821eaf578da08c2a5841fbc451b",
+        "name": "俞照野",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "29675821eaf578da08c2a5841fbc451b",
+            "authorId": "author-ev-29675821eaf578da08c2a5841fbc451b",
+            "authorName": "俞照野",
+            "title": "窗口被规范塞满，当前 issue 会失踪 - 知乎",
+            "summary": "窗口被规范塞满，当前 issue 会失踪。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2079565935845827992?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-5:29675821eaf578da08c2a5841fbc451b",
+                "topicId": "llm-application-concept-5",
+                "topic": "位置如何进来",
+                "question": "",
+                "resourceId": "llm-application-concept-5",
+                "carrierId": "carrier-job-evidence",
+                "carrier": "词表与损失",
+                "nodeIds": [
+                  "29675821eaf578da08c2a5841fbc451b",
+                  "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-1"
+                ],
+                "nodeTitles": {
+                  "29675821eaf578da08c2a5841fbc451b": "窗口被规范塞满，当前 issue 会失踪 - 知乎",
+                  "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-1": "一个块要能独立说明一件事"
+                },
+                "nodeKinds": {
+                  "29675821eaf578da08c2a5841fbc451b": "article",
+                  "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-1": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/xiancai.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-5",
+            "title": "位置如何进来",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-58170758c6a49bc943c9fc5fcc4332e7",
+        "name": "纪南枝",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "58170758c6a49bc943c9fc5fcc4332e7",
+            "authorId": "author-ev-58170758c6a49bc943c9fc5fcc4332e7",
+            "authorName": "纪南枝",
+            "title": "十二步之后还要能复述为何失败 - 知乎",
+            "summary": "十二步之后还要能复述为何失败。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://www.zhihu.com/question/1965005707020604245/answer/2075519813137573331?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-5:58170758c6a49bc943c9fc5fcc4332e7",
+                "topicId": "llm-application-concept-5",
+                "topic": "位置如何进来",
+                "question": "",
+                "resourceId": "llm-application-concept-5",
+                "carrierId": "carrier-job-evidence",
+                "carrier": "词表与损失",
+                "nodeIds": [
+                  "58170758c6a49bc943c9fc5fcc4332e7",
+                  "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-2"
+                ],
+                "nodeTitles": {
+                  "58170758c6a49bc943c9fc5fcc4332e7": "十二步之后还要能复述为何失败 - 知乎",
+                  "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-2": "长度与重叠，都是需要验证的选择"
+                },
+                "nodeKinds": {
+                  "58170758c6a49bc943c9fc5fcc4332e7": "article",
+                  "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-2": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/stivensss.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-5",
+            "title": "位置如何进来",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-199966002a36ba359750eb39134291fc",
+        "name": "夏听澜",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "199966002a36ba359750eb39134291fc",
+            "authorId": "author-ev-199966002a36ba359750eb39134291fc",
+            "authorName": "夏听澜",
+            "title": "压缩轨迹，不把整仓一次塞进窗口 - 知乎",
+            "summary": "压缩轨迹，不把整仓一次塞进窗口。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/1995936798757639641?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-6:199966002a36ba359750eb39134291fc",
+                "topicId": "llm-application-concept-6",
+                "topic": "下一步怎样写出",
+                "question": "",
+                "resourceId": "llm-application-concept-6",
+                "carrierId": "carrier-job-evidence",
+                "carrier": "词表与损失",
+                "nodeIds": [
+                  "199966002a36ba359750eb39134291fc",
+                  "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-0"
+                ],
+                "nodeTitles": {
+                  "199966002a36ba359750eb39134291fc": "压缩轨迹，不把整仓一次塞进窗口 - 知乎",
+                  "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-0": "从仓库里找答案，而不只是找相同的词"
+                },
+                "nodeKinds": {
+                  "199966002a36ba359750eb39134291fc": "article",
+                  "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-0": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/FrontierAIHub.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-6",
+            "title": "下一步怎样写出",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-59030d05086f9f5993d6c5d53a398f91",
+        "name": "齐北渡",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "59030d05086f9f5993d6c5d53a398f91",
+            "authorId": "author-ev-59030d05086f9f5993d6c5d53a398f91",
+            "authorName": "齐北渡",
+            "title": "按需加载说明，不是再请一个 Agent - 知乎",
+            "summary": "按需加载说明，不是再请一个 Agent。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2052678341103182258?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-6:59030d05086f9f5993d6c5d53a398f91",
+                "topicId": "llm-application-concept-6",
+                "topic": "下一步怎样写出",
+                "question": "",
+                "resourceId": "llm-application-concept-6",
+                "carrierId": "carrier-job-evidence",
+                "carrier": "词表与损失",
+                "nodeIds": [
+                  "59030d05086f9f5993d6c5d53a398f91",
+                  "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-1"
+                ],
+                "nodeTitles": {
+                  "59030d05086f9f5993d6c5d53a398f91": "按需加载说明，不是再请一个 Agent - 知乎",
+                  "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-1": "给问题和片段生成可比较的表示"
+                },
+                "nodeKinds": {
+                  "59030d05086f9f5993d6c5d53a398f91": "article",
+                  "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-1": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/it-guoguo.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-6",
+            "title": "下一步怎样写出",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-8535b20e873674c64047e2bde181e1d3",
+        "name": "钟衔月",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "8535b20e873674c64047e2bde181e1d3",
+            "authorId": "author-ev-8535b20e873674c64047e2bde181e1d3",
+            "authorName": "钟衔月",
+            "title": "丢掉重复的 ls，不要丢掉拒绝原因 - 知乎",
+            "summary": "丢掉重复的 ls，不要丢掉拒绝原因。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/1985318555126878517?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-6:8535b20e873674c64047e2bde181e1d3",
+                "topicId": "llm-application-concept-6",
+                "topic": "下一步怎样写出",
+                "question": "",
+                "resourceId": "llm-application-concept-6",
+                "carrierId": "carrier-job-evidence",
+                "carrier": "词表与损失",
+                "nodeIds": [
+                  "8535b20e873674c64047e2bde181e1d3",
+                  "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-2"
+                ],
+                "nodeTitles": {
+                  "8535b20e873674c64047e2bde181e1d3": "丢掉重复的 ls，不要丢掉拒绝原因 - 知乎",
+                  "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-2": "丢掉重复的 ls，不要丢掉拒绝原因 - 知乎"
+                },
+                "nodeKinds": {
+                  "8535b20e873674c64047e2bde181e1d3": "article",
+                  "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-2": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/DFires.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-6",
+            "title": "下一步怎样写出",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-754518826533138506d2c3ba779b1d74",
+        "name": "柳知还",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "754518826533138506d2c3ba779b1d74",
+            "authorId": "author-ev-754518826533138506d2c3ba779b1d74",
+            "authorName": "柳知还",
+            "title": "压缩按阶段切换，不要一刀切摘要 - 知乎",
+            "summary": "压缩按阶段切换，不要一刀切摘要。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2078803845048812397?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-6:754518826533138506d2c3ba779b1d74",
+                "topicId": "llm-application-concept-6",
+                "topic": "下一步怎样写出",
+                "question": "",
+                "resourceId": "llm-application-concept-6",
+                "carrierId": "carrier-job-evidence",
+                "carrier": "词表与损失",
+                "nodeIds": [
+                  "754518826533138506d2c3ba779b1d74",
+                  "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-3"
+                ],
+                "nodeTitles": {
+                  "754518826533138506d2c3ba779b1d74": "压缩按阶段切换，不要一刀切摘要 - 知乎",
+                  "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-3": "把同一组计算写成一个小函数"
+                },
+                "nodeKinds": {
+                  "754518826533138506d2c3ba779b1d74": "article",
+                  "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-3": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/token-jujin.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-6",
+            "title": "下一步怎样写出",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-64615b2f4ab131b2c05cc6f6157ad60b",
+        "name": "范清野",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "64615b2f4ab131b2c05cc6f6157ad60b",
+            "authorId": "author-ev-64615b2f4ab131b2c05cc6f6157ad60b",
+            "authorName": "范清野",
+            "title": "Skills 用到再注入，用完就移出 - 知乎",
+            "summary": "Skills 用到再注入，用完就移出。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2062843692864495639?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-6:64615b2f4ab131b2c05cc6f6157ad60b",
+                "topicId": "llm-application-concept-6",
+                "topic": "下一步怎样写出",
+                "question": "",
+                "resourceId": "llm-application-concept-6",
+                "carrierId": "carrier-job-evidence",
+                "carrier": "词表与损失",
+                "nodeIds": [
+                  "64615b2f4ab131b2c05cc6f6157ad60b",
+                  "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-4"
+                ],
+                "nodeTitles": {
+                  "64615b2f4ab131b2c05cc6f6157ad60b": "Skills 用到再注入，用完就移出 - 知乎",
+                  "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-4": "型号与否定条件，不能被话题相似掩盖"
+                },
+                "nodeKinds": {
+                  "64615b2f4ab131b2c05cc6f6157ad60b": "article",
+                  "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-4": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/tan-sir.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-6",
+            "title": "下一步怎样写出",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-1b433363a2b32ba41b68169ab7c0682e",
+        "name": "纪南枝",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "1b433363a2b32ba41b68169ab7c0682e",
+            "authorId": "author-ev-1b433363a2b32ba41b68169ab7c0682e",
+            "authorName": "纪南枝",
+            "title": "窗口被规范塞满，当前 issue 会失踪 - 知乎",
+            "summary": "窗口被规范塞满，当前 issue 会失踪。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2074863205927630433?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-6:1b433363a2b32ba41b68169ab7c0682e",
+                "topicId": "llm-application-concept-6",
+                "topic": "下一步怎样写出",
+                "question": "",
+                "resourceId": "llm-application-concept-6",
+                "carrierId": "carrier-job-evidence",
+                "carrier": "词表与损失",
+                "nodeIds": [
+                  "1b433363a2b32ba41b68169ab7c0682e",
+                  "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-5"
+                ],
+                "nodeTitles": {
+                  "1b433363a2b32ba41b68169ab7c0682e": "窗口被规范塞满，当前 issue 会失踪 - 知乎",
+                  "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-5": "用三个问题验证真实检索"
+                },
+                "nodeKinds": {
+                  "1b433363a2b32ba41b68169ab7c0682e": "article",
+                  "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-5": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/stivensss.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-6",
+            "title": "下一步怎样写出",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-882b0a9b824955b47f49345002496810",
+        "name": "金拾穗",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "882b0a9b824955b47f49345002496810",
+            "authorId": "author-ev-882b0a9b824955b47f49345002496810",
+            "authorName": "金拾穗",
+            "title": "Skills 按需加载，不要一次塞完规范 - 知乎",
+            "summary": "・Prompt 强约束：在系统提示词中明确要求”只根据提供的文档内容回答，文档中没有的信息不要编造，不确定时回答’文档中未提及’“。这一条看起来简单，但实际效果立竿见影\n・引用溯源：要求模型在回答中标注信息来源，比如”根据文档A，退货需在7天内申请”。模型要编造内容时，找不到对应的文档引用，就编不下去了\n・后处理校验：生成回答后，用一个轻量模型或规则引擎，把回答和原始文档做交叉比对，检测回答中是否包含文档未提及的声明，发现幻觉就打回重新生成\n・拒绝回答机制：当模型对回答的置信度不够时，宁可说”根据已有文档无法回答”，也不要硬编。可以通过调整 temperature（降低随机性）或在 Prompt 中设置拒绝条件来实现\nLost in the Middle：关键信息被淹没\n Transformer大厂面试题汇总 ",
+            "url": "https://www.zhihu.com/question/643138720/answer/2040834219891487513?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-7:882b0a9b824955b47f49345002496810",
+                "topicId": "llm-application-concept-7",
+                "topic": "温度如何改轨迹",
+                "question": "",
+                "resourceId": "llm-application-concept-7",
+                "carrierId": "carrier-job-evidence",
+                "carrier": "词表与损失",
+                "nodeIds": [
+                  "882b0a9b824955b47f49345002496810",
+                  "answer-2fd79cae-4c43-4705-986a-8c0188e32705-0",
+                  "answer-2fd79cae-4c43-4705-986a-8c0188e32705-3",
+                  "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-0",
+                  "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-1",
+                  "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-2",
+                  "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-3",
+                  "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-4",
+                  "author-6fdc1633-dc58-4612-b0bb-922eb16d2fd0-0",
+                  "author-6fdc1633-dc58-4612-b0bb-922eb16d2fd0-1",
+                  "author-6fdc1633-dc58-4612-b0bb-922eb16d2fd0-2"
+                ],
+                "nodeTitles": {
+                  "882b0a9b824955b47f49345002496810": "Skills 按需加载，不要一次塞完规范 - 知乎",
+                  "answer-2fd79cae-4c43-4705-986a-8c0188e32705-0": "同一份仓库，为什么仍然可能答错",
+                  "answer-2fd79cae-4c43-4705-986a-8c0188e32705-3": "保留完整依据，缺少证据时停止推断",
+                  "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-0": "先看证据在哪一段丢失",
+                  "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-1": "检索检查：不是只看最高相似度",
+                  "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-2": "生成检查：编号对得上仍然可能说错",
+                  "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-3": "用受控对照分清影响",
+                  "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-4": "把这次排错留在作品里",
+                  "author-6fdc1633-dc58-4612-b0bb-922eb16d2fd0-0": "Skills 按需加载，不要一次塞完规范 - 知乎",
+                  "author-6fdc1633-dc58-4612-b0bb-922eb16d2fd0-1": "Skills 按需加载，不要一次塞完规范 - 知乎",
+                  "author-6fdc1633-dc58-4612-b0bb-922eb16d2fd0-2": "Skills 按需加载，不要一次塞完规范 - 知乎"
+                },
+                "nodeKinds": {
+                  "882b0a9b824955b47f49345002496810": "article",
+                  "answer-2fd79cae-4c43-4705-986a-8c0188e32705-0": "answer",
+                  "answer-2fd79cae-4c43-4705-986a-8c0188e32705-3": "answer",
+                  "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-0": "answer",
+                  "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-1": "answer",
+                  "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-2": "answer",
+                  "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-3": "answer",
+                  "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-4": "answer",
+                  "author-6fdc1633-dc58-4612-b0bb-922eb16d2fd0-0": "author",
+                  "author-6fdc1633-dc58-4612-b0bb-922eb16d2fd0-1": "author",
+                  "author-6fdc1633-dc58-4612-b0bb-922eb16d2fd0-2": "author"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/follow-code.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-7",
+            "title": "温度如何改轨迹",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-3c83f11fc843340849135b87b7d0ffb4",
+        "name": "宋临川",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "3c83f11fc843340849135b87b7d0ffb4",
+            "authorId": "author-ev-3c83f11fc843340849135b87b7d0ffb4",
+            "authorName": "宋临川",
+            "title": "十二步之后还要能复述为何失败 - 知乎",
+            "summary": "十二步之后还要能复述为何失败。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2048110092512400786?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-7:3c83f11fc843340849135b87b7d0ffb4",
+                "topicId": "llm-application-concept-7",
+                "topic": "温度如何改轨迹",
+                "question": "",
+                "resourceId": "llm-application-concept-7",
+                "carrierId": "carrier-job-evidence",
+                "carrier": "词表与损失",
+                "nodeIds": [
+                  "3c83f11fc843340849135b87b7d0ffb4",
+                  "answer-2fd79cae-4c43-4705-986a-8c0188e32705-1"
+                ],
+                "nodeTitles": {
+                  "3c83f11fc843340849135b87b7d0ffb4": "十二步之后还要能复述为何失败 - 知乎",
+                  "answer-2fd79cae-4c43-4705-986a-8c0188e32705-1": "把问题、证据和回答要求分清楚"
+                },
+                "nodeKinds": {
+                  "3c83f11fc843340849135b87b7d0ffb4": "article",
+                  "answer-2fd79cae-4c43-4705-986a-8c0188e32705-1": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/xu-xiaoxi.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-7",
+            "title": "温度如何改轨迹",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-f390710ea5ad3cc034dd5a999982ae8d",
+        "name": "闻栖迟",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "f390710ea5ad3cc034dd5a999982ae8d",
+            "authorId": "author-ev-f390710ea5ad3cc034dd5a999982ae8d",
+            "authorName": "闻栖迟",
+            "title": "按需加载说明，不是再请一个 Agent - 知乎",
+            "summary": "按需加载说明，不是再请一个 Agent。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2051650757963912545?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-7:f390710ea5ad3cc034dd5a999982ae8d",
+                "topicId": "llm-application-concept-7",
+                "topic": "温度如何改轨迹",
+                "question": "",
+                "resourceId": "llm-application-concept-7",
+                "carrierId": "carrier-job-evidence",
+                "carrier": "词表与损失",
+                "nodeIds": [
+                  "f390710ea5ad3cc034dd5a999982ae8d",
+                  "answer-2fd79cae-4c43-4705-986a-8c0188e32705-2",
+                  "answer-2fd79cae-4c43-4705-986a-8c0188e32705-4"
+                ],
+                "nodeTitles": {
+                  "f390710ea5ad3cc034dd5a999982ae8d": "按需加载说明，不是再请一个 Agent - 知乎",
+                  "answer-2fd79cae-4c43-4705-986a-8c0188e32705-2": "检查分两层：引用存在，结论得到支持",
+                  "answer-2fd79cae-4c43-4705-986a-8c0188e32705-4": "把引用核对做成可以展示的成果"
+                },
+                "nodeKinds": {
+                  "f390710ea5ad3cc034dd5a999982ae8d": "article",
+                  "answer-2fd79cae-4c43-4705-986a-8c0188e32705-2": "answer",
+                  "answer-2fd79cae-4c43-4705-986a-8c0188e32705-4": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/xiancai.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-7",
+            "title": "温度如何改轨迹",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-1d47e7701cb1a22244bff258088d7f0c",
+        "name": "江晚舟",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "1d47e7701cb1a22244bff258088d7f0c",
+            "authorId": "author-ev-1d47e7701cb1a22244bff258088d7f0c",
+            "authorName": "江晚舟",
+            "title": "零件会了，还不等于能修一个 issue - 知乎",
+            "summary": "零件会了，还不等于能修一个 issue。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2078975551646216656?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-8:1d47e7701cb1a22244bff258088d7f0c",
+                "topicId": "llm-application-concept-8",
+                "topic": "接到同一个例子",
+                "question": "",
+                "resourceId": "llm-application-concept-8",
+                "carrierId": "carrier-job-deliver",
+                "carrier": "训练与验收",
+                "nodeIds": [
+                  "1d47e7701cb1a22244bff258088d7f0c",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-0"
+                ],
+                "nodeTitles": {
+                  "1d47e7701cb1a22244bff258088d7f0c": "零件会了，还不等于能修一个 issue - 知乎",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-0": "把已经完成的能力接起来"
+                },
+                "nodeKinds": {
+                  "1d47e7701cb1a22244bff258088d7f0c": "article",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-0": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/tuoni.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-8",
+            "title": "接到同一个例子",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-3f60c1fa2e72f2d09fad64ff45791430",
+        "name": "陆承野",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "3f60c1fa2e72f2d09fad64ff45791430",
+            "authorId": "author-ev-3f60c1fa2e72f2d09fad64ff45791430",
+            "authorName": "陆承野",
+            "title": "检索和权限要接到同一个循环 - 知乎",
+            "summary": "检索和权限要接到同一个循环。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2071183687383771052?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-8:3f60c1fa2e72f2d09fad64ff45791430",
+                "topicId": "llm-application-concept-8",
+                "topic": "接到同一个例子",
+                "question": "",
+                "resourceId": "llm-application-concept-8",
+                "carrierId": "carrier-job-deliver",
+                "carrier": "训练与验收",
+                "nodeIds": [
+                  "3f60c1fa2e72f2d09fad64ff45791430",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-5"
+                ],
+                "nodeTitles": {
+                  "3f60c1fa2e72f2d09fad64ff45791430": "检索和权限要接到同一个循环 - 知乎",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-5": "沿一次实际轨迹检查模块之间的接口"
+                },
+                "nodeKinds": {
+                  "3f60c1fa2e72f2d09fad64ff45791430": "article",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-5": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/smartcode-dewu.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-8",
+            "title": "接到同一个例子",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-85547654c05876a74277b65c9683460a",
+        "name": "许清和",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "85547654c05876a74277b65c9683460a",
+            "authorId": "author-ev-85547654c05876a74277b65c9683460a",
+            "authorName": "许清和",
+            "title": "零件会了，还不等于能修一个 issue - 知乎",
+            "summary": "零件会了，还不等于能修一个 issue。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2058906164394562036?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-8:85547654c05876a74277b65c9683460a",
+                "topicId": "llm-application-concept-8",
+                "topic": "接到同一个例子",
+                "question": "",
+                "resourceId": "llm-application-concept-8",
+                "carrierId": "carrier-job-deliver",
+                "carrier": "训练与验收",
+                "nodeIds": [
+                  "85547654c05876a74277b65c9683460a",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-4"
+                ],
+                "nodeTitles": {
+                  "85547654c05876a74277b65c9683460a": "零件会了，还不等于能修一个 issue - 知乎",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-4": "给模型足够的证据，保留决定答案的条件"
+                },
+                "nodeKinds": {
+                  "85547654c05876a74277b65c9683460a": "article",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-4": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/tencent-workbuddy.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-8",
+            "title": "接到同一个例子",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-9b4c941d6325ebda91e0eb79e24a6995",
+        "name": "莫听潮",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "9b4c941d6325ebda91e0eb79e24a6995",
+            "authorId": "author-ev-9b4c941d6325ebda91e0eb79e24a6995",
+            "authorName": "莫听潮",
+            "title": "Agent中大模型如何调用工具(九):提高工具选择的准确性 - 知乎",
+            "summary": "Kevin\n一、问题背景\n不同的用户任务可能需要不同的工具，相同的工具，在不同的用户任务中的参数是不同的，如何让Agent正确滴选择工具，并提供正确的参数呢？\n二、提高工具选择准确性\n1. 工具描述质量（最高影响因子）\nLLM 选工具本质上是在做语义匹配，工具的描述质量直接决定选择准确率。\n关键原则：\n・意图描述 而非功能描述（说\"用来干什么\"而不是\"是什么\"）\n・明确边界：说清楚什么时候用、什么时候不该用\n・区分相似工具：相近工具之间要显式说明差异\n2. 工具命名规范\n名字本身就是信号，LLM 会利用名字做推理：\n3. 工具数量控制（结合上个话题）\n工具越多，选择越容易出错，尤其是相似工具间的混淆：\n解决方案：动态加载 + 分层路由，参考： Agent中大模型如何调用工具（八）：解决大规模工具调用问题",
+            "url": "https://zhuanlan.zhihu.com/p/2037110047017318131?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-8:9b4c941d6325ebda91e0eb79e24a6995",
+                "topicId": "llm-application-concept-8",
+                "topic": "接到同一个例子",
+                "question": "",
+                "resourceId": "llm-application-concept-8",
+                "carrierId": "carrier-job-deliver",
+                "carrier": "训练与验收",
+                "nodeIds": [
+                  "9b4c941d6325ebda91e0eb79e24a6995",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-2"
+                ],
+                "nodeTitles": {
+                  "9b4c941d6325ebda91e0eb79e24a6995": "Agent中大模型如何调用工具(九):提高工具选择的准确性 - 知乎",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-2": "工具说明要帮助选择，而不是许下保证"
+                },
+                "nodeKinds": {
+                  "9b4c941d6325ebda91e0eb79e24a6995": "article",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-2": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/data-ai-fan.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-8",
+            "title": "接到同一个例子",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-1e2bd3d06dfbfeb118ab0ec0530bc13d",
+        "name": "晏北林",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "1e2bd3d06dfbfeb118ab0ec0530bc13d",
+            "authorId": "author-ev-1e2bd3d06dfbfeb118ab0ec0530bc13d",
+            "authorName": "晏北林",
+            "title": "Agent 怎么决定并调用工具的 - 知乎",
+            "summary": "模型自己从不「执行」工具。它只负责「说」出：我要调用哪个工具、传什么参数。真正执行的是外层宿主程序（runtime/harness，比如 Claude Code）。模型就是一个「发指令的大脑」，手脚是宿主程序。\n一、第一步：工具以「说明书」形式告诉模型\n每个工具都有一份 JSON Schema（工具说明书），随每次请求一起发给模型。模型「读」这些说明书，就知道自己有哪些手脚可用。\n以 Read 工具为例，它的说明书长这样：\n模型看到这份说明书后，就「知道」：有个叫 Read 的工具，能读文件，需要给一个 file_path 参数。\n二、第二步：模型「决定」要不要用工具、用哪个\n这是关键一步。模型靠推理 + 训练习得的模式做判断：\n这个「工具调用」是结构化数据，不是自然语言：\n这就是「决定」的本质：模型把用户的意",
+            "url": "https://zhuanlan.zhihu.com/p/2075603543948531349?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-8:1e2bd3d06dfbfeb118ab0ec0530bc13d",
+                "topicId": "llm-application-concept-8",
+                "topic": "接到同一个例子",
+                "question": "",
+                "resourceId": "llm-application-concept-8",
+                "carrierId": "carrier-job-deliver",
+                "carrier": "训练与验收",
+                "nodeIds": [
+                  "1e2bd3d06dfbfeb118ab0ec0530bc13d",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-1"
+                ],
+                "nodeTitles": {
+                  "1e2bd3d06dfbfeb118ab0ec0530bc13d": "Agent 怎么决定并调用工具的 - 知乎",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-1": "把检索包装成一个只读工具"
+                },
+                "nodeKinds": {
+                  "1e2bd3d06dfbfeb118ab0ec0530bc13d": "article",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-1": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/roushan.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-8",
+            "title": "接到同一个例子",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-9eebc4cd6aff7710103913e7b2fbe0c8",
+        "name": "纪南枝",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "9eebc4cd6aff7710103913e7b2fbe0c8",
+            "authorId": "author-ev-9eebc4cd6aff7710103913e7b2fbe0c8",
+            "authorName": "纪南枝",
+            "title": "让LLM老老实实调工具,靠提示词根本不够——阿里P8面试引发的深度思考 - 知乎",
+            "summary": "让LLM老老实实调工具，靠提示词根本不够——阿里P8面试引发的深度思考\n 阿里P8问：怎么让LLM老老实实调工具？候选人答”提示词写清楚就行”。面试官笑了：”那你写一个我看看。”\n我想90%的人栽在这。\n01 一个让无数开发者踩坑的经典场景\n有的时候，我们不要以为在 Prompt 中写好了”让LLM不乱写参数”，它就能按照你的意思来执行。\n可能你测试了几个例子觉得没问题，但一上线，就会发现系统直接崩盘。\n举个具体的例子：查询天气任务，输入参数是 city 和 date。\n我们写了一个自以为没问题的系统提示：\n 你只能调用 get_weather，参数 city 必须是标准城市名，date 必须是今天或明天。不可以自己编城市和日期。\n看起来没问题对吧？但用户问：\n “北京后天天气怎么样？”\n模型的三种典型”瞎编”",
+            "url": "https://zhuanlan.zhihu.com/p/2053078731225297520?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-8:9eebc4cd6aff7710103913e7b2fbe0c8",
+                "topicId": "llm-application-concept-8",
+                "topic": "接到同一个例子",
+                "question": "",
+                "resourceId": "llm-application-concept-8",
+                "carrierId": "carrier-job-deliver",
+                "carrier": "训练与验收",
+                "nodeIds": [
+                  "9eebc4cd6aff7710103913e7b2fbe0c8",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-3"
+                ],
+                "nodeTitles": {
+                  "9eebc4cd6aff7710103913e7b2fbe0c8": "让LLM老老实实调工具,靠提示词根本不够——阿里P8面试引发的深度思考 - 知乎",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-3": "选择正确以后，仍要校验与回查"
+                },
+                "nodeKinds": {
+                  "9eebc4cd6aff7710103913e7b2fbe0c8": "article",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-3": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/ziyou-luffy.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-8",
+            "title": "接到同一个例子",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-200c59f6fdef0c8972e42141083a8da6",
+        "name": "霍清川",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "200c59f6fdef0c8972e42141083a8da6",
+            "authorId": "author-ev-200c59f6fdef0c8972e42141083a8da6",
+            "authorName": "霍清川",
+            "title": "冻结一组 issue，才能讲清成败落点 - 知乎",
+            "summary": "冻结一组 issue，才能讲清成败落点。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/1952781316467700044?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-8:200c59f6fdef0c8972e42141083a8da6",
+                "topicId": "llm-application-concept-8",
+                "topic": "接到同一个例子",
+                "question": "",
+                "resourceId": "llm-application-concept-8",
+                "carrierId": "carrier-job-deliver",
+                "carrier": "训练与验收",
+                "nodeIds": [
+                  "200c59f6fdef0c8972e42141083a8da6",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-6"
+                ],
+                "nodeTitles": {
+                  "200c59f6fdef0c8972e42141083a8da6": "冻结一组 issue，才能讲清成败落点 - 知乎",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-6": "正常、缺证据和工具失败都要试到"
+                },
+                "nodeKinds": {
+                  "200c59f6fdef0c8972e42141083a8da6": "article",
+                  "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-6": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/jiejie.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-8",
+            "title": "接到同一个例子",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-4f680573d13bf734df32d67a066a5c52",
+        "name": "唐既望",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "4f680573d13bf734df32d67a066a5c52",
+            "authorId": "author-ev-4f680573d13bf734df32d67a066a5c52",
+            "authorName": "唐既望",
+            "title": "Agent面试总结(三)-工业界干货版本 - 知乎",
+            "summary": "看了下面这个链接后，我总结了十几道Agent面试题，全是干货。\n 直播回放｜如何准备 Agent 面试项目：从调用大模型到完整的 Agent 工程体系-AI Agent 系统设计面试现场-极客时间\n第一部分：破局——为什么你的 Agent 像玩具？\n1. 为什么面试官常觉得很多候选人的 Agent 项目仅仅是个普通的 Workflow（工作流）应用？\n白话版本：因为很多人的项目场景太简单了，就是线性的“第一步干嘛，第二步干嘛”，大模型在里面只是个文本生成器。既然流程都是死板的，用传统代码写个 Workflow 就行了，完全没体现出 Agent 自己思考、自己做决定的能力。\n高分版本：主要原因是缺乏动态决策机制和异常处理能力。真正的 Agent 核心在于其具备自主运行机制（如 ReAct），能够在遇到条件缺失、工",
+            "url": "https://zhuanlan.zhihu.com/p/2060785188943164764?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-9:4f680573d13bf734df32d67a066a5c52",
+                "topicId": "llm-application-concept-9",
+                "topic": "指出错在哪一层",
+                "question": "",
+                "resourceId": "llm-application-concept-9",
+                "carrierId": "carrier-job-deliver",
+                "carrier": "训练与验收",
+                "nodeIds": [
+                  "4f680573d13bf734df32d67a066a5c52",
+                  "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-0",
+                  "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-4"
+                ],
+                "nodeTitles": {
+                  "4f680573d13bf734df32d67a066a5c52": "Agent面试总结(三)-工业界干货版本 - 知乎",
+                  "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-0": "从一个可重现的错误开始",
+                  "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-4": "按证据经过的顺序排查"
+                },
+                "nodeKinds": {
+                  "4f680573d13bf734df32d67a066a5c52": "article",
+                  "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-0": "answer",
+                  "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-4": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/Trancy-Wang.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-9",
+            "title": "指出错在哪一层",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-d8656e7728d162113ff23eaf186f2095",
+        "name": "阮青桐",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "d8656e7728d162113ff23eaf186f2095",
+            "authorId": "author-ev-d8656e7728d162113ff23eaf186f2095",
+            "authorName": "阮青桐",
+            "title": "一次幸运修复证明不了你看住了循环 - 知乎",
+            "summary": "一次幸运修复证明不了你看住了循环。公开写法，用来对照载体上的概念，不是做成作品的依据。",
+            "url": "https://zhuanlan.zhihu.com/p/2079153807582351995?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-9:d8656e7728d162113ff23eaf186f2095",
+                "topicId": "llm-application-concept-9",
+                "topic": "指出错在哪一层",
+                "question": "",
+                "resourceId": "llm-application-concept-9",
+                "carrierId": "carrier-job-deliver",
+                "carrier": "训练与验收",
+                "nodeIds": [
+                  "d8656e7728d162113ff23eaf186f2095",
+                  "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-2"
+                ],
+                "nodeTitles": {
+                  "d8656e7728d162113ff23eaf186f2095": "一次幸运修复证明不了你看住了循环 - 知乎",
+                  "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-2": "记录足够的上下文，不收集一切"
+                },
+                "nodeKinds": {
+                  "d8656e7728d162113ff23eaf186f2095": "article",
+                  "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-2": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/piziju.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-9",
+            "title": "指出错在哪一层",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-f85870d51a656ebb511082ddf8624763",
+        "name": "岑望远",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "f85870d51a656ebb511082ddf8624763",
+            "authorId": "author-ev-f85870d51a656ebb511082ddf8624763",
+            "authorName": "岑望远",
+            "title": "2026年最新AI agent面试(01)_Agent基础与推理范式 - 知乎",
+            "summary": "Q1. Agent 的基本架构由哪些核心组件构成？［来源：小红书］\n・核心答案：\n一个完整的 Agent 是一套以 LLM 为决策中枢、能自主逼近目标的闭环系统，而不是\"调一次大模型\"。它的基本架构由四个不可替代的核心组件构成：LLM、工具（Tools）、记忆（Memory）、规划（Planning）。可以类比一家公司：LLM 是老板（拍板），工具是外包执行团队（干活），记忆是公司档案室（存/调档），规划是项目经理（拆任务单）。四角色各司其职，才撑起 Agent 的自主运行。\n ・LLM 是大脑/决策中枢：所有用户输入、工具返回结果、记忆召回内容，最终都汇聚到 LLM 做理解与决策——下一步该思考、调哪个工具、还是已可收尾，全部由它拍板。没有 LLM，其余三个组件只是一堆零件。\n ・工具是 Agent 与外部世",
+            "url": "https://zhuanlan.zhihu.com/p/2061399102936686861?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-9:f85870d51a656ebb511082ddf8624763",
+                "topicId": "llm-application-concept-9",
+                "topic": "指出错在哪一层",
+                "question": "",
+                "resourceId": "llm-application-concept-9",
+                "carrierId": "carrier-job-deliver",
+                "carrier": "训练与验收",
+                "nodeIds": [
+                  "f85870d51a656ebb511082ddf8624763",
+                  "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-1"
+                ],
+                "nodeTitles": {
+                  "f85870d51a656ebb511082ddf8624763": "2026年最新AI agent面试(01)_Agent基础与推理范式 - 知乎",
+                  "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-1": "用一个问题讲清模块如何协作"
+                },
+                "nodeKinds": {
+                  "f85870d51a656ebb511082ddf8624763": "article",
+                  "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-1": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/javaagent-architect.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-9",
+            "title": "指出错在哪一层",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-06d98e7b12f1f980b29fb4b6e505b37b",
+        "name": "谢临风",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "06d98e7b12f1f980b29fb4b6e505b37b",
+            "authorId": "author-ev-06d98e7b12f1f980b29fb4b6e505b37b",
+            "authorName": "谢临风",
+            "title": "🚀 2026 年 AI Agent 高频面试题与工程落地终极指南 - 知乎",
+            "summary": "导读：大模型面试已从单纯的 Prompt 调优彻底转向 Agent 架构设计与工程落地。本文总结了在真实生产环境下，关于 Agent 架构、Tool Calling 稳定性、状态管理、流式渲染优化及可观测性的 6 大核心模块与高频面试题解析，适合作为备考与技术复盘笔记。\n目录\n・模块一：Agent 核心架构与决策机制\n・模块二：Tool Calling（工具调用）工程实践与容错\n・模块三：状态机编排与 Human-in-the-Loop\n・模块四：高并发流式渲染与性能调优（rAF 机制）\n・模块五：Agent 可观测性与自动化评估（Evaluation）\n・模块六：手撕 Mini-ReAct Agent 极简实现\n模块一：Agent 核心架构与决策机制\nQ1：什么是 AI Agent？它与传统的 LLM Cha",
+            "url": "https://zhuanlan.zhihu.com/p/2065467369087039200?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-9:06d98e7b12f1f980b29fb4b6e505b37b",
+                "topicId": "llm-application-concept-9",
+                "topic": "指出错在哪一层",
+                "question": "",
+                "resourceId": "llm-application-concept-9",
+                "carrierId": "carrier-job-deliver",
+                "carrier": "训练与验收",
+                "nodeIds": [
+                  "06d98e7b12f1f980b29fb4b6e505b37b",
+                  "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-3"
+                ],
+                "nodeTitles": {
+                  "06d98e7b12f1f980b29fb4b6e505b37b": "🚀 2026 年 AI Agent 高频面试题与工程落地终极指南 - 知乎",
+                  "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-3": "取舍要用行为解释"
+                },
+                "nodeKinds": {
+                  "06d98e7b12f1f980b29fb4b6e505b37b": "article",
+                  "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-3": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/Json.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-9",
+            "title": "指出错在哪一层",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-f1253b4d9f594f531bc1c1d42fb556a1",
+        "name": "卞知微",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "f1253b4d9f594f531bc1c1d42fb556a1",
+            "authorId": "author-ev-f1253b4d9f594f531bc1c1d42fb556a1",
+            "authorName": "卞知微",
+            "title": "AI Agent 面试指南:面试官真正在考什么 - 知乎",
+            "summary": "如果你还在准备「什么是 Agent」「ReAct 是什么」这种概念题，可能已经不够用了。现在的 AI Agent 岗位面试，更看重三件事：系统怎么设计、工程能不能落地、实际问题你怎么解。下面按面试里最高频的几块，用通俗话说清楚——既帮你复习，也帮你理解面试官到底在考什么。\n阅读时长：5-8分钟\nAgent 的「大脑」：架构和四大组件\n面试官想确认的不是你会不会背名词，而是：一个 Agent 怎么思考、怎么记、怎么动手。\n三种主流「思考方式」\nReAct（Reasoning + Acting）\n可以把它想成：想一步 --> 做一步 --> 看结果 --> 再想下一步。\n・Thought：我现在该干什么？缺什么信息？\n・Action：调用哪个工具、传什么参数？\n・Observation：工具返回了什么？成功还是失败",
+            "url": "https://zhuanlan.zhihu.com/p/2038980112880760774?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-9:f1253b4d9f594f531bc1c1d42fb556a1",
+                "topicId": "llm-application-concept-9",
+                "topic": "指出错在哪一层",
+                "question": "",
+                "resourceId": "llm-application-concept-9",
+                "carrierId": "carrier-job-deliver",
+                "carrier": "训练与验收",
+                "nodeIds": [
+                  "f1253b4d9f594f531bc1c1d42fb556a1",
+                  "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-5"
+                ],
+                "nodeTitles": {
+                  "f1253b4d9f594f531bc1c1d42fb556a1": "AI Agent 面试指南:面试官真正在考什么 - 知乎",
+                  "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-5": "让别人能跑起来，也能看见边界"
+                },
+                "nodeKinds": {
+                  "f1253b4d9f594f531bc1c1d42fb556a1": "article",
+                  "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-5": "answer"
+                },
+                "origin": "learning",
+                "discoveredAt": 0,
+                "helpful": false
+              }
+            ],
+            "avatar": "assets/images/authors/wei12580.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-9",
+            "title": "指出错在哪一层",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-acd97c14ea01f980fe429e0ff47809cd",
+        "name": "林启衡",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "acd97c14ea01f980fe429e0ff47809cd",
+            "authorId": "author-ev-acd97c14ea01f980fe429e0ff47809cd",
+            "authorName": "林启衡",
+            "title": "固定算力下不能先把模型做大 - 知乎",
+            "summary": "固定算力下不能先把模型做大。做大参数、少看词元，损失会钉在数据项上。",
+            "url": "https://zhuanlan.zhihu.com/p/2075967922607075434?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-1:acd97c14ea01f980fe429e0ff47809cd",
+                "topicId": "llm-application-concept-1",
+                "topic": "计算最优如何定",
+                "question": "从零训一亿两千万参数时，公开文章怎么看计算最优、过训和该不该停一次训练？拆开之后，哪一层必须请人判断？",
+                "resourceId": "llm-application-concept-1",
+                "carrierId": "carrier-job-contract",
+                "carrier": "规模与预算",
+                "nodeIds": [
+                  "author-615fbaa9-7356-4cd4-8a58-af2cb2dee6c2-0"
+                ],
+                "nodeTitles": {
+                  "author-615fbaa9-7356-4cd4-8a58-af2cb2dee6c2-0": "固定算力下不能先把模型做大 - 知乎"
+                },
+                "nodeKinds": {
+                  "author-615fbaa9-7356-4cd4-8a58-af2cb2dee6c2-0": "author"
+                },
+                "origin": "author-card",
+                "discoveredAt": 0,
+                "helpful": false,
+                "questionKind": "follow_up"
+              }
+            ],
+            "avatar": "assets/images/authors/letsgetai.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-1",
+            "title": "计算最优如何定",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-cbffcc49059093c82647861f85760af1",
+        "name": "苏晚青",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "cbffcc49059093c82647861f85760af1",
+            "authorId": "author-ev-cbffcc49059093c82647861f85760af1",
+            "authorName": "苏晚青",
+            "title": "二十比一是谷底不是证明 - 知乎",
+            "summary": "二十词元配一参数是等损失谷，不是你的数据证明。脏数据会把谷底挪走。",
+            "url": "https://zhuanlan.zhihu.com/p/2033103606249935720?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-1:cbffcc49059093c82647861f85760af1",
+                "topicId": "llm-application-concept-1",
+                "topic": "计算最优如何定",
+                "question": "从零训一亿两千万参数时，公开文章怎么看计算最优、过训和该不该停一次训练？拆开之后，哪一层必须请人判断？",
+                "resourceId": "llm-application-concept-1",
+                "carrierId": "carrier-job-contract",
+                "carrier": "规模与预算",
+                "nodeIds": [
+                  "author-615fbaa9-7356-4cd4-8a58-af2cb2dee6c2-1"
+                ],
+                "nodeTitles": {
+                  "author-615fbaa9-7356-4cd4-8a58-af2cb2dee6c2-1": "二十比一是谷底不是证明 - 知乎"
+                },
+                "nodeKinds": {
+                  "author-615fbaa9-7356-4cd4-8a58-af2cb2dee6c2-1": "author"
+                },
+                "origin": "author-card",
+                "discoveredAt": 0,
+                "helpful": false,
+                "questionKind": "follow_up"
+              }
+            ],
+            "avatar": "assets/images/authors/zhang-shanyou.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-1",
+            "title": "计算最优如何定",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "author-ev-bf7ab7d8b67de2f723c8835496ef6ebb",
+        "name": "韩牧之",
+        "identity": "evidence",
+        "authorUrl": null,
+        "evidence": [
+          {
+            "evidenceId": "bf7ab7d8b67de2f723c8835496ef6ebb",
+            "authorId": "author-ev-bf7ab7d8b67de2f723c8835496ef6ebb",
+            "authorName": "韩牧之",
+            "title": "过训可以损失掉了仍可能该停 - 知乎",
+            "summary": "小模型多看词元可以是过训。损失在降，仍可能该停这次训练。",
+            "url": "https://zhuanlan.zhihu.com/p/2072323309233082423?utm_medium=openapi_platform&utm_source=cf621feb3f2d",
+            "authorUrl": null,
+            "uses": [
+              {
+                "key": "llm-application-concept-1:bf7ab7d8b67de2f723c8835496ef6ebb",
+                "topicId": "llm-application-concept-1",
+                "topic": "计算最优如何定",
+                "question": "从零训一亿两千万参数时，公开文章怎么看计算最优、过训和该不该停一次训练？拆开之后，哪一层必须请人判断？",
+                "resourceId": "llm-application-concept-1",
+                "carrierId": "carrier-job-contract",
+                "carrier": "规模与预算",
+                "nodeIds": [
+                  "author-615fbaa9-7356-4cd4-8a58-af2cb2dee6c2-2"
+                ],
+                "nodeTitles": {
+                  "author-615fbaa9-7356-4cd4-8a58-af2cb2dee6c2-2": "过训可以损失掉了仍可能该停 - 知乎"
+                },
+                "nodeKinds": {
+                  "author-615fbaa9-7356-4cd4-8a58-af2cb2dee6c2-2": "author"
+                },
+                "origin": "author-card",
+                "discoveredAt": 0,
+                "helpful": false,
+                "questionKind": "follow_up"
+              }
+            ],
+            "avatar": "assets/images/authors/haohaoyong-ai.jpg"
+          }
+        ],
+        "topics": [
+          {
+            "id": "llm-application-concept-1",
+            "title": "计算最优如何定",
+            "uses": 0,
+            "helpful": 0,
+            "score": 0,
+            "pinned": false,
+            "hidden": false
+          }
+        ]
+      }
+    ]
+  },
+  "details": {
+    "4b4af40127f923e8fd6b5fe03a07bcbb": {
+      "cards": [
+        {
+          "id": "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-0",
+          "title": "先把四层收成一张总图",
+          "type": "answer",
+          "preview": "先把四层收成一张总图。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "b91f89c7433b7ce4e9e08e0902973b01": {
+      "cards": [
+        {
+          "id": "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-1",
+          "title": "下一轮要带上需要的观察",
+          "type": "answer",
+          "preview": "下一轮要带上需要的观察。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "fcaa79510d00451c65dfea18cd6ba683": {
+      "cards": [
+        {
+          "id": "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-3",
+          "title": "失败先定位到哪一层",
+          "type": "answer",
+          "preview": "失败先定位到哪一层。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "b3365850817dd1343f5efe3799e451dd": {
+      "cards": [
+        {
+          "id": "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-4",
+          "title": "第二轮请求，要带上需要的历史",
+          "type": "answer",
+          "preview": "假设模型已经回复了仓库副本的用途，你接着问“那它能帮助售后人员做什么？”这里的“它”要靠历史消除歧义。对于本节这种无状态消息接口，把刚才的问答和新问题一起送入下一次请求：\n\n```python\nmessages.append({\"role\": \"assistant\", \"content\": reply})\nmessages.append({\"role\": \"user\", \"content\": \"那它能帮助售后人员做什么？\"})\n```\n\n再使用更新后的 messages 发出请求。模型看到的是你实际传入的上下文，不是自动读取程序里的所有变量。历史越来越长时，需要按实际窗口管理内容；这不等于每次都必须永久重发全部旧对话。"
+        },
+        {
+          "id": "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-5",
+          "title": "用一次小检查，确认循环真的接通",
+          "type": "answer",
+          "preview": "用一次小检查，确认循环真的接通。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "168f3758f439a66b6aff2a3972f5a23e": {
+      "cards": [
+        {
+          "id": "answer-39e1d645-cb2c-4c72-81ce-df22f830ab39-2",
+          "title": "输出预算控制长度，参数不保证正确",
+          "type": "answer",
+          "preview": "输出预算控制长度，参数不保证正确。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "9a498b90e025c6ff4a3ee4a7bc6bdadb": {
+      "cards": [
+        {
+          "id": "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-0",
+          "title": "工具调用必须先被程序看懂",
+          "type": "answer",
+          "preview": "继续做同一个编码 Agent。假设我们给它一段自拟的产品说明：“设备测试一年，附件不在此范围。”现在要求它提取期限与适用范围，而不是自由写一段总结。\n\n```json\n{\"warranty_months\":12,\"scope\":\"设备；附件不在此范围\"}\n```\n\n程序可以按字段读取这个对象。注意两层区别：JSON 能解析，只说明语法成立；字段符合约定，也不说明内容忠于资料。把期限填成 24，仍然可能得到一份格式完全合法的错误答案。"
+        },
+        {
+          "id": "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-5",
+          "title": "用三份输入检验这条链路",
+          "type": "answer",
+          "preview": "用三份输入检验这条链路。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "6259ba57c8d8c9eb9814fabb576a3137": {
+      "cards": [
+        {
+          "id": "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-3",
+          "title": "重试只修当前错误，不偷偷扩大权限",
+          "type": "answer",
+          "preview": "重试只修当前错误，不偷偷扩大权限。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "e57664a9fc6787d73c2c25ebedd77a14": {
+      "cards": [
+        {
+          "id": "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-4",
+          "title": "原生结构约束有边界",
+          "type": "answer",
+          "preview": "原生结构约束有边界。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "4631ddea4ee5d98959b7f03fad6f116e": {
+      "cards": [
+        {
+          "id": "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-1",
+          "title": "把字段、类型与缺失情况说清楚",
+          "type": "answer",
+          "preview": "把字段、类型与缺失情况说清楚。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "2fa6c94a09b283afee5a5fe018581b85": {
+      "cards": [
+        {
+          "id": "answer-09f30072-85a3-4585-9ecf-c1aa1d631490-2",
+          "title": "先解析，再校验；失败不补成成功",
+          "type": "answer",
+          "preview": "先解析，再校验；失败不补成成功。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "f7dbc868864e9aef29b369f9aabf4c56": {
+      "cards": [
+        {
+          "id": "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-0",
+          "title": "模型缺少资料时，先提出一次查询",
+          "type": "answer",
+          "preview": "我们仍在做编码 Agent。用一个自拟练习开始：用户问“test_auth 的失败测试是多少？”给定一个只读工具 list_dir(model)，它从练习资料中读取该型号的说明。\n\n模型可以判断这次需要查询，并提出工具名和参数；真正读取资料的是你的程序。工具调用没有把模型变成可以任意执行代码的主体，它只是让助手能请求一个你已经定义好的能力。"
+        },
+        {
+          "id": "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-3",
+          "title": "工具结果是证据，不是新的系统命令",
+          "type": "answer",
+          "preview": "工具结果是证据，不是新的系统命令。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "d4db02aa6e7ec1e864d0fce8713882ae": {
+      "cards": [
+        {
+          "id": "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-1",
+          "title": "最小循环只有一个核心分岔",
+          "type": "answer",
+          "preview": "最小循环只有一个核心分岔。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        },
+        {
+          "id": "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-4",
+          "title": "给循环一个确定的终点",
+          "type": "answer",
+          "preview": "把循环写成受控的步骤，而不是无条件 while True：\n\n1. 发送当前消息，并读取一份完整模型响应。\n2. 若是最终文本，展示并结束。\n3. 若是工具请求，校验后调用本课唯一的只读工具。\n4. 保存调用及结果，再进入下一轮。\n5. 达到设定的轮数上限仍未得到结果，就停止并说明尚未完成。\n\n这份步骤描述用于实现你自己的接口适配，不伪装成可以直接运行的 SDK 代码。本节先验证一条正常的只读调用，下一单元再具体区分参数错误、权限拒绝和暂时失败。"
+        }
+      ]
+    },
+    "2cf175bfc4b9fc865c11758e3c5d3de8": {
+      "cards": [
+        {
+          "id": "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-2",
+          "title": "沿同一问题走完一次调用",
+          "type": "answer",
+          "preview": "假设本次模型提出的请求是：\n\n```json\n{\"name\":\"list_dir\",\"arguments\":{\"model\":\"A\"}}\n```\n\n程序查到的练习资料是：\n\n```json\n{\"source_id\":\"manual-A-warranty\",\"text\":\"test_auth：设备测试一年，附件除外。\"}\n```\n\n这两段是自拟的过程示意，不是当前产品的真实仓库。使用带 tool_calls 的消息接口时，需要保留模型发出的调用消息，并用相应 tool_call_id 回填结果。这样同一轮里的请求与结果才能对应起来，模型才有资料可用于回答。"
+        },
+        {
+          "id": "answer-800d75b1-dafe-465f-a8a3-f316ac177e29-5",
+          "title": "检查：指出真正发生动作的那一步",
+          "type": "answer",
+          "preview": "检查：指出真正发生动作的那一步。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "df2a58551d5000f2ca235a7d21e9bde2": {
+      "cards": [
+        {
+          "id": "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-5",
+          "title": "返回了内容，也要检查有没有回答原问题",
+          "type": "answer",
+          "preview": "返回了内容，也要检查有没有回答原问题。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        },
+        {
+          "id": "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-7",
+          "title": "用两种失败检验，而不是再换一个项目",
+          "type": "answer",
+          "preview": "仍然测试 list_dir：传入空型号，应在执行前失败；把本地模拟函数改为每次都超时，应在两次尝试后结束。检查日志中的尝试数是否符合约定。\n\n再观察最终回答：没有资料时不能声称已经确认失败测试。至此，你已经给现有循环加上了可解释的边界。资料检索是并行推进的另一条能力线；两条线最终会在同一个编码 Agent中汇合。"
+        }
+      ]
+    },
+    "147a174e4240c118779dbb33481ea4ee": {
+      "cards": [
+        {
+          "id": "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-2",
+          "title": "把重试计数放在程序里",
+          "type": "answer",
+          "preview": "下面用一个自拟的本地函数模拟“第一次超时、第二次成功”。它不连接外部服务，只让你看清重试边界。\n\n```python\nattempts = 0\n\ndef list_dir(model):\n    global attempts\n    attempts += 1\n    if attempts == 1:\n        raise TimeoutError(\"模拟暂时超时\")\n    return {\"model\": model, \"text\": \"设备测试一年，附件除外。\"}\n\ndef lookup_with_limit(model):\n    if not isinstance(model, str) or not model.strip():\n        return {\"ok\": False, \"code\": \"INVALID_MODEL\"}\n    for attempt in range(2):\n        try:\n            return {\"ok\": True, \"data\": list_dir(model)}\n        except TimeoutError:\n            if attempt == 1:\n                return {\"ok\": False, \"code\": \"LOO"
+        }
+      ]
+    },
+    "1bec6142b9cb3de4d37e36d35214d831": {
+      "cards": [
+        {
+          "id": "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-1",
+          "title": "先判断：重新发送能解决什么",
+          "type": "answer",
+          "preview": "先判断：重新发送能解决什么。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "663262ba8ee7714a9e41960b97af7d2a": {
+      "cards": [
+        {
+          "id": "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-4",
+          "title": "给模型和界面一个清楚的失败结果",
+          "type": "answer",
+          "preview": "给模型和界面一个清楚的失败结果。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        },
+        {
+          "id": "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-6",
+          "title": "同时限制循环和单个工具",
+          "type": "answer",
+          "preview": "同时限制循环和单个工具。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "7ed42c2be9d64bc2953137dea71ade1a": {
+      "cards": [
+        {
+          "id": "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-3",
+          "title": "需要模型修正时，只交给它可修的部分",
+          "type": "answer",
+          "preview": "需要模型修正时，只交给它可修的部分。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "7903623fadc366015d508213ea411be1": {
+      "cards": [
+        {
+          "id": "answer-1e0dd4e1-d9a6-4876-bc45-f850efbc3307-0",
+          "title": "让同一个查询失败一次",
+          "type": "answer",
+          "preview": "继续使用编码 Agent的 list_dir 工具。用户问test_auth 的失败测试，模型给出查询请求，但这次可能传错参数、没有读取权限，或者查询服务暂时超时。\n\n这些情况都表现为“没有拿到资料”，处理方式却不同。我们要做的是把失败交给合适的程序分支，让用户知道当前状态，并留下能排查的记录；不能擅自把test_auth 改成另一个型号，查到东西就算成功。"
+        }
+      ]
+    },
+    "b308945718b7e720f7169b8ac1aed0a9": {
+      "cards": [
+        {
+          "id": "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-0",
+          "title": "从一份看得懂的短仓库开始",
+          "type": "answer",
+          "preview": "从一份看得懂的短仓库开始。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "13fb83382debe9ee4978ca5a4ae4b4c9": {
+      "cards": [
+        {
+          "id": "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-4",
+          "title": "先人工核对，再交给检索算法",
+          "type": "answer",
+          "preview": "先人工核对，再交给检索算法。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "75d442882f025af54cebfbd24bf2b21a": {
+      "cards": [
+        {
+          "id": "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-3",
+          "title": "在拆开之前，保留原文位置",
+          "type": "answer",
+          "preview": "在拆开之前，保留原文位置。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "29675821eaf578da08c2a5841fbc451b": {
+      "cards": [
+        {
+          "id": "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-1",
+          "title": "一个块要能独立说明一件事",
+          "type": "answer",
+          "preview": "一个块要能独立说明一件事。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "58170758c6a49bc943c9fc5fcc4332e7": {
+      "cards": [
+        {
+          "id": "answer-53d170d4-8f02-4ff8-8d62-6851d3904883-2",
+          "title": "长度与重叠，都是需要验证的选择",
+          "type": "answer",
+          "preview": "长度与重叠，都是需要验证的选择。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "199966002a36ba359750eb39134291fc": {
+      "cards": [
+        {
+          "id": "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-0",
+          "title": "从仓库里找答案，而不只是找相同的词",
+          "type": "answer",
+          "preview": "从仓库里找答案，而不只是找相同的词。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "59030d05086f9f5993d6c5d53a398f91": {
+      "cards": [
+        {
+          "id": "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-1",
+          "title": "给问题和片段生成可比较的表示",
+          "type": "answer",
+          "preview": "给问题和片段生成可比较的表示。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "8535b20e873674c64047e2bde181e1d3": {
+      "cards": [
+        {
+          "id": "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-2",
+          "title": "编码 Agent 主线笔记",
+          "type": "answer",
+          "preview": "编码 Agent 主线笔记。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "754518826533138506d2c3ba779b1d74": {
+      "cards": [
+        {
+          "id": "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-3",
+          "title": "把同一组计算写成一个小函数",
+          "type": "answer",
+          "preview": "把同一组计算写成一个小函数。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "64615b2f4ab131b2c05cc6f6157ad60b": {
+      "cards": [
+        {
+          "id": "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-4",
+          "title": "型号与否定条件，不能被话题相似掩盖",
+          "type": "answer",
+          "preview": "型号与否定条件，不能被话题相似掩盖。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "1b433363a2b32ba41b68169ab7c0682e": {
+      "cards": [
+        {
+          "id": "answer-b97de081-fb9e-4e48-a00e-8bfb98263153-5",
+          "title": "用三个问题验证真实检索",
+          "type": "answer",
+          "preview": "用三个问题验证真实检索。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "882b0a9b824955b47f49345002496810": {
+      "cards": [
+        {
+          "id": "answer-2fd79cae-4c43-4705-986a-8c0188e32705-0",
+          "title": "同一份仓库，为什么仍然可能答错",
+          "type": "answer",
+          "preview": "继续使用前两课的自拟仓库。片段 A 写着“test_auth：设备测试一年，附件除外”，片段 B 写着“test_login：设备测试两年，具体范围以本型号条款为准”。用户问：“test_auth 的附件能测试两年吗？”\n\n检索到两段相关文字，不代表可以把它们拼成一个结论。型号、期限和适用范围必须对应：B 的两年不能移给 A，设备测试也不能自动覆盖附件。当前资料支持的回答是：test_auth 的附件不在这段测试范围内；不能根据test_login 的说明推断 A 的附件可以测试两年。\n\n这一步要学会的，是把一条结论和真正支持它的证据连接起来。"
+        },
+        {
+          "id": "answer-2fd79cae-4c43-4705-986a-8c0188e32705-3",
+          "title": "保留完整依据，缺少证据时停止推断",
+          "type": "answer",
+          "preview": "保留完整依据，缺少证据时停止推断。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        },
+        {
+          "id": "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-0",
+          "title": "先看证据在哪一段丢失",
+          "type": "answer",
+          "preview": "先看证据在哪一段丢失。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        },
+        {
+          "id": "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-1",
+          "title": "检索检查：不是只看最高相似度",
+          "type": "answer",
+          "preview": "检索检查：不是只看最高相似度。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        },
+        {
+          "id": "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-2",
+          "title": "生成检查：编号对得上仍然可能说错",
+          "type": "answer",
+          "preview": "生成检查：编号对得上仍然可能说错。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        },
+        {
+          "id": "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-3",
+          "title": "用受控对照分清影响",
+          "type": "answer",
+          "preview": "用受控对照分清影响。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        },
+        {
+          "id": "answer-165050c8-b517-44c5-9343-1dfc4a625ab4-4",
+          "title": "把这次排错留在作品里",
+          "type": "answer",
+          "preview": "把这次排错留在作品里。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        },
+        {
+          "id": "author-6fdc1633-dc58-4612-b0bb-922eb16d2fd0-0",
+          "title": "编码 Agent 主线笔记",
+          "type": "author",
+          "preview": "编码 Agent 主线笔记。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        },
+        {
+          "id": "author-6fdc1633-dc58-4612-b0bb-922eb16d2fd0-1",
+          "title": "编码 Agent 主线笔记",
+          "type": "author",
+          "preview": "编码 Agent 主线笔记。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        },
+        {
+          "id": "author-6fdc1633-dc58-4612-b0bb-922eb16d2fd0-2",
+          "title": "编码 Agent 主线笔记",
+          "type": "author",
+          "preview": "编码 Agent 主线笔记。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "3c83f11fc843340849135b87b7d0ffb4": {
+      "cards": [
+        {
+          "id": "answer-2fd79cae-4c43-4705-986a-8c0188e32705-1",
+          "title": "把问题、证据和回答要求分清楚",
+          "type": "answer",
+          "preview": "把问题、证据和回答要求分清楚。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "f390710ea5ad3cc034dd5a999982ae8d": {
+      "cards": [
+        {
+          "id": "answer-2fd79cae-4c43-4705-986a-8c0188e32705-2",
+          "title": "检查分两层：引用存在，结论得到支持",
+          "type": "answer",
+          "preview": "检查分两层：引用存在，结论得到支持。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        },
+        {
+          "id": "answer-2fd79cae-4c43-4705-986a-8c0188e32705-4",
+          "title": "把引用核对做成可以展示的成果",
+          "type": "answer",
+          "preview": "为同一个问题保存四项内容：原始问题、最终送入模型的片段、带引用的回答，以及逐条核对记录。每条关键结论记录引用编号、支持它的原句和核对结果。\n\n先用完整 A、B 资料运行，再移除 A 重跑。第一组应避免混用型号，第二组应说明缺口；若失败，就保存失败现场，回到检索或生成环节排查。仅在页面上出现可点击的引用，还不足以证明内容正确。\n\n做到这里，你的检索模块已经可以提供有出处、可核查的回答。下一阶段把它作为只读工具接入另一条学习线中的 Agent 循环，两条能力共同服务同一个编码 Agent。"
+        }
+      ]
+    },
+    "1d47e7701cb1a22244bff258088d7f0c": {
+      "cards": [
+        {
+          "id": "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-0",
+          "title": "把已经完成的能力接起来",
+          "type": "answer",
+          "preview": "把已经完成的能力接起来。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "3f60c1fa2e72f2d09fad64ff45791430": {
+      "cards": [
+        {
+          "id": "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-5",
+          "title": "沿一次实际轨迹检查模块之间的接口",
+          "type": "answer",
+          "preview": "沿一次实际轨迹检查模块之间的接口。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "85547654c05876a74277b65c9683460a": {
+      "cards": [
+        {
+          "id": "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-4",
+          "title": "给模型足够的证据，保留决定答案的条件",
+          "type": "answer",
+          "preview": "给模型足够的证据，保留决定答案的条件。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "9b4c941d6325ebda91e0eb79e24a6995": {
+      "cards": [
+        {
+          "id": "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-2",
+          "title": "工具说明要帮助选择，而不是许下保证",
+          "type": "answer",
+          "preview": "工具说明要帮助选择，而不是许下保证。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "1e2bd3d06dfbfeb118ab0ec0530bc13d": {
+      "cards": [
+        {
+          "id": "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-1",
+          "title": "把检索包装成一个只读工具",
+          "type": "answer",
+          "preview": "把检索包装成一个只读工具。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "9eebc4cd6aff7710103913e7b2fbe0c8": {
+      "cards": [
+        {
+          "id": "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-3",
+          "title": "选择正确以后，仍要校验与回查",
+          "type": "answer",
+          "preview": "选择正确以后，仍要校验与回查。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "200c59f6fdef0c8972e42141083a8da6": {
+      "cards": [
+        {
+          "id": "answer-86837bb5-1427-4705-a2f7-b5b67e64b770-6",
+          "title": "正常、缺证据和工具失败都要试到",
+          "type": "answer",
+          "preview": "正常、缺证据和工具失败都要试到。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "4f680573d13bf734df32d67a066a5c52": {
+      "cards": [
+        {
+          "id": "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-0",
+          "title": "从一个可重现的错误开始",
+          "type": "answer",
+          "preview": "从一个可重现的错误开始。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        },
+        {
+          "id": "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-4",
+          "title": "按证据经过的顺序排查",
+          "type": "answer",
+          "preview": "按证据经过的顺序排查。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "d8656e7728d162113ff23eaf186f2095": {
+      "cards": [
+        {
+          "id": "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-2",
+          "title": "记录足够的上下文，不收集一切",
+          "type": "answer",
+          "preview": "记录足够的上下文，不收集一切。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "f85870d51a656ebb511082ddf8624763": {
+      "cards": [
+        {
+          "id": "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-1",
+          "title": "用一个问题讲清模块如何协作",
+          "type": "answer",
+          "preview": "用一个问题讲清模块如何协作。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "06d98e7b12f1f980b29fb4b6e505b37b": {
+      "cards": [
+        {
+          "id": "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-3",
+          "title": "取舍要用行为解释",
+          "type": "answer",
+          "preview": "取舍要用行为解释。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "f1253b4d9f594f531bc1c1d42fb556a1": {
+      "cards": [
+        {
+          "id": "answer-dc8f6193-516a-4c9d-b94b-759fbb491623-5",
+          "title": "让别人能跑起来，也能看见边界",
+          "type": "answer",
+          "preview": "让别人能跑起来，也能看见边界。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "acd97c14ea01f980fe429e0ff47809cd": {
+      "cards": [
+        {
+          "id": "author-615fbaa9-7356-4cd4-8a58-af2cb2dee6c2-0",
+          "title": "编码 Agent 主线笔记",
+          "type": "author",
+          "preview": "编码 Agent 主线笔记。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "cbffcc49059093c82647861f85760af1": {
+      "cards": [
+        {
+          "id": "author-615fbaa9-7356-4cd4-8a58-af2cb2dee6c2-1",
+          "title": "编码 Agent 主线笔记",
+          "type": "author",
+          "preview": "编码 Agent 主线笔记。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    },
+    "bf7ab7d8b67de2f723c8835496ef6ebb": {
+      "cards": [
+        {
+          "id": "author-615fbaa9-7356-4cd4-8a58-af2cb2dee6c2-2",
+          "title": "编码 Agent 主线笔记",
+          "type": "author",
+          "preview": "编码 Agent 主线笔记。按编码 Agent 主线改写：复用 Python 与 Git，从循环、契约或对应载体概念往下学。检索排在沙箱和闸门之后，不做向量库。"
+        }
+      ]
+    }
+  }
+}

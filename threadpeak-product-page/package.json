@@ -1,0 +1,37 @@
+{
+  "name": "threadpeak-product-page",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "tsc --noEmit",
+    "preview": "node scripts/serve.mjs",
+    "verify": "node scripts/verify-assets.mjs"
+  },
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "@remotion/player": "4.0.523",
+    "remotion": "4.0.523",
+    "three": "0.185.1",
+    "mdast-util-from-markdown": "2.0.3",
+    "katex": "0.16.47",
+    "react-markdown": "10.1.0",
+    "remark-gfm": "4.0.1",
+    "remark-math": "6.0.0",
+    "mdast-util-math": "3.0.0",
+    "micromark-extension-math": "3.1.0"
+  },
+  "devDependencies": {
+    "vite": "8.2.2",
+    "typescript": "6.0.3",
+    "@vitejs/plugin-react": "6.1.1",
+    "postcss": "8.5.26",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
+    "@types/three": "0.185.4",
+    "@types/katex": "0.16.8",
+    "@types/node": "24.13.3"
+  }
+}

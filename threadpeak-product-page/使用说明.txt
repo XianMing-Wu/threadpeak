@@ -1,0 +1,10 @@
+双击 index.html 即可打开完整产品页，无需安装依赖或启动服务器。
+
+把整个文件夹拷到任何电脑，双击 index.html 即可打开，不需要安装软件。
+代码在 src/：章节入口 core/chapters.ts，共用时间轴 core/timeline.ts，各场景在 scenes/。
+原始图片、字体、人物动画和 3D 模型在 assets/ 各分类目录，文件名使用英文。
+runtime/vendor.js 是第三方库，runtime/product.js 是问山页面代码；styles/、data/ 也是构建结果。
+assets/offline/ 只存双击运行需要的兼容资源数据。licenses/ 是版权与许可证声明，无需操作。
+
+详细目录、模块关系和修改方式请阅读 README.md。
+移动或分享时保留整个文件夹。

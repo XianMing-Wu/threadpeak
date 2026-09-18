@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import { readFile, mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import { checkDocumentation, inspectMarkdown, parseRule, validateDocuments } from '../scripts/check-documentation.mjs'
@@ -63,6 +64,23 @@ test('rule metadata rejects always-on, duplicate and invalid fields', () => {
   const valid = '---\ndescription: "Scope"\nglobs: "src/**"\nalwaysApply: false\n---\n# Rule\n'
   assert.deepEqual(parseRule(valid), ['src/**'])
   for (const source of [valid.replace('false', 'true'), valid.replace('src/**', ''), valid.replace('src/**', 'src/**,src/**'), valid.replace('---\n#', 'globs: "server/**"\n---\n#'), valid.replace('description:', 'unknown:')]) assert.throws(() => parseRule(source))
+})
+
+test('excluded asset directories remain valid link targets without hiding genuinely missing files', async t => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'threadpeak-doc-links-'))
+  t.after(() => rm(directory, { recursive: true, force: true }))
+  await mkdir(path.join(directory, 'raw', 'empty'), { recursive: true })
+  await writeFile(path.join(directory, 'package.json'), JSON.stringify({ scripts: {} }))
+  await writeFile(path.join(directory, 'AGENTS.md'), '# Instructions\n')
+  await writeFile(path.join(directory, 'raw', 'capture.json'), '{}\n')
+  await writeFile(path.join(directory, 'raw', 'upstream.md'), '[upstream-only](not-in-this-checkout)\n')
+  await writeFile(path.join(directory, 'README.md'), '[capture](raw/capture.json)\n\n[folder](raw/empty)\n\n[missing](raw/missing.json)\n\n[outside](../outside.json)\n')
+  const result = await checkDocumentation(directory)
+  assert.deepEqual(result.errors, [
+    'README.md:5: missing link target raw/missing.json',
+    'README.md:7: link escapes repository: ../outside.json',
+  ])
+  assert.ok(!result.documents.has('raw/upstream.md'))
 })
 
 test('environment example keys are unique, credential-free and documented at their configuration owner', async () => {

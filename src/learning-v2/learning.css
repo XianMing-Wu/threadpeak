@@ -3019,6 +3019,18 @@
   margin: 0 0 .7em;
 }
 
+.lp-doc-read .tp-math.is-inline {
+  display: inline;
+  padding: 0;
+  overflow: visible;
+  vertical-align: baseline;
+}
+
+.lp-doc-read .tp-math.is-inline .katex {
+  font-size: 1em;
+  line-height: 1;
+}
+
 .lp-detail-body .md-body {
   font: inherit;
   line-height: 1.95;

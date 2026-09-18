@@ -1,0 +1,50 @@
+button.send-control {
+  color: #fff;
+  cursor: pointer;
+  opacity: 1;
+  touch-action: manipulation;
+  background: #111;
+  border: 0;
+  border-radius: 50%;
+  flex: 0 0 40px;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  transition: background .15s, transform .15s;
+  display: inline-flex;
+}
+
+button.send-control:hover:not(:disabled) {
+  background: #292929;
+}
+
+button.send-control:active:not(:disabled) {
+  transform: scale(.96);
+}
+
+button.send-control:disabled {
+  background: var(--surface-3, #f1f3f5);
+  color: var(--ink-3, #7d8490);
+  cursor: not-allowed;
+}
+
+button.send-control:focus-visible {
+  outline-offset: 3px;
+  outline: 2px solid #111;
+}
+
+button.send-control svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button.send-control {
+    transition: none;
+  }
+}

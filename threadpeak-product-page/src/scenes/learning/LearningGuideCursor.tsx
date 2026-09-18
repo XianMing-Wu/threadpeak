@@ -1,0 +1,2 @@
+/** A compact cobalt/ink pointer. Click feedback belongs to the real controls. */
+export function LearningGuideCursor() { return <svg viewBox="0 0 44 54" fill="none" aria-hidden="true"><g className="guide-arrow"><path d="M3 3Q4 18 6 36L15 26 24 45Q27 47 30 43L21 24 36 23Q22 12 3 3Z" fill="#fcfdff" stroke="#243b50" strokeWidth="1.65" strokeLinejoin="round"/><path d="M6 6 8 28M10 7 31 21M19 28 26 40" stroke="#2c69db" strokeWidth="1.6" strokeLinecap="round"/></g></svg>; }

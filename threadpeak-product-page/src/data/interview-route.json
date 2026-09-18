@@ -1,0 +1,435 @@
+{
+  "protocol": "learning-path",
+  "version": "1.0",
+  "id": "threadpeak-showcase-interview-v1",
+  "metadata": {
+    "title": "从零训练小模型路线",
+    "description": "已能写出多头注意力和训练循环，也在单卡上跑过小型网络；用过聊天模型，但还没按固定算力在参数和词元之间做过一次真实分配。有一块云端显卡，目标是从零训出一个能跑完、能验收的小模型。四个概念集合层层递进：规模与预算是前置，其中第一课是计算最优如何定。",
+    "locale": "zh-CN"
+  },
+  "structure": {
+    "entrySubjectId": "route-start",
+    "goalSubjectIds": [
+      "goal-understanding"
+    ],
+    "subjects": [
+      {
+        "id": "route-start",
+        "cardRef": "card-start",
+        "orderHint": 0
+      },
+      {
+        "id": "carrier-job-contract",
+        "cardRef": "card-carrier-job-contract",
+        "orderHint": 1
+      },
+      {
+        "id": "carrier-job-tools",
+        "cardRef": "card-carrier-job-tools",
+        "orderHint": 2
+      },
+      {
+        "id": "carrier-job-evidence",
+        "cardRef": "card-carrier-job-evidence",
+        "orderHint": 3
+      },
+      {
+        "id": "carrier-job-deliver",
+        "cardRef": "card-carrier-job-deliver",
+        "orderHint": 4
+      },
+      {
+        "id": "goal-understanding",
+        "cardRef": "card-goal",
+        "orderHint": 5
+      }
+    ],
+    "concepts": [
+      {
+        "id": "llm-application-concept-1",
+        "subjectId": "carrier-job-contract",
+        "cardRef": "card-llm-application-concept-1",
+        "actionRef": "action-llm-application-concept-1",
+        "orderHint": 1
+      },
+      {
+        "id": "llm-application-concept-2",
+        "subjectId": "carrier-job-contract",
+        "cardRef": "card-llm-application-concept-2",
+        "actionRef": "action-llm-application-concept-2",
+        "orderHint": 2
+      },
+      {
+        "id": "llm-application-concept-3",
+        "subjectId": "carrier-job-tools",
+        "cardRef": "card-llm-application-concept-3",
+        "actionRef": "action-llm-application-concept-3",
+        "orderHint": 1
+      },
+      {
+        "id": "llm-application-concept-4",
+        "subjectId": "carrier-job-tools",
+        "cardRef": "card-llm-application-concept-4",
+        "actionRef": "action-llm-application-concept-4",
+        "orderHint": 2
+      },
+      {
+        "id": "llm-application-concept-5",
+        "subjectId": "carrier-job-tools",
+        "cardRef": "card-llm-application-concept-5",
+        "actionRef": "action-llm-application-concept-5",
+        "orderHint": 3
+      },
+      {
+        "id": "llm-application-concept-6",
+        "subjectId": "carrier-job-evidence",
+        "cardRef": "card-llm-application-concept-6",
+        "actionRef": "action-llm-application-concept-6",
+        "orderHint": 1
+      },
+      {
+        "id": "llm-application-concept-7",
+        "subjectId": "carrier-job-evidence",
+        "cardRef": "card-llm-application-concept-7",
+        "actionRef": "action-llm-application-concept-7",
+        "orderHint": 2
+      },
+      {
+        "id": "llm-application-concept-8",
+        "subjectId": "carrier-job-deliver",
+        "cardRef": "card-llm-application-concept-8",
+        "actionRef": "action-llm-application-concept-8",
+        "orderHint": 1
+      },
+      {
+        "id": "llm-application-concept-9",
+        "subjectId": "carrier-job-deliver",
+        "cardRef": "card-llm-application-concept-9",
+        "actionRef": "action-llm-application-concept-9",
+        "orderHint": 2
+      }
+    ],
+    "flow": [
+      {
+        "id": "flow-route-start-carrier-job-contract",
+        "fromSubjectId": "route-start",
+        "toSubjectId": "carrier-job-contract"
+      },
+      {
+        "id": "flow-carrier-job-contract-carrier-job-tools",
+        "fromSubjectId": "carrier-job-contract",
+        "toSubjectId": "carrier-job-tools",
+        "semantics": {
+          "splitGroupId": "split-carrier-job-contract"
+        }
+      },
+      {
+        "id": "flow-carrier-job-contract-carrier-job-evidence",
+        "fromSubjectId": "carrier-job-contract",
+        "toSubjectId": "carrier-job-evidence",
+        "semantics": {
+          "splitGroupId": "split-carrier-job-contract"
+        }
+      },
+      {
+        "id": "flow-carrier-job-tools-carrier-job-deliver",
+        "fromSubjectId": "carrier-job-tools",
+        "toSubjectId": "carrier-job-deliver",
+        "semantics": {
+          "joinGroupId": "join-carrier-job-deliver"
+        }
+      },
+      {
+        "id": "flow-carrier-job-evidence-carrier-job-deliver",
+        "fromSubjectId": "carrier-job-evidence",
+        "toSubjectId": "carrier-job-deliver",
+        "semantics": {
+          "joinGroupId": "join-carrier-job-deliver"
+        }
+      },
+      {
+        "id": "flow-carrier-job-deliver-goal-understanding",
+        "fromSubjectId": "carrier-job-deliver",
+        "toSubjectId": "goal-understanding"
+      }
+    ],
+    "flowGroups": [
+      {
+        "id": "split-carrier-job-contract",
+        "type": "split",
+        "anchorSubjectId": "carrier-job-contract",
+        "policy": "parallel"
+      },
+      {
+        "id": "join-carrier-job-deliver",
+        "type": "join",
+        "anchorSubjectId": "carrier-job-deliver",
+        "policy": "all-required"
+      }
+    ]
+  },
+  "data": {
+    "cards": [
+      {
+        "id": "card-carrier-job-contract",
+        "eyebrow": "学习载体",
+        "title": "规模与预算",
+        "summary": "第一个概念集合，也是后面所有集合的前置。把计算最优如何定、参数配数据收成一组。注意力公式和入门训练步已经会，不再单独建一课。本集合立住后，才分出「网络与注意力」和「词表与损失」。",
+        "tags": [
+          "学习方向",
+          "阶段载体"
+        ]
+      },
+      {
+        "id": "card-llm-application-concept-1",
+        "eyebrow": "概念",
+        "title": "计算最优如何定",
+        "summary": "属于「规模与预算」，是整条路线的第一组概念。\n\n学什么：固定算力时，参数和词元怎么换。卡普兰路线把钱花在做大模型上；计算最优把验证损失写成 $L(N,D)=E+A/N^{\\alpha}+B/D^{\\beta}$，粗规则约二十个词元配一个参数。公开复现里，一亿两千万参数看一百亿词元也很常见——那是为了推理更便宜，不是算错了。\n\n边界：不重教注意力公式。不在这里选网络实现或词表。二十比一会被数据脏度改掉。\n\n为什么：会写训练步，缺的是把显卡小时写成 $N$ 和 $D$ 的交换，而不是先写层数。规模写错，后面所有结构课都在为一次训不完的账单服务。\n\n必要前置：起点里已经会的注意力和训练循环。本概念是「参数配数据」的前置。\n\n完成检验：给定一块显卡预算，写出计算最优的 $N$ 与 $D$，并说明何时应该故意多看词元、少上参数。",
+        "body": "属于「规模与预算」，是整条路线的第一组概念。\n\n学什么：固定算力时，参数和词元怎么换。卡普兰路线把钱花在做大模型上；计算最优把验证损失写成 $L(N,D)=E+A/N^{\\alpha}+B/D^{\\beta}$，粗规则约二十个词元配一个参数。公开复现里，一亿两千万参数看一百亿词元也很常见——那是为了推理更便宜，不是算错了。\n\n边界：不重教注意力公式。不在这里选网络实现或词表。二十比一会被数据脏度改掉。\n\n为什么：会写训练步，缺的是把显卡小时写成 $N$ 和 $D$ 的交换，而不是先写层数。规模写错，后面所有结构课都在为一次训不完的账单服务。\n\n必要前置：起点里已经会的注意力和训练循环。本概念是「参数配数据」的前置。\n\n完成检验：给定一块显卡预算，写出计算最优的 $N$ 与 $D$，并说明何时应该故意多看词元、少上参数。",
+        "tags": [
+          "目标所需"
+        ]
+      },
+      {
+        "id": "card-llm-application-concept-2",
+        "eyebrow": "概念",
+        "title": "参数配数据",
+        "summary": "属于「规模与预算」，依赖同一集合里的「计算最优如何定」。\n\n学什么：验证损失写成 $L(N,D)=E+A/N^{\\alpha}+B/D^{\\beta}$。固定算力时，参数和词元要一起长，粗规则是约二十个词元配一个参数。\n\n边界：二十比一是计算最优的粗规则，不是你的数据质量证明。不在这里选注意力实现或词表。\n\n为什么：少看词元的大模型常常更亏。同样算力下，更小但看够数据的模型可以更强。\n\n必要前置：「计算最优如何定」。本集合是后面「网络与注意力」「词表与损失」的前置。\n\n完成检验：给定 $N$，写出计算最优的 $D$；并说明把 $D$ 砍掉只加层数时，损失会卡在数据项上。",
+        "body": "属于「规模与预算」，依赖同一集合里的「计算最优如何定」。\n\n学什么：验证损失写成 $L(N,D)=E+A/N^{\\alpha}+B/D^{\\beta}$。固定算力时，参数和词元要一起长，粗规则是约二十个词元配一个参数。\n\n边界：二十比一是计算最优的粗规则，不是你的数据质量证明。不在这里选注意力实现或词表。\n\n为什么：少看词元的大模型常常更亏。同样算力下，更小但看够数据的模型可以更强。\n\n必要前置：「计算最优如何定」。本集合是后面「网络与注意力」「词表与损失」的前置。\n\n完成检验：给定 $N$，写出计算最优的 $D$；并说明把 $D$ 砍掉只加层数时，损失会卡在数据项上。",
+        "tags": [
+          "目标所需"
+        ]
+      },
+      {
+        "id": "card-carrier-job-tools",
+        "eyebrow": "学习载体",
+        "title": "网络与注意力",
+        "summary": "第二个概念集合，依赖「规模与预算」。收的是结构概念：网络块训什么、注意力如何实现、位置如何写入。与「词表与损失」并列；两路都齐，才进入「训练与验收」。",
+        "tags": [
+          "学习方向",
+          "阶段载体"
+        ]
+      },
+      {
+        "id": "card-llm-application-concept-3",
+        "eyebrow": "概念",
+        "title": "网络块训什么",
+        "summary": "属于「网络与注意力」，依赖前置集合「规模与预算」。\n\n学什么：预训练优化的仍是下一词 $p(x_t\\mid x_{<t})$。一块里是注意力通信和前馈计算；残差和层归一让深度可训。你要能指出梯度在更新哪些权重。\n\n边界：这一课不选注意力实现变体，也不开始谈词表。\n\n为什么：讲不清块里在训什么，后面「注意力如何实现」会变成调包。\n\n必要前置：「规模与预算」整课。本概念是同一集合里后两个概念的前置。\n\n完成检验：对着一块图，指出哪些参数在训练中更新，以及损失回传的是下一词交叉熵，不是聊天回复。",
+        "body": "属于「网络与注意力」，依赖前置集合「规模与预算」。\n\n学什么：预训练优化的仍是下一词 $p(x_t\\mid x_{<t})$。一块里是注意力通信和前馈计算；残差和层归一让深度可训。你要能指出梯度在更新哪些权重。\n\n边界：这一课不选注意力实现变体，也不开始谈词表。\n\n为什么：讲不清块里在训什么，后面「注意力如何实现」会变成调包。\n\n必要前置：「规模与预算」整课。本概念是同一集合里后两个概念的前置。\n\n完成检验：对着一块图，指出哪些参数在训练中更新，以及损失回传的是下一词交叉熵，不是聊天回复。",
+        "tags": [
+          "目标所需"
+        ]
+      },
+      {
+        "id": "card-llm-application-concept-4",
+        "eyebrow": "概念",
+        "title": "注意力如何实现",
+        "summary": "属于「网络与注意力」，依赖同一集合里的「网络块训什么」。\n\n学什么：分数仍是 $QK^{\\top}/\\sqrt{d}$。多头每头一套键值；分组查询让多组查询共享键值，省显存、改容量。一亿两千万参数和七十亿参数上，这个取舍不是同一道题。\n\n边界：公式对不等于结构对。选不选共享键值、头数和上下文，最后要人评估值不值得砸剩下的显卡小时。\n\n为什么：默认抄某一种实现，都会把第一次训练做成别人的配置，而不是你的预算。\n\n必要前置：同一集合里的「网络块训什么」。\n\n完成检验：说明两种实现在键值显存上的差别，并写出你这次规模下的倾向和不确定点。",
+        "body": "属于「网络与注意力」，依赖同一集合里的「网络块训什么」。\n\n学什么：分数仍是 $QK^{\\top}/\\sqrt{d}$。多头每头一套键值；分组查询让多组查询共享键值，省显存、改容量。一亿两千万参数和七十亿参数上，这个取舍不是同一道题。\n\n边界：公式对不等于结构对。选不选共享键值、头数和上下文，最后要人评估值不值得砸剩下的显卡小时。\n\n为什么：默认抄某一种实现，都会把第一次训练做成别人的配置，而不是你的预算。\n\n必要前置：同一集合里的「网络块训什么」。\n\n完成检验：说明两种实现在键值显存上的差别，并写出你这次规模下的倾向和不确定点。",
+        "tags": [
+          "目标所需"
+        ]
+      },
+      {
+        "id": "card-carrier-job-evidence",
+        "eyebrow": "学习载体",
+        "title": "词表与损失",
+        "summary": "第三个概念集合，同样依赖「规模与预算」，与「网络与注意力」并列。收的是词表如何划定、损失为何不降。只依赖规模集合里的词元预算，不必等结构集合选完。两路齐了，才进入「训练与验收」。",
+        "tags": [
+          "学习方向",
+          "阶段载体"
+        ]
+      },
+      {
+        "id": "card-llm-application-concept-5",
+        "eyebrow": "概念",
+        "title": "位置如何写入",
+        "summary": "属于「网络与注意力」，排在块结构和注意力实现之后。\n\n学什么：没有位置，交换两个词元分数会乱。训练里常见的是学习位置或旋转位置。位置编码改变谁对谁打分，因而改变可训练的归纳偏置。\n\n边界：不讲具体内核；不把推理时的键值缓存说成已经理解了的记忆。\n\n为什么：缺了它，结构图上的注意力像一组无序相似度，训出来的模型对词序不敏感。\n\n必要前置：同一集合里的「网络块训什么」和「注意力如何实现」。\n\n完成检验：说明为什么「猫吃鱼」和「鱼吃猫」必须在位置上可分，并指出这是训练时就要写入的结构，不是生成时再补。",
+        "body": "属于「网络与注意力」，排在块结构和注意力实现之后。\n\n学什么：没有位置，交换两个词元分数会乱。训练里常见的是学习位置或旋转位置。位置编码改变谁对谁打分，因而改变可训练的归纳偏置。\n\n边界：不讲具体内核；不把推理时的键值缓存说成已经理解了的记忆。\n\n为什么：缺了它，结构图上的注意力像一组无序相似度，训出来的模型对词序不敏感。\n\n必要前置：同一集合里的「网络块训什么」和「注意力如何实现」。\n\n完成检验：说明为什么「猫吃鱼」和「鱼吃猫」必须在位置上可分，并指出这是训练时就要写入的结构，不是生成时再补。",
+        "tags": [
+          "目标所需"
+        ]
+      },
+      {
+        "id": "card-llm-application-concept-6",
+        "eyebrow": "概念",
+        "title": "词表如何划定",
+        "summary": "属于「词表与损失」，依赖前置集合「规模与预算」。\n\n学什么：下一词分布定义在词表碎片上。字节对编码词表是训出来的，不是预处理细节。词表大小、中英文切分、特殊符号，都会改 $p(x_t\\mid x_{<t})$ 的支撑集。\n\n边界：不在这里做对齐；不把「用过现成词表」当成会训词表。\n\n为什么：词表错了，后面所有损失数字都在另一张表上。\n\n必要前置：「规模与预算」。不必等「网络与注意力」选完。本概念是「损失为何不降」的前置。\n\n完成检验：指出词表改变后，同一个汉字序列对应的词元数和损失项会怎样变，并说明为什么不能拿字符级损失和字节对损失直接比。",
+        "body": "属于「词表与损失」，依赖前置集合「规模与预算」。\n\n学什么：下一词分布定义在词表碎片上。字节对编码词表是训出来的，不是预处理细节。词表大小、中英文切分、特殊符号，都会改 $p(x_t\\mid x_{<t})$ 的支撑集。\n\n边界：不在这里做对齐；不把「用过现成词表」当成会训词表。\n\n为什么：词表错了，后面所有损失数字都在另一张表上。\n\n必要前置：「规模与预算」。不必等「网络与注意力」选完。本概念是「损失为何不降」的前置。\n\n完成检验：指出词表改变后，同一个汉字序列对应的词元数和损失项会怎样变，并说明为什么不能拿字符级损失和字节对损失直接比。",
+        "tags": [
+          "目标所需"
+        ]
+      },
+      {
+        "id": "card-llm-application-concept-7",
+        "eyebrow": "概念",
+        "title": "损失为何不降",
+        "summary": "属于「词表与损失」，依赖同一集合里的「词表如何划定」。\n\n学什么：训练损失是平均交叉熵。不降时，先分清是数据重复或泄漏、学习率、还是结构容量。梯度裁剪和学习率升温是稳定手段，不是结构本身。\n\n边界：损失曲线不能代替人判断该不该停这次训练。评测集污染是训练隐患，要请人评估。\n\n为什么：缺了它，所有失败都会被说成「模型不行」或「再加大模型」。\n\n必要前置：同一集合里的「词表如何划定」。本集合与「网络与注意力」一起，是「训练与验收」的前置。\n\n完成检验：给一条突然升高的损失，列出数据、学习率、批次和结构四类假说，并说明哪一类不能只靠再看一眼曲线决定。",
+        "body": "属于「词表与损失」，依赖同一集合里的「词表如何划定」。\n\n学什么：训练损失是平均交叉熵。不降时，先分清是数据重复或泄漏、学习率、还是结构容量。梯度裁剪和学习率升温是稳定手段，不是结构本身。\n\n边界：损失曲线不能代替人判断该不该停这次训练。评测集污染是训练隐患，要请人评估。\n\n为什么：缺了它，所有失败都会被说成「模型不行」或「再加大模型」。\n\n必要前置：同一集合里的「词表如何划定」。本集合与「网络与注意力」一起，是「训练与验收」的前置。\n\n完成检验：给一条突然升高的损失，列出数据、学习率、批次和结构四类假说，并说明哪一类不能只靠再看一眼曲线决定。",
+        "tags": [
+          "目标所需"
+        ]
+      },
+      {
+        "id": "card-carrier-job-deliver",
+        "eyebrow": "学习载体",
+        "title": "训练与验收",
+        "summary": "第四个概念集合，依赖前面三个集合都齐：规模与预算、网络与注意力、词表与损失。收的是怎样算跑通、失败怪哪里。对照失败模式验收，而不是只看最后一条损失。",
+        "tags": [
+          "学习方向",
+          "阶段载体"
+        ]
+      },
+      {
+        "id": "card-llm-application-concept-8",
+        "eyebrow": "概念",
+        "title": "怎样算跑通",
+        "summary": "属于「训练与验收」，依赖前三个概念集合都齐。\n\n学什么：跑通不是脚本没报错。要有可复现的配置、训练和验证损失、定期样本，以及一次最小评测。\n\n边界：这一课不发明新优化器。验证损失下降不等于能交付。\n\n为什么：缺了它，前面三个集合只是零件。\n\n必要前置：「规模与预算」「网络与注意力」「词表与损失」。本概念是「失败怪哪里」的前置。\n\n完成检验：列出这次训练的 $N$、$D$、上下文、注意力实现、词表和验证损失；缺一项就不算跑通。",
+        "body": "属于「训练与验收」，依赖前三个概念集合都齐。\n\n学什么：跑通不是脚本没报错。要有可复现的配置、训练和验证损失、定期样本，以及一次最小评测。\n\n边界：这一课不发明新优化器。验证损失下降不等于能交付。\n\n为什么：缺了它，前面三个集合只是零件。\n\n必要前置：「规模与预算」「网络与注意力」「词表与损失」。本概念是「失败怪哪里」的前置。\n\n完成检验：列出这次训练的 $N$、$D$、上下文、注意力实现、词表和验证损失；缺一项就不算跑通。",
+        "tags": [
+          "目标所需"
+        ]
+      },
+      {
+        "id": "card-llm-application-concept-9",
+        "eyebrow": "概念",
+        "title": "失败怪哪里",
+        "summary": "属于「训练与验收」，依赖同一集合里的「怎样算跑通」。\n\n学什么：当验证损失不降或样本乱码，能指出更像结构容量、词表、数据泄漏，还是超参把训练打飞。不把失败一律说成「再换个框架」。\n\n边界：理解验收不代替请人评估结构值不值得继续砸算力，也不代替亲历者讲损失突增那天发生了什么。\n\n为什么：缺了它，还只是会复述教程目录。\n\n必要前置：「怎样算跑通」。\n\n完成检验：给一次失败训练，说明它更像欠拟合、数据脏、学习率过大还是结构选错，并写出下一步是改规模、改实现，还是请人看配置。",
+        "body": "属于「训练与验收」，依赖同一集合里的「怎样算跑通」。\n\n学什么：当验证损失不降或样本乱码，能指出更像结构容量、词表、数据泄漏，还是超参把训练打飞。不把失败一律说成「再换个框架」。\n\n边界：理解验收不代替请人评估结构值不值得继续砸算力，也不代替亲历者讲损失突增那天发生了什么。\n\n为什么：缺了它，还只是会复述教程目录。\n\n必要前置：「怎样算跑通」。\n\n完成检验：给一次失败训练，说明它更像欠拟合、数据脏、学习率过大还是结构选错，并写出下一步是改规模、改实现，还是请人看配置。",
+        "tags": [
+          "目标所需"
+        ]
+      },
+      {
+        "id": "card-start",
+        "eyebrow": "路线起点 · 不是载体",
+        "title": "从这里出发",
+        "summary": "已掌握：会写多头注意力和训练循环，也在单卡上跑过小型网络；用过聊天模型。还不会按固定算力在参数和词元之间做计算最优分配。下一座圆台才是第一个概念集合「规模与预算」，第一课是「计算最优如何定」。",
+        "tags": [
+          "开始"
+        ]
+      },
+      {
+        "id": "card-goal",
+        "eyebrow": "学习目标 · 不是载体",
+        "title": "训出一个能验收的小模型",
+        "summary": "能按算力写出参数和词元，选好词表与注意力实现，跑完一次预训练，并用验证损失和样本做最小验收。四个概念集合必须按前置关系走完：规模与预算 → 网络与注意力、词表与损失 → 训练与验收。结构是否值得继续砸算力，要另请人评估。",
+        "tags": [
+          "路线终点"
+        ]
+      }
+    ],
+    "resources": [
+      {
+        "id": "resource-llm-application-concept-1",
+        "href": "#session-learning"
+      },
+      {
+        "id": "resource-llm-application-concept-2",
+        "href": "#session-learning"
+      },
+      {
+        "id": "resource-llm-application-concept-3",
+        "href": "#session-learning"
+      },
+      {
+        "id": "resource-llm-application-concept-4",
+        "href": "#session-learning"
+      },
+      {
+        "id": "resource-llm-application-concept-5",
+        "href": "#session-learning"
+      },
+      {
+        "id": "resource-llm-application-concept-6",
+        "href": "#session-learning"
+      },
+      {
+        "id": "resource-llm-application-concept-7",
+        "href": "#session-learning"
+      },
+      {
+        "id": "resource-llm-application-concept-8",
+        "href": "#session-learning"
+      },
+      {
+        "id": "resource-llm-application-concept-9",
+        "href": "#session-learning"
+      }
+    ],
+    "actions": [
+      {
+        "id": "action-llm-application-concept-1",
+        "kind": "open-resource",
+        "label": "进入学习",
+        "resourceId": "resource-llm-application-concept-1",
+        "target": "self"
+      },
+      {
+        "id": "action-llm-application-concept-2",
+        "kind": "open-resource",
+        "label": "进入学习",
+        "resourceId": "resource-llm-application-concept-2",
+        "target": "self"
+      },
+      {
+        "id": "action-llm-application-concept-3",
+        "kind": "open-resource",
+        "label": "进入学习",
+        "resourceId": "resource-llm-application-concept-3",
+        "target": "self"
+      },
+      {
+        "id": "action-llm-application-concept-4",
+        "kind": "open-resource",
+        "label": "进入学习",
+        "resourceId": "resource-llm-application-concept-4",
+        "target": "self"
+      },
+      {
+        "id": "action-llm-application-concept-5",
+        "kind": "open-resource",
+        "label": "进入学习",
+        "resourceId": "resource-llm-application-concept-5",
+        "target": "self"
+      },
+      {
+        "id": "action-llm-application-concept-6",
+        "kind": "open-resource",
+        "label": "进入学习",
+        "resourceId": "resource-llm-application-concept-6",
+        "target": "self"
+      },
+      {
+        "id": "action-llm-application-concept-7",
+        "kind": "open-resource",
+        "label": "进入学习",
+        "resourceId": "resource-llm-application-concept-7",
+        "target": "self"
+      },
+      {
+        "id": "action-llm-application-concept-8",
+        "kind": "open-resource",
+        "label": "进入学习",
+        "resourceId": "resource-llm-application-concept-8",
+        "target": "self"
+      },
+      {
+        "id": "action-llm-application-concept-9",
+        "kind": "open-resource",
+        "label": "进入学习",
+        "resourceId": "resource-llm-application-concept-9",
+        "target": "self"
+      }
+    ]
+  },
+  "presentation": {
+    "layout": {
+      "direction": "top-to-bottom",
+      "subjectGap": 3.75,
+      "layerGap": 3.5,
+      "conceptGap": 3.75,
+      "conceptColumnGap": 4.4
+    }
+  }
+}

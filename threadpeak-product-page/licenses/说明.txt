@@ -1,0 +1,6 @@
+这里保存本页实际打包进 runtime/ 的开源库许可证，以及随页面分发的字体与 Rive 运行时声明。
+
+包含 React、Three.js、Remotion、KaTeX、Rive，以及阅读渲染用到的 react-markdown / remark / mdast / micromark 依赖树。
+它不是页面内容，也不是需要安装的软件。浏览器不会加载这个目录。
+无需操作这些文件；复制或分发产品页时随文件夹一起保留即可。
+上一级 index.html 是页面入口。

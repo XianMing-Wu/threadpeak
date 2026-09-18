@@ -1,0 +1,45 @@
+.learn-card-ink {
+  overflow: hidden;
+}
+
+.learn-product-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.learn-evidence-label {
+  flex-shrink: 0;
+}
+
+.learn-product-ui .lp-graph-card {
+  height: auto;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.learn-product-ui .lp-graph-card > h3 {
+  min-height: 0;
+}
+
+.learn-product-ui .lp-graph-card > .lp-node-prose,
+.learn-product-ui .lp-graph-card > .lp-author-content {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+}
+
+.learn-product-ui .lp-graph-card > .lp-node-sources {
+  margin-top: auto;
+}
+
+.learning-scene[data-overview="true"] .learn-card-ink {
+  font-size: 15px;
+}
+
+.learn-card-ink[data-expanded="true"] .lp-graph-card > .lp-node-prose,
+.learn-card-ink[data-expanded="true"] .lp-graph-card > .lp-author-content {
+  overflow: auto;
+}

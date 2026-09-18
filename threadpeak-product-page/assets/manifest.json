@@ -1,0 +1,863 @@
+{
+  "generatedAt": "2026-09-18T03:24:29.485Z",
+  "files": {
+    "assets/fonts/KaTeX_AMS-Regular.ttf": {
+      "mime": "font/ttf",
+      "bytes": 63632,
+      "sha256": "68534840bcfdd2bffb6f0e8deb48684dd01e7f04ea2813267577afb906de1d13",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_AMS-Regular.woff": {
+      "mime": "font/woff",
+      "bytes": 33516,
+      "sha256": "30da91e84c893f875e252689faebdc590b2871145e8adc7f9a9d4dbd8ce0b251",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_AMS-Regular.woff2": {
+      "mime": "font/woff2",
+      "bytes": 28076,
+      "sha256": "0cdd387c9590a1a9f9794560022dbb59654a7d86f187aa0c81495ad42d3a7308",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Caligraphic-Bold.ttf": {
+      "mime": "font/ttf",
+      "bytes": 12368,
+      "sha256": "07d8e303ce4fc12b4bb54f1004170dd190a1f3db45d400fe68060df3e0897268",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Caligraphic-Bold.woff": {
+      "mime": "font/woff",
+      "bytes": 7716,
+      "sha256": "1ae6bd7475590e97e7f145a89e09ccde322f7a6bc0b91607b1c8b8ee28290fed",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Caligraphic-Bold.woff2": {
+      "mime": "font/woff2",
+      "bytes": 6912,
+      "sha256": "de7701e42cf1f4cf0b766c03fb27977207eee2f4fd5d76fa82188406da43ea4c",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Caligraphic-Regular.ttf": {
+      "mime": "font/ttf",
+      "bytes": 12344,
+      "sha256": "ed0b74372feefcbb9c0666b2e210da37b7e49fa7fbbf3eeb11db5f693dacfbb7",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Caligraphic-Regular.woff": {
+      "mime": "font/woff",
+      "bytes": 7656,
+      "sha256": "3398dd02302557a793f2863f88e02d96ce10df2abffa07c8e9fa90775116e65c",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Caligraphic-Regular.woff2": {
+      "mime": "font/woff2",
+      "bytes": 6908,
+      "sha256": "5d53e70ad607c2352162dec9e0923fb54ecdafaccbf604cd8dcf7d00facb989b",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Fraktur-Bold.ttf": {
+      "mime": "font/ttf",
+      "bytes": 19584,
+      "sha256": "9163df9c7122432e6495b4229fa9071cf9ae86a758ae5efc4924ec2e1a6dbce1",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Fraktur-Bold.woff": {
+      "mime": "font/woff",
+      "bytes": 13296,
+      "sha256": "9be7ceb88004ab8ad124082246fbfcca4091e36385d4ec6ed1df67375dad50fb",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Fraktur-Bold.woff2": {
+      "mime": "font/woff2",
+      "bytes": 11348,
+      "sha256": "74444efd593c005e3f4573b44524704c0af0a937fe911cca9e94068d0d140d3f",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Fraktur-Regular.ttf": {
+      "mime": "font/ttf",
+      "bytes": 19572,
+      "sha256": "1e6f9579e90e2cac37f8f60a597c436e075c114385652b7cbeb0dec0421291b3",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Fraktur-Regular.woff": {
+      "mime": "font/woff",
+      "bytes": 13208,
+      "sha256": "5e28753be717dac97f559f49bc10be9cf3c124ddcabda6659d11cb68febc6463",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Fraktur-Regular.woff2": {
+      "mime": "font/woff2",
+      "bytes": 11316,
+      "sha256": "51814d270d06ff0255dba0799994fa4d8c84d11f09951d47595f4abb1f3602dc",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Main-Bold.ttf": {
+      "mime": "font/ttf",
+      "bytes": 51336,
+      "sha256": "138ac28d1663b3037e9c5f52371fa5c63d8324f4a38d22cd573e6ea3a3fd0cf8",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Main-Bold.woff": {
+      "mime": "font/woff",
+      "bytes": 29912,
+      "sha256": "c76c5d696297d51b9cb1639c7da4334f0e7dec81b42b11213b5e25ef671bb822",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Main-Bold.woff2": {
+      "mime": "font/woff2",
+      "bytes": 25324,
+      "sha256": "0f60d1b897938ec918c8ce073092411baf9438f6739465693ff18b0f9d20b021",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Main-BoldItalic.ttf": {
+      "mime": "font/ttf",
+      "bytes": 32968,
+      "sha256": "70ee1f64a20f2048c21940ef46d0144fd215baa953ca69afd1e31e98544f708f",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Main-BoldItalic.woff": {
+      "mime": "font/woff",
+      "bytes": 19412,
+      "sha256": "a6f7ec0d846ac7ad975adb8959c37ed49b94acbc4ae436db9ce9e20287e4a64c",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Main-BoldItalic.woff2": {
+      "mime": "font/woff2",
+      "bytes": 16780,
+      "sha256": "99cd42a3c072d918f2f44984a807cf7aa16e13545fd0875fc07c6c65f99e715b",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Main-Italic.ttf": {
+      "mime": "font/ttf",
+      "bytes": 33580,
+      "sha256": "0d85ae7cc30f23790a7f1a58c4a112fdca8aae769b6ba11429af1d98b1b6cb3a",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Main-Italic.woff": {
+      "mime": "font/woff",
+      "bytes": 19676,
+      "sha256": "f1d6ef86f3b11a528bd5185199bd2443ecb2b0dead96d88674b5a2c12be24bdf",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Main-Italic.woff2": {
+      "mime": "font/woff2",
+      "bytes": 16988,
+      "sha256": "97479ca6cce906abc961ecac96faa5f9ca2e61b8e7670d475826bcdee9a7c267",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Main-Regular.ttf": {
+      "mime": "font/ttf",
+      "bytes": 53580,
+      "sha256": "d0332f52868370fd83ae7fa46470f90c8f2eab2fcf12bc4f88080b340c95a830",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Main-Regular.woff": {
+      "mime": "font/woff",
+      "bytes": 30772,
+      "sha256": "c6368d87e8a1a3a5d337623d83d8dc4b868f242a9ad476237d6f8d1e0f168cdc",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Main-Regular.woff2": {
+      "mime": "font/woff2",
+      "bytes": 26272,
+      "sha256": "c2342cd8b869e01752a9321dc17213fc40d4d04c79688c1d43f2cf316abd7866",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Math-BoldItalic.ttf": {
+      "mime": "font/ttf",
+      "bytes": 31196,
+      "sha256": "f9377ab0271cda59af24bcffbd46a4d0c8a3572ffafdbb38de2ad5ea7b0d5ee5",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Math-BoldItalic.woff": {
+      "mime": "font/woff",
+      "bytes": 18668,
+      "sha256": "850c0af5c2238497febaf5e461d880bf458c341f42f4f330f1b1ab5698b1998e",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Math-BoldItalic.woff2": {
+      "mime": "font/woff2",
+      "bytes": 16400,
+      "sha256": "dc47344dbb6cb5b655c8460d561f4df5f501b90c804ad3c6cec65fe322351ab1",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Math-Italic.ttf": {
+      "mime": "font/ttf",
+      "bytes": 31308,
+      "sha256": "08ce98e51b04d58945a301e639e02b6998af29fdfd61a7b8afdd07bbfc479d4a",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Math-Italic.woff": {
+      "mime": "font/woff",
+      "bytes": 18748,
+      "sha256": "8a8d244581371912b8f3f5a23e2437cb2a59cd9bcaebb0346e722c05737a2571",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Math-Italic.woff2": {
+      "mime": "font/woff2",
+      "bytes": 16440,
+      "sha256": "7af58c5ec8f132a2ddde9027c6d7814decce4d3b822a11192a42a20e2e973264",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_SansSerif-Bold.ttf": {
+      "mime": "font/ttf",
+      "bytes": 24504,
+      "sha256": "1ece03f79f95277d57dc7f6b435a74e1379b0d46104a8530286b60ff49369ea0",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_SansSerif-Bold.woff": {
+      "mime": "font/woff",
+      "bytes": 14408,
+      "sha256": "ece03cfd83e22c212cdef66feb8442d25a083beb988db3f1883f3f9738d750ba",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_SansSerif-Bold.woff2": {
+      "mime": "font/woff2",
+      "bytes": 12216,
+      "sha256": "e99ae51144bf1232efcc1bfe5add36262c6866b0faab24fa75740e1b98577a62",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_SansSerif-Italic.ttf": {
+      "mime": "font/ttf",
+      "bytes": 22364,
+      "sha256": "3931dd81faed86ba021bb2bbdc36f5bed9a38d6b4f4077aca59b265aa1b02083",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_SansSerif-Italic.woff": {
+      "mime": "font/woff",
+      "bytes": 14112,
+      "sha256": "91ee67500cc0129aa0ace3ac5c61ff1692102f0f31d02b69347fba35dcb75bf2",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_SansSerif-Italic.woff2": {
+      "mime": "font/woff2",
+      "bytes": 12028,
+      "sha256": "00b26ac825e2095056396e0553b8ac26d3f8ad158c3826e28b4c45b385c4714a",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_SansSerif-Regular.ttf": {
+      "mime": "font/ttf",
+      "bytes": 19436,
+      "sha256": "f36ea897e19f4a2e571d1e900e4e3710e438deb05a842486045ba0a3e616a4ad",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_SansSerif-Regular.woff": {
+      "mime": "font/woff",
+      "bytes": 12316,
+      "sha256": "11e4dc8a6471ff6d6ee561d53d10fde8f7489e798257ff449c5d37c197435605",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_SansSerif-Regular.woff2": {
+      "mime": "font/woff2",
+      "bytes": 10344,
+      "sha256": "68e8c73ef42afd3ccec58bf0fba302cce448938e7fc020a5e31f8a952eee1342",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Script-Regular.ttf": {
+      "mime": "font/ttf",
+      "bytes": 16648,
+      "sha256": "1c67f068fea8bb09bf099c088b1cf64bd27516a6e07f4684344873564bb66a67",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Script-Regular.woff": {
+      "mime": "font/woff",
+      "bytes": 10588,
+      "sha256": "d96cdf2b3bdd4d64a8fd5f74a4c467f123a8a73931cd435889f08ffaf9bf947a",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Script-Regular.woff2": {
+      "mime": "font/woff2",
+      "bytes": 9644,
+      "sha256": "036d4e95149b69ff9bcc0cd55771efeb25ffa3947293e69acd78d5ac328c684b",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Size1-Regular.ttf": {
+      "mime": "font/ttf",
+      "bytes": 12228,
+      "sha256": "95b6d2f1a50173bfedb8c63e1d1c99b10427d0a4df4201cb44513b226951a22b",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Size1-Regular.woff": {
+      "mime": "font/woff",
+      "bytes": 6496,
+      "sha256": "c943cc986384f59e86bea5fd7dc50a9c4dfe567a7c05eb40d6790720dead97c9",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Size1-Regular.woff2": {
+      "mime": "font/woff2",
+      "bytes": 5468,
+      "sha256": "6b47c40166b6dbe21a5dfca7718413f2147fd2399be1ba605d8ad39cedf25dfe",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Size2-Regular.ttf": {
+      "mime": "font/ttf",
+      "bytes": 11508,
+      "sha256": "a6b2099fb555c60e3a0db3a08842ebf1d732c6eb4e4bf44913613bed4fc4e39b",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Size2-Regular.woff": {
+      "mime": "font/woff",
+      "bytes": 6188,
+      "sha256": "2014c523c3210bcc166648c4d4cc57f05b747df07a24277bf71c51e67dc79e3d",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Size2-Regular.woff2": {
+      "mime": "font/woff2",
+      "bytes": 5208,
+      "sha256": "d04c54219f9eaec6d4d4fd42dfb28785975a4794d6b2fc71e566b9cd6db842dd",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Size3-Regular.ttf": {
+      "mime": "font/ttf",
+      "bytes": 7588,
+      "sha256": "500e04d54f0d51666332c9d2089aa803be22aa878eca539e59fa53c6e522b082",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Size3-Regular.woff": {
+      "mime": "font/woff",
+      "bytes": 4420,
+      "sha256": "6ab6b62e9b62dae2c00dd90f791bd10950be0ecc3490d7d6045f51c2e8fe0949",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Size3-Regular.woff2": {
+      "mime": "font/woff2",
+      "bytes": 3624,
+      "sha256": "73d591271b1604960cb10bb90fee021670af7297017e0e98480b332d11f51995",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Size4-Regular.ttf": {
+      "mime": "font/ttf",
+      "bytes": 10364,
+      "sha256": "c647367d1dd4e162468717d020e1fc0f1dc5c26ebfdffbe55261713bf88c5877",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Size4-Regular.woff": {
+      "mime": "font/woff",
+      "bytes": 5980,
+      "sha256": "99f9c6750b489c9462bf04900bd3f939df9b829339daaaaa99ef5495cdddea58",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Size4-Regular.woff2": {
+      "mime": "font/woff2",
+      "bytes": 4928,
+      "sha256": "a4af7d414440a1c1790825cfb700cf9cf43b0f2c4b04f0ebc523011ad9853ec0",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Typewriter-Regular.ttf": {
+      "mime": "font/ttf",
+      "bytes": 27556,
+      "sha256": "f01f3e87d9c6a61c0c081ceb577abd864eb00a612f7ac1620dd6915fad2ef5aa",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Typewriter-Regular.woff": {
+      "mime": "font/woff",
+      "bytes": 16028,
+      "sha256": "e14fed02b1aba7ce9f5afd5844b5d0321b22351febc720e0de8b8723527609f7",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/KaTeX_Typewriter-Regular.woff2": {
+      "mime": "font/woff2",
+      "bytes": 13568,
+      "sha256": "71d517d67827787cfabdf186914cc3358eda539e37931941f2b2fd4a21f68c0b",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/fonts/card-sans.woff2": {
+      "mime": "font/woff2",
+      "bytes": 65744,
+      "sha256": "8b5ff15c6ec178792e775e5b47a87645ad817816392cde89ac0980ed36abf976",
+      "offlineFile": "assets/offline/fonts.css"
+    },
+    "assets/images/authors/DFires.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 2223,
+      "sha256": "35fc8523e3e4fca510f5ad0cb3626e5aff054a19c4a3493d1740a7a65c4bc1df",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/FireMan.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 21084,
+      "sha256": "ca9a2fe9cc657786a2b4a9c48e6749d9195a854c61522f6c8e96c4beb1aba2a3",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/FrontierAIHub.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 2419,
+      "sha256": "c551290ccf94b9e02b3e5e38a87bd60da670db0b777a8bceaf1e6f53152efcb2",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/Json.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 3195,
+      "sha256": "dcfb1a6231e99942ad5c1057c019434b6d28ab6212db5dc1c37d540f538e4cf4",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/Trancy-Wang.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 2406,
+      "sha256": "55cb8800d9b66b4aa04ce86677f0e5f39921e38226696a3dec34950e8a979032",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/da-mianyang.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 10881,
+      "sha256": "faf3481397fa55bc380f21efb14470e17c12cc261c84cc46d80aa4cc0ca523b9",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/data-ai-fan.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 1503,
+      "sha256": "f2c521f4edc5ffcc5daa9112fe389197af3603cabb0efe963c3ee9d061d108a3",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/fanstuck.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 2214,
+      "sha256": "9c93dcb8a2ce48d80592e40cac1ae9139c97234a0845cf204fa92c3a84a76fce",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/follow-code.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 2065,
+      "sha256": "e180eed974a9d013ad26bf11a18a273a80008b0dee59d101058c1ca666d1f585",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/guima-mark.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 20004,
+      "sha256": "03b3da549861529b8671238193d834464e223e5458d706825738951cf0a527fd",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/hanjiang-guying.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 14082,
+      "sha256": "1492559e623e817a09b3121613d093c8bf146ea9d2439a11d2642a8cac924a4f",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/haohaoyong-ai.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 3031,
+      "sha256": "c6d7099dee84895258f293d35c3c4d7e40f38aeab08b11918ac5f10547752e24",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/it-guoguo.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 2618,
+      "sha256": "138d9003721ebaeb7b32547fde90a10f9b571ad0bab7bbb48bc8e92ef605df7e",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/javaagent-architect.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 3158,
+      "sha256": "3b08354136c7cfabb9096d986caa0dffedaecdb4211ce3c8a16cfe07cb7b7863",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/jiejie.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 3152,
+      "sha256": "683d607ba2a12327fc0b4a18c334f5843893ec4ff311c4f78eb5bf6aa5a2ffa7",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/letsgetai.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 2499,
+      "sha256": "dcacb88a86a764aead2409b61dc495d3dcea7e64c911e9db2b640c07e1e172f2",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/li-dongpo.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 2513,
+      "sha256": "6ca37dde12461f8c5c8d9c418fcb412f472d2e804e7892781cc7e714580fa076",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/luoxiansheng.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 1748,
+      "sha256": "267c7d25f5b21ce14b8555c0690feefe2a09cce15ea33d0cc019b1343ce5428f",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/mie-xiaoyang.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 1708,
+      "sha256": "cb3b6fbbfb9643255955d48903b78533ddb46b8c186e1a8300a95c4eb487105e",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/piziju.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 2342,
+      "sha256": "f898d5d519ef3164dc65fc9a13336b533d6b905f6f4a6f8fdfbef7f47cf1b8dd",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/pp22dds.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 16700,
+      "sha256": "c32be8ca6064f2fe4524aae942b2ac729eb9b6b5675a0d954786ed36692d2605",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/qiwu.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 18569,
+      "sha256": "e2ca6e43052c0ff3feccae637507ad656e2833014ff81ff3ce57c4c98c1299a4",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/roushan.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 3416,
+      "sha256": "4b41c678e400cc6beec0cb1ae693149e3fd890bf760c01787028e32ee34a2d26",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/sangeng-denghuo.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 1848,
+      "sha256": "f67674a77a5a3138378eca546d981cd7a1063659b86be59c2b0218808f3db798",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/smartcode-dewu.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 5674,
+      "sha256": "be4fba60d64ef981390fbdf3063e41aef5914fa43c4e855c1a2809b69ba27fe5",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/stivensss.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 2598,
+      "sha256": "1aa61621ddea8f77f879fb937a9c15c659241e50d3afecbf05e9c6da956bb4e2",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/tan-sir.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 3256,
+      "sha256": "4745876587bccc6c9489921bb411154e7742c2574ddacfd960e07431e39ba3df",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/tencent-workbuddy.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 15822,
+      "sha256": "cee60698664e0938ae905570a61474e527980df40781b3cd6045ec7620325199",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/token-jujin.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 12542,
+      "sha256": "046baadfdc9ee06b722b9ab31cc3b467af0bd67ad3d5f907a668e15823e43af1",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/tuoni.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 1837,
+      "sha256": "ee8e5d5cdb9c2e8e10226470bcc15b3e3a44e6cb097d96f0303593ee2e0663e5",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/wei12580.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 17437,
+      "sha256": "ca52098500434996f1f524f581048444842ce78309172aa4ccbeb42f4b55fbad",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/wu-shixiong.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 2491,
+      "sha256": "a5d0e536183f28068dca11552f552a89da57e74609107361033f014e408bcbb6",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/wubian-de-jie.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 2924,
+      "sha256": "6249f955f2513327ae74a016716c91c447efd019686cba731d8fecc50bbcce49",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/xiancai.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 1691,
+      "sha256": "b7d61c88bebdf8f37209cdfa75f6a4f456c9e047193d5043e30c4b1ad9980eb3",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/xiaoyemaomao.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 2693,
+      "sha256": "5db721ea443d47e3085e73fb7bb66361f29fce975b47cbe0729e781361ac1c82",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/xu-xiaoxi.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 15925,
+      "sha256": "9fbfa8c706402fd5308d1f07843623769f637913b55f69bb2c89d41477ed9ffa",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/yangwang-xingkong.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 1461,
+      "sha256": "16d20e07c4efe58a7c5611c10e66ddbd1a801178cd7cb793e3d85d679fbc53be",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/yizhanlu.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 3798,
+      "sha256": "715776dff0b826a9ad91bfeaa865ea5be3064d8826c748fb9ad18ffebc8356fe",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/yu-yang.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 14857,
+      "sha256": "3366c0e3512d85f1cc3677fc266e9e183386b83e5244f23164da06a557f6f39b",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/zhang-shanyou.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 2549,
+      "sha256": "30ab666dbb07370eff5447f0fe1fb2edd8f041964dc37d9d68f32242b594b87b",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/authors/ziyou-luffy.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 2819,
+      "sha256": "2a9781b573bf0a0bf6e8db226dcc047ef434765d3054a4cc170d89d78a674c80",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/characters/designer.webp": {
+      "mime": "image/webp",
+      "bytes": 25914,
+      "sha256": "b062018d5654ff143706fcfce7c23af63577d7979a9788c19f9e7a2f9402b2b4",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/characters/developer.webp": {
+      "mime": "image/webp",
+      "bytes": 21516,
+      "sha256": "4b6caed742c83b2164afe177d941ea3102e46cd6cdedbc7bf3715431b28018ea",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/characters/engineer.webp": {
+      "mime": "image/webp",
+      "bytes": 27082,
+      "sha256": "10c881a852c08d4ebdfbe0a4a3910d73653d2d330ae71803a144426caa4cfcf0",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/characters/graduate.webp": {
+      "mime": "image/webp",
+      "bytes": 23632,
+      "sha256": "046366cc9b14e1b8c62115bfae2ede124f8b5829df4312154d52249f12547fb9",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/characters/reference.webp": {
+      "mime": "image/webp",
+      "bytes": 11398,
+      "sha256": "06860ad04f0d3ee97f673f80c588fe81584a70d96d3289ce726a087b660497f6",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/characters/researcher.webp": {
+      "mime": "image/webp",
+      "bytes": 24020,
+      "sha256": "0a58fef4fce232abbb2b4aacbc6d62b3b4177420c40a37d47fb8ff84d9ab94ab",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/characters/teacher.webp": {
+      "mime": "image/webp",
+      "bytes": 22156,
+      "sha256": "a89987ce344483cd73720ad56ee80bd16d6c2f37a68ff48df4d4df2b42d02068",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/illustrations/kanshan-avatar.png": {
+      "mime": "image/png",
+      "bytes": 50048,
+      "sha256": "39640106ced22fdf5b45cc1fdbded0e30204484e9e250bb6761451a96a74ddbb",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/illustrations/kanshan-ink.png": {
+      "mime": "image/png",
+      "bytes": 777574,
+      "sha256": "63eb5ee22dd9ad9413c316ecb0f16e02c65e8690a2206aefb235f6f529e30b37",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/illustrations/pitch-poster.jpg": {
+      "mime": "image/jpeg",
+      "bytes": 550601,
+      "sha256": "7545158775e2149c966d7351da19461490ebfd8a29d3450bfc06de95dd419568",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/images/illustrations/threadpeak-icon.png": {
+      "mime": "image/png",
+      "bytes": 16131,
+      "sha256": "bb64aad0d9cf320e15475ca0cea38633682928d28d67b2cc20cc73cd15ef2621",
+      "offlineFile": "assets/offline/images.js"
+    },
+    "assets/lettering/attention-formula.svg": {
+      "mime": "image/svg+xml",
+      "bytes": 23015,
+      "sha256": "2cee2d826dd0d45541a46022a6c0fd53d71c8220651006cf10aafd3935aca66d",
+      "offlineFile": "assets/offline/lettering.js"
+    },
+    "assets/lettering/network-topic-0.svg": {
+      "mime": "image/svg+xml",
+      "bytes": 30845,
+      "sha256": "dae01d7e79024b60e266d14351071d888b4fb661b71e2ba902feb9e25fd64995",
+      "offlineFile": "assets/offline/lettering.js"
+    },
+    "assets/lettering/network-topic-1.svg": {
+      "mime": "image/svg+xml",
+      "bytes": 29344,
+      "sha256": "f42cd807a171c2b79db7bc0d42509c59064edc59acf20f233cbf7a3ae0d157d8",
+      "offlineFile": "assets/offline/lettering.js"
+    },
+    "assets/lettering/network-topic-2.svg": {
+      "mime": "image/svg+xml",
+      "bytes": 26039,
+      "sha256": "a873358c0a2c9ba3940c0530be1eb00de379d219bca946cae2145641a15328ab",
+      "offlineFile": "assets/offline/lettering.js"
+    },
+    "assets/lettering/network-topic-3.svg": {
+      "mime": "image/svg+xml",
+      "bytes": 26316,
+      "sha256": "a97cca77335122db0ffed4583bef24d6f220878f8c22be78c1ddef947a6da551",
+      "offlineFile": "assets/offline/lettering.js"
+    },
+    "assets/lettering/route/carrier-0.svg": {
+      "mime": "image/svg+xml",
+      "bytes": 30845,
+      "sha256": "dae01d7e79024b60e266d14351071d888b4fb661b71e2ba902feb9e25fd64995",
+      "offlineFile": "assets/offline/lettering.js"
+    },
+    "assets/lettering/route/carrier-1.svg": {
+      "mime": "image/svg+xml",
+      "bytes": 29344,
+      "sha256": "f42cd807a171c2b79db7bc0d42509c59064edc59acf20f233cbf7a3ae0d157d8",
+      "offlineFile": "assets/offline/lettering.js"
+    },
+    "assets/lettering/route/carrier-2.svg": {
+      "mime": "image/svg+xml",
+      "bytes": 26039,
+      "sha256": "a873358c0a2c9ba3940c0530be1eb00de379d219bca946cae2145641a15328ab",
+      "offlineFile": "assets/offline/lettering.js"
+    },
+    "assets/lettering/route/carrier-3.svg": {
+      "mime": "image/svg+xml",
+      "bytes": 26316,
+      "sha256": "a97cca77335122db0ffed4583bef24d6f220878f8c22be78c1ddef947a6da551",
+      "offlineFile": "assets/offline/lettering.js"
+    },
+    "assets/lettering/route/concept-0.svg": {
+      "mime": "image/svg+xml",
+      "bytes": 47499,
+      "sha256": "1056464e4d37658ca8440a816f7cdb8ab7c2599d0362e624e7734df61fefb889",
+      "offlineFile": "assets/offline/lettering.js"
+    },
+    "assets/lettering/route/concept-1.svg": {
+      "mime": "image/svg+xml",
+      "bytes": 39934,
+      "sha256": "cbfaaf70dac8af7dbfefb94c6ee4e85c71df9aeb823ebf1342944e292d860aff",
+      "offlineFile": "assets/offline/lettering.js"
+    },
+    "assets/lettering/route/concept-2.svg": {
+      "mime": "image/svg+xml",
+      "bytes": 31526,
+      "sha256": "da92874dad1983e58f4e3e45e1c3ac45ef26133d23941c4699913a422b680504",
+      "offlineFile": "assets/offline/lettering.js"
+    },
+    "assets/lettering/route/concept-3.svg": {
+      "mime": "image/svg+xml",
+      "bytes": 42687,
+      "sha256": "8221c988c5ce279bb3b9d898948239d2a88d4e83cb19cd5b78215f73a062cd7d",
+      "offlineFile": "assets/offline/lettering.js"
+    },
+    "assets/lettering/route/concept-4.svg": {
+      "mime": "image/svg+xml",
+      "bytes": 33093,
+      "sha256": "ee499a9cbd97c0da738a5494c9eca293c04a8b51e86338100c0c817bd31f7331",
+      "offlineFile": "assets/offline/lettering.js"
+    },
+    "assets/lettering/route/concept-5.svg": {
+      "mime": "image/svg+xml",
+      "bytes": 37007,
+      "sha256": "44f1dc1b790d76ffa0dfba50960bfbebda27026926e5af23d9c7ab542e84a544",
+      "offlineFile": "assets/offline/lettering.js"
+    },
+    "assets/lettering/route/concept-6.svg": {
+      "mime": "image/svg+xml",
+      "bytes": 38099,
+      "sha256": "3b6389ef5ab5e76076c6c768d2d0808e14e1c10208ffeb5f4ca730c561f2bdf1",
+      "offlineFile": "assets/offline/lettering.js"
+    },
+    "assets/lettering/route/concept-7.svg": {
+      "mime": "image/svg+xml",
+      "bytes": 43505,
+      "sha256": "9424452716c0650bfee3bb582bc530b89e059835442ffff72e7a4fee9ad366cf",
+      "offlineFile": "assets/offline/lettering.js"
+    },
+    "assets/lettering/route/concept-8.svg": {
+      "mime": "image/svg+xml",
+      "bytes": 35327,
+      "sha256": "8a83d5c54cccdf19333654f5bc09fae4c4aaeb3dcc930cebfb4611e47fb7a6fc",
+      "offlineFile": "assets/offline/lettering.js"
+    },
+    "assets/models/liu-kanshan-idle.glb": {
+      "mime": "model/gltf-binary",
+      "bytes": 44600,
+      "sha256": "004e767bcf5af1722acce85bcbe4ed194a2d1ba01b5751b27c492be6a0d7fd45",
+      "offlineFile": "assets/offline/models.js"
+    },
+    "assets/models/liu-kanshan-run.glb": {
+      "mime": "model/gltf-binary",
+      "bytes": 908900,
+      "sha256": "c6abc6d57ac5d48ea10d712aaa41dcd45121e997bbd5ed21ec37364d637e6e8c",
+      "offlineFile": "assets/offline/models.js"
+    },
+    "assets/rive/01-engineer.riv": {
+      "mime": "application/octet-stream",
+      "bytes": 3254079,
+      "sha256": "6c6ad30c5fc20139be4c303134e810b65d142bec6e83dbb8089b5b6ec198b839",
+      "offlineFile": "assets/offline/characters.js"
+    },
+    "assets/rive/02-developer.riv": {
+      "mime": "application/octet-stream",
+      "bytes": 1943353,
+      "sha256": "2bf797d3143de0a0ecb7f5a2c643fa249cf7101cd86582148cda2d6eff415260",
+      "offlineFile": "assets/offline/characters.js"
+    },
+    "assets/rive/03-student.riv": {
+      "mime": "application/octet-stream",
+      "bytes": 2128274,
+      "sha256": "671264360d834874eda9d7917b59c11d8c9c62d915e1f1a5fc694c3c863db64a",
+      "offlineFile": "assets/offline/characters.js"
+    },
+    "assets/rive/04-designer.riv": {
+      "mime": "application/octet-stream",
+      "bytes": 2243238,
+      "sha256": "3eff06908bf71f828db97b95978cf15d536bb8909126a792aaa6402c4fca0162",
+      "offlineFile": "assets/offline/characters.js"
+    },
+    "assets/rive/05-teacher.riv": {
+      "mime": "application/octet-stream",
+      "bytes": 2311073,
+      "sha256": "ab0a28407a0fad6194d57abb5ec463b062d93a46e29afdf98092be76ecf2e379",
+      "offlineFile": "assets/offline/characters.js"
+    },
+    "assets/rive/06-researcher.riv": {
+      "mime": "application/octet-stream",
+      "bytes": 2266617,
+      "sha256": "23f264b8a9f0879126cc7a6235bf546171bbf1b8f81a5d5d0fd3934ae2020211",
+      "offlineFile": "assets/offline/characters.js"
+    },
+    "assets/rive/reference.riv": {
+      "mime": "application/octet-stream",
+      "bytes": 81042,
+      "sha256": "f064f4cfa73bcabaff7a6970cf0032792018c4b7a237f1f320822bc09066e030",
+      "offlineFile": "assets/offline/characters.js"
+    },
+    "assets/wasm/rive.wasm": {
+      "mime": "application/wasm",
+      "bytes": 1892288,
+      "sha256": "8b48d33a20b89809228c8a4e27d8ed9a72c05c95de01c2eda816409349df2095",
+      "offlineFile": "assets/offline/characters.js"
+    }
+  },
+  "rawTextFiles": [
+    "assets/lettering/network-topic-3.svg",
+    "assets/lettering/network-topic-1.svg",
+    "assets/lettering/network-topic-0.svg",
+    "assets/lettering/network-topic-2.svg"
+  ],
+  "offlinePacks": [
+    "./assets/offline/images.js",
+    "./assets/offline/lettering.js",
+    "./assets/offline/characters.js",
+    "./assets/offline/models.js"
+  ]
+}
