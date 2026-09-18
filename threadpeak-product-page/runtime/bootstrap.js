@@ -8,8 +8,8 @@
 ];
   const rawTextFiles = [
   "assets/lettering/network-topic-3.svg",
-  "assets/lettering/network-topic-1.svg",
   "assets/lettering/network-topic-0.svg",
+  "assets/lettering/network-topic-1.svg",
   "assets/lettering/network-topic-2.svg"
 ];
 

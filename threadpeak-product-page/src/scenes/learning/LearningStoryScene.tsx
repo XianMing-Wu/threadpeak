@@ -165,9 +165,20 @@ export function LearningStoryScene({ transition }: {
                     place(aiPrompt, promptBox(width), promptAlpha(p));
                     replies.forEach((node, i) => { place(node, replyBoxes[i], replyEntry(p, i), removedBranch && i === 0 ? 0 : 1); glow(node, p, .90 + i * .02, .963 + i * .02); node.dataset.selected = String(i === 0 && ((p > 1.005 && p < 1.355) || (p > 1.507 && p < 1.79))); wire(`reply-${i}`, answerBoxes[askFromAnswer], replyBoxes[i], p, .842 + i * .02, .884 + i * .02); if (i === 0) {
                         const color = colorProgress(p), fill = rgb(chosenColor);
-                        node.style.setProperty('--card-fill', `rgb(${fill.map(v => lerp(255, v, color)).join(',')})`);
+                        const bg = `rgb(${fill.map(v => lerp(255, v, color)).join(',')})`;
+                        const stroke = lerp(1, chosenStroke, color);
+                        node.style.setProperty('--card-fill', bg);
                         node.style.setProperty('--card-line', '#d8dce2');
-                        node.style.setProperty('--card-stroke', String(lerp(1, chosenStroke, color)));
+                        node.style.setProperty('--card-stroke', String(stroke));
+                        const face = node.querySelector<HTMLElement>('.lp-graph-card');
+                        if (face) {
+                            face.style.background = bg;
+                            face.style.borderWidth = `${stroke}px`;
+                            if (color > .02)
+                                face.dataset.customColor = 'true';
+                            else
+                                delete face.dataset.customColor;
+                        }
                     } });
                     place(authorPrompt, authorPromptBox(width), authorPromptAlpha(p));
                     authors.forEach((node, i) => { node.dataset.selected = String(i === 1 && p > 1.393 && p < 1.45); place(node, authorBoxes[i], authorEntry(p, i), removedBranch ? 0 : 1 - part(raw, 29.18, 29.48)); glow(node, p, 1.215 + i * .025, 1.29 + i * .025); wire(`author-${i}`, replyBoxes[0], authorBoxes[i], p, 1.15 + i * .025, 1.202 + i * .025); });
@@ -186,7 +197,27 @@ export function LearningStoryScene({ transition }: {
                     }
                     const pointer = guideAt(p, width), size = 24 / c.scale;
                     const rest = storyState === 'settled';
-                    place(cursor, { x: pointer.x - 1.64 / c.scale, y: pointer.y - 1.64 / c.scale, w: size, h: size * 54 / 44 }, rest ? 0 : pointer.alpha);
+                    const worldFromEl = (target: Element | null, ax = .62, ay = .42) => {
+                        if (!target)
+                            return null;
+                        const r = target.getBoundingClientRect(), vr = viewport.getBoundingClientRect();
+                        if (r.width < 4 || r.height < 4)
+                            return null;
+                        return { x: (r.left + r.width * ax - vr.left - tx) / c.scale, y: (r.top + r.height * ay - vr.top - ty) / c.scale };
+                    };
+                    const toolbarButton = (label: string) => [...toolbar.querySelectorAll('button')].find(b => (b.getAttribute('aria-label') ?? b.textContent ?? '').includes(label)) ?? null;
+                    const aim = p >= .735 && p < .76 ? worldFromEl(toolbarButton('询问 AI'))
+                        : p >= .77 && p < .825 ? worldFromEl(aiPrompt.querySelector('.learn-input-field, textarea'))
+                            : p >= .825 && p < .86 ? worldFromEl(aiPrompt.querySelector('.send-control, .learn-send-feedback'))
+                                : p >= 1.018 && p < 1.055 ? worldFromEl(toolbarButton('问博主'))
+                                    : p >= 1.07 && p < 1.13 ? worldFromEl(authorPrompt.querySelector('.learn-input-field, textarea'))
+                                        : p >= 1.13 && p < 1.16 ? worldFromEl(authorPrompt.querySelector('.send-control, .learn-send-feedback'))
+                                            : p >= 1.52 && p < 1.56 ? worldFromEl(toolbarButton('卡片颜色和描边'))
+                                                : p >= 1.56 && p < 1.64 ? worldFromEl(palette.querySelector('[aria-label="颜色 13 #dff1e5"]'))
+                                                    : p >= 1.66 && p < 1.70 ? worldFromEl(toolbarButton('添加卡片'))
+                                                        : p >= 1.70 && p < 1.745 ? worldFromEl(addMenu.querySelectorAll('.lp-node-menu button')[1] ?? null)
+                                                            : null;
+                    place(cursor, { x: (aim?.x ?? pointer.x) - 1.64 / c.scale, y: (aim?.y ?? pointer.y) - 1.64 / c.scale, w: size, h: size * 54 / 44 }, rest ? 0 : pointer.alpha);
                     cursor.style.setProperty('--guide-press', '1');
                     const presses = [{ start: .742, label: '询问 AI' }, { start: 1.031, label: '问博主' }, { start: 1.538, label: '卡片颜色和描边' }, { start: 1.67, label: '添加卡片' }];
                     for (const button of toolbar.querySelectorAll('button')) {

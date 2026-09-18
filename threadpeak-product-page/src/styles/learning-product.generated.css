@@ -642,13 +642,13 @@
 }
 
 .learn-product-ui .lp-graph-card .lp-node-sources {
-  margin-top: auto;
+  margin-top: 0;
 }
 
 .learn-product-ui .lp-graph-card[data-type="custom"] {
   --card-accent: #75808c;
   border-color: var(--line-2);
-  justify-content: center;
+  justify-content: flex-start;
   padding: 16px 17px;
 }
 
@@ -819,11 +819,11 @@
 
 .learn-product-ui .lp-graph-card > .lp-node-prose {
   min-height: 0;
-  font-size: 17px;
+  font-size: var(--fs-meta);
   color: var(--card-muted);
-  flex-shrink: 1;
+  flex: 1 1 auto;
   max-height: none;
-  line-height: 1.6;
+  line-height: 1.8;
   overflow: hidden;
 }
 

@@ -82,7 +82,7 @@ export function useScrollTransition(root: RefObject<HTMLElement | null>) {
             if (!instant && !reduced.matches && snap && Math.abs(snap.to - to) < 1e-6)
                 return void accelerate();
             state.current.target = to;
-            if (instant || reduced.matches) {
+            if (instant) {
                 snap = null;
                 state.current.progress = to;
                 placeScroll(yAtRaw(to));

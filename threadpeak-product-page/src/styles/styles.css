@@ -97,6 +97,15 @@ button:focus-visible {
   height: 100svh;
 }
 
+.combined-page > .pitch-layer,
+.combined-page > .author-network-scene,
+.combined-page > .consultation-scene,
+.combined-page > .finale-scene,
+.combined-page > .learning-scene {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+}
+
 .combined-page {
   --intro-opacity: 1;
   --intro-rise: 0px;
@@ -306,6 +315,7 @@ button:focus-visible {
   pointer-events: auto;
   cursor: pointer;
   opacity: 0;
+  visibility: hidden;
   z-index: 3;
   background: none;
   border: none;
@@ -1135,8 +1145,9 @@ button:focus-visible {
   }
 }
 
-.learning-scene[data-active="false"], .author-network-scene[data-active="false"] {
-  display: none !important;
+.learning-scene[data-active="false"] {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .combined-page {

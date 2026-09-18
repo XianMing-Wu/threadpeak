@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-18T03:24:29.485Z",
+  "generatedAt": "2026-09-18T06:33:57.554Z",
   "files": {
     "assets/fonts/KaTeX_AMS-Regular.ttf": {
       "mime": "font/ttf",
@@ -850,8 +850,8 @@
   },
   "rawTextFiles": [
     "assets/lettering/network-topic-3.svg",
-    "assets/lettering/network-topic-1.svg",
     "assets/lettering/network-topic-0.svg",
+    "assets/lettering/network-topic-1.svg",
     "assets/lettering/network-topic-2.svg"
   ],
   "offlinePacks": [

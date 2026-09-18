@@ -19,6 +19,16 @@ export function PitchScenes({ transition }: {
             el.style.opacity = pitch === 'story' ? '0' : '1';
             el.style.visibility = pitch === 'story' ? 'hidden' : 'visible';
             el.inert = pitch === 'story';
+            if (pitch === 'cover') {
+                const box = el.querySelector<HTMLElement>('.pitch-cover');
+                const frame = el.querySelector<HTMLElement>('.pitch-cover-frame');
+                if (box && frame) {
+                    const cw = box.clientWidth, ch = box.clientHeight, ratio = 16 / 9;
+                    const width = Math.min(cw, ch * ratio), height = width / ratio;
+                    frame.style.width = `${Math.max(0, width)}px`;
+                    frame.style.height = `${Math.max(0, height)}px`;
+                }
+            }
             frame = requestAnimationFrame(tick);
         };
         frame = requestAnimationFrame(tick);

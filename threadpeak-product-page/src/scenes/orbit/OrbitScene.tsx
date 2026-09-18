@@ -151,6 +151,12 @@ export function OrbitScene({ transition, frame, activeGoal, onGoal, onStory, bea
                 for (const hidden of [goalScene, intro, ticker, stage.current!]) {
                     hidden.setAttribute('aria-hidden', 'true');
                 }
+                for (const node of nodes.current) {
+                    if (!node)
+                        continue;
+                    node.style.opacity = '0';
+                    node.style.visibility = 'hidden';
+                }
                 if (wall < PRELUDE_ORBIT)
                     main.style.setProperty('--intro-opacity', '0');
                 main.dataset.transition = wall.toFixed(4);
@@ -158,6 +164,12 @@ export function OrbitScene({ transition, frame, activeGoal, onGoal, onStory, bea
                 return;
             }
             if (raw >= 7.4) {
+                for (const node of nodes.current) {
+                    if (!node)
+                        continue;
+                    node.style.opacity = '0';
+                    node.style.visibility = 'hidden';
+                }
                 // Research/document live inside interview-scene. Keep the host visible
                 // until later chapters; only the interview chrome uses --interview-remain.
                 main.style.setProperty('--interview-open', raw < 31 ? '1' : '0');
@@ -319,7 +331,9 @@ export function OrbitScene({ transition, frame, activeGoal, onGoal, onStory, bea
                     return;
                 const point = points[i];
                 node.style.transform = `translate(-50%,-50%) translate(${point.x}px,${point.y}px) scale(${point.scale})`;
-                node.style.opacity = completeRef.current ? String(point.opacity * (1 - segment(raw, 1.22, 1.52))) : '0';
+                const shown = completeRef.current && point.opacity > .01 && raw < 1.52;
+                node.style.visibility = shown ? 'visible' : 'hidden';
+                node.style.opacity = shown ? String(point.opacity * (1 - segment(raw, 1.22, 1.52))) : '0';
                 node.disabled = !completeRef.current || point.opacity < 1 || nextView === 'transition' || nextView === 'interview';
                 node.tabIndex = node.disabled ? -1 : 0;
                 node.style.setProperty('--tilt', `${point.tilt}deg`);

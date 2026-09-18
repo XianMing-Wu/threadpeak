@@ -32,6 +32,7 @@ export const STORY_STEPS: StoryStep[] = [
     later('research-graph', 9.52, 2800),
     ...LEARNING_STOPS.map((p, i) => later(learningNames[i], 7.4 + p * 10, learningDurations[i])),
     later('graph-document', 28.25, 2400), later('graph-doc-read', 28.80, 8000), later('graph-canvas', 29.15, 2200),
+    later('network-cards', 31.10, 7000),
     later('author-identity', 33.80, 10000),
     later('footprint-source', 34.80, 2200), later('footprint-concept', 35.95, 1800),
     later('footprint-question', 37.25, 1800), later('footprint-card', 38.40, 2000),

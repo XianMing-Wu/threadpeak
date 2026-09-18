@@ -16,23 +16,24 @@ export function CardMark({ kind }: {
     kind: Kind;
 }) { return <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={marks[kind]}/></svg>; }
 export { CardAvatar } from "../../components/learning/CardAvatar.tsx";
-/** Every node owns its SVG geometry, clip, light circuit and rich-text surface. */
+/** Product GraphCard is the surface. SVG only carries the one-shot birth/idle light. */
 export function LearningCardModel({ kind, children }: {
     kind: Kind;
     children: ReactNode;
 }) {
     const uid = useId().replaceAll(':', '');
-    return <svg className="learn-card-model" data-model={kind} width={CARD.w} height={CARD.h} viewBox={`0 0 ${CARD.w} ${CARD.h}`}>
-  <defs><linearGradient id={`rim-${uid}`}><stop stopColor="#6db5b6"/><stop offset=".55" stopColor="#527fc8"/><stop offset="1" stopColor="#b2a2ca"/></linearGradient><clipPath id={`face-${uid}`}><rect x="1" y="1" width={CARD.w - 2} height={CARD.h - 2} rx="12"/></clipPath></defs>
-  <g className="learn-card-shell"><rect className="model-shadow" x="1" y="3" width={CARD.w - 2} height={CARD.h - 4} rx="12"/><rect className="model-surface" x=".75" y=".75" width={CARD.w - 1.5} height={CARD.h - 1.5} rx="12"/><path className="model-topline" d={`M 20 1 H ${CARD.w - 20}`}/></g>
-  <foreignObject x="0" y="0" width={CARD.w} height={CARD.h} clipPath={`url(#face-${uid})`}>{children}</foreignObject>
-  <rect className="learn-selection-outline" x="-4" y="-4" width={CARD.w + 8} height={CARD.h + 8} rx="15"/>
-  <g className="learn-card-ports"><circle cx={kind === 'root' ? CARD.w : 0} cy={CARD.h / 2} r="3"/>{kind !== 'root' && <circle cx={CARD.w} cy={CARD.h / 2} r="3"/>}</g>
-  <g className="learn-glow"><rect className="glow-halo" x="1" y="1" width={CARD.w - 2} height={CARD.h - 2} rx="12" pathLength="100" stroke={`url(#rim-${uid})`}/><rect className="glow-color" x="1" y="1" width={CARD.w - 2} height={CARD.h - 2} rx="12" pathLength="100" stroke={`url(#rim-${uid})`}/><rect className="glow-core" x="1" y="1" width={CARD.w - 2} height={CARD.h - 2} rx="12" pathLength="100"/></g>
-  <rect className="learn-idle-rim" x="1" y="1" width={CARD.w - 2} height={CARD.h - 2} rx="12" pathLength="100" stroke={`url(#rim-${uid})`}/>
- </svg>;
+    return <div className="learn-card-model" data-model={kind}>
+  <div className="learn-card-face">
+   {children}
+   <svg className="learn-card-fx" viewBox={`0 0 ${CARD.w} ${CARD.h}`} preserveAspectRatio="none" aria-hidden="true">
+    <defs><linearGradient id={`rim-${uid}`}><stop stopColor="#6db5b6"/><stop offset=".55" stopColor="#527fc8"/><stop offset="1" stopColor="#b2a2ca"/></linearGradient></defs>
+    <g className="learn-glow"><rect className="glow-halo" x="2" y="2" width={CARD.w - 4} height={CARD.h - 4} rx="12" pathLength="100" stroke={`url(#rim-${uid})`}/><rect className="glow-color" x="2" y="2" width={CARD.w - 4} height={CARD.h - 4} rx="12" pathLength="100" stroke={`url(#rim-${uid})`}/><rect className="glow-core" x="2" y="2" width={CARD.w - 4} height={CARD.h - 4} rx="12" pathLength="100"/></g>
+    <rect className="learn-idle-rim" x="2" y="2" width={CARD.w - 4} height={CARD.h - 4} rx="12" pathLength="100" stroke={`url(#rim-${uid})`}/>
+   </svg>
+  </div>
+ </div>;
 }
-/** Actual product card DOM inside each independently lit SVG surface. */
+/** Actual product card DOM: kind, title, prose, sources, expand. */
 export function LearningCardContent({ node, fullText, editing, onFinishEdit, stream }: {
     stream?: TextStream;
     node: GraphNode;
@@ -58,10 +59,9 @@ export function LearningCardContent({ node, fullText, editing, onFinishEdit, str
     useEffect(() => { for (const body of face.current?.querySelectorAll('.lp-node-prose,.lp-author-content') ?? [])
         body.scrollTop = 0; }, [expanded, sourceId]);
     const displayed: GraphNode = source ? { id: source.id, type: 'article', title: source.title, text: source.markdown || source.text, sources: [source.id], parents: [] } : { ...node, author: node.author ? { ...node.author, matchReason: undefined } : undefined, title: expanded ? node.title : current.title, text: expanded ? (fullText ?? node.text) : current.text };
-    return <div ref={face} className="learn-card-ink" data-streaming={!expanded && current.streaming} data-expanded={expanded} data-source-reading={!!source}><div className="learn-product-ui learn-product-card">
+    return <div ref={face} className="learn-card-ink" data-streaming={!expanded && current.streaming} data-expanded={expanded} data-source-reading={!!source}>
+  <div className="learn-product-ui learn-product-card">
   <LearningData value={{ articles: readingArticles.map(a => ({ ...a, summary: a.text, likes: a.likes ?? null, authorId: null, topic: content.provenance.conceptId, sourceKind: 'zhihu' as const })), concept: content.provenance.conceptId }}>
-   {!source && !expanded && (node.type === 'article' || node.type === 'author') && <p className="learn-evidence-label">{node.type === 'author' ? '公开观点整理' : '本课阅读提示'}</p>}
-   {expanded && (source || node.type === 'article' || node.type === 'author') && <p className="learn-evidence-label">公开资料节选 · 可回查来源</p>}
    {source && <button className="learn-source-back" onClick={e => { e.stopPropagation(); collapse(); }}>← 返回当前卡片</button>}
    <GraphCard key="markdown-stream" node={displayed} toolbar={false} expanded={expanded} onExpand={toggle} onOriginal={toggle} onSource={openSource} editing={editing} onFinishEdit={onFinishEdit}/>
   </LearningData>

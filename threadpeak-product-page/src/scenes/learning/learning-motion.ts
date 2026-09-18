@@ -42,7 +42,7 @@ export const promptBox = (width = 1280): Box => width < 700 ? ({ x: ANSWER_X, y:
 export const authorPromptBox = (width = 1280): Box => width < 700 ? ({ x: REPLY_X, y: replyBoxes[0].y + PITCH, w: 520, h: 342 }) : ({ x: 2940, y: replyBoxes[0].y, w: 520, h: 342 });
 export const promptAlpha = (p: number) => part(p, .752, .778) * (1 - part(p, .843, .865));
 export const authorPromptAlpha = (p: number) => part(p, 1.05, 1.077) * (1 - part(p, 1.14, 1.17));
-export const colorProgress = (p: number) => part(p, 1.604, 1.628);
+export const colorProgress = (p: number) => part(p, 1.598, 1.62);
 export const customEntry = (p: number) => part(p, 1.765, 1.815);
 export const sourceEntry = (p: number, i: number) => part(p, .248 + i * .028, .286 + i * .028);
 export const answerStream = (i: number) => {

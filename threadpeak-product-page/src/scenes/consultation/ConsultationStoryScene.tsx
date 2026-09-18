@@ -35,7 +35,12 @@ function Profile({ i, mirror = false, onSelect }: {
   <div className="consult-profile-ink"><span className="consult-avatar"><CardAvatar name={a.name} src={a.avatar}/></span><strong className="consult-author-name">{a.name}</strong><span className="consult-author-topic">{a.topic}</span><span className="consult-profile-rule"/><span className="consult-source-title">{a.title}</span><ConsultationGlyph i={i} mirror={mirror}/><span className="consult-source-kicker"><Mark />知乎 · 公开文章</span><span className="consult-fit"><Mark kind="check"/>公开资料</span></div>
  </Tag>;
 }
-const show = (el: HTMLElement, value: number) => { el.style.opacity = String(value); el.style.visibility = value > .001 ? 'visible' : 'hidden'; el.setAttribute('aria-hidden', String(value <= .001)); };
+const show = (el: HTMLElement, value: number) => {
+    const on = value > .001;
+    el.style.opacity = String(Math.max(0, Math.min(1, value)));
+    el.style.visibility = on ? 'visible' : 'hidden';
+    el.setAttribute('aria-hidden', String(!on));
+};
 const place = (el: HTMLElement, b: {
     x: number;
     y: number;
@@ -91,6 +96,8 @@ export function ConsultationStoryScene({ transition }: {
                 el.inert = true;
                 el.style.visibility = 'hidden';
                 el.setAttribute('aria-hidden', 'true');
+                for (const t of travelers)
+                    show(t, 0);
                 if (wasActive) {
                     origins = [];
                     realOrigins = false;
@@ -104,6 +111,9 @@ export function ConsultationStoryScene({ transition }: {
                 return;
             }
             wasActive = true;
+            const box = el.getBoundingClientRect();
+            width = box.width || el.clientWidth || width;
+            height = box.height || el.clientHeight || height;
             if (width && height && !document.hidden) {
                 el.inert = false;
                 el.style.visibility = 'visible';

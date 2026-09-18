@@ -11,11 +11,18 @@
 }
 
 .consultation-scene[data-active="false"] {
-  display: none !important;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .consultation-scene[data-active="false"] * {
   animation-play-state: paused !important;
+}
+
+.consultation-scene[data-active="false"] .consult-traveler,
+.consultation-scene[aria-hidden="true"] .consult-traveler {
+  visibility: hidden !important;
+  opacity: 0 !important;
 }
 
 .consult-stage {
@@ -573,6 +580,8 @@
 }
 
 .consult-composer[data-background="true"] .consult-background-panel {
+  visibility: visible !important;
+  opacity: 1;
   pointer-events: auto;
 }
 
@@ -597,6 +606,18 @@
   transform-origin: 0 40%;
   pointer-events: auto;
   position: absolute;
+}
+
+.consult-detail > .consult-shell {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.consult-evidence, .consult-draft, .consult-author-details {
+  z-index: 1;
 }
 
 .consult-detail > .consult-shell {
@@ -1677,6 +1698,7 @@
 .consult-author-details {
   box-sizing: border-box;
   visibility: hidden;
+  opacity: 0;
   background: none;
   border-radius: 18px;
   flex-direction: column;

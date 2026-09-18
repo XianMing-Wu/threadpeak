@@ -135,8 +135,13 @@ export function AuthorNetwork3D({ transition, selected, onSelect }: {
             const dt = last ? Math.min(.05, (now - last) / 1000) : 0;
             last = now;
             const raw = legacyRaw(transition.current.progress), p = networkVolumeProgress(networkProgress(raw)), visible = p > .525 && raw < NETWORK_EXIT;
-            if (!visible && renderer)
-                dispose();
+            if (width && height && !renderer && !failed && raw >= 29.2 && raw < NETWORK_EXIT && !document.hidden)
+                initialize();
+            if (!visible)
+                for (const n of labels.values()) {
+                    n.style.visibility = 'hidden';
+                    n.style.opacity = '0';
+                }
             if (visible && width && height && !document.hidden) {
                 if (!renderer && !failed)
                     initialize();
