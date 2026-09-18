@@ -2772,6 +2772,7 @@
   position: absolute;
   inset: 0;
   overflow: auto;
+  overscroll-behavior: contain;
   background: var(--surface-1);
   padding: 34px 30px 100px;
   scrollbar-width: thin;

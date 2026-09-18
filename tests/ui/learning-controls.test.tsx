@@ -69,6 +69,22 @@ test('keyboard selection exposes a separate toolbar and preserves the selected b
   await waitFor(() => expect(submit).toHaveBeenLastCalledWith('还有哪些应用条件？', 'author', ['answer']))
 })
 
+test('the knowledge-graph tab leaves document notes and returns to the canvas', () => {
+  function Wrap() {
+    const [presentation, setPresentation] = useState<'map' | 'document'>('map')
+    return <>
+      <button type="button" onClick={() => setPresentation('map')}>知识脉络</button>
+      <KnowledgeGraph nodes={nodes} selected={[]} onSelect={() => {}} onSelection={() => {}} onPromptSubmit={async () => true} depth="fast" onDepth={() => {}} onStop={() => {}} onCopy={() => {}} presentation={presentation} onPresentation={setPresentation}/>
+    </>
+  }
+  render(<Wrap/>)
+  fireEvent.click(screen.getByRole('button', { name: '文档模式' }))
+  expect(screen.getByLabelText('知识脉络文档')).toBeTruthy()
+  fireEvent.click(screen.getByRole('button', { name: '知识脉络' }))
+  expect(screen.queryByLabelText('知识脉络文档')).toBeNull()
+  expect(screen.getByRole('button', { name: '画布模式' }).getAttribute('aria-pressed')).toBe('true')
+})
+
 test('document editing uses a native action and submits source text while leaving the source node intact', () => {
   const save = vi.fn()
   const { container } = render(<KnowledgeDocument nodes={nodes} selected={[]} focusId={null}
@@ -86,6 +102,18 @@ test('document editing uses a native action and submits source text while leavin
   fireEvent.keyDown(input, { key: 'Escape' })
   expect(save).toHaveBeenCalledWith('answer', '先确定坐标', source)
   expect(nodes[2].text).toBe('原始解释与公式 $x+y$。')
+})
+
+test('notes wheel stays inside the document and does not scroll the page', () => {
+  render(<KnowledgeDocument nodes={nodes} selected={[]} focusId={null}
+    onSelect={() => {}} onSave={() => {}} renderToolbar={() => null} onScroll={() => {}}/>)
+  const doc = screen.getByLabelText('知识脉络文档')
+  Object.defineProperty(doc, 'scrollHeight', { configurable: true, value: 200 })
+  Object.defineProperty(doc, 'clientHeight', { configurable: true, value: 200 })
+  Object.defineProperty(doc, 'scrollTop', { configurable: true, value: 0 })
+  const event = new WheelEvent('wheel', { deltaY: 80, bubbles: true, cancelable: true })
+  doc.dispatchEvent(event)
+  expect(event.defaultPrevented).toBe(true)
 })
 
 

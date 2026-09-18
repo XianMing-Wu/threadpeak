@@ -32,5 +32,18 @@ export function KnowledgeDocument({nodes,selected,focusId,busy=false,onSelect,on
   const {rows,children}=useMemo(()=>documentOrder(nodes,collapsed),[nodes,collapsed])
   useEffect(()=>{if(!focusId)return;setCollapsed([])},[focusId])
   useEffect(()=>{if(!focusId||collapsed.length)return;const el=Array.from(doc.current?.querySelectorAll<HTMLElement>('[data-doc-id]')??[]).find(e=>e.dataset.docId===focusId);if(!el)return;el.scrollIntoView({block:'center',behavior:'instant'});el.querySelector<HTMLElement>('.lp-doc-read')?.click();el.querySelector<HTMLElement>('.lp-doc-text')?.focus({preventScroll:true})},[focusId,collapsed.length])
-  return <div className="lp-doc-view" ref={doc} onScroll={onScroll} aria-label="知识脉络文档" onPointerDown={e=>e.stopPropagation()} onWheel={e=>e.stopPropagation()}><h2>{nodes.find(n=>n.id==='root')?.title}</h2>{rows.map(({node,depth})=><div key={node.id} className="lp-doc-branch lp-doc-flat" data-depth={depth} style={{marginInlineStart:Math.min(depth,6)*23}}><DocumentCard node={node} selected={selected.includes(node.id)} busy={busy} onSelect={()=>onSelect(node.id)} onSave={(title,text)=>onSave(node.id,title,text)} toolbar={renderToolbar(node)} hasChildren={!!children.get(node.id)?.length} collapsed={collapsed.includes(node.id)} onCollapse={()=>setCollapsed(old=>old.includes(node.id)?old.filter(id=>id!==node.id):[...old,node.id])}/></div>)}<div className="lp-doc-overview"/></div>
+  useEffect(()=>{
+    const el=doc.current
+    if(!el)return
+    const onWheel=(e:WheelEvent)=>{
+      e.stopPropagation()
+      const max=el.scrollHeight-el.clientHeight
+      const atTop=el.scrollTop<=0&&e.deltaY<0
+      const atBottom=el.scrollTop>=max-1&&e.deltaY>0
+      if(max<=0||atTop||atBottom||e.ctrlKey||e.metaKey)e.preventDefault()
+    }
+    el.addEventListener('wheel',onWheel,{passive:false,capture:true})
+    return()=>el.removeEventListener('wheel',onWheel,{capture:true})
+  },[])
+  return <div className="lp-doc-view" ref={doc} onScroll={onScroll} aria-label="知识脉络文档" onPointerDown={e=>e.stopPropagation()} onWheel={e=>{e.stopPropagation();e.nativeEvent.stopImmediatePropagation()}}><h2>{nodes.find(n=>n.id==='root')?.title}</h2>{rows.map(({node,depth})=><div key={node.id} className="lp-doc-branch lp-doc-flat" data-depth={depth} style={{marginInlineStart:Math.min(depth,6)*23}}><DocumentCard node={node} selected={selected.includes(node.id)} busy={busy} onSelect={()=>onSelect(node.id)} onSave={(title,text)=>onSave(node.id,title,text)} toolbar={renderToolbar(node)} hasChildren={!!children.get(node.id)?.length} collapsed={collapsed.includes(node.id)} onCollapse={()=>setCollapsed(old=>old.includes(node.id)?old.filter(id=>id!==node.id):[...old,node.id])}/></div>)}<div className="lp-doc-overview"/></div>
 }
